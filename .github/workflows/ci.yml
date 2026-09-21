@@ -28,6 +28,7 @@ jobs:
       - run: npm ci
       - run: npm audit --audit-level=high
       - run: npm run lint
+      - run: node bin/schema-manifest.mjs --check
       - run: npm run build
       - run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
       - name: Reproducible release archive

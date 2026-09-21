@@ -4,7 +4,7 @@ $root = dirname(__DIR__);
 $installed = json_decode(file_get_contents($root . '/vendor/composer/installed.json'), true, 512, JSON_THROW_ON_ERROR);
 if ($installed['dev'] ?? true) { throw new RuntimeException('Install production dependencies before packaging.'); }
 $files = ['uop-core.php', 'readme.txt', 'LICENSE', 'THIRD-PARTY-NOTICES.md', 'composer.json', 'composer.lock', 'package.json', 'package-lock.json'];
-foreach (['src', 'vendor', 'build', 'bin'] as $directory) {
+foreach (['src', 'vendor', 'build', 'bin', 'schema'] as $directory) {
     foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/' . $directory, FilesystemIterator::SKIP_DOTS)) as $file) {
         if ($file->isFile()) { $files[] = str_replace('\\', '/', substr($file->getPathname(), strlen($root) + 1)); }
     }

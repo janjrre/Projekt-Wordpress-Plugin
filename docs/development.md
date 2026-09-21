@@ -38,3 +38,25 @@ In a clean checkout run npm ci, npm run build, composer install --no-dev --optim
 - WordPress Coding Standards are blocking, with only the filename convention adjusted for the mandated PSR-4 structure. No static-analysis baseline hides errors.
 
 M1 may begin only after M0 activation, incompatible-environment, build, quality and matrix tests pass.
+
+## Persistence contracts (M1)
+
+M0 passed on commit 196d0998d8ea6a2768b145516d60308a862bbc36 before M1 work began; see verification-m0.md.
+
+The runtime schema is schema/manifest.json. It contains all 26 Phase 2 tables plus email_templates and export_jobs, including template_revision, template_hash and locale in email_messages. Run node bin/schema-manifest.mjs --check to detect divergence from the authoritative documents. Integer display widths are normalized between MySQL and MariaDB; types, column order, nullability, defaults, auto-increment, full index columns, uniqueness, InnoDB, collation and absent foreign keys are verified against the real database.
+
+Activation and normal upgrade boot share the environment gate. WordPress options must also use InnoDB because checkpoints and the organization seed share a transaction. No unsupported-environment path writes UOP state. The explicit Installer composition root wires persistence services; no business feature is wired.
+
+The migration runner uses a connection-owned, database/site-specific advisory lock. It records each verified DDL checkpoint in WordPress options, re-verifies completed checkpoints on resume, and promotes uop_db_version/uop_data_version only after verification. DDL is additive and resumable, not represented as rollback-capable. Transactional DML steps include their checkpoint in the same transaction. There is no destructive down-migration. A failed attempt retains progress and records safe exception type/code in Site Health; SQL, values and traces are never included.
+
+After resolving the cause, an administrator can retry by activating the plugin or running the following command on the intended site:
+
+```sh
+wp eval '\UOP\Infrastructure\Database\Installer::runner()->run();'
+```
+
+The transaction manager forbids nested calls, performs at most three complete retries after errno 1213, discards callbacks from failed attempts, and executes successful callbacks only after commit. Other errors are not retried. The wpdb adapter pins the connection identity and disables automatic reconnection during its queries so a lost transaction or advisory lock cannot silently become autocommit work.
+
+Repository queries require a non-null OrgScope, validated PublicId, explicit columns, allowed filters and bounded keyset pagination (default 50, maximum 100). The base query currently supports indexed ID ordering in either direction. Internal rows/cursors stay in persistence/mapping; they are not public DTOs. OrgScope is the storage boundary; actor authorization and field projection remain M2 work.
+
+Tests use disposable fixtures only. They cover initial installation, exact physical schema, repeat with unchanged DDL/seed, interruption after DDL before checkpoint, resume, competing connections and lock recovery, transactional-step rollback, connection loss, cross-organization queries and intentional schema drift. No person, event, form, registration, email, consent, export or other product service is implemented.
