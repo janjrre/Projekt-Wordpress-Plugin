@@ -25,7 +25,7 @@ The CI workflow creates independent disposable databases for PHP 8.3/8.4/8.5 on 
 
 ## Build
 
-In a clean checkout run npm ci, npm run build, composer install --no-dev --optimize-autoloader, then php bin/package.php. The archive uses sorted paths, stable timestamps and an explicit allowlist; it contains runtime dependencies and source. There are no frontend assets in M0. Install the generated dist/uop-core.zip on a disposable WordPress to smoke-test the actual artifact. Restore development dependencies with composer install before running tests.
+In a clean checkout set COMPOSER_ROOT_VERSION to the version in package.json (currently 0.1.0-alpha.1), then run npm ci, npm run build, composer install --no-dev --optimize-autoloader, and php bin/package.php. Pinning the root version keeps Composer metadata independent of the checkout branch or source archive. The archive uses sorted paths, stable timestamps and an explicit allowlist; it contains runtime dependencies and source. There are no frontend assets in M0. Install the generated dist/uop-core.zip on a disposable WordPress to smoke-test the actual artifact. Restore development dependencies with composer install before running tests.
 
 ## Foundation contracts
 

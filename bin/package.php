@@ -3,6 +3,11 @@
 $root = dirname(__DIR__);
 $installed = json_decode(file_get_contents($root . '/vendor/composer/installed.json'), true, 512, JSON_THROW_ON_ERROR);
 if ($installed['dev'] ?? true) { throw new RuntimeException('Install production dependencies before packaging.'); }
+$version = json_decode(file_get_contents($root . '/package.json'), true, 512, JSON_THROW_ON_ERROR)['version'];
+$metadata = require $root . '/vendor/composer/installed.php';
+if ($metadata['root']['pretty_version'] !== $version) {
+    throw new RuntimeException('Set COMPOSER_ROOT_VERSION to the package.json version before composer install for a reproducible release.');
+}
 $files = ['uop-core.php', 'readme.txt', 'LICENSE', 'THIRD-PARTY-NOTICES.md', 'composer.json', 'composer.lock', 'package.json', 'package-lock.json'];
 foreach (['src', 'vendor', 'build', 'bin', 'schema'] as $directory) {
     foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/' . $directory, FilesystemIterator::SKIP_DOTS)) as $file) {

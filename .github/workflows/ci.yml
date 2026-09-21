@@ -4,6 +4,8 @@ on:
   pull_request:
 permissions:
   contents: read
+env:
+  COMPOSER_ROOT_VERSION: 0.1.0-alpha.1
 jobs:
   quality:
     runs-on: ubuntu-latest
