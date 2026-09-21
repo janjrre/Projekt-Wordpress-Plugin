@@ -172,7 +172,9 @@ Eine spätere Markenänderung ändert nur sichtbaren Namen, Assets und Beschreib
 
 ## Schema Ergänzungen
 
-Phase 2 definiert 24 Core Tabellen. Mit den zwei notwendigen Ergänzungen umfasst das initiale V1 Schema 26 Tabellen.
+Phase 2 definiert 26 Core Tabellen. Mit den zwei notwendigen Ergänzungen umfasst das initiale V1 Schema 28 Tabellen.
+
+Die Tabellenzahl wurde am 21. September 2026 verbindlich redaktionell korrigiert: Alle 26 unterschiedlichen CREATE-TABLE-Definitionen aus Phase 2 bleiben unverändert erhalten; Phase 3 ergänzt zwei Tabellen. Keine Phase-2-Tabelle darf entfernt oder zusammengelegt werden.
 
 ### Email Templates
 
@@ -411,7 +413,7 @@ Ein Milestone beginnt erst, wenn die Exit Criteria des vorherigen Milestones gr�
 
 #### M1 01 Normatives Schema Manifest
 
-**Scope:** Alle 26 V1 Tabellen, Spalten, Indizes und Invariants in maschinenlesbarer beziehungsweise testbarer Form.
+**Scope:** Alle 28 V1 Tabellen, Spalten, Indizes und Invariants in maschinenlesbarer beziehungsweise testbarer Form.
 
 **Acceptance Criteria:** Schema stimmt mit Phase 2 plus ADR 302 und 303 überein; Tasks, Documents, Payments und Signatures Tabellen existieren nicht.
 
@@ -820,7 +822,7 @@ Implementiere in diesem Auftrag nur:
 - expliziten Service Container und Module Registry
 - Coding Standards, Static Analysis und CI
 - Unit und WordPress Integration Test Harness
-- vollständiges normatives V1 Schema mit 26 Tabellen
+- vollständiges normatives V1 Schema mit 28 Tabellen
 - Migration Registry, Runner und initiale Migration
 - Public ID, UTC Clock und Correlation ID
 - Transaction Manager mit Deadlock Retry
@@ -898,7 +900,7 @@ ABNAHME
 Milestone 0 und 1 sind nur abgeschlossen, wenn:
 - das Plugin auf unterstützter Umgebung sauber aktiviert und deaktiviert
 - eine nicht unterstützte Umgebung vor Datenmutation stoppt
-- alle 26 Tabellen und erwarteten Indizes reproduzierbar angelegt werden
+- alle 28 Tabellen und erwarteten Indizes reproduzierbar angelegt werden
 - keine Out of Scope Tabellen existieren
 - Default Organization genau einmal angelegt wird
 - Public ID Roundtrip und Invalid Input Tests grün sind
