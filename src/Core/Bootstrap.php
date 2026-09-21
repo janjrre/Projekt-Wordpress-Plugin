@@ -63,8 +63,9 @@ final class Bootstrap {
 			return;
 		}
 		$container = new ServiceContainer();
-		$container->set( EnvironmentChecker::class, static fn () => new EnvironmentChecker() );
-		self::$kernel = new Kernel( $container, new ModuleRegistry() );
+		$modules   = new ModuleRegistry();
+		$modules->add( new FoundationModule() );
+		self::$kernel = new Kernel( $container, $modules );
 		self::$kernel->boot();
 	}
 

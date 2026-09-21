@@ -6,9 +6,9 @@ test('web activation and deactivation complete without PHP diagnostics', async (
   await page.getByRole('button', { name: 'Log In', exact: true }).click();
   await page.goto('/wp-admin/plugins.php');
   const plugin = page.locator('tr[data-slug="uop-core"]');
-  await plugin.getByRole('link', { name: 'Activate', exact: true }).click();
-  await expect(plugin.getByRole('link', { name: 'Deactivate', exact: true })).toBeVisible();
+  await plugin.getByRole('link', { name: 'Activate UOP Core', exact: true }).click();
+  await expect(plugin.getByRole('link', { name: 'Deactivate UOP Core', exact: true })).toBeVisible();
   await expect(page.locator('body')).not.toContainText(/Fatal error:|Warning:|Notice:|Failed checks:/);
-  await plugin.getByRole('link', { name: 'Deactivate', exact: true }).click();
-  await expect(plugin.getByRole('link', { name: 'Activate', exact: true })).toBeVisible();
+  await plugin.getByRole('link', { name: 'Deactivate UOP Core', exact: true }).click();
+  await expect(plugin.getByRole('link', { name: 'Activate UOP Core', exact: true })).toBeVisible();
 });

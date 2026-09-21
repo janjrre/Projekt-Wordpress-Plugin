@@ -17,6 +17,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Keep this entrypoint parseable on older PHP; load modern code only after the gate.
 if ( version_compare( PHP_VERSION, '8.3', '<' ) ) {
+	register_activation_hook(
+		__FILE__,
+		static function () {
+			wp_die( esc_html__( 'UOP Core requires PHP 8.3 or newer.', 'uop-core' ) );
+		}
+	);
 	add_action(
 		'admin_notices',
 		static function () {
