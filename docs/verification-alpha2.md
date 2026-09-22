@@ -13,6 +13,7 @@ Scope is limited to the five confirmed findings in M0/M1. Phase 3 > Phase 2 > Ph
 ## Additional required verification
 
 - All existing Unit/Architecture, Integration, CLI and browser tests remain enabled.
+- Browser setup authenticates via a real WordPress login HTTP request and shares its cookies with the browser. This removes WordPress's delayed-autofocus typing race; activation/deactivation and diagnostic assertions still run in the browser, with no retries or skipped checks.
 - CI runs PHP 8.3/8.4/8.5 against MySQL 8.0 and MariaDB 10.11, WordPress 6.9/7.1.1, with a non-default `uop_ci_` prefix. Artifact smoke uses the default prefix.
 - After browser testing, each matrix entry converts its disposable installation to Multisite and runs `tests/multisite.php`: subsite prefix, distinct migration locks, independent schema/state, repeat activation, correct-site cache invalidation when the caller switches sites during a transaction, and preservation of the main site's schema/seed.
 - Multisite testing validates site-local persistence only; it does not implement network-wide product features.
