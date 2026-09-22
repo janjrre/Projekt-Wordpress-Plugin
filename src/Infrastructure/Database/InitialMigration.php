@@ -54,7 +54,7 @@ final class InitialMigration implements Migration {
 				'table_' . $name,
 				function () use ( $name ): void {
 					// dbDelta is limited to additive initial DDL; verification, not its return messages, determines success.
-					dbDelta( $this->manifest->ddl( $name, $this->prefix, $this->charset_collate ) );
+					$this->db->apply_schema( $this->manifest->ddl( $name, $this->prefix, $this->charset_collate ), Installer::lock_name() );
 				},
 				fn () => $this->inspector->verify_table( $name )
 			);

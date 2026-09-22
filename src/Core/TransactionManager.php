@@ -12,6 +12,7 @@ use LogicException;
 use Throwable;
 use UOP\Infrastructure\Database\Connection;
 use UOP\Infrastructure\Database\DatabaseException;
+use UOP\Infrastructure\Database\TransactionState;
 /** Nested business transactions are explicitly forbidden. */
 final class TransactionManager {
 	/**
@@ -50,10 +51,12 @@ final class TransactionManager {
 	 * @throws Throwable On business or database failure.
 	 */
 	public function run( Closure $work ): mixed {
-		if ( $this->active ) {
+		$state = TransactionState::for_connection( $this->connection );
+		if ( $state->active ) {
 			throw new LogicException( 'Nested business transactions are forbidden.' );
 		}
 		for ( $attempt = 0; ; ++$attempt ) {
+			$state->active   = true;
 			$this->active    = true;
 			$this->callbacks = array();
 			try {
@@ -65,7 +68,9 @@ final class TransactionManager {
 				try {
 					$this->connection->execute( 'ROLLBACK' );
 				} finally {
-					$this->active = false;
+					$this->active  = false;
+					$state->active = false;
+					$this->complete_attempt( $state );
 				}
 				if ( $error instanceof DatabaseException && 1213 === $error->getCode() && $attempt < 3 ) {
 					( $this->pause )( random_int( 1000, 10000 ) );
@@ -73,7 +78,9 @@ final class TransactionManager {
 				}
 				throw $error;
 			}
-			$this->active    = false;
+			$this->active  = false;
+			$state->active = false;
+			$this->complete_attempt( $state );
 			$callbacks       = $this->callbacks;
 			$this->callbacks = array();
 			foreach ( $callbacks as $callback ) {
@@ -88,6 +95,25 @@ final class TransactionManager {
 				}
 			}
 			return $result;
+		}
+	}
+
+	/**
+	 * Invalidate transactional caches on either outcome, before public callbacks.
+	 *
+	 * @param TransactionState $state Shared connection state.
+	 */
+	private function complete_attempt( TransactionState $state ): void {
+		foreach ( $state->take_completion() as $callback ) {
+			try {
+				$callback();
+			} catch ( Throwable $error ) {
+				try {
+					( $this->diagnose )( $error );
+				} catch ( Throwable ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Preserve the commit/rollback outcome even if cache diagnostics fail.
+					// Owned migration options also bypass cache on reads.
+				}
+			}
 		}
 	}
 

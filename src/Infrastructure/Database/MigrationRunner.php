@@ -36,8 +36,7 @@ final class MigrationRunner {
 	/**
 	 * Resume after the last verified checkpoint.
 	 *
-	 * @throws RuntimeException If unsupported, busy or a downgrade.
-	 * @throws Throwable If a migration fails.
+	 * @throws RuntimeException If unsupported, busy, inconsistent, or a migration fails.
 	 */
 	public function run(): void {
 		if ( ( $this->environment )() ) {
@@ -51,6 +50,21 @@ final class MigrationRunner {
 			$installed = (int) $this->state->read( 'uop_db_version', 0 );
 			if ( $installed > $this->registry->latest() ) {
 				throw new RuntimeException( 'Schema downgrade is not supported.' );
+			}
+			if ( $installed === $this->registry->latest() ) {
+				foreach ( $this->registry->pending( $installed - 1 ) as $migration ) {
+					$migration->verify( new MigrationContext( $this->state, $this->transactions, $installed ) );
+				}
+				if ( $installed !== (int) $this->state->read( 'uop_data_version', 0 ) ) {
+					throw new RuntimeException( 'Schema and data versions are inconsistent.' );
+				}
+				$this->state->write(
+					'uop_migration_status',
+					array(
+						'status'  => 'complete',
+						'version' => $installed,
+					)
+				);
 			}
 			foreach ( $this->registry->pending( $installed ) as $migration ) {
 				$this->state->write(
@@ -79,17 +93,28 @@ final class MigrationRunner {
 				);
 			}
 		} catch ( Throwable $error ) {
-			$this->state->write(
-				'uop_migration_status',
-				array(
-					'status'     => 'failed',
-					'error_type' => get_class( $error ),
-					'error_code' => $error->getCode(),
-				)
-			);
+			try {
+				$owner = $this->db->rows( 'SELECT IS_USED_LOCK(%s) = CONNECTION_ID() AS owned', array( $this->lock_name ) );
+				if ( 1 === (int) ( $owner[0]['owned'] ?? 0 ) ) {
+					$this->state->write(
+						'uop_migration_status',
+						array(
+							'status'     => 'failed',
+							'error_type' => get_class( $error ),
+							'error_code' => $error->getCode(),
+						)
+					);
+				}
+			} catch ( Throwable ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- A lost connection cannot safely persist diagnostics; keep the original failure and checkpoint.
+				// Never reconnect or overwrite a successor runner's state to log an error.
+			}
 			throw $error;
 		} finally {
-			$this->db->rows( 'SELECT RELEASE_LOCK(%s) AS released', array( $this->lock_name ) );
+			try {
+				$this->db->rows( 'SELECT RELEASE_LOCK(%s) AS released', array( $this->lock_name ) );
+			} catch ( Throwable ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Connection-owned locks are released by disconnect; preserve the original error.
+				// No reconnect for cleanup.
+			}
 		}
 	}
 }

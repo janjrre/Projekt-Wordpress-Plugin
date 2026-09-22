@@ -68,8 +68,30 @@ final class Installer {
 	 * @return array<string, mixed>
 	 */
 	public static function health(): array {
-		$state      = get_option( 'uop_migration_status', array() );
-		$good       = 1 === (int) get_option( 'uop_db_version', 0 ) && 1 === (int) get_option( 'uop_data_version', 0 ) && 'complete' === ( $state['status'] ?? '' );
+		MigrationState::register_option_reads();
+		$state = array();
+		$good  = false;
+		try {
+			$state = get_option( 'uop_migration_status', array() );
+			$good  = 1 === (int) get_option( 'uop_db_version', 0 ) && 1 === (int) get_option( 'uop_data_version', 0 ) && 'complete' === ( $state['status'] ?? '' );
+			if ( Bootstrap::errors() ) {
+				$good  = false;
+				$state = array( 'status' => 'unsupported_environment' );
+			} else {
+				global $wpdb;
+				$db        = new WpdbConnection( $wpdb );
+				$manifest  = new SchemaManifest( dirname( __DIR__, 3 ) . '/schema/manifest.json' );
+				$inspector = new SchemaInspector( $db, $manifest, $wpdb->prefix . 'uop_', $wpdb->collate );
+				$inspector->verify_all();
+			}
+		} catch ( \Throwable $error ) {
+			$good  = false;
+			$state = array(
+				'status'     => 'verification_failed',
+				'error_type' => get_class( $error ),
+				'error_code' => $error->getCode(),
+			);
+		}
 		$diagnostic = sprintf(
 			/* translators: 1: migration status, 2: safe exception class, 3: numeric error code. */
 			__( 'Migration state: %1$s. Error type: %2$s. Error code: %3$d.', 'uop-core' ),

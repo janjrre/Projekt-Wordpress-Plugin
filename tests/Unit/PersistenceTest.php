@@ -11,6 +11,8 @@ use UOP\Domain\Organization\OrgScope;
 use UOP\Infrastructure\Database\{Connection, DatabaseException, PageRequest, ScopedRepository, SchemaManifest};
 
 final class RecordingConnection implements Connection {
+    public function identity(): object { return $this; }
+    public function apply_schema(string $ddl, string $lock_name): void { throw new LogicException('DDL is not part of this unit fixture.'); }
     public array $statements = [];
     public function execute(string $sql, array $args = []): int { $this->statements[] = [$sql, $args]; return 1; }
     public function rows(string $sql, array $args = []): array { $this->execute($sql, $args); return []; }

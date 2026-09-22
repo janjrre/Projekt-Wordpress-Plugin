@@ -1,4 +1,8 @@
 <?php
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit;
+}
 // Run after composer install --no-dev and npm run build in a clean checkout.
 $root = dirname(__DIR__);
 $installed = json_decode(file_get_contents($root . '/vendor/composer/installed.json'), true, 512, JSON_THROW_ON_ERROR);
@@ -9,7 +13,7 @@ if ($metadata['root']['pretty_version'] !== $version) {
     throw new RuntimeException('Set COMPOSER_ROOT_VERSION to the package.json version before composer install for a reproducible release.');
 }
 $files = ['uop-core.php', 'readme.txt', 'LICENSE', 'THIRD-PARTY-NOTICES.md', 'composer.json', 'composer.lock', 'package.json', 'package-lock.json'];
-foreach (['src', 'vendor', 'build', 'bin', 'schema'] as $directory) {
+foreach (['src', 'vendor', 'build', 'schema'] as $directory) {
     foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/' . $directory, FilesystemIterator::SKIP_DOTS)) as $file) {
         if ($file->isFile()) { $files[] = str_replace('\\', '/', substr($file->getPathname(), strlen($root) + 1)); }
     }

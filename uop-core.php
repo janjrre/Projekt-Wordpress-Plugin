@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UOP Core
  * Description: Foundation for organization-owned participant operations.
- * Version: 0.1.0-alpha.1
+ * Version: 0.1.0-alpha.2
  * Requires at least: 6.9
  * Requires PHP: 8.3
  * Text Domain: uop-core
@@ -48,7 +48,7 @@ if ( ! file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 	return;
 }
 
-define( 'UOP_CORE_VERSION', '0.1.0-alpha.1' );
+define( 'UOP_CORE_VERSION', '0.1.0-alpha.2' );
 define( 'UOP_CORE_FILE', __FILE__ );
 require_once __DIR__ . '/vendor/autoload.php';
 

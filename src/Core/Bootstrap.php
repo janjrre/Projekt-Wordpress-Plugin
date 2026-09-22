@@ -9,6 +9,7 @@ namespace UOP\Core;
 
 use UOP\Extension\ModuleRegistry;
 use UOP\Infrastructure\Database\Installer;
+use UOP\Infrastructure\Database\MigrationState;
 
 /** Runs no domain construction at global scope. */
 final class Bootstrap {
@@ -37,6 +38,7 @@ final class Bootstrap {
 
 	/** Validate before activation. */
 	public static function activate(): void {
+		MigrationState::register_option_reads();
 		$errors = self::errors();
 		if ( $errors ) {
 			wp_die( esc_html( self::message( $errors ) ) );
@@ -56,6 +58,7 @@ final class Bootstrap {
 
 	/** Boot only on a supported environment. */
 	public static function boot(): void {
+		MigrationState::register_option_reads();
 		if ( null !== self::$kernel ) {
 			return;
 		}

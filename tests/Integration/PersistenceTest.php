@@ -61,6 +61,8 @@ final class PersistenceTest extends TestCase {
         $fault = new class($this->db, $interrupted) implements Connection {
             private int $checkpoints = 0;
             public function __construct(private Connection $db, private bool &$interrupted) {}
+            public function identity(): object { return $this->db->identity(); }
+            public function apply_schema(string $ddl, string $lock_name): void { $this->db->apply_schema($ddl, $lock_name); }
             public function execute(string $sql, array $args = []): int {
                 if (in_array('uop_migration_progress_1', $args, true) && ++$this->checkpoints === 8 && !$this->interrupted) {
                     $this->interrupted = true;
@@ -196,5 +198,105 @@ final class PersistenceTest extends TestCase {
         Bootstrap::boot();
         self::assertSame($id, $this->state->read('uop_default_organization_id'));
         self::assertCount(1, $this->db->rows('SELECT id FROM %i', [$this->prefix . 'organizations']));
+    }
+
+    public static function ddl_loss_cases(): array { return [['CREATE'], ['ALTER']]; }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('ddl_loss_cases')]
+    public function test_lock_loss_during_dbdelta_never_replays_create_or_alter_and_can_resume(string $operation): void {
+        global $wpdb;
+        $original = $wpdb;
+        $table = $this->prefix . 'organizations';
+        $before = null;
+        if ($operation === 'ALTER') {
+            $this->db->execute($this->manifest->ddl('organizations', $this->prefix, $wpdb->get_charset_collate()));
+            $this->db->execute('ALTER TABLE %i DROP INDEX uq_public_id', [$table]);
+            $before = $this->db->rows('SHOW CREATE TABLE %i', [$table]);
+        }
+        $worker = new \wpdb(DB_USER, DB_PASSWORD, DB_NAME, DB_HOST);
+        $worker->set_prefix($original->prefix);
+        $wpdb = $worker;
+        $runner = Installer::runner();
+        $lock = Installer::lock_name();
+        $session = $worker->__get('dbh')->thread_id;
+        $killer = $original->__get('dbh');
+        $injected = false;
+        $mode = (new \mysqli_driver())->report_mode;
+        $retries = $worker->__get('reconnect_retries');
+        $filter = function($sql) use ($operation, $table, $killer, $session, $lock, &$injected) {
+            if (!$injected && str_starts_with($sql, $operation . ' TABLE ' . $table)) {
+                $injected = true;
+                $killer->query('KILL CONNECTION ' . $session);
+                self::assertSame('1', (string)$killer->query("SELECT GET_LOCK('" . $killer->real_escape_string($lock) . "',2) AS owned")->fetch_assoc()['owned']);
+            }
+            return $sql;
+        };
+        add_filter('query', $filter);
+        try {
+            try { $runner->run(); self::fail('Lost lock was accepted'); }
+            catch (DatabaseException $error) { self::assertContains($error->getCode(), [2006, 2013]); }
+            self::assertTrue($injected);
+            self::assertSame($retries, $worker->__get('reconnect_retries'));
+            self::assertSame($mode, (new \mysqli_driver())->report_mode);
+        } finally {
+            remove_filter('query', $filter);
+            $wpdb = $original;
+            $worker->close();
+            $killer->query("SELECT RELEASE_LOCK('" . $killer->real_escape_string($lock) . "')");
+        }
+        if ($before === null) {
+            self::assertSame([], $this->db->rows('SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=%s', [$table]));
+        } else {
+            self::assertSame($before, $this->db->rows('SHOW CREATE TABLE %i', [$table]));
+        }
+        self::assertSame($before === null ? [] : [['TABLE_NAME'=>$table]], $this->db->rows('SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND LEFT(TABLE_NAME,%d)=%s ORDER BY TABLE_NAME', [strlen($this->prefix),$this->prefix]));
+        self::assertSame(0, (int)$this->state->read('uop_db_version', 0));
+        self::assertSame([], $this->state->read('uop_migration_progress_1', []));
+        self::assertSame('critical', Installer::health()['status']);
+        Installer::runner()->run();
+        $this->inspector->verify_all();
+        self::assertSame('good', Installer::health()['status']);
+    }
+
+    public function test_two_transaction_managers_share_physical_connection_ownership(): void {
+        global $wpdb;
+        $this->runner()->run();
+        foreach ([$this->db, new WpdbConnection($wpdb)] as $connection) {
+            $outer = new TransactionManager($this->db, static function(){}, static function(){});
+            $inner = new TransactionManager($connection, static function(){}, static function(){});
+            $entered = false;
+            try {
+                $outer->run(function() use ($inner, &$entered) {
+                    $this->seed_org('outer-rollback');
+                    $inner->run(function() use (&$entered) { $entered=true; $this->seed_org('inner-rollback'); });
+                    throw new RuntimeException('Outer failure');
+                });
+                self::fail('Nested transaction accepted');
+            } catch (\LogicException $error) { self::assertStringContainsString('Nested', $error->getMessage()); }
+            self::assertFalse($entered);
+            self::assertSame([], $this->db->rows('SELECT id FROM %i WHERE slug IN (%s,%s)', [$this->prefix.'organizations','outer-rollback','inner-rollback']));
+            self::assertSame(42, $inner->run(static fn()=>42));
+        }
+    }
+
+    public function test_activation_recovery_and_health_reject_drift_at_current_version(): void {
+        $this->runner()->run();
+        $this->db->execute('ALTER TABLE %i DROP INDEX uq_org_wp_user', [$this->prefix.'persons']);
+        self::assertSame('critical', Installer::health()['status']);
+        $handler = static fn()=>static function($message){ throw new RuntimeException($message); };
+        add_filter('wp_die_handler',$handler);
+        try {
+            try { Bootstrap::activate(); self::fail('Activation accepted drift'); }
+            catch (RuntimeException $error) { self::assertStringContainsString('migration failed', $error->getMessage()); }
+        } finally { remove_filter('wp_die_handler',$handler); }
+        self::assertSame(1,(int)$this->state->read('uop_db_version'));
+        self::assertSame('failed',$this->state->read('uop_migration_status')['status']);
+        self::assertSame('critical', Installer::health()['status']);
+        self::assertStringNotContainsString('ALTER TABLE', Installer::health()['description']);
+        try { Installer::runner()->run(); self::fail('Recovery accepted drift'); }
+        catch (RuntimeException $error) { self::assertSame('Schema column or index drift.', $error->getMessage()); }
+        $this->db->execute('ALTER TABLE %i ADD UNIQUE KEY uq_org_wp_user (organization_id, wp_user_id)', [$this->prefix.'persons']);
+        Installer::runner()->run();
+        self::assertSame('good', Installer::health()['status']);
     }
 }

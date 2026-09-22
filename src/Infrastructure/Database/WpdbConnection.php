@@ -17,6 +17,18 @@ final class WpdbConnection implements Connection {
 	 */
 	private int $session_id;
 	/**
+	 * Internal coordination state.
+	 *
+	 * @var object Stable physical connection identity.
+	 */
+	private object $identity;
+	/**
+	 * Prevent recursive fencing of the lock ownership query.
+	 *
+	 * @var bool
+	 */
+	private bool $checking_schema = false;
+	/**
 	 * Bind a WordPress connection.
 	 *
 	 * @param wpdb $wpdb WordPress database.
@@ -24,6 +36,69 @@ final class WpdbConnection implements Connection {
 	public function __construct( private wpdb $wpdb ) {
 		$handle           = $wpdb->__get( 'dbh' );
 		$this->session_id = $handle instanceof \mysqli ? $handle->thread_id : 0;
+		$this->identity   = $handle instanceof \mysqli ? $handle : $wpdb;
+	}
+
+	/**
+	 * Share transaction ownership across adapter instances.
+	 *
+	 * @return object
+	 */
+	public function identity(): object {
+		return $this->identity;
+	}
+
+	/**
+	 * Fence every dbDelta query on the original session and lock owner.
+	 *
+	 * @param string $ddl Frozen, validated CREATE TABLE definition.
+	 * @param string $lock_name Required advisory lock.
+	 * @throws DatabaseException On lock loss or SQL failure.
+	 */
+	public function apply_schema( string $ddl, string $lock_name ): void {
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		$driver  = new \mysqli_driver(); // phpcs:ignore WordPress.DB.RestrictedFunctions -- Inspect and restore driver error mode; queries still use wpdb.
+		$mode    = $driver->report_mode;
+		$retries = $this->wpdb->__get( 'reconnect_retries' );
+		$prior   = $this->wpdb->suppress_errors( true );
+		$fence   = function ( string $query ) use ( $lock_name ): string {
+			if ( ! $this->checking_schema ) {
+				$this->checking_schema = true;
+				try {
+					$owner = $this->rows( 'SELECT IS_USED_LOCK(%s) AS owner', array( $lock_name ) );
+					if ( (int) ( $owner[0]['owner'] ?? 0 ) !== $this->session_id ) {
+						throw new DatabaseException( 'Migration lock lost.' );
+					}
+				} finally {
+					$this->checking_schema = false;
+				}
+			}
+			return $query;
+		};
+		$this->wpdb->__set( 'reconnect_retries', 0 );
+		// Strict driver errors abort before wpdb can reconnect or terminate the request.
+		mysqli_report( MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT ); // phpcs:ignore WordPress.DB.RestrictedFunctions -- Preserve the locked physical session during WordPress's dbDelta queries.
+		add_filter( 'query', $fence, PHP_INT_MAX );
+		try {
+			try {
+				dbDelta( $ddl );
+			} catch ( \mysqli_sql_exception $error ) {
+				// dbDelta probes a missing table with DESCRIBE. Only this expected error
+				// permits the original CREATE; it still passes through the lock fence.
+				preg_match( '/^CREATE TABLE ([a-zA-Z0-9_]+) /', $ddl, $table );
+				if ( 1146 !== $error->getCode() || ! isset( $table[1] ) || 'DESCRIBE ' . $table[1] . ';' !== $this->wpdb->last_query ) {
+					throw new DatabaseException( 'Schema operation failed.', $error->getCode() );
+				}
+				$this->execute( $ddl );
+			}
+		} catch ( \mysqli_sql_exception $error ) {
+			throw new DatabaseException( 'Schema operation failed.', (int) $error->getCode() );
+		} finally {
+			remove_filter( 'query', $fence, PHP_INT_MAX );
+			mysqli_report( $mode ); // phpcs:ignore WordPress.DB.RestrictedFunctions -- Restore caller driver mode.
+			$this->wpdb->__set( 'reconnect_retries', $retries );
+			$this->wpdb->suppress_errors( $prior );
+		}
 	}
 
 	/**
