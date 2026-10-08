@@ -116,5 +116,36 @@ final class M3PersistenceTest extends TestCase {
         self::assertSame('2026-10-25 02:30:00',$row[0]['end_at']);
         self::assertSame('Europe/Berlin',$row[0]['timezone']);
         self::assertNull($s['events']->find(new OrgScope($this->scope->id+99),$post_id));
+        // A user who passes the application's manager policy still must have
+        // WordPress edit_post authority over this particular editorial event.
+        $stranger = wp_create_user('uop_occ_view_' . bin2hex(random_bytes(4)), wp_generate_password(32), 'occ_' . bin2hex(random_bytes(4)) . '@example.invalid');
+        self::assertIsInt($stranger);
+        $stranger_actor = new Actor($stranger);
+        $policy = new PolicyService(
+            $s['people'],
+            new DelegationRepository($this->db,$this->prefix),
+            new AssignmentRepository($this->db,$this->prefix),
+            static fn(int $user_id, string $cap): bool => true
+        );
+        $tx = new TransactionManager($this->db, static function(int $n): void {}, static function(\Throwable $e): void {});
+        $guarded_event = new EventService(
+            $s['events'],
+            new OccurrenceRepository($this->db,$this->prefix),
+            $policy,
+            $tx,
+            new AuditWriter($this->db,$this->prefix),
+            new OutboxRepository($this->db,$this->prefix)
+        );
+        self::assertFalse(user_can($stranger, 'edit_post', $post_id));
+        $before = $this->db->rows('SELECT id FROM %i WHERE event_post_id = %d', [$this->prefix.'event_occurrences',$post_id]);
+        try {
+            $guarded_event->add_occurrence($stranger_actor,$this->scope,$post_id,$window,'2030-01-01 10:00:00',CorrelationId::generate());
+            self::fail('WordPress post permission was not enforced');
+        } catch (RuntimeException $e) {
+            self::assertStringContainsString('outside authorized', $e->getMessage());
+        }
+        $after = $this->db->rows('SELECT id FROM %i WHERE event_post_id = %d', [$this->prefix.'event_occurrences',$post_id]);
+        self::assertCount(count($before), $after);
+
     }
 }
