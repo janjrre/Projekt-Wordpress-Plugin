@@ -94,9 +94,9 @@ final class FieldRules {
 			if ( ! is_array( $value ) || count( $value ) > 100 || count( $value ) !== count( array_unique( $value, SORT_REGULAR ) ) ) {
 				throw new InvalidArgumentException( 'Invalid multiselect values.' );
 			}
-			$result = array();
+			$result     = array();
 			foreach ( array_values( $value ) as $ordinal => $item ) {
-				$normalized = self::normalize( 'select', $item, $choices );
+				$normalized   = self::normalize( 'select', $item, $choices );
 				$result[] = array(
 					'slot'    => 'value_string',
 					'value'   => $normalized[0]['value'],

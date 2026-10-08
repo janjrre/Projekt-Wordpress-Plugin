@@ -71,7 +71,7 @@ final class ProfileService {
 				if ( ! $row ) {
 					throw new RuntimeException( 'Profile field could not be loaded.' );
 				}
-				$event  = PublicId::generate();
+				$event = PublicId::generate();
 				$this->audit->append( $scope, $actor, 'profile.field_created', $object, 'success', $correlation, $event );
 				$this->outbox->append( $scope, $event, 'person', (int) $row['id'], 'profile.field_created', $correlation, array( 'public_id' => $uuid->to_string() ) );
 			}
@@ -105,7 +105,7 @@ final class ProfileService {
 					throw new RuntimeException( 'Profile field edit denied.' );
 				}
 				$settings = json_decode( (string) $field['settings_json'], true, 32, JSON_THROW_ON_ERROR );
-				$values = FieldRules::normalize( (string) $field['data_type'], $input, $settings['options'] ?? array() );
+				$values   = FieldRules::normalize( (string) $field['data_type'], $input, $settings['options'] ?? array() );
 				$this->values->replace( $scope, (int) $person['id'], (int) $field['id'], $values, $utc_now );
 				$event = PublicId::generate();
 				$this->audit->append( $scope, $actor, 'profile.value_changed', $object, 'success', $correlation, $event );

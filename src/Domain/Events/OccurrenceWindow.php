@@ -70,7 +70,7 @@ final readonly class OccurrenceWindow {
 			throw new InvalidArgumentException( 'An IANA zone and explicit local offset are required.' );
 		}
 		try {
-			$utc = $this->as_utc( $input );
+			$utc   = $this->as_utc( $input );
 			$local = $utc->setTimezone( new DateTimeZone( $zone ) );
 		} catch ( \Exception ) {
 			throw new InvalidArgumentException( 'Invalid event instant.' );
