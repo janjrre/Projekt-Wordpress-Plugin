@@ -61,7 +61,7 @@ final class WaitlistRepository {
 	 */
 	public function lock_bucket( OrgScope $scope, int $id ): ?array {
 		$rows = $this->db->rows(
-			'SELECT id, event_post_id, occurrence_id, capacity, status FROM %i WHERE organization_id = %d AND id = %d LIMIT 1 FOR UPDATE',
+			'SELECT id, event_post_id, occurrence_id, eligibility_json, capacity, status FROM %i WHERE organization_id = %d AND id = %d LIMIT 1 FOR UPDATE',
 			array( $this->prefix . 'capacity_buckets', $scope->id, $id )
 		);
 		return $rows[0] ?? null;
@@ -76,7 +76,7 @@ final class WaitlistRepository {
 	 */
 	public function next_waiter( OrgScope $scope, int $bucket ): ?array {
 		$rows = $this->db->rows(
-			"SELECT w.id, w.registration_id, r.public_id AS registration_public_id FROM %i w INNER JOIN %i r ON r.id = w.registration_id AND r.organization_id = w.organization_id WHERE w.organization_id = %d AND w.bucket_id = %d AND w.status = 'waiting' AND r.status = 'waitlisted' ORDER BY w.priority DESC, w.joined_at ASC, w.id ASC LIMIT 1",
+			"SELECT w.id, w.registration_id, r.public_id AS registration_public_id FROM %i w INNER JOIN %i r ON r.id = w.registration_id AND r.organization_id = w.organization_id WHERE w.organization_id = %d AND w.bucket_id = %d AND w.status = 'waiting' AND r.status = 'waitlisted' ORDER BY w.priority DESC, w.joined_at ASC, w.id ASC LIMIT 1 FOR UPDATE",
 			array( $this->prefix . 'waitlist_entries', $this->prefix . 'registrations', $scope->id, $bucket )
 		);
 		return $rows[0] ?? null;

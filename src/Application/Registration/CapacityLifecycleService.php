@@ -119,40 +119,120 @@ final class CapacityLifecycleService {
 				if ( ! $bucket ) {
 					throw new RuntimeException( 'Offer bucket unavailable.' );
 				}
-				$event = new PolicyObject( $scope->id, 'event', (int) $bucket['event_post_id'], null, (int) $bucket['event_post_id'] );
-				if ( ! $this->policy->can( $actor, 'capacity.manage', $event )->allowed
-					|| ! user_can( $actor->user_id, 'edit_post', (int) $bucket['event_post_id'] ) ) {
-					throw new RuntimeException( 'Offer creation is not authorized.' );
-				}
-				if ( 0 !== (int) $bucket['occurrence_id'] || null !== $bucket['eligibility_json'] ) {
-					throw new RuntimeException( 'This bucket requires another eligibility strategy.' );
-				}
-				if ( $this->capacity->occupied( $scope, (int) $bucket['id'] ) >= (int) $bucket['capacity'] ) {
-					return null;
-				}
-				$waiting = $this->queue->next_waiter( $scope, (int) $bucket['id'] );
-				if ( ! $waiting ) {
-					return null;
-				}
-				$row = $this->queue->registration( $scope, (int) $waiting['registration_id'] );
-				if ( ! $row || 'waitlisted' !== $row['status'] || (int) $row['event_post_id'] !== (int) $bucket['event_post_id'] ) {
-					throw new RuntimeException( 'FIFO queue state changed.' );
-				}
-				if ( $this->capacity->requires_verification( $scope, (int) $bucket['event_post_id'] ) && null === $row['email_verified_at'] ) {
-					throw new RuntimeException( 'Queue head requires verification.' );
-				}
-				$this->states->assert_transition( 'waitlisted', 'offered' );
-				$token   = bin2hex( random_bytes( 32 ) );
-				$offer   = PublicId::generate();
-				$expires = gmdate( 'Y-m-d H:i:s', strtotime( $utc_now . ' UTC +48 hours' ) );
-				$this->queue->hold( $scope, (int) $bucket['id'], (int) $waiting['id'], (int) $row['id'], $offer, hash( 'sha256', $token, true ), $utc_now, $expires );
-				$this->queue->transition( $scope, (int) $row['id'], 'waitlisted', 'offered', $command, $actor->user_id, $utc_now, $correlation );
-				$this->record( $scope, $actor, $this->resource( $scope, $row ), 'registration.offered', PublicId::from_binary( $row['public_id'] ), 'offered', $correlation );
-				return array(
-					'public_id' => $offer->to_string(),
-					'token'     => $token,
-				);
+				$this->assert_capacity_manager( $actor, $scope, (int) $bucket['event_post_id'] );
+				return $this->offer_under_bucket_lock( $actor, $scope, $bucket, $command, $utc_now, $correlation );
 			}
+		);
+	}
+
+	/**
+	 * Atomically release a manager-cancelled seat and reserve it for the queue.
+	 *
+	 * The plaintext token is returned only to an authorized capacity manager
+	 * for private recipient delivery. It is not placed in audit or outbox.
+	 * Self-service cancellation intentionally uses cancel() without returning
+	 * a different participant's bearer secret; the M5 delivery adapter must
+	 * connect that pathway before automatic self-service promotion is enabled.
+	 *
+	 * @param Actor         $actor        Authorized capacity manager.
+	 * @param OrgScope      $scope        Trusted organization.
+	 * @param PublicId      $registration Registration being cancelled.
+	 * @param PublicId      $command      Stable cancellation command identity.
+	 * @param string        $utc_now      UTC cancellation instant.
+	 * @param CorrelationId $correlation  Request correlation.
+	 * @return array{public_id:string,token:string}|null Private offer, or none.
+	 */
+	public function cancel_and_offer_next( Actor $actor, OrgScope $scope, PublicId $registration, PublicId $command, string $utc_now, CorrelationId $correlation ): ?array {
+		$bucket_id = $this->queue->bucket_for_registration( $scope, $registration );
+		if ( null === $bucket_id ) {
+			throw new RuntimeException( 'Registration has no capacity allocation.' );
+		}
+		return $this->tx->run(
+			function () use ( $actor, $scope, $registration, $command, $utc_now, $correlation, $bucket_id ): ?array {
+				$bucket = $this->queue->lock_bucket( $scope, $bucket_id );
+				if ( ! $bucket ) {
+					throw new RuntimeException( 'Capacity bucket unavailable.' );
+				}
+				$this->assert_capacity_manager( $actor, $scope, (int) $bucket['event_post_id'] );
+				$row = $this->registration_from_public( $scope, $registration, $bucket_id );
+				$domain_object = $this->resource( $scope, $row );
+				if ( ! $this->policy->can( $actor, 'registration.cancel', $domain_object )->allowed ) {
+					throw new RuntimeException( 'Registration cancellation is denied.' );
+				}
+				if ( 'cancelled' === $row['status'] ) {
+					// Repeated command never creates another seat reservation.
+					return null;
+				}
+				if ( ! in_array( $row['status'], array( 'accepted', 'waitlisted', 'offered' ), true ) ) {
+					throw new RuntimeException( 'Registration is not in an allocated state.' );
+				}
+				$this->states->assert_transition( (string) $row['status'], 'cancelled' );
+				$this->queue->release( $scope, (int) $row['id'], $bucket_id, $utc_now );
+				$this->queue->transition( $scope, (int) $row['id'], (string) $row['status'], 'cancelled', $command, $actor->user_id, $utc_now, $correlation );
+				$this->record( $scope, $actor, $domain_object, 'registration.cancelled', $registration, 'cancelled', $correlation );
+				return $this->offer_under_bucket_lock( $actor, $scope, $bucket, PublicId::generate(), $utc_now, $correlation );
+			}
+		);
+	}
+
+	/**
+	 * Ensure only an event-capable manager may receive another person's offer.
+	 *
+	 * @param Actor    $actor      Current acting manager.
+	 * @param OrgScope $scope      Trusted organization.
+	 * @param int      $event_post Event WordPress post ID.
+	 */
+	private function assert_capacity_manager( Actor $actor, OrgScope $scope, int $event_post ): void {
+		$event = new PolicyObject( $scope->id, 'event', $event_post, null, $event_post );
+		if ( ! $this->policy->can( $actor, 'capacity.manage', $event )->allowed
+			|| ! user_can( $actor->user_id, 'edit_post', $event_post ) ) {
+			throw new RuntimeException( 'Capacity management is not authorized.' );
+		}
+	}
+
+	/**
+	 * Reserve a free seat for the first waiting registration inside the lock.
+	 *
+	 * @param Actor                $actor       Authorized capacity manager.
+	 * @param OrgScope             $scope       Trusted organization.
+	 * @param array<string, mixed> $bucket      Already locked capacity bucket.
+	 * @param PublicId             $command     Unique transition command.
+	 * @param string               $utc_now     UTC offer instant.
+	 * @param CorrelationId        $correlation Request trace.
+	 * @return array{public_id:string,token:string}|null Private offer or none.
+	 */
+	private function offer_under_bucket_lock( Actor $actor, OrgScope $scope, array $bucket, PublicId $command, string $utc_now, CorrelationId $correlation ): ?array {
+		$post = get_post( (int) $bucket['event_post_id'] );
+		if ( 'active' !== ( $bucket['status'] ?? 'active' ) || ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status ) {
+			return null;
+		}
+		if ( 0 !== (int) $bucket['occurrence_id'] || null !== $bucket['eligibility_json'] ) {
+			throw new RuntimeException( 'This bucket requires another eligibility strategy.' );
+		}
+		if ( $this->capacity->occupied( $scope, (int) $bucket['id'] ) >= (int) $bucket['capacity'] ) {
+			return null;
+		}
+		$waiting = $this->queue->next_waiter( $scope, (int) $bucket['id'] );
+		if ( ! $waiting ) {
+			return null;
+		}
+		$row = $this->queue->registration( $scope, (int) $waiting['registration_id'] );
+		if ( ! $row || 'waitlisted' !== $row['status'] || (int) $row['event_post_id'] !== (int) $bucket['event_post_id'] ) {
+			throw new RuntimeException( 'FIFO queue state changed.' );
+		}
+		if ( $this->capacity->requires_verification( $scope, (int) $bucket['event_post_id'] ) && null === $row['email_verified_at'] ) {
+			throw new RuntimeException( 'Queue head requires verification.' );
+		}
+		$this->states->assert_transition( 'waitlisted', 'offered' );
+		$token   = bin2hex( random_bytes( 32 ) );
+		$offer   = PublicId::generate();
+		$expires = gmdate( 'Y-m-d H:i:s', strtotime( $utc_now . ' UTC +48 hours' ) );
+		$this->queue->hold( $scope, (int) $bucket['id'], (int) $waiting['id'], (int) $row['id'], $offer, hash( 'sha256', $token, true ), $utc_now, $expires );
+		$this->queue->transition( $scope, (int) $row['id'], 'waitlisted', 'offered', $command, $actor->user_id, $utc_now, $correlation );
+		$this->record( $scope, $actor, $this->resource( $scope, $row ), 'registration.offered', PublicId::from_binary( $row['public_id'] ), 'offered', $correlation );
+		return array(
+			'public_id' => $offer->to_string(),
+			'token'     => $token,
 		);
 	}
 
