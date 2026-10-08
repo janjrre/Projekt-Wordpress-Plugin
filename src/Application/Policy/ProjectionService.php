@@ -4,21 +4,33 @@
  *
  * @package UOP
  */
+
 namespace UOP\Application\Policy;
 
 use UOP\Core\PublicId;
 
 /** Reject object access before any value is serialized or rendered. */
 final class ProjectionService {
+	/**
+	 * Initialize required dependencies and validated values.
+	 *
+	 * @param PolicyService $policy policy input.
+	 */
 	public function __construct( private PolicyService $policy ) {}
 
 	/**
-	 * @param array<string, FieldDefinition> $definitions Trusted published field metadata.
-	 * @param array<string, mixed> $values Raw internal values, never returned wholesale.
+	 * Filter all fields using one authoritative projection boundary.
+	 *
+	 * @param Actor $actor actor input.
+	 * @param string $action action input.
+	 * @param Resource $object object input.
+	 * @param PublicId $public_id public id input.
+	 * @param array $definitions definitions input.
+	 * @param array $values values input.
 	 * @return array<string, mixed>|null Null is a hidden object.
 	 */
-	public function project( Actor $actor, string $action, Resource $resource, PublicId $public_id, array $definitions, array $values ): ?array {
-		if ( ! $this->policy->can( $actor, $action, $resource )->allowed ) {
+	public function project( Actor $actor, string $action, Resource $object, PublicId $public_id, array $definitions, array $values ): ?array {
+		if ( ! $this->policy->can( $actor, $action, $object )->allowed ) {
 			return null;
 		}
 		$visible = array();
@@ -26,10 +38,13 @@ final class ProjectionService {
 			if ( ! $definition instanceof FieldDefinition || $key !== $definition->key || ! array_key_exists( $key, $values ) ) {
 				continue;
 			}
-			if ( $this->policy->can( $actor, $action, $resource, $definition )->allowed ) {
+			if ( $this->policy->can( $actor, $action, $object, $definition )->allowed ) {
 				$visible[ $key ] = $values[ $key ];
 			}
 		}
-		return array( 'public_id' => $public_id->to_string(), 'fields' => $visible );
+		return array(
+			'public_id' => $public_id->to_string(),
+			'fields'    => $visible,
+		);
 	}
 }

@@ -4,18 +4,32 @@
  *
  * @package UOP
  */
+
 namespace UOP\Infrastructure\Database;
 
 use InvalidArgumentException;
 use UOP\Core\PublicId;
 use UOP\Domain\Organization\OrgScope;
 
+/** Validated organization-owned service. */
 final class DelegationRepository {
+	/**
+	 * Initialize required dependencies and validated values.
+	 *
+	 * @param Connection $db db input.
+	 * @param string $prefix prefix input.
+	 */
 	public function __construct( private Connection $db, private string $prefix ) {}
 
 	/**
-	 * Resolve active delegated permission from the database on every decision.
-	 * An organization-wide grant has scope organization/0; event grants are narrow.
+	 * Evaluate the live delegation scope and expiry.
+	 *
+	 * @param OrgScope $scope scope input.
+	 * @param int $actor_id actor id input.
+	 * @param int $subject_id subject id input.
+	 * @param string $permission permission input.
+	 * @param int $event_id event id input.
+	 * @return bool
 	 */
 	public function allows( OrgScope $scope, int $actor_id, int $subject_id, string $permission, int $event_id = 0 ): bool {
 		if ( $actor_id < 1 || $subject_id < 1 ) {
@@ -28,7 +42,13 @@ final class DelegationRepository {
 		return ! empty( $rows );
 	}
 
-	/** @return list<array<string, mixed>> */
+	/**
+	 * List current delegations for a trusted actor.
+	 *
+	 * @param OrgScope $scope scope input.
+	 * @param int $actor_id actor id input.
+	 * @return list<array<string, mixed>>
+	 */
 	public function for_actor( OrgScope $scope, int $actor_id ): array {
 		return $this->db->rows(
 			"SELECT id, public_id, subject_person_id, permission_set, scope_type, scope_id FROM %i WHERE organization_id = %d AND actor_user_id = %d AND status = 'active' AND (valid_from IS NULL OR valid_from <= UTC_TIMESTAMP()) AND (valid_to IS NULL OR valid_to > UTC_TIMESTAMP()) ORDER BY id ASC LIMIT 100",
@@ -36,7 +56,20 @@ final class DelegationRepository {
 		);
 	}
 
-	/** Grant uses the unique business key; a revoked grant can be explicitly renewed. */
+	/**
+	 * Create or explicitly reactivate a validated delegation.
+	 *
+	 * @param OrgScope $scope scope input.
+	 * @param PublicId $id id input.
+	 * @param int $actor_id actor id input.
+	 * @param int $subject_id subject id input.
+	 * @param string $permission permission input.
+	 * @param string $scope_type scope type input.
+	 * @param int $scope_id scope id input.
+	 * @param int|null $relationship_id relationship id input.
+	 * @param string $utc_now utc now input.
+	 * @throws \InvalidArgumentException When input violates invariants.
+	 */
 	public function grant( OrgScope $scope, PublicId $id, int $actor_id, int $subject_id, string $permission, string $scope_type, int $scope_id, ?int $relationship_id, string $utc_now ): void {
 		if ( $actor_id < 1 || $subject_id < 1 || ! in_array( $permission, array( 'registration_manage', 'profile_view', 'profile_edit' ), true ) || ! in_array( $scope_type, array( 'organization', 'event' ), true ) || ( 'organization' === $scope_type && 0 !== $scope_id ) || ( 'event' === $scope_type && $scope_id < 1 ) ) {
 			throw new InvalidArgumentException( 'Invalid delegation grant.' );
@@ -54,7 +87,14 @@ final class DelegationRepository {
 		);
 	}
 
-	/** Immediately revoke all grants issued to a removed WordPress user. */
+	/**
+	 * Revoke an actor's live grants within an organization.
+	 *
+	 * @param OrgScope $scope scope input.
+	 * @param int $actor_id actor id input.
+	 * @param string $utc_now utc now input.
+	 * @return int
+	 */
 	public function revoke_for_actor( OrgScope $scope, int $actor_id, string $utc_now ): int {
 		return $this->db->execute(
 			"UPDATE %i SET status = 'revoked', revoked_at = %s WHERE organization_id = %d AND actor_user_id = %d AND status = 'active'",
@@ -62,6 +102,14 @@ final class DelegationRepository {
 		);
 	}
 
+	/**
+	 * Revoke one grant within the trusted organization.
+	 *
+	 * @param OrgScope $scope scope input.
+	 * @param PublicId $id id input.
+	 * @param string $utc_now utc now input.
+	 * @return bool
+	 */
 	public function revoke( OrgScope $scope, PublicId $id, string $utc_now ): bool {
 		return 1 === $this->db->execute(
 			"UPDATE %i SET status = 'revoked', revoked_at = %s WHERE organization_id = %d AND public_id = %s AND status = 'active'",

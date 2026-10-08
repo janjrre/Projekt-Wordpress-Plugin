@@ -4,23 +4,42 @@
  *
  * @package UOP
  */
+
 namespace UOP\Application\Policy;
 
 /** Role names are provisioning conveniences, never authorization predicates. */
 final class CapabilityRegistry {
-	/** @return list<string> */
+	/**
+	 * List primitive WordPress capabilities supported by UOP.
+	 *
+	 * @return list<string>
+	 */
 	public static function all(): array {
 		return array(
-			'uop_manage_settings', 'uop_manage_organization', 'uop_view_people',
-			'uop_edit_people', 'uop_manage_delegations', 'uop_manage_events',
-			'uop_manage_forms', 'uop_view_registrations', 'uop_review_registrations',
-			'uop_manage_capacity', 'uop_send_communications', 'uop_export_data',
-			'uop_view_sensitive_data', 'uop_edit_sensitive_data',
-			'uop_manage_privacy', 'uop_view_audit',
+			'uop_manage_settings',
+			'uop_manage_organization',
+			'uop_view_people',
+			'uop_edit_people',
+			'uop_manage_delegations',
+			'uop_manage_events',
+			'uop_manage_forms',
+			'uop_view_registrations',
+			'uop_review_registrations',
+			'uop_manage_capacity',
+			'uop_send_communications',
+			'uop_export_data',
+			'uop_view_sensitive_data',
+			'uop_edit_sensitive_data',
+			'uop_manage_privacy',
+			'uop_view_audit',
 		);
 	}
 
-	/** @return array<string, list<string>> */
+	/**
+	 * Define default capability bundles for provisioning.
+	 *
+	 * @return array<string, list<string>>
+	 */
 	public static function roles(): array {
 		return array(
 			'org_manager'   => array_values( array_diff( self::all(), array( 'uop_manage_settings' ) ) ),
@@ -31,7 +50,10 @@ final class CapabilityRegistry {
 		);
 	}
 
-	/** Install once per site or repair an incomplete upgrade. */
+	/**
+	 * Install WordPress capability bundles once per site.
+	 *
+	 */
 	public static function install(): void {
 		if ( 1 === (int) get_option( 'uop_caps_version', 0 ) ) {
 			return;

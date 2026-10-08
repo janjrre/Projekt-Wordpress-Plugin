@@ -4,12 +4,24 @@
  *
  * @package UOP
  */
+
 namespace UOP\Application\Policy;
 
 use InvalidArgumentException;
 
 /** Not a client-supplied authorization claim. */
 final readonly class Resource {
+	/**
+	 * Initialize required dependencies and validated values.
+	 *
+	 * @param int $organization_id organization id input.
+	 * @param string $type type input.
+	 * @param int $id id input.
+	 * @param int|null $subject_person_id subject person id input.
+	 * @param int|null $event_post_id event post id input.
+	 * @param bool $archived archived input.
+	 * @throws \InvalidArgumentException When input violates invariants.
+	 */
 	public function __construct(
 		public int $organization_id,
 		public string $type,

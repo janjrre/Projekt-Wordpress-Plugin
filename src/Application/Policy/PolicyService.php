@@ -4,6 +4,7 @@
  *
  * @package UOP
  */
+
 namespace UOP\Application\Policy;
 
 use Closure;
@@ -17,6 +18,14 @@ final class PolicyService {
 	/** @var Closure(int,string): bool */
 	private Closure $has_capability;
 
+	/**
+	 * Initialize required dependencies and validated values.
+	 *
+	 * @param PersonRepository $people people input.
+	 * @param DelegationRepository $delegations delegations input.
+	 * @param AssignmentRepository $assignments assignments input.
+	 * @param callable $has_capability has capability input.
+	 */
 	public function __construct(
 		private PersonRepository $people,
 		private DelegationRepository $delegations,
@@ -26,20 +35,24 @@ final class PolicyService {
 		$this->has_capability = Closure::fromCallable( $has_capability );
 	}
 
-	/** @return array<string, string> */
+	/**
+	 * Map application actions to required primitive capabilities.
+	 *
+	 * @return array<string, string>
+	 */
 	private static function capabilities(): array {
 		return array(
-			'person.create'        => 'uop_edit_people',
-			'person.view'          => 'uop_view_people',
-			'person.edit'          => 'uop_edit_people',
-			'person.link'          => 'uop_manage_organization',
-			'delegation.manage'    => 'uop_manage_delegations',
-			'event.manage'         => 'uop_manage_events',
-			'form.manage'          => 'uop_manage_forms',
-			'registration.create'  => 'uop_view_registrations',
-			'registration.view'    => 'uop_view_registrations',
-			'registration.cancel'  => 'uop_view_registrations',
-			'registration.review'  => 'uop_review_registrations',
+			'person.create'       => 'uop_edit_people',
+			'person.view'         => 'uop_view_people',
+			'person.edit'         => 'uop_edit_people',
+			'person.link'         => 'uop_manage_organization',
+			'delegation.manage'   => 'uop_manage_delegations',
+			'event.manage'        => 'uop_manage_events',
+			'form.manage'         => 'uop_manage_forms',
+			'registration.create' => 'uop_view_registrations',
+			'registration.view'   => 'uop_view_registrations',
+			'registration.cancel' => 'uop_view_registrations',
+			'registration.review' => 'uop_review_registrations',
 			'capacity.manage'     => 'uop_manage_capacity',
 			'communication.send'  => 'uop_send_communications',
 			'export.create'       => 'uop_export_data',
@@ -48,8 +61,16 @@ final class PolicyService {
 		);
 	}
 
-	/** Unknown actions, organizations, objects and sensitivity levels deny by default. */
-	public function can( Actor $actor, string $action, Resource $resource, ?FieldDefinition $field = null ): Decision {
+	/**
+	 * Check actor, object and optional field permissions without caching.
+	 *
+	 * @param Actor $actor actor input.
+	 * @param string $action action input.
+	 * @param Resource $object object input.
+	 * @param ?FieldDefinition $field field input.
+	 * @return Decision
+	 */
+	public function can( Actor $actor, string $action, Resource $object, ?FieldDefinition $field = null ): Decision {
 		$capabilities = self::capabilities();
 		if ( ! isset( $capabilities[ $action ] ) ) {
 			return Decision::deny( 'DENY_CAPABILITY' );
@@ -57,12 +78,12 @@ final class PolicyService {
 		if ( $actor->user_id < 1 ) {
 			return Decision::deny( 'DENY_UNAUTHENTICATED' );
 		}
-		if ( $resource->archived ) {
+		if ( $object->archived ) {
 			return Decision::deny( 'DENY_ARCHIVED' );
 		}
-		$scope = new OrgScope( $resource->organization_id );
-		$subject_id = $resource->subject_person_id ?? ( 'person' === $resource->type ? $resource->id : null );
-		$event_id   = $resource->event_post_id ?? ( 'event' === $resource->type ? $resource->id : 0 );
+		$scope      = new OrgScope( $object->organization_id );
+		$subject_id = $object->subject_person_id ?? ( 'person' === $object->type ? $object->id : null );
+		$event_id   = $object->event_post_id ?? ( 'event' === $object->type ? $object->id : 0 );
 		$manager    = ( $this->has_capability )( $actor->user_id, 'uop_manage_settings' );
 		$mode       = '';
 		$ceiling    = null;
@@ -132,6 +153,12 @@ final class PolicyService {
 		return Decision::allow( 'self' === $mode ? 'ALLOW_SELF' : ( 'delegate' === $mode ? 'ALLOW_DELEGATION' : 'ALLOW_ORG_ASSIGNMENT' ) );
 	}
 
+	/**
+	 * Map a known sensitivity label to its authorization rank.
+	 *
+	 * @param string $sensitivity sensitivity input.
+	 * @return int
+	 */
 	private static function level( string $sensitivity ): int {
 		$levels = array( 'public', 'internal', 'personal', 'sensitive', 'medical' );
 		$level  = array_search( $sensitivity, $levels, true );
