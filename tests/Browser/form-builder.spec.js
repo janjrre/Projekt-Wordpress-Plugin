@@ -17,8 +17,17 @@ test('form builder supports accessible keyboard reorder, saving and immutable pu
   if (await activate.isVisible()) await activate.click();
   await page.goto('/wp-admin/admin.php?page=uop-forms');
   await expect(page.getByRole('heading', { name: 'UOP Form Builder' })).toBeVisible();
+  const keyInput = page.getByLabel('Form key');
+  // On slower CI WordPress may paint the admin shell before wp-element mounts.
+  // Reload once if the JS editor did not initialize; persistent mount failures still fail.
+  try {
+    await expect(keyInput).toBeVisible({ timeout: 8000 });
+  } catch {
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(keyInput).toBeVisible({ timeout: 10000 });
+  }
   const unique = 'builder_' + Date.now();
-  await page.getByLabel('Form key').fill(unique);
+  await keyInput.fill(unique);
   await page.getByLabel('Title').fill('Keyboard Form');
   await page.getByRole('button', { name: 'Create draft' }).click();
   await expect(page.getByRole('heading', { name: 'Keyboard Form' })).toBeVisible();
