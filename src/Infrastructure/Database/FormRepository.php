@@ -144,4 +144,19 @@ final class FormRepository extends ScopedRepository {
 		);
 		return $rows ? PublicId::from_binary( $rows[0]['public_id'] ) : null;
 	}
+	/**
+	 * Resolve the published-version pointer only through the form owner scope.
+	 *
+	 * @param OrgScope $scope Scoped organization.
+	 * @param int      $form_id Internal form ID from a scoped read.
+	 * @return array<string, mixed>|null
+	 */
+	public function current_published( OrgScope $scope, int $form_id ): ?array {
+		$rows = $this->db->rows(
+			'SELECT v.public_id, v.version, v.checksum, v.published_at FROM %i f INNER JOIN %i v ON v.id = f.current_version_id WHERE f.organization_id = %d AND f.id = %d LIMIT 1',
+			array( $this->prefix . 'forms', $this->prefix . 'form_versions', $scope->id, $form_id )
+		);
+		return $rows[0] ?? null;
+	}
+
 }

@@ -50,4 +50,32 @@ final class EventRepository {
 			array( $this->prefix . 'event_settings', $post_id, $uuid->to_binary(), $scope->id, 'active', 'private', $zone, 'manual', 0, $utc_now, $utc_now )
 		);
 	}
+	/**
+	 * Lookup an event by its external public ID, not a client-supplied post key.
+	 *
+	 * @param OrgScope $scope Trusted organization.
+	 * @param PublicId $uuid  External public ID.
+	 * @return array<string, mixed>|null
+	 */
+	public function by_public( OrgScope $scope, PublicId $uuid ): ?array {
+		$rows = $this->db->rows(
+			'SELECT event_post_id, public_id, organization_id, status, visibility, timezone, registration_open_at, registration_close_at, version FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1',
+			array( $this->prefix . 'event_settings', $scope->id, $uuid->to_binary() )
+		);
+		return $rows[0] ?? null;
+	}
+
+	/**
+	 * Enumerate a bounded page of manager-visible organization event settings.
+	 *
+	 * @param OrgScope $scope Trusted organization.
+	 * @return list<array<string, mixed>>
+	 */
+	public function for_organization( OrgScope $scope ): array {
+		return $this->db->rows(
+			'SELECT event_post_id, public_id, status, visibility, timezone FROM %i WHERE organization_id = %d ORDER BY event_post_id ASC LIMIT 100',
+			array( $this->prefix . 'event_settings', $scope->id )
+		);
+	}
+
 }

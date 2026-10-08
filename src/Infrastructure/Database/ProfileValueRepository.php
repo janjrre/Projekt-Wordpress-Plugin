@@ -54,4 +54,18 @@ final class ProfileValueRepository {
 			);
 		}
 	}
+	/**
+	 * Read typed values for a scoped person with organization-bound field joins.
+	 *
+	 * @param OrgScope $scope Trusted organization.
+	 * @param int      $person_id Internal subject ID already scoped in the application.
+	 * @return list<array<string, mixed>>
+	 */
+	public function for_person( OrgScope $scope, int $person_id ): array {
+		return $this->db->rows(
+			"SELECT v.field_id, v.ordinal, v.value_string, v.value_text, v.value_decimal, v.value_date, v.value_boolean FROM %i v INNER JOIN %i f ON f.id = v.field_id INNER JOIN %i p ON p.id = v.person_id WHERE p.organization_id = %d AND f.organization_id = %d AND p.id = %d AND p.status = 'active' AND f.status = 'active' ORDER BY v.field_id, v.ordinal LIMIT 1000",
+			array( $this->prefix . 'profile_values', $this->prefix . 'profile_fields', $this->prefix . 'persons', $scope->id, $scope->id, $person_id )
+		);
+	}
+
 }

@@ -47,4 +47,18 @@ final class OccurrenceRepository extends ScopedRepository {
 			array( $this->prefix . 'event_occurrences', $uuid->to_binary(), $scope->id, $post_id, $window->start_utc(), $window->end_utc(), $window->zone, 'scheduled', $utc_now, $utc_now )
 		);
 	}
+	/**
+	 * List event occurrences only from their owner organization.
+	 *
+	 * @param OrgScope $scope Trusted organization.
+	 * @param int      $event_post_id Trusted event post ID from a scoped read.
+	 * @return list<array<string, mixed>>
+	 */
+	public function for_event( OrgScope $scope, int $event_post_id ): array {
+		return $this->db->rows(
+			'SELECT public_id, start_at, end_at, timezone, status FROM %i WHERE organization_id = %d AND event_post_id = %d ORDER BY start_at ASC, id ASC LIMIT 100',
+			array( $this->prefix . 'event_occurrences', $scope->id, $event_post_id )
+		);
+	}
+
 }
