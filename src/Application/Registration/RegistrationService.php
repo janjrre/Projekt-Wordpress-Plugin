@@ -159,7 +159,10 @@ final class RegistrationService {
 
 				$contact_email = null;
 				foreach ( $schema['fields'] as $field ) {
-					if ( 'email' === $field['type'] && isset( $stored[ $field['key'] ] ) ) {
+										if ( 'email' === $field['type'] && isset( $stored[ $field['key'] ] ) ) {
+						if ( ! is_string( $stored[ $field['key'] ] ) || ! is_email( $stored[ $field['key'] ] ) ) {
+							throw new InvalidArgumentException( 'Invalid contact email.' );
+						}
 						if ( null !== $contact_email && $contact_email !== $stored[ $field['key'] ] ) {
 							throw new InvalidArgumentException( 'One verified contact email is required.' );
 						}
