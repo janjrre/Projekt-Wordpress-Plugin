@@ -21,7 +21,7 @@ final class FormSchema {
 	 * @throws InvalidArgumentException For unknown fields or malformed conditions.
 	 */
 	public function validate_draft( array $schema ): void {
-		if ( array_keys( $schema ) !== array( 'schema_version', 'fields' ) || 1 !== $schema['schema_version']
+		if ( count( $schema ) !== 2 || ! array_key_exists( 'schema_version', $schema ) || ! array_key_exists( 'fields', $schema ) || 1 !== $schema['schema_version']
 			|| ! is_array( $schema['fields'] ) || ! array_is_list( $schema['fields'] )
 			|| ! $schema['fields'] || count( $schema['fields'] ) > 100 ) {
 			throw new InvalidArgumentException( 'Invalid V1 form draft envelope.' );

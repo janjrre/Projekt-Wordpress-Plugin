@@ -26,14 +26,16 @@ final class EventModule implements ModuleInterface {
 	 * @param ServiceContainer $container Kernel service container.
 	 */
 	public function register( ServiceContainer $container ): void {
-		add_action( 'init', static function (): void {
-			register_post_type(
-			'uop_event',
-			array(
-				'labels'          => array(
-					'name'          => __( 'Events', 'uop-core' ),
-					'singular_name' => __( 'Event', 'uop-core' ),
-				),
+		add_action(
+			'init',
+			static function (): void {
+				register_post_type(
+						'uop_event',
+						array(
+							'labels'          => array(
+						'name'          => __( 'Events', 'uop-core' ),
+						'singular_name' => __( 'Event', 'uop-core' ),
+					),
 				'public'          => true,
 				'show_in_rest'    => true,
 				'has_archive'     => false,
@@ -41,7 +43,8 @@ final class EventModule implements ModuleInterface {
 				'capability_type' => 'post',
 				'map_meta_cap'    => true,
 			)
+				);
+			}
 		);
-		} );
 	}
 }

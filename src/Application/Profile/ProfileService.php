@@ -73,7 +73,7 @@ final class ProfileService {
 				}
 				$event = PublicId::generate();
 				$this->audit->append( $scope, $actor, 'profile.field_created', $object, 'success', $correlation, $event );
-				$this->outbox->append( $scope, $event, 'person', (int) $row['id'], 'profile.field_created', $correlation, array( 'public_id' => $uuid->to_string() ) );
+				$this->outbox->append( $scope, $event, 'profile_field', (int) $row['id'], 'profile.field_created', $correlation, array( 'public_id' => $uuid->to_string() ) );
 			}
 		);
 		return $uuid;
