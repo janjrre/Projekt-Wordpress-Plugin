@@ -141,6 +141,7 @@ final class CapacityLifecycleService {
 	 * @param string        $utc_now      UTC cancellation instant.
 	 * @param CorrelationId $correlation  Request correlation.
 	 * @return array{public_id:string,token:string}|null Private offer, or none.
+	 * @throws RuntimeException When cancellation or promotion is not permitted.
 	 */
 	public function cancel_and_offer_next( Actor $actor, OrgScope $scope, PublicId $registration, PublicId $command, string $utc_now, CorrelationId $correlation ): ?array {
 		$bucket_id = $this->queue->bucket_for_registration( $scope, $registration );
@@ -154,7 +155,7 @@ final class CapacityLifecycleService {
 					throw new RuntimeException( 'Capacity bucket unavailable.' );
 				}
 				$this->assert_capacity_manager( $actor, $scope, (int) $bucket['event_post_id'] );
-				$row = $this->registration_from_public( $scope, $registration, $bucket_id );
+				$row           = $this->registration_from_public( $scope, $registration, $bucket_id );
 				$domain_object = $this->resource( $scope, $row );
 				if ( ! $this->policy->can( $actor, 'registration.cancel', $domain_object )->allowed ) {
 					throw new RuntimeException( 'Registration cancellation is denied.' );
@@ -181,6 +182,7 @@ final class CapacityLifecycleService {
 	 * @param Actor    $actor      Current acting manager.
 	 * @param OrgScope $scope      Trusted organization.
 	 * @param int      $event_post Event WordPress post ID.
+	 * @throws RuntimeException When actor is not an event manager.
 	 */
 	private function assert_capacity_manager( Actor $actor, OrgScope $scope, int $event_post ): void {
 		$event = new PolicyObject( $scope->id, 'event', $event_post, null, $event_post );
@@ -200,6 +202,7 @@ final class CapacityLifecycleService {
 	 * @param string               $utc_now     UTC offer instant.
 	 * @param CorrelationId        $correlation Request trace.
 	 * @return array{public_id:string,token:string}|null Private offer or none.
+	 * @throws RuntimeException When verification or eligibility fails.
 	 */
 	private function offer_under_bucket_lock( Actor $actor, OrgScope $scope, array $bucket, PublicId $command, string $utc_now, CorrelationId $correlation ): ?array {
 		$post = get_post( (int) $bucket['event_post_id'] );
