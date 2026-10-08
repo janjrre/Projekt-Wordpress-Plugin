@@ -303,4 +303,72 @@ final class M4RegistrationTest extends TestCase {
 		self::assertNull($owner['wp_user_id'],'A verified email may not silently link a WP user');
 	}
 
+	public function test_manager_cancellation_and_next_offer_share_one_atomic_capacity_boundary(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$first_person,$event,$form,$now]=$this->setup_registration($draft);
+		$people=[$first_person];
+		for ($i=1;$i<3;++$i) {
+			$person=PublicId::generate();
+			$s['people']->create($this->scope,$person,'FIFO Guest '.$i,null,$now);
+			$people[]=$person;
+		}
+		$registrations=[];
+		foreach ($people as $i=>$person) {
+			$registrations[]=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'Guest '.$i],$now,CorrelationId::generate());
+		}
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		foreach ($registrations as $i=>$id) {
+			self::assertSame(0===$i?'accepted':'waitlisted',$s['capacity']->decide($s['actor'],$this->scope,$id,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		}
+		$command=PublicId::generate();
+		$offer=$s['lifecycle']->cancel_and_offer_next($s['actor'],$this->scope,$registrations[0],$command,$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		self::assertSame(64,strlen($offer['token']));
+		self::assertNull($s['lifecycle']->cancel_and_offer_next($s['actor'],$this->scope,$registrations[0],$command,$now,CorrelationId::generate()),'Replay must not grant another held seat');
+		$states=$this->db->rows('SELECT status FROM %i ORDER BY id',[$this->prefix.'registrations']);
+		self::assertSame(['cancelled','offered','waitlisted'],array_column($states,'status'));
+		$claims=$this->db->rows("SELECT status FROM %i WHERE status IN ('confirmed','held')",[$this->prefix.'capacity_claims']);
+		self::assertCount(1,$claims);
+		self::assertSame('held',$claims[0]['status']);
+		$offers=$this->db->rows('SELECT registration_id,token_hash FROM %i',[$this->prefix.'waitlist_offers']);
+		self::assertCount(1,$offers);
+		$second_id=$this->db->rows('SELECT id FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registrations[1]->to_binary()]);
+		self::assertSame((int)$second_id[0]['id'],(int)$offers[0]['registration_id'],'Oldest waiting applicant must be selected');
+		self::assertNotSame($offer['token'],$offers[0]['token_hash']);
+		$history=$this->db->rows("SELECT to_status FROM %i WHERE to_status IN ('cancelled','offered')",[$this->prefix.'registration_history']);
+		self::assertSame(['cancelled','offered'],array_column($history,'to_status'));
+		$events=$this->db->rows('SELECT event_name,payload_json FROM %i WHERE event_name IN (%s,%s) ORDER BY id',[$this->prefix.'domain_events','registration.cancelled','registration.offered']);
+		self::assertSame(['registration.cancelled','registration.offered'],array_column($events,'event_name'));
+		foreach ($events as $row) {
+			self::assertStringNotContainsString($offer['token'],$row['payload_json']);
+		}
+		$s['lifecycle']->accept_offer($s['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+		$occupied=$this->db->rows("SELECT COUNT(*) AS n FROM %i WHERE status IN ('held','confirmed')",[$this->prefix.'capacity_claims']);
+		self::assertSame(1,(int)$occupied[0]['n']);
+	}
+
+	public function test_atomic_manager_cancellation_rolls_back_when_next_waiter_cannot_be_verified(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$first_person,$event,$form,$now]=$this->setup_registration($draft);
+		$second_person=PublicId::generate();
+		$s['people']->create($this->scope,$second_person,'Unverified Applicant',null,$now);
+		$first=$s['submit']->submit($s['actor'],$this->scope,$first_person,$event,null,PublicId::generate(),['name'=>'First'],$now,CorrelationId::generate());
+		$second=$s['submit']->submit($s['actor'],$this->scope,$second_person,$event,null,PublicId::generate(),['name'=>'Second'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$this->db->execute('UPDATE %i SET require_email_verification = 1 WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()]);
+		try {
+			$s['lifecycle']->cancel_and_offer_next($s['actor'],$this->scope,$first,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Unverifiable FIFO offer was allowed');
+		} catch (RuntimeException) {
+			self::assertTrue(true);
+		}
+		$states=$this->db->rows('SELECT status FROM %i ORDER BY id',[$this->prefix.'registrations']);
+		self::assertSame(['accepted','waitlisted'],array_column($states,'status'),'Cancellation must roll back with failed offer');
+		self::assertSame(1,(int)$this->db->rows("SELECT COUNT(*) AS n FROM %i WHERE status = 'confirmed'",[$this->prefix.'capacity_claims'])[0]['n']);
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'waitlist_offers']));
+		self::assertSame([],$this->db->rows("SELECT id FROM %i WHERE event_name = 'registration.cancelled'",[$this->prefix.'domain_events']));
+	}
+
 }
