@@ -15,16 +15,18 @@ use UOP\Infrastructure\Database\PersonRepository;
 
 /** The same service must guard Admin, REST, Portal, CSV and background jobs. */
 final class PolicyService {
-	/** @var Closure(int,string): bool */
+	/** Injected WordPress capability resolver.
+	 * @var Closure(int,string): bool
+	 */
 	private Closure $has_capability;
 
 	/**
 	 * Initialize required dependencies and validated values.
 	 *
-	 * @param PersonRepository $people people input.
+	 * @param PersonRepository     $people people input.
 	 * @param DelegationRepository $delegations delegations input.
 	 * @param AssignmentRepository $assignments assignments input.
-	 * @param callable $has_capability has capability input.
+	 * @param callable             $has_capability has capability input.
 	 */
 	public function __construct(
 		private PersonRepository $people,
@@ -64,13 +66,13 @@ final class PolicyService {
 	/**
 	 * Check actor, object and optional field permissions without caching.
 	 *
-	 * @param Actor $actor actor input.
-	 * @param string $action action input.
-	 * @param Resource $object object input.
+	 * @param Actor            $actor actor input.
+	 * @param string           $action action input.
+	 * @param Resource         $domain_object object input.
 	 * @param ?FieldDefinition $field field input.
 	 * @return Decision
 	 */
-	public function can( Actor $actor, string $action, Resource $object, ?FieldDefinition $field = null ): Decision {
+	public function can( Actor $actor, string $action, Resource $domain_object, ?FieldDefinition $field = null ): Decision {
 		$capabilities = self::capabilities();
 		if ( ! isset( $capabilities[ $action ] ) ) {
 			return Decision::deny( 'DENY_CAPABILITY' );
@@ -78,12 +80,12 @@ final class PolicyService {
 		if ( $actor->user_id < 1 ) {
 			return Decision::deny( 'DENY_UNAUTHENTICATED' );
 		}
-		if ( $object->archived ) {
+		if ( $domain_object->archived ) {
 			return Decision::deny( 'DENY_ARCHIVED' );
 		}
-		$scope      = new OrgScope( $object->organization_id );
-		$subject_id = $object->subject_person_id ?? ( 'person' === $object->type ? $object->id : null );
-		$event_id   = $object->event_post_id ?? ( 'event' === $object->type ? $object->id : 0 );
+		$scope      = new OrgScope( $domain_object->organization_id );
+		$subject_id = $domain_object->subject_person_id ?? ( 'person' === $domain_object->type ? $domain_object->id : null );
+		$event_id   = $domain_object->event_post_id ?? ( 'event' === $domain_object->type ? $domain_object->id : 0 );
 		$manager    = ( $this->has_capability )( $actor->user_id, 'uop_manage_settings' );
 		$mode       = '';
 		$ceiling    = null;

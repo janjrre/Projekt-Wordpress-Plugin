@@ -17,7 +17,7 @@ final class DelegationRepository {
 	 * Initialize required dependencies and validated values.
 	 *
 	 * @param Connection $db db input.
-	 * @param string $prefix prefix input.
+	 * @param string     $prefix prefix input.
 	 */
 	public function __construct( private Connection $db, private string $prefix ) {}
 
@@ -25,10 +25,10 @@ final class DelegationRepository {
 	 * Evaluate the live delegation scope and expiry.
 	 *
 	 * @param OrgScope $scope scope input.
-	 * @param int $actor_id actor id input.
-	 * @param int $subject_id subject id input.
-	 * @param string $permission permission input.
-	 * @param int $event_id event id input.
+	 * @param int      $actor_id actor id input.
+	 * @param int      $subject_id subject id input.
+	 * @param string   $permission permission input.
+	 * @param int      $event_id event id input.
 	 * @return bool
 	 */
 	public function allows( OrgScope $scope, int $actor_id, int $subject_id, string $permission, int $event_id = 0 ): bool {
@@ -46,7 +46,7 @@ final class DelegationRepository {
 	 * List current delegations for a trusted actor.
 	 *
 	 * @param OrgScope $scope scope input.
-	 * @param int $actor_id actor id input.
+	 * @param int      $actor_id actor id input.
 	 * @return list<array<string, mixed>>
 	 */
 	public function for_actor( OrgScope $scope, int $actor_id ): array {
@@ -61,13 +61,13 @@ final class DelegationRepository {
 	 *
 	 * @param OrgScope $scope scope input.
 	 * @param PublicId $id id input.
-	 * @param int $actor_id actor id input.
-	 * @param int $subject_id subject id input.
-	 * @param string $permission permission input.
-	 * @param string $scope_type scope type input.
-	 * @param int $scope_id scope id input.
+	 * @param int      $actor_id actor id input.
+	 * @param int      $subject_id subject id input.
+	 * @param string   $permission permission input.
+	 * @param string   $scope_type scope type input.
+	 * @param int      $scope_id scope id input.
 	 * @param int|null $relationship_id relationship id input.
-	 * @param string $utc_now utc now input.
+	 * @param string   $utc_now utc now input.
 	 * @throws \InvalidArgumentException When input violates invariants.
 	 */
 	public function grant( OrgScope $scope, PublicId $id, int $actor_id, int $subject_id, string $permission, string $scope_type, int $scope_id, ?int $relationship_id, string $utc_now ): void {
@@ -91,8 +91,8 @@ final class DelegationRepository {
 	 * Revoke an actor's live grants within an organization.
 	 *
 	 * @param OrgScope $scope scope input.
-	 * @param int $actor_id actor id input.
-	 * @param string $utc_now utc now input.
+	 * @param int      $actor_id actor id input.
+	 * @param string   $utc_now utc now input.
 	 * @return int
 	 */
 	public function revoke_for_actor( OrgScope $scope, int $actor_id, string $utc_now ): int {
@@ -107,7 +107,7 @@ final class DelegationRepository {
 	 *
 	 * @param OrgScope $scope scope input.
 	 * @param PublicId $id id input.
-	 * @param string $utc_now utc now input.
+	 * @param string   $utc_now utc now input.
 	 * @return bool
 	 */
 	public function revoke( OrgScope $scope, PublicId $id, string $utc_now ): bool {

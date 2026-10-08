@@ -52,7 +52,6 @@ final class CapabilityRegistry {
 
 	/**
 	 * Install WordPress capability bundles once per site.
-	 *
 	 */
 	public static function install(): void {
 		if ( 1 === (int) get_option( 'uop_caps_version', 0 ) ) {

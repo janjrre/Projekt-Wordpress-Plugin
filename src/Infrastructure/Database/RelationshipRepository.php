@@ -17,7 +17,7 @@ final class RelationshipRepository {
 	 * Initialize required dependencies and validated values.
 	 *
 	 * @param Connection $db db input.
-	 * @param string $prefix prefix input.
+	 * @param string     $prefix prefix input.
 	 */
 	public function __construct( private Connection $db, private string $prefix ) {}
 
@@ -41,10 +41,10 @@ final class RelationshipRepository {
 	 *
 	 * @param OrgScope $scope scope input.
 	 * @param PublicId $id id input.
-	 * @param int $from_id from id input.
-	 * @param int $to_id to id input.
-	 * @param string $type type input.
-	 * @param string $utc_now utc now input.
+	 * @param int      $from_id from id input.
+	 * @param int      $to_id to id input.
+	 * @param string   $type type input.
+	 * @param string   $utc_now utc now input.
 	 * @throws \InvalidArgumentException When input violates invariants.
 	 */
 	public function create( OrgScope $scope, PublicId $id, int $from_id, int $to_id, string $type, string $utc_now ): void {

@@ -21,8 +21,8 @@ final class AccountLinkService {
 	/**
 	 * Initialize required dependencies and validated values.
 	 *
-	 * @param PersonRepository $persons persons input.
-	 * @param PolicyService $policy policy input.
+	 * @param PersonRepository   $persons persons input.
+	 * @param PolicyService      $policy policy input.
 	 * @param TransactionManager $transactions transactions input.
 	 * @throws \RuntimeException When the requested command is rejected.
 	 */
@@ -35,11 +35,11 @@ final class AccountLinkService {
 	/**
 	 * Atomically associate an unlinked person with a WordPress account.
 	 *
-	 * @param Actor $actor actor input.
+	 * @param Actor    $actor actor input.
 	 * @param OrgScope $scope scope input.
 	 * @param PublicId $person_id person id input.
-	 * @param int $user_id user id input.
-	 * @param string $utc_now utc now input.
+	 * @param int      $user_id user id input.
+	 * @param string   $utc_now utc now input.
 	 * @throws \RuntimeException When the requested command is rejected.
 	 */
 	public function link( Actor $actor, OrgScope $scope, PublicId $person_id, int $user_id, string $utc_now ): void {

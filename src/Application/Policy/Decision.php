@@ -12,7 +12,7 @@ final readonly class Decision {
 	/**
 	 * Initialize required dependencies and validated values.
 	 *
-	 * @param bool $allowed allowed input.
+	 * @param bool   $allowed allowed input.
 	 * @param string $reason reason input.
 	 */
 	public function __construct( public bool $allowed, public string $reason ) {}

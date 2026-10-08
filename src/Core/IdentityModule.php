@@ -46,7 +46,7 @@ final class IdentityModule implements ModuleInterface {
 			)
 		);
 		$container->set( ProjectionService::class, static fn ( ServiceContainer $c ) => new ProjectionService( $c->get( PolicyService::class ) ) );
-		$container->set( TransactionManager::class, static fn ( ServiceContainer $c ) => new TransactionManager( $c->get( Connection::class ), static fn ( int $microseconds ) => usleep( $microseconds ), static fn ( \Throwable $error ) => error_log( 'UOP post-commit callback failed: ' . get_class( $error ) ) ) );
+		$container->set( TransactionManager::class, static fn ( ServiceContainer $c ) => new TransactionManager( $c->get( Connection::class ), static fn ( int $microseconds ) => usleep( $microseconds ), static fn ( \Throwable $error ) => update_option( 'uop_post_commit_error', array( 'type' => get_class( $error ), 'code' => $error->getCode() ), false ) ) );
 		$container->set( AccountLinkService::class, static fn ( ServiceContainer $c ) => new AccountLinkService( $c->get( PersonRepository::class ), $c->get( PolicyService::class ), $c->get( TransactionManager::class ) ) );
 		CapabilityRegistry::install();
 	}

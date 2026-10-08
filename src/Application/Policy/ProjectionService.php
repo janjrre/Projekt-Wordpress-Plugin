@@ -21,16 +21,16 @@ final class ProjectionService {
 	/**
 	 * Filter all fields using one authoritative projection boundary.
 	 *
-	 * @param Actor $actor actor input.
-	 * @param string $action action input.
-	 * @param Resource $object object input.
+	 * @param Actor    $actor actor input.
+	 * @param string   $action action input.
+	 * @param Resource $domain_object object input.
 	 * @param PublicId $public_id public id input.
-	 * @param array $definitions definitions input.
-	 * @param array $values values input.
+	 * @param array    $definitions definitions input.
+	 * @param array    $values values input.
 	 * @return array<string, mixed>|null Null is a hidden object.
 	 */
-	public function project( Actor $actor, string $action, Resource $object, PublicId $public_id, array $definitions, array $values ): ?array {
-		if ( ! $this->policy->can( $actor, $action, $object )->allowed ) {
+	public function project( Actor $actor, string $action, Resource $domain_object, PublicId $public_id, array $definitions, array $values ): ?array {
+		if ( ! $this->policy->can( $actor, $action, $domain_object )->allowed ) {
 			return null;
 		}
 		$visible = array();
@@ -38,7 +38,7 @@ final class ProjectionService {
 			if ( ! $definition instanceof FieldDefinition || $key !== $definition->key || ! array_key_exists( $key, $values ) ) {
 				continue;
 			}
-			if ( $this->policy->can( $actor, $action, $object, $definition )->allowed ) {
+			if ( $this->policy->can( $actor, $action, $domain_object, $definition )->allowed ) {
 				$visible[ $key ] = $values[ $key ];
 			}
 		}

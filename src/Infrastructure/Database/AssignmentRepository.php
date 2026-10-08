@@ -15,7 +15,7 @@ final class AssignmentRepository {
 	 * Initialize required dependencies and validated values.
 	 *
 	 * @param Connection $db db input.
-	 * @param string $prefix prefix input.
+	 * @param string     $prefix prefix input.
 	 */
 	public function __construct( private Connection $db, private string $prefix ) {}
 
@@ -23,7 +23,7 @@ final class AssignmentRepository {
 	 * Query non-expired actor assignments without caching.
 	 *
 	 * @param OrgScope $scope scope input.
-	 * @param int $user_id user id input.
+	 * @param int      $user_id user id input.
 	 * @return list<array<string, mixed>>
 	 */
 	public function active_for( OrgScope $scope, int $user_id ): array {
@@ -40,8 +40,8 @@ final class AssignmentRepository {
 	 * Revoke an actor's live grants within an organization.
 	 *
 	 * @param OrgScope $scope scope input.
-	 * @param int $user_id user id input.
-	 * @param string $utc_now utc now input.
+	 * @param int      $user_id user id input.
+	 * @param string   $utc_now utc now input.
 	 * @return int
 	 */
 	public function revoke_for_actor( OrgScope $scope, int $user_id, string $utc_now ): int {
