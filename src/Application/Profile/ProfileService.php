@@ -71,7 +71,7 @@ final class ProfileService {
 				if ( ! $row ) {
 					throw new RuntimeException( 'Profile field could not be loaded.' );
 				}
-				$event = PublicId::generate();
+				$event  = PublicId::generate();
 				$this->audit->append( $scope, $actor, 'profile.field_created', $object, 'success', $correlation, $event );
 				$this->outbox->append( $scope, $event, 'person', (int) $row['id'], 'profile.field_created', $correlation, array( 'public_id' => $uuid->to_string() ) );
 			}

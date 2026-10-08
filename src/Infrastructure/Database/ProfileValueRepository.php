@@ -26,7 +26,8 @@ final class ProfileValueRepository {
 	 * @param OrgScope $scope Organization boundary.
 	 * @param int      $person_id Internal person ID.
 	 * @param int      $field_id  Internal field ID.
-	 * @param list<array{slot:string,value:string|int,ordinal:int}> $values Typed normalized values.
+	 * @param array    $values Typed normalized values.
+	 * @phpstan-param list<array{slot:string,value:string|int,ordinal:int}> $values
 	 * @param string   $utc_now UTC timestamp.
 	 * @throws InvalidArgumentException If a value escapes its scalar slot.
 	 */

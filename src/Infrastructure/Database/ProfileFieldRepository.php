@@ -46,10 +46,10 @@ final class ProfileFieldRepository extends ScopedRepository {
 	/**
 	 * Insert validated author metadata, never write an arbitrary request object.
 	 *
-	 * @param OrgScope $scope Scoped organization.
-	 * @param PublicId $id    Opaque public ID.
+	 * @param OrgScope             $scope Scoped organization.
+	 * @param PublicId             $id    Opaque public ID.
 	 * @param array<string, mixed> $definition Strict allowlisted definition.
-	 * @param string   $utc_now UTC timestamp.
+	 * @param string               $utc_now UTC timestamp.
 	 */
 	public function create( OrgScope $scope, PublicId $id, array $definition, string $utc_now ): void {
 		FieldRules::validate( $definition );

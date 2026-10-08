@@ -49,9 +49,9 @@ final class FieldRules {
 			}
 		}
 		foreach ( array(
-			'privacy_purpose'  => 255,
+			'privacy_purpose'   => 255,
 			'lawful_basis_note' => 2000,
-			'retention_class'  => 64,
+			'retention_class'   => 64,
 		) as $property => $limit ) {
 			if ( isset( $definition[ $property ] ) && ( ! is_string( $definition[ $property ] ) || mb_strlen( $definition[ $property ] ) > $limit ) ) {
 				throw new InvalidArgumentException( 'Invalid privacy metadata.' );
@@ -64,7 +64,7 @@ final class FieldRules {
 		if ( in_array( $type, array( 'select', 'radio', 'multiselect' ), true ) && ! $choices ) {
 			throw new InvalidArgumentException( 'Choice fields require options.' );
 		}
-		$seen   = array();
+		$seen = array();
 		foreach ( $choices as $choice ) {
 			if ( ! is_string( $choice ) || '' === $choice || strlen( $choice ) > 100 || isset( $seen[ $choice ] ) ) {
 				throw new InvalidArgumentException( 'Options must be unique short strings.' );
