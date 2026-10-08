@@ -10,6 +10,10 @@ namespace UOP\Core;
 use UOP\Application\Event\EventService;
 use UOP\Application\Form\FormService;
 use UOP\Application\Profile\ProfileService;
+use UOP\Application\Query\M3ReadService;
+use UOP\Application\Policy\ProjectionService;
+use UOP\Admin\M3FormBuilderScreen;
+use UOP\REST\M3Controller;
 use UOP\Application\Policy\PolicyService;
 use UOP\Extension\ModuleInterface;
 use UOP\Infrastructure\Database\AuditWriter;
@@ -79,5 +83,34 @@ final class M3Module implements ModuleInterface {
 				$c->get( OutboxRepository::class )
 			)
 		);
+		$container->set(
+			M3ReadService::class,
+			static fn ( ServiceContainer $c ) => new M3ReadService(
+				$c->get( PersonRepository::class ),
+				$c->get( ProfileFieldRepository::class ),
+				$c->get( ProfileValueRepository::class ),
+				$c->get( EventRepository::class ),
+				$c->get( OccurrenceRepository::class ),
+				$c->get( FormRepository::class ),
+				$c->get( PolicyService::class ),
+				$c->get( ProjectionService::class )
+			)
+		);
+		$container->set(
+			M3Controller::class,
+			static fn ( ServiceContainer $c ) => new M3Controller(
+				$c->get( M3ReadService::class ),
+				$c->get( FormService::class ),
+				$c->get( PolicyService::class )
+			)
+		);
+		$container->set(
+			M3FormBuilderScreen::class,
+			static fn ( ServiceContainer $c ) => new M3FormBuilderScreen( $c->get( PolicyService::class ) )
+		);
+		add_action( 'rest_api_init', array( $container->get( M3Controller::class ), 'register' ) );
+		$builder = $container->get( M3FormBuilderScreen::class );
+		add_action( 'admin_menu', array( $builder, 'menu' ) );
+		add_action( 'admin_enqueue_scripts', array( $builder, 'assets' ) );
 	}
 }

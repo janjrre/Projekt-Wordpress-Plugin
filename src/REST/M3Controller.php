@@ -9,7 +9,6 @@ namespace UOP\REST;
 
 use InvalidArgumentException;
 use RuntimeException;
-use Throwable;
 use UOP\Application\Form\FormService;
 use UOP\Application\Policy\Actor;
 use UOP\Application\Policy\PolicyObject;
