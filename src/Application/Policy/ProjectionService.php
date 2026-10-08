@@ -28,6 +28,8 @@ final class ProjectionService {
 	 * @param array        $definitions definitions input.
 	 * @param array        $values values input.
 	 * @return array<string, mixed>|null Null is a hidden object.
+	 * @phpstan-param array<string, FieldDefinition> $definitions
+	 * @phpstan-param array<string, mixed> $values
 	 */
 	public function project( Actor $actor, string $action, PolicyObject $domain_object, PublicId $public_id, array $definitions, array $values ): ?array {
 		if ( ! $this->policy->can( $actor, $action, $domain_object )->allowed ) {
