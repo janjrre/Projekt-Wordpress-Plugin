@@ -11,7 +11,11 @@ use InvalidArgumentException;
 
 /** Every transition is an explicit domain decision, never a direct status PATCH. */
 final class RegistrationStateMachine {
-	/** @var array<string, list<string>> Allowed business transitions. */
+	/**
+	 * Fixed business state transition map.
+	 *
+	 * @var array<string, list<string>>
+	 */
 	private const TRANSITIONS = array(
 		'submitted'  => array( 'review', 'accepted', 'waitlisted', 'rejected', 'cancelled' ),
 		'review'     => array( 'accepted', 'waitlisted', 'rejected', 'cancelled' ),

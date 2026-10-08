@@ -31,10 +31,10 @@ final class RegistrationService {
 	 * Bind the M2 authorization, historical persistence and audit boundary.
 	 *
 	 * @param RegistrationRepository $registrations Scoped registration storage.
-	 * @param PolicyService         $policy        Central authorization.
-	 * @param TransactionManager    $tx            Atomic command transaction.
-	 * @param AuditWriter           $audit         Durable minimal audit.
-	 * @param OutboxRepository      $outbox        Transactional domain events.
+	 * @param PolicyService          $policy        Central authorization.
+	 * @param TransactionManager     $tx            Atomic command transaction.
+	 * @param AuditWriter            $audit         Durable minimal audit.
+	 * @param OutboxRepository       $outbox        Transactional domain events.
 	 */
 	public function __construct(
 		private RegistrationRepository $registrations,
@@ -47,15 +47,16 @@ final class RegistrationService {
 	/**
 	 * Submit once with a caller-generated v4 idempotency UUID.
 	 *
-	 * @param Actor                $actor       Current WordPress actor.
-	 * @param OrgScope             $scope       Trusted organization.
-	 * @param PublicId             $person_id   Linked or delegated subject.
-	 * @param PublicId             $event_id    Active published event.
-	 * @param PublicId|null        $occurrence  Event occurrence or event-wide.
-	 * @param PublicId             $command_id  Stable idempotency UUID.
-	 * @param array<string, mixed> $input       Only published form field keys.
-	 * @param string               $utc_now     Trusted UTC instant.
-	 * @param CorrelationId        $correlation Request correlation.
+	 * @param Actor         $actor       Current WordPress actor.
+	 * @param OrgScope      $scope       Trusted organization.
+	 * @param PublicId      $person_id   Linked or delegated subject.
+	 * @param PublicId      $event_id    Active published event.
+	 * @param PublicId|null $occurrence  Event occurrence or event-wide.
+	 * @param PublicId      $command_id  Stable idempotency UUID.
+	 * @param array         $input       Only published form field keys.
+	 * @phpstan-param array<string, mixed> $input
+	 * @param string        $utc_now     Trusted UTC instant.
+	 * @param CorrelationId $correlation Request correlation.
 	 * @return PublicId Canonical persisted registration UUID.
 	 * @throws RuntimeException When state, policy or required fields prohibit submission.
 	 * @throws InvalidArgumentException For malformed input.
@@ -91,6 +92,14 @@ final class RegistrationService {
 						|| (int) $prior['occurrence_id'] !== $occurrence_id || (int) $prior['form_version_id'] !== (int) $form['form_version_id'] ) {
 						throw new RuntimeException( 'Idempotency key is bound to another submission.' );
 					}
+					$original = json_decode( (string) $prior['payload_json'], true, 64, JSON_THROW_ON_ERROR );
+					$old_fields = $original['fields'];
+					$new_fields = $input;
+					ksort( $old_fields );
+					ksort( $new_fields );
+					if ( $old_fields !== $new_fields ) {
+						throw new RuntimeException( 'Idempotency key was reused with different field values.' );
+					}
 					return PublicId::from_binary( $prior['public_id'] );
 				}
 				if ( $this->registrations->already_registered( $scope, (int) $person['id'], $event_post_id, $occurrence_id ) ) {
@@ -112,8 +121,8 @@ final class RegistrationService {
 					if ( isset( $field['visible_when'] ) && $this->uses_profile_condition( $field['visible_when'] ) ) {
 						throw new RuntimeException( 'Server-side profile conditions require authoritative facts.' );
 					}
-					$key           = $field['key'];
-					$types[ $key ] = $field['type'];
+					$key             = $field['key'];
+					$types[ $key ]   = $field['type'];
 					$stashed[ $key ] = array_key_exists( $key, $input ) ? $input[ $key ] : null;
 				}
 				if ( array_diff( array_keys( $input ), array_keys( $types ) ) ) {
@@ -123,7 +132,10 @@ final class RegistrationService {
 				$stored = array();
 				foreach ( $schema['fields'] as $field ) {
 					$key     = $field['key'];
-					$visible = ! isset( $field['visible_when'] ) || $engine->evaluate( $field['visible_when'], array( 'profile' => array(), 'registration' => $stashed ) );
+					$visible = ! isset( $field['visible_when'] ) || $engine->evaluate( $field['visible_when'], array(
+						'profile'      => array(),
+						'registration' => $stashed,
+					) );
 					if ( ! $visible ) {
 						if ( array_key_exists( $key, $input ) ) {
 							throw new InvalidArgumentException( 'A hidden field cannot be submitted.' );
@@ -134,16 +146,19 @@ final class RegistrationService {
 					if ( $field['required'] && ( null === $value || '' === $value || array() === $value || false === $value ) ) {
 						throw new InvalidArgumentException( 'Required field is missing.' );
 					}
-					$normalized = FieldRules::normalize( $field['type'], $value, $field['options'] ?? array() );
+					$normalized    = FieldRules::normalize( $field['type'], $value, $field['options'] ?? array() );
 					$stored[ $key ] = $value;
 					$values[ $key ] = $normalized;
 				}
 				$uuid       = PublicId::generate();
 				$version_id = PublicId::from_binary( $form['form_version_public_id'] );
 				$id         = $this->registrations->insert( $scope, $uuid, $command_id, (int) $person['id'], $actor->user_id, $event_post_id, $occurrence_id, (int) $form['form_version_id'], $version_id, $stored, $values, $types, $utc_now, $correlation );
-				$event = PublicId::generate();
+				$event      = PublicId::generate();
 				$this->audit->append( $scope, $actor, 'registration.submitted', $resource, 'success', $correlation, $event );
-				$this->outbox->append( $scope, $event, 'registration', $id, 'registration.submitted', $correlation, array( 'public_id' => $uuid->to_string(), 'status' => 'submitted' ) );
+				$this->outbox->append( $scope, $event, 'registration', $id, 'registration.submitted', $correlation, array(
+					'public_id' => $uuid->to_string(),
+					'status'    => 'submitted',
+				) );
 				return $uuid;
 			}
 		);

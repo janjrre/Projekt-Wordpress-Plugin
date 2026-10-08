@@ -84,8 +84,8 @@ final class RegistrationRepository {
 	 */
 	public function by_submission_key( OrgScope $scope, PublicId $key ): ?array {
 		$rows = $this->db->rows(
-			'SELECT id, public_id, person_id, event_post_id, occurrence_id, form_version_id FROM %i WHERE organization_id = %d AND submission_key = %s LIMIT 1',
-			array( $this->prefix . 'registrations', $scope->id, $key->to_binary() )
+			'SELECT r.id, r.public_id, r.person_id, r.event_post_id, r.occurrence_id, r.form_version_id, s.payload_json FROM %i r INNER JOIN %i s ON s.id = r.current_snapshot_id WHERE r.organization_id = %d AND r.submission_key = %s LIMIT 1',
+			array( $this->prefix . 'registrations', $this->prefix . 'registration_snapshots', $scope->id, $key->to_binary() )
 		);
 		return $rows[0] ?? null;
 	}
@@ -109,20 +109,23 @@ final class RegistrationRepository {
 	/**
 	 * Insert the first registration and its frozen historical snapshot.
 	 *
-	 * @param OrgScope              $scope       Trusted organization.
-	 * @param PublicId              $public_id   Generated registration UUID.
-	 * @param PublicId              $submission  Client idempotency UUID.
-	 * @param int                   $person_id   Scoped locked person ID.
-	 * @param int                   $actor_id    Authorized WordPress actor.
-	 * @param int                   $event_post  Scoped event post.
-	 * @param int                   $occurrence  Scoped occurrence or zero.
-	 * @param int                   $form_version Frozen published version.
-	 * @param PublicId              $version_uuid Published version public UUID.
-	 * @param array<string, mixed>  $fields      Normalized validated snapshot input.
-	 * @param array<string, list<array{slot:string,value:string|int,ordinal:int}>> $values Frozen query projection.
-	 * @param array<string, string> $types       Frozen type mapping.
-	 * @param string                $utc_now     Timestamp.
-	 * @param CorrelationId         $correlation Command trace.
+	 * @param OrgScope      $scope       Trusted organization.
+	 * @param PublicId      $public_id   Generated registration UUID.
+	 * @param PublicId      $submission  Client idempotency UUID.
+	 * @param int           $person_id   Scoped locked person ID.
+	 * @param int           $actor_id    Authorized WordPress actor.
+	 * @param int           $event_post  Scoped event post.
+	 * @param int           $occurrence  Scoped occurrence or zero.
+	 * @param int           $form_version Frozen published version.
+	 * @param PublicId      $version_uuid Published version public UUID.
+	 * @param array         $fields      Normalized validated snapshot input.
+	 * @phpstan-param array<string, mixed> $fields
+	 * @param array         $values Frozen query projection.
+	 * @phpstan-param array<string, list<array{slot:string,value:string|int,ordinal:int}>> $values
+	 * @param array         $types       Frozen type mapping.
+	 * @phpstan-param array<string, string> $types
+	 * @param string        $utc_now     Timestamp.
+	 * @param CorrelationId $correlation Command trace.
 	 * @return int Registration internal ID.
 	 * @throws RuntimeException If any required write fails.
 	 */
@@ -153,19 +156,19 @@ final class RegistrationRepository {
 		if ( ! $ids ) {
 			throw new RuntimeException( 'Registration insert failed.' );
 		}
-		$id = (int) $ids[0]['id'];
-		$snapshot = array(
-			'schema_version'          => 1,
+		$id            = (int) $ids[0]['id'];
+		$snapshot      = array(
+			'schema_version'         => 1,
 			'form_version_public_id' => $version_uuid->to_string(),
 			'fields'                 => $fields,
 		);
-		$json = (string) wp_json_encode( $snapshot, JSON_THROW_ON_ERROR );
+		$json          = (string) wp_json_encode( $snapshot, JSON_THROW_ON_ERROR );
 		$snapshot_uuid = PublicId::generate();
 		$this->db->execute(
 			'INSERT INTO %i (public_id, registration_id, revision, form_version_id, payload_json, payload_hash, created_by_user_id, reason, created_at) VALUES (%s,%d,1,%d,%s,%s,%d,%s,%s)',
 			array( $this->prefix . 'registration_snapshots', $snapshot_uuid->to_binary(), $id, $form_version, $json, hash( 'sha256', $json, true ), $actor_id, 'submission', $utc_now )
 		);
-		$snap_rows = $this->db->rows(
+		$snap_rows   = $this->db->rows(
 			'SELECT id FROM %i WHERE registration_id = %d AND public_id = %s LIMIT 1',
 			array( $this->prefix . 'registration_snapshots', $id, $snapshot_uuid->to_binary() )
 		);

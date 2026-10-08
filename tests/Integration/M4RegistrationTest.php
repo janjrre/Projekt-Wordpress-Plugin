@@ -79,6 +79,12 @@ final class M4RegistrationTest extends TestCase {
 		$id=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,$key,$input,$now,CorrelationId::generate());
 		$again=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,$key,$input,$now,CorrelationId::generate());
 		self::assertSame($id->to_string(),$again->to_string());
+		try {
+			$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,$key,['name'=>'Changed','extras'=>['music','food'],'adult'=>false],$now,CorrelationId::generate());
+			self::fail('Reusing the key with a different body must be rejected');
+		} catch (RuntimeException) {
+			self::assertTrue(true);
+		}
 		$rows=$this->db->rows('SELECT id, current_snapshot_id, status, email_verified_at FROM %i WHERE organization_id = %d',[$this->prefix.'registrations',$this->scope->id]);
 		self::assertCount(1,$rows);
 		self::assertSame('submitted',$rows[0]['status']);
