@@ -4,6 +4,7 @@ namespace UOP\Tests\Unit;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use UOP\Domain\Profiles\FieldRules;
+use UOP\Domain\Forms\FormSchema;
 use UOP\Domain\Conditions\ConditionEngine;
 
 final class M3DomainTest extends TestCase {
@@ -77,4 +78,46 @@ final class M3DomainTest extends TestCase {
             catch (InvalidArgumentException) { self::assertTrue(true); }
         }
     }
+
+    public function test_form_conditions_reject_missing_consent_and_cyclic_dependencies(): void {
+        $schema=new FormSchema();
+        $predicate=static fn(string $reference): array => [
+            'schema_version'=>1,
+            'all'=>[['source'=>'registration','field'=>$reference,'operator'=>'exists']]
+        ];
+        $valid=['schema_version'=>1,'fields'=>[
+            ['key'=>'first','type'=>'text','label'=>'First','required'=>false,'visible_when'=>$predicate('second')],
+            ['key'=>'second','type'=>'text','label'=>'Second','required'=>false],
+        ]];
+        $schema->validate_draft($valid); // Forward references are legal when acyclic.
+
+        $missing=$valid;
+        $missing['fields'][0]['visible_when']=$predicate('deleted');
+        $self=$valid;
+        $self['fields'][0]['visible_when']=$predicate('first');
+        $cycle=$valid;
+        $cycle['fields'][1]['visible_when']=$predicate('first');
+        $consent=$valid;
+        $consent['fields'][1]=[
+            'key'=>'second','type'=>'consent','label'=>'Consent','required'=>false,
+            'consent_definition_public_id'=>\UOP\Core\PublicId::generate()->to_string()
+        ];
+        $nested=$valid;
+        $nested['fields'][0]['visible_when']=[
+            'schema_version'=>1,
+            'not'=>['any'=>[
+                ['source'=>'registration','field'=>'deleted','operator'=>'exists'],
+                ['source'=>'profile','field'=>'birth_date','operator'=>'exists']
+            ]]
+        ];
+        foreach ([$missing,$self,$cycle,$consent,$nested] as $invalid) {
+            try {
+                $schema->validate_draft($invalid);
+                self::fail('Dangling or circular form visibility dependency was accepted.');
+            } catch (InvalidArgumentException) {
+                self::assertTrue(true);
+            }
+        }
+    }
+
 }
