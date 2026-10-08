@@ -129,7 +129,7 @@ try {
 	}
 	if ( 1 !== count( array_filter( $results, static fn ( string $status ): bool => 'accepted' === $status ) )
 		|| 49 !== count( array_filter( $results, static fn ( string $status ): bool => 'waitlisted' === $status ) ) ) {
-		throw new RuntimeException( 'Concurrent service decisions were not 1 accepted / 49 waitlisted.' );
+		throw new RuntimeException( 'Concurrent decisions violated 1/49 invariant. Actual distribution: ' . wp_json_encode( array_count_values( $results ) ) );
 	}
 	$claim_rows = $db->rows(
 		'SELECT c.status, COUNT(*) AS count FROM %i c INNER JOIN %i b ON b.id = c.bucket_id WHERE b.organization_id = %d AND b.public_id = %s GROUP BY c.status',
