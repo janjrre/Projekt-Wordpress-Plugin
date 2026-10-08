@@ -92,7 +92,7 @@ final class RegistrationService {
 						|| (int) $prior['occurrence_id'] !== $occurrence_id || (int) $prior['form_version_id'] !== (int) $form['form_version_id'] ) {
 						throw new RuntimeException( 'Idempotency key is bound to another submission.' );
 					}
-					$original = json_decode( (string) $prior['payload_json'], true, 64, JSON_THROW_ON_ERROR );
+					$original   = json_decode( (string) $prior['payload_json'], true, 64, JSON_THROW_ON_ERROR );
 					$old_fields = $original['fields'];
 					$new_fields = $input;
 					ksort( $old_fields );
@@ -132,10 +132,16 @@ final class RegistrationService {
 				$stored = array();
 				foreach ( $schema['fields'] as $field ) {
 					$key     = $field['key'];
-					$visible = ! isset( $field['visible_when'] ) || $engine->evaluate( $field['visible_when'], array(
-						'profile'      => array(),
-						'registration' => $stashed,
-					) );
+					$visible = true;
+					if ( isset( $field['visible_when'] ) ) {
+						$visible = $engine->evaluate(
+							$field['visible_when'],
+							array(
+								'profile'      => array(),
+								'registration' => $stashed,
+							)
+						);
+					}
 					if ( ! $visible ) {
 						if ( array_key_exists( $key, $input ) ) {
 							throw new InvalidArgumentException( 'A hidden field cannot be submitted.' );
@@ -146,7 +152,7 @@ final class RegistrationService {
 					if ( $field['required'] && ( null === $value || '' === $value || array() === $value || false === $value ) ) {
 						throw new InvalidArgumentException( 'Required field is missing.' );
 					}
-					$normalized    = FieldRules::normalize( $field['type'], $value, $field['options'] ?? array() );
+					$normalized     = FieldRules::normalize( $field['type'], $value, $field['options'] ?? array() );
 					$stored[ $key ] = $value;
 					$values[ $key ] = $normalized;
 				}
@@ -156,10 +162,18 @@ final class RegistrationService {
 				$event      = PublicId::generate();
 				$registered = new PolicyObject( $scope->id, 'registration', $id, (int) $person['id'], $event_post_id );
 				$this->audit->append( $scope, $actor, 'registration.submitted', $registered, 'success', $correlation, $event );
-				$this->outbox->append( $scope, $event, 'registration', $id, 'registration.submitted', $correlation, array(
-					'public_id' => $uuid->to_string(),
-					'status'    => 'submitted',
-				) );
+				$this->outbox->append(
+					$scope,
+					$event,
+					'registration',
+					$id,
+					'registration.submitted',
+					$correlation,
+					array(
+						'public_id' => $uuid->to_string(),
+						'status'    => 'submitted',
+					)
+				);
 				return $uuid;
 			}
 		);

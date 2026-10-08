@@ -51,16 +51,16 @@ final class RegistrationConfigurationService {
 					"SELECT event_post_id FROM %i WHERE organization_id = %d AND public_id = %s AND status = 'active' LIMIT 1 FOR UPDATE",
 					array( $this->prefix . 'event_settings', $scope->id, $event_id->to_binary() )
 				);
-				$forms = $this->db->rows(
+				$forms  = $this->db->rows(
 					"SELECT id FROM %i WHERE organization_id = %d AND public_id = %s AND context = 'event' AND status = 'published' AND current_version_id IS NOT NULL LIMIT 1",
 					array( $this->prefix . 'forms', $scope->id, $form_id->to_binary() )
 				);
 				if ( ! $events || ! $forms ) {
 					throw new RuntimeException( 'Event and form must be active in one organization.' );
 				}
-				$post_id   = (int) $events[0]['event_post_id'];
-				$resource  = new PolicyObject( $scope->id, 'event', $post_id, null, $post_id );
-				$form      = new PolicyObject( $scope->id, 'form', (int) $forms[0]['id'] );
+				$post_id  = (int) $events[0]['event_post_id'];
+				$resource = new PolicyObject( $scope->id, 'event', $post_id, null, $post_id );
+				$form     = new PolicyObject( $scope->id, 'form', (int) $forms[0]['id'] );
 				if ( ! user_can( $actor->user_id, 'edit_post', $post_id )
 					|| ! $this->policy->can( $actor, 'event.manage', $resource )->allowed
 					|| ! $this->policy->can( $actor, 'form.manage', $form )->allowed ) {

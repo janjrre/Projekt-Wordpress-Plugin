@@ -168,7 +168,7 @@ final class RegistrationRepository {
 			'INSERT INTO %i (public_id, registration_id, revision, form_version_id, payload_json, payload_hash, created_by_user_id, reason, created_at) VALUES (%s,%d,1,%d,%s,%s,%d,%s,%s)',
 			array( $this->prefix . 'registration_snapshots', $snapshot_uuid->to_binary(), $id, $form_version, $json, hash( 'sha256', $json, true ), $actor_id, 'submission', $utc_now )
 		);
-		$snap_rows   = $this->db->rows(
+		$snap_rows = $this->db->rows(
 			'SELECT id FROM %i WHERE registration_id = %d AND public_id = %s LIMIT 1',
 			array( $this->prefix . 'registration_snapshots', $id, $snapshot_uuid->to_binary() )
 		);
