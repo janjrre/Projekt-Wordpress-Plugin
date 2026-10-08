@@ -124,6 +124,7 @@ final class RegistrationRepository {
 	 * @phpstan-param array<string, list<array{slot:string,value:string|int,ordinal:int}>> $values
 	 * @param array         $types       Frozen type mapping.
 	 * @phpstan-param array<string, string> $types
+	 * @param string|null   $contact_email Contact email validated from published form.
 	 * @param string        $utc_now     Timestamp.
 	 * @param CorrelationId $correlation Command trace.
 	 * @return int Registration internal ID.
@@ -142,12 +143,13 @@ final class RegistrationRepository {
 		array $fields,
 		array $values,
 		array $types,
+		?string $contact_email,
 		string $utc_now,
 		CorrelationId $correlation
 	): int {
 		$this->db->execute(
-			"INSERT INTO %i (public_id, submission_key, organization_id, person_id, actor_user_id, event_post_id, occurrence_id, form_version_id, status, source, submitted_at, created_at, updated_at) VALUES (%s,%s,%d,%d,%d,%d,%d,%d,'submitted','portal',%s,%s,%s)",
-			array( $this->prefix . 'registrations', $public_id->to_binary(), $submission->to_binary(), $scope->id, $person_id, $actor_id, $event_post, $occurrence, $form_version, $utc_now, $utc_now, $utc_now )
+			"INSERT INTO %i (public_id, submission_key, organization_id, person_id, actor_user_id, event_post_id, occurrence_id, form_version_id, status, source, contact_email, submitted_at, created_at, updated_at) VALUES (%s,%s,%d,%d,%d,%d,%d,%d,'submitted','portal',NULLIF(%s,''),%s,%s,%s)",
+			array( $this->prefix . 'registrations', $public_id->to_binary(), $submission->to_binary(), $scope->id, $person_id, $actor_id, $event_post, $occurrence, $form_version, $contact_email ?? '', $utc_now, $utc_now, $utc_now )
 		);
 		$ids = $this->db->rows(
 			'SELECT id FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1',
@@ -207,7 +209,7 @@ final class RegistrationRepository {
 	 */
 	public function lock_registration( OrgScope $scope, PublicId $uuid ): ?array {
 		$rows = $this->db->rows(
-			'SELECT id, public_id, person_id, event_post_id, occurrence_id, email_verified_at, status FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1 FOR UPDATE',
+			'SELECT id, public_id, person_id, event_post_id, occurrence_id, contact_email, email_verification_token_hash, verification_expires_at, email_verified_at, status FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1 FOR UPDATE',
 			array( $this->prefix . 'registrations', $scope->id, $uuid->to_binary() )
 		);
 		return $rows[0] ?? null;
@@ -252,6 +254,38 @@ final class RegistrationRepository {
 		$this->db->execute(
 			'INSERT INTO %i (registration_id, command_id, from_status, to_status, actor_user_id, correlation_id, created_at) VALUES (%d,%s,%s,%s,%d,%s,%s)',
 			array( $this->prefix . 'registration_history', $id, $command->to_binary(), $from, $to, $actor_id, $correlation->to_binary(), $utc_now )
+		);
+	}
+	/**
+	 * Set a fresh one-time email verification challenge for a submitted registration.
+	 *
+	 * @param OrgScope $scope    Trusted organization.
+	 * @param int      $id       Locked registration internal ID.
+	 * @param string   $hash     SHA256 digest bytes, no plaintext token.
+	 * @param string   $expires  Absolute UTC challenge expiry.
+	 * @param string   $utc_now  UTC issuance instant.
+	 * @return bool True only when challenge was stored.
+	 */
+	public function challenge( OrgScope $scope, int $id, string $hash, string $expires, string $utc_now ): bool {
+		return 1 === $this->db->execute(
+			'UPDATE %i SET email_verification_token_hash = %s, verification_expires_at = %s, updated_at = %s WHERE organization_id = %d AND id = %d AND contact_email IS NOT NULL AND email_verified_at IS NULL AND status IN (%s,%s)',
+			array( $this->prefix . 'registrations', $hash, $expires, $utc_now, $scope->id, $id, 'submitted', 'review' )
+		);
+	}
+
+	/**
+	 * Consume a nonexpired one-time token atomically without changing business state.
+	 *
+	 * @param OrgScope $scope   Trusted organization.
+	 * @param int      $id      Locked registration internal ID.
+	 * @param string   $hash    SHA256 token digest.
+	 * @param string   $utc_now UTC verification instant.
+	 * @return bool True only on the unique successful verification.
+	 */
+	public function verify( OrgScope $scope, int $id, string $hash, string $utc_now ): bool {
+		return 1 === $this->db->execute(
+			'UPDATE %i SET email_verified_at = %s, email_verification_token_hash = NULL, verification_expires_at = NULL, updated_at = %s WHERE organization_id = %d AND id = %d AND email_verified_at IS NULL AND email_verification_token_hash = %s AND verification_expires_at > %s',
+			array( $this->prefix . 'registrations', $utc_now, $utc_now, $scope->id, $id, $hash, $utc_now )
 		);
 	}
 }

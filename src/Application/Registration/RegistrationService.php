@@ -156,9 +156,22 @@ final class RegistrationService {
 					$stored[ $key ] = $value;
 					$values[ $key ] = $normalized;
 				}
+
+				$contact_email = null;
+				foreach ( $schema['fields'] as $field ) {
+					if ( 'email' === $field['type'] && isset( $stored[ $field['key'] ] ) ) {
+						if ( null !== $contact_email && $contact_email !== $stored[ $field['key'] ] ) {
+							throw new InvalidArgumentException( 'One verified contact email is required.' );
+						}
+						$contact_email = $stored[ $field['key'] ];
+					}
+				}
+				if ( 1 === (int) $form['require_email_verification'] && null === $contact_email ) {
+					throw new InvalidArgumentException( 'Contact email is required for verification.' );
+				}
 				$uuid       = PublicId::generate();
 				$version_id = PublicId::from_binary( $form['form_version_public_id'] );
-				$id         = $this->registrations->insert( $scope, $uuid, $command_id, (int) $person['id'], $actor->user_id, $event_post_id, $occurrence_id, (int) $form['form_version_id'], $version_id, $stored, $values, $types, $utc_now, $correlation );
+				$id         = $this->registrations->insert( $scope, $uuid, $command_id, (int) $person['id'], $actor->user_id, $event_post_id, $occurrence_id, (int) $form['form_version_id'], $version_id, $stored, $values, $types, $contact_email, $utc_now, $correlation );
 				$event      = PublicId::generate();
 				$registered = new PolicyObject( $scope->id, 'registration', $id, (int) $person['id'], $event_post_id );
 				$this->audit->append( $scope, $actor, 'registration.submitted', $registered, 'success', $correlation, $event );
