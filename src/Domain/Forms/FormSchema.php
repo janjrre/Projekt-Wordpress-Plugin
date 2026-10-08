@@ -111,7 +111,7 @@ final class FormSchema {
 			return;
 		}
 		if ( 'registration' === ( $node['source'] ?? null ) ) {
-			$references[] = $node['field'];
+			$references[] = (string) $node['field'];
 		}
 	}
 
