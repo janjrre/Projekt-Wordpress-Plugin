@@ -94,7 +94,8 @@ final class FormSchema {
 	 * Traverse a validated condition AST and extract registration field keys.
 	 *
 	 * @param array<string, mixed> $node       AST root, group or predicate.
-	 * @param list<string>         $references Accumulated field references.
+	 * @param array                $references Accumulated field references.
+	 * @phpstan-param list<string> $references
 	 */
 	private function collect_references( array $node, array &$references ): void {
 		foreach ( array( 'all', 'any' ) as $group ) {
@@ -117,10 +118,10 @@ final class FormSchema {
 	/**
 	 * Detect direct and indirect cycles in a bounded dependency graph.
 	 *
-	 * @param string                     $key      Current field.
+	 * @param string                      $key      Current field.
 	 * @param array<string, list<string>> $edges    Directed field dependencies.
-	 * @param array<string, bool>        $visiting Nodes on recursion path.
-	 * @param array<string, bool>        $visited  Completed nodes.
+	 * @param array<string, bool>         $visiting Nodes on recursion path.
+	 * @param array<string, bool>         $visited  Completed nodes.
 	 * @throws InvalidArgumentException When a dependency cycle exists.
 	 */
 	private function check_cycle( string $key, array $edges, array &$visiting, array &$visited ): void {
