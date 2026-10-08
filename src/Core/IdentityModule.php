@@ -1,21 +1,34 @@
 <?php
 /**
- * Composition of the M2 identity and policy foundations.
+ * M2 composition of identity, policy, audit and outbox services.
  *
  * @package UOP
  */
 
 namespace UOP\Core;
 
+use UOP\Application\Event\PostCommitPublisher;
+use UOP\Application\Identity\AccountDeletionListener;
 use UOP\Application\Identity\AccountLinkService;
-use UOP\Application\Policy\{CapabilityRegistry, PolicyService, ProjectionService};
+use UOP\Application\Identity\PersonService;
+use UOP\Application\Policy\CapabilityRegistry;
+use UOP\Application\Policy\PolicyService;
+use UOP\Application\Policy\ProjectionService;
 use UOP\Extension\ModuleInterface;
-use UOP\Infrastructure\Database\{AssignmentRepository, Connection, DelegationRepository, PersonRepository, RelationshipRepository, WpdbConnection};
+use UOP\Infrastructure\Database\AssignmentRepository;
+use UOP\Infrastructure\Database\AuditWriter;
+use UOP\Infrastructure\Database\Connection;
+use UOP\Infrastructure\Database\DelegationRepository;
+use UOP\Infrastructure\Database\OutboxRepository;
+use UOP\Infrastructure\Database\PersonRepository;
+use UOP\Infrastructure\Database\RelationshipRepository;
+use UOP\Infrastructure\Database\WpdbConnection;
+use UOP\Infrastructure\Queue\OutboxDispatcher;
 
-/** All persistence services are private to application command/query services. */
+/** A narrow composition root, not a public CRUD facade. */
 final class IdentityModule implements ModuleInterface {
 	/**
-	 * Return the unique module registration key.
+	 * Return the registered module key.
 	 *
 	 * @return string
 	 */
@@ -24,9 +37,9 @@ final class IdentityModule implements ModuleInterface {
 	}
 
 	/**
-	 * Register lazy application services and WordPress hooks.
+	 * Register services once after the environment and schema gates succeed.
 	 *
-	 * @param ServiceContainer $container container input.
+	 * @param ServiceContainer $container Explicit service dependencies.
 	 */
 	public function register( ServiceContainer $container ): void {
 		global $wpdb;
@@ -36,6 +49,23 @@ final class IdentityModule implements ModuleInterface {
 		$container->set( RelationshipRepository::class, static fn ( ServiceContainer $c ) => new RelationshipRepository( $c->get( Connection::class ), $prefix ) );
 		$container->set( DelegationRepository::class, static fn ( ServiceContainer $c ) => new DelegationRepository( $c->get( Connection::class ), $prefix ) );
 		$container->set( AssignmentRepository::class, static fn ( ServiceContainer $c ) => new AssignmentRepository( $c->get( Connection::class ), $prefix ) );
+		$container->set( AuditWriter::class, static fn ( ServiceContainer $c ) => new AuditWriter( $c->get( Connection::class ), $prefix ) );
+		$container->set( OutboxRepository::class, static fn ( ServiceContainer $c ) => new OutboxRepository( $c->get( Connection::class ), $prefix ) );
+		$container->set(
+			TransactionManager::class,
+			static fn ( ServiceContainer $c ) => new TransactionManager(
+				$c->get( Connection::class ),
+				static fn ( int $microseconds ) => usleep( $microseconds ),
+				static fn ( \Throwable $error ) => update_option(
+					'uop_post_commit_error',
+					array(
+						'type' => get_class( $error ),
+						'code' => $error->getCode(),
+					),
+					false
+				)
+			)
+		);
 		$container->set(
 			PolicyService::class,
 			static fn ( ServiceContainer $c ) => new PolicyService(
@@ -46,11 +76,54 @@ final class IdentityModule implements ModuleInterface {
 			)
 		);
 		$container->set( ProjectionService::class, static fn ( ServiceContainer $c ) => new ProjectionService( $c->get( PolicyService::class ) ) );
-		$container->set( TransactionManager::class, static fn ( ServiceContainer $c ) => new TransactionManager( $c->get( Connection::class ), static fn ( int $microseconds ) => usleep( $microseconds ), static fn ( \Throwable $error ) => update_option( 'uop_post_commit_error', array(
-				'type' => get_class( $error ),
-				'code' => $error->getCode(),
-			), false ) ) );
-		$container->set( AccountLinkService::class, static fn ( ServiceContainer $c ) => new AccountLinkService( $c->get( PersonRepository::class ), $c->get( PolicyService::class ), $c->get( TransactionManager::class ) ) );
+		$container->set( PostCommitPublisher::class, static fn ( ServiceContainer $c ) => new PostCommitPublisher( $c->get( TransactionManager::class ) ) );
+		$container->set(
+			PersonService::class,
+			static fn ( ServiceContainer $c ) => new PersonService(
+				$c->get( PersonRepository::class ),
+				$c->get( PolicyService::class ),
+				$c->get( TransactionManager::class ),
+				$c->get( AuditWriter::class ),
+				$c->get( OutboxRepository::class ),
+				$c->get( PostCommitPublisher::class )
+			)
+		);
+		$container->set(
+			AccountLinkService::class,
+			static fn ( ServiceContainer $c ) => new AccountLinkService(
+				$c->get( PersonRepository::class ),
+				$c->get( PolicyService::class ),
+				$c->get( TransactionManager::class ),
+				$c->get( AuditWriter::class ),
+				$c->get( OutboxRepository::class ),
+				$c->get( PostCommitPublisher::class )
+			)
+		);
+		$container->set(
+			AccountDeletionListener::class,
+			static fn ( ServiceContainer $c ) => new AccountDeletionListener(
+				$c->get( Connection::class ),
+				$prefix,
+				$c->get( PersonRepository::class ),
+				$c->get( DelegationRepository::class ),
+				$c->get( AssignmentRepository::class ),
+				$c->get( TransactionManager::class ),
+				$c->get( AuditWriter::class ),
+				$c->get( OutboxRepository::class ),
+				$c->get( PostCommitPublisher::class )
+			)
+		);
+		$container->set(
+			OutboxDispatcher::class,
+			static fn ( ServiceContainer $c ) => new OutboxDispatcher(
+				$c->get( Connection::class ),
+				$c->get( OutboxRepository::class ),
+				$prefix
+			)
+		);
 		CapabilityRegistry::install();
+		$dispatcher = $container->get( OutboxDispatcher::class );
+		$dispatcher->register_hooks();
+		add_action( 'deleted_user', array( $container->get( AccountDeletionListener::class ), 'handle' ), 10, 1 );
 	}
 }
