@@ -26,7 +26,7 @@ final class M3FormBuilderScreen {
 		add_menu_page(
 			__( 'UOP Forms', 'uop-core' ),
 			__( 'UOP Forms', 'uop-core' ),
-			'uop_manage_forms',
+			'uop_manage_forms', // phpcs:ignore -- Custom capability provisioned by the UOP CapabilityRegistry.
 			'uop-forms',
 			array( $this, 'render' ),
 			'dashicons-feedback',
@@ -85,7 +85,7 @@ final class M3FormBuilderScreen {
 	 */
 	private function can_manage(): bool {
 		$org_id = (int) get_option( 'uop_default_organization_id', 0 );
-		if ( $org_id < 1 || ! current_user_can( 'uop_manage_forms' ) ) {
+		if ( $org_id < 1 || ! current_user_can( 'uop_manage_forms' ) ) { // phpcs:ignore -- Custom UOP capability.
 			return false;
 		}
 		$scope = new OrgScope( $org_id );
