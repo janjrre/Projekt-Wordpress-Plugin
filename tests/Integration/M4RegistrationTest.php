@@ -7,11 +7,11 @@ use RuntimeException;
 use UOP\Application\Policy\{Actor, PolicyService};
 use UOP\Application\Event\EventService;
 use UOP\Application\Form\FormService;
-use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService, RegistrationTransitionService};
+use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService, RegistrationTransitionService, CapacityAllocationService};
 use UOP\Domain\Registrations\RegistrationStateMachine;
 use UOP\Core\{CorrelationId, PublicId, TransactionManager};
 use UOP\Domain\Organization\OrgScope;
-use UOP\Infrastructure\Database\{AssignmentRepository, AuditWriter, DelegationRepository, EventRepository, FormRepository, Installer, OccurrenceRepository, OutboxRepository, PersonRepository, RegistrationRepository, SchemaManifest, WpdbConnection};
+use UOP\Infrastructure\Database\{AssignmentRepository, AuditWriter, CapacityRepository, DelegationRepository, EventRepository, FormRepository, Installer, OccurrenceRepository, OutboxRepository, PersonRepository, RegistrationRepository, SchemaManifest, WpdbConnection};
 
 final class M4RegistrationTest extends TestCase {
 	private WpdbConnection $db;
@@ -51,6 +51,7 @@ final class M4RegistrationTest extends TestCase {
 			'event'=>new EventService(new EventRepository($this->db,$this->prefix),new OccurrenceRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
 			'config'=>new RegistrationConfigurationService($this->db,$this->prefix,$policy,$tx,$audit,$outbox),
 			'submit'=>new RegistrationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
+			'capacity'=>new CapacityAllocationService(new CapacityRepository($this->db,$this->prefix),new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
 			'transition'=>new RegistrationTransitionService(new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
 		];
 	}
@@ -166,6 +167,34 @@ final class M4RegistrationTest extends TestCase {
 		try {
 			$s['transition']->transition($s['actor'],$this->scope,$uuid,'cancelled',PublicId::generate(),$now,CorrelationId::generate());
 			self::fail('Terminal registration cancelled');
+		} catch (RuntimeException) { self::assertTrue(true); }
+	}
+
+	public function test_last_available_seat_creates_one_claim_and_fifo_waitlist_entry(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$other=PublicId::generate();
+		$s['people']->create($this->scope,$other,'Second Person',null,$now);
+		$first=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'One'],$now,CorrelationId::generate());
+		$second=$s['submit']->submit($s['actor'],$this->scope,$other,$event,null,PublicId::generate(),['name'=>'Two'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$command=PublicId::generate();
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,$command,$now,CorrelationId::generate()));
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,$command,$now,CorrelationId::generate()));
+		self::assertSame('waitlisted',$s['capacity']->decide($s['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$claims=$this->db->rows('SELECT status,registration_id FROM %i',[$this->prefix.'capacity_claims']);
+		self::assertCount(1,$claims);
+		self::assertSame('confirmed',$claims[0]['status']);
+		$queue=$this->db->rows('SELECT priority,status,joined_at FROM %i',[$this->prefix.'waitlist_entries']);
+		self::assertCount(1,$queue);
+		self::assertSame('waiting',$queue[0]['status']);
+		$states=$this->db->rows('SELECT status FROM %i ORDER BY id',[$this->prefix.'registrations']);
+		self::assertSame(['accepted','waitlisted'],array_column($states,'status'));
+		$evidence=$this->db->rows('SELECT command_id FROM %i WHERE to_status IN (%s,%s)',[$this->prefix.'registration_history','accepted','waitlisted']);
+		self::assertCount(2,$evidence);
+		try {
+			$s['capacity']->decide($s['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Waitlisted registration bypassed queue');
 		} catch (RuntimeException) { self::assertTrue(true); }
 	}
 
