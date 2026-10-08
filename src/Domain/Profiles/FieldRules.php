@@ -31,8 +31,8 @@ final class FieldRules {
 		if ( array_diff( array_keys( $definition ), $allowed ) ) {
 			throw new InvalidArgumentException( 'Unknown field definition attribute.' );
 		}
-		$key = $definition['key'] ?? null;
-		$type = $definition['type'] ?? null;
+		$key   = $definition['key'] ?? null;
+		$type  = $definition['type'] ?? null;
 		$label = $definition['label'] ?? null;
 		if ( ! is_string( $key ) || ! preg_match( '/^[a-z][a-z0-9_]{0,99}$/D', $key )
 			|| ! is_string( $type ) || ! in_array( $type, self::types(), true )
@@ -48,7 +48,11 @@ final class FieldRules {
 				throw new InvalidArgumentException( 'Field policy flags must be boolean.' );
 			}
 		}
-		foreach ( array( 'privacy_purpose' => 255, 'lawful_basis_note' => 2000, 'retention_class' => 64 ) as $property => $limit ) {
+		foreach ( array(
+			'privacy_purpose'  => 255,
+			'lawful_basis_note' => 2000,
+			'retention_class'  => 64,
+		) as $property => $limit ) {
 			if ( isset( $definition[ $property ] ) && ( ! is_string( $definition[ $property ] ) || mb_strlen( $definition[ $property ] ) > $limit ) ) {
 				throw new InvalidArgumentException( 'Invalid privacy metadata.' );
 			}
@@ -60,7 +64,7 @@ final class FieldRules {
 		if ( in_array( $type, array( 'select', 'radio', 'multiselect' ), true ) && ! $choices ) {
 			throw new InvalidArgumentException( 'Choice fields require options.' );
 		}
-		$seen = array();
+		$seen   = array();
 		foreach ( $choices as $choice ) {
 			if ( ! is_string( $choice ) || '' === $choice || strlen( $choice ) > 100 || isset( $seen[ $choice ] ) ) {
 				throw new InvalidArgumentException( 'Options must be unique short strings.' );
@@ -72,9 +76,10 @@ final class FieldRules {
 	/**
 	 * Normalize user input to exact database slots, never a lossy string cast.
 	 *
-	 * @param string       $type    Frozen V1 type.
-	 * @param mixed        $value   Raw typed input; null clears the field.
-	 * @param list<string> $choices Validated choice values.
+	 * @param string $type    Frozen V1 type.
+	 * @param mixed  $value   Raw typed input; null clears the field.
+	 * @param array  $choices Validated choice values.
+	 * @phpstan-param list<string> $choices
 	 * @return list<array{slot:string,value:string|int,ordinal:int}>
 	 * @throws InvalidArgumentException For invalid value type or representation.
 	 */
@@ -104,7 +109,13 @@ final class FieldRules {
 			if ( ! is_bool( $value ) ) {
 				throw new InvalidArgumentException( 'Checkbox must be boolean.' );
 			}
-			return array( array( 'slot' => 'value_boolean', 'value' => $value ? 1 : 0, 'ordinal' => 0 ) );
+			return array(
+				array(
+					'slot'    => 'value_boolean',
+					'value'   => $value ? 1 : 0,
+					'ordinal' => 0,
+				),
+			);
 		}
 		if ( 'number' === $type ) {
 			if ( ! is_int( $value ) && ! is_float( $value ) && ! is_string( $value ) ) {
@@ -114,7 +125,13 @@ final class FieldRules {
 			if ( ! preg_match( '/^-?(?:0|[1-9][0-9]{0,12})(?:\.[0-9]{1,6})?$/D', $number ) ) {
 				throw new InvalidArgumentException( 'Number exceeds fixed decimal precision.' );
 			}
-			return array( array( 'slot' => 'value_decimal', 'value' => $number, 'ordinal' => 0 ) );
+			return array(
+				array(
+					'slot'    => 'value_decimal',
+					'value'   => $number,
+					'ordinal' => 0,
+				),
+			);
 		}
 		if ( ! is_string( $value ) ) {
 			throw new InvalidArgumentException( 'Text-like input must be a string.' );
@@ -124,7 +141,13 @@ final class FieldRules {
 			if ( ! $date || $date->format( 'Y-m-d' ) !== $value ) {
 				throw new InvalidArgumentException( 'Invalid calendar date.' );
 			}
-			return array( array( 'slot' => 'value_date', 'value' => $value, 'ordinal' => 0 ) );
+			return array(
+				array(
+					'slot'    => 'value_date',
+					'value'   => $value,
+					'ordinal' => 0,
+				),
+			);
 		}
 		$limit = 'textarea' === $type ? 10000 : 191;
 		if ( mb_strlen( $value ) > $limit || ( 'email' === $type && ! filter_var( $value, FILTER_VALIDATE_EMAIL ) )
@@ -132,6 +155,12 @@ final class FieldRules {
 			|| ( in_array( $type, array( 'select', 'radio' ), true ) && ! in_array( $value, $choices, true ) ) ) {
 			throw new InvalidArgumentException( 'Invalid profile field value.' );
 		}
-		return array( array( 'slot' => 'textarea' === $type ? 'value_text' : 'value_string', 'value' => $value, 'ordinal' => 0 ) );
+		return array(
+			array(
+				'slot'    => 'textarea' === $type ? 'value_text' : 'value_string',
+				'value'   => $value,
+				'ordinal' => 0,
+			),
+		);
 	}
 }

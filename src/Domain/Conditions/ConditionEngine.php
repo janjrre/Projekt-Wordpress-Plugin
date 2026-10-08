@@ -36,8 +36,10 @@ final class ConditionEngine {
 	 * Compute a deterministic boolean from trusted, server-loaded facts.
 	 *
 	 * @param array<string, mixed> $ast     Validated condition tree.
-	 * @param array<string, array<string, mixed>> $facts Authorized profile/registration values.
-	 * @param array<string, string> $contexts Date/time context values, UTC ISO-8601.
+	 * @param array                $facts Authorized profile/registration values.
+	 * @phpstan-param array<string, array<string, mixed>> $facts
+	 * @param array                $contexts Date/time context values, UTC ISO-8601.
+	 * @phpstan-param array<string, string> $contexts
 	 * @return bool
 	 */
 	public function evaluate( array $ast, array $facts, array $contexts = array() ): bool {
@@ -52,6 +54,7 @@ final class ConditionEngine {
 	 * @param array<string, mixed> $node  One AST node.
 	 * @param int                  $depth Current nesting.
 	 * @param int                  $count Total nodes, passed by reference.
+	 * @throws InvalidArgumentException On invalid AST shape.
 	 */
 	private function validate_node( array $node, int $depth, int &$count ): void {
 		++$count;
@@ -97,7 +100,7 @@ final class ConditionEngine {
 			throw new InvalidArgumentException( 'Operator requires a value.' );
 		}
 		if ( array_key_exists( 'value', $node ) ) {
-			$json = json_encode( $node['value'] );
+			$json = json_encode( $node['value'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode -- Pure condition domain has no WordPress runtime dependency.
 			if ( false === $json || strlen( $json ) > 1000 || is_object( $node['value'] ) ) {
 				throw new InvalidArgumentException( 'Condition value is not a supported literal.' );
 			}
@@ -115,8 +118,10 @@ final class ConditionEngine {
 	 * Evaluate a schema-validated node only.
 	 *
 	 * @param array<string, mixed> $node AST node.
-	 * @param array<string, array<string, mixed>> $facts Authorized source values.
-	 * @param array<string, string> $contexts Trusted UTC event dates.
+	 * @param array                $facts Authorized source values.
+	 * @phpstan-param array<string, array<string, mixed>> $facts
+	 * @param array                $contexts Trusted UTC event dates.
+	 * @phpstan-param array<string, string> $contexts
 	 * @return bool
 	 */
 	private function evaluate_node( array $node, array $facts, array $contexts ): bool {
@@ -140,7 +145,7 @@ final class ConditionEngine {
 			return ! $this->evaluate_node( $node['not'], $facts, $contexts );
 		}
 		$source = (string) $node['source'];
-		$field = (string) $node['field'];
+		$field  = (string) $node['field'];
 		$actual = $facts[ $source ][ $field ] ?? null;
 		$target = $node['value'] ?? null;
 		return match ( $node['operator'] ) {
