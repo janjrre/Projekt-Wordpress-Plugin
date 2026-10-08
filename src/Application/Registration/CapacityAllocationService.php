@@ -58,7 +58,7 @@ final class CapacityAllocationService {
 	 * @param string        $utc_now     Trusted UTC instant.
 	 * @param CorrelationId $correlation Request trace.
 	 * @return PublicId Bucket public identity.
-	 * @throws \Exception When capacity is invalid or actor/event is ineligible.
+	 * @throws InvalidArgumentException When capacity is invalid.
 	 */
 	public function create_general_bucket( Actor $actor, OrgScope $scope, PublicId $event_id, int $limit, string $utc_now, CorrelationId $correlation ): PublicId {
 		if ( $limit < 1 || $limit > 1000000 ) {

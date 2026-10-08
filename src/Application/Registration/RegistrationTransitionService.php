@@ -55,7 +55,7 @@ final class RegistrationTransitionService {
 	 * @param PublicId      $command_id  Stable idempotent command ID.
 	 * @param string        $utc_now     Trusted UTC clock.
 	 * @param CorrelationId $correlation Trace identity.
-	 * @throws \Exception When permission or state prohibits this transition.
+	 * @throws InvalidArgumentException For forbidden transition targets.
 	 */
 	public function transition( Actor $actor, OrgScope $scope, PublicId $id, string $target, PublicId $command_id, string $utc_now, CorrelationId $correlation ): void {
 		if ( ! in_array( $target, array( 'review', 'rejected', 'cancelled' ), true ) ) {
