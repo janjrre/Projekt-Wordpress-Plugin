@@ -1,0 +1,71 @@
+<?php
+/**
+ * Live delegation grants; independent from relationships.
+ *
+ * @package UOP
+ */
+namespace UOP\Infrastructure\Database;
+
+use InvalidArgumentException;
+use UOP\Core\PublicId;
+use UOP\Domain\Organization\OrgScope;
+
+final class DelegationRepository {
+	public function __construct( private Connection $db, private string $prefix ) {}
+
+	/**
+	 * Resolve active delegated permission from the database on every decision.
+	 * An organization-wide grant has scope organization/0; event grants are narrow.
+	 */
+	public function allows( OrgScope $scope, int $actor_id, int $subject_id, string $permission, int $event_id = 0 ): bool {
+		if ( $actor_id < 1 || $subject_id < 1 ) {
+			return false;
+		}
+		$rows = $this->db->rows(
+			"SELECT id FROM %i WHERE organization_id = %d AND actor_user_id = %d AND subject_person_id = %d AND permission_set = %s AND status = 'active' AND (valid_from IS NULL OR valid_from <= UTC_TIMESTAMP()) AND (valid_to IS NULL OR valid_to > UTC_TIMESTAMP()) AND ((scope_type = 'organization' AND scope_id = 0) OR (scope_type = 'event' AND scope_id = %d AND %d > 0)) LIMIT 1",
+			array( $this->prefix . 'delegations', $scope->id, $actor_id, $subject_id, $permission, $event_id, $event_id )
+		);
+		return ! empty( $rows );
+	}
+
+	/** @return list<array<string, mixed>> */
+	public function for_actor( OrgScope $scope, int $actor_id ): array {
+		return $this->db->rows(
+			"SELECT id, public_id, subject_person_id, permission_set, scope_type, scope_id FROM %i WHERE organization_id = %d AND actor_user_id = %d AND status = 'active' AND (valid_from IS NULL OR valid_from <= UTC_TIMESTAMP()) AND (valid_to IS NULL OR valid_to > UTC_TIMESTAMP()) ORDER BY id ASC LIMIT 100",
+			array( $this->prefix . 'delegations', $scope->id, $actor_id )
+		);
+	}
+
+	/** Grant uses the unique business key; a revoked grant can be explicitly renewed. */
+	public function grant( OrgScope $scope, PublicId $id, int $actor_id, int $subject_id, string $permission, string $scope_type, int $scope_id, ?int $relationship_id, string $utc_now ): void {
+		if ( $actor_id < 1 || $subject_id < 1 || ! in_array( $permission, array( 'registration_manage', 'profile_view', 'profile_edit' ), true ) || ! in_array( $scope_type, array( 'organization', 'event' ), true ) || ( 'organization' === $scope_type && 0 !== $scope_id ) || ( 'event' === $scope_type && $scope_id < 1 ) ) {
+			throw new InvalidArgumentException( 'Invalid delegation grant.' );
+		}
+		$people = $this->db->rows(
+			"SELECT id FROM %i WHERE organization_id = %d AND status = 'active' AND id = %d LIMIT 1",
+			array( $this->prefix . 'persons', $scope->id, $subject_id )
+		);
+		if ( ! $people ) {
+			throw new InvalidArgumentException( 'Delegation subject is outside the organization.' );
+		}
+		$this->db->execute(
+			"INSERT INTO %i (public_id, organization_id, actor_user_id, subject_person_id, relationship_id, permission_set, scope_type, scope_id, status, created_at) VALUES (%s,%d,%d,%d,%d,%s,%s,%d,'active',%s) ON DUPLICATE KEY UPDATE status = 'active', revoked_at = NULL, valid_from = NULL, valid_to = NULL",
+			array( $this->prefix . 'delegations', $id->to_binary(), $scope->id, $actor_id, $subject_id, $relationship_id ?? 0, $permission, $scope_type, $scope_id, $utc_now )
+		);
+	}
+
+	/** Immediately revoke all grants issued to a removed WordPress user. */
+	public function revoke_for_actor( OrgScope $scope, int $actor_id, string $utc_now ): int {
+		return $this->db->execute(
+			"UPDATE %i SET status = 'revoked', revoked_at = %s WHERE organization_id = %d AND actor_user_id = %d AND status = 'active'",
+			array( $this->prefix . 'delegations', $utc_now, $scope->id, $actor_id )
+		);
+	}
+
+	public function revoke( OrgScope $scope, PublicId $id, string $utc_now ): bool {
+		return 1 === $this->db->execute(
+			"UPDATE %i SET status = 'revoked', revoked_at = %s WHERE organization_id = %d AND public_id = %s AND status = 'active'",
+			array( $this->prefix . 'delegations', $utc_now, $scope->id, $id->to_binary() )
+		);
+	}
+}
