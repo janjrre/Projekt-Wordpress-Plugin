@@ -44,6 +44,7 @@ final class PolicyTest extends TestCase {
         self::assertFalse($policy->can(new Actor(7), 'person.view', $child)->allowed);
         $db->delegations[] = ['organization_id'=>1,'actor_user_id'=>7,'subject_person_id'=>40,'permission_set'=>'registration_manage','scope_type'=>'organization','scope_id'=>0,'status'=>'active'];
         self::assertSame('ALLOW_DELEGATION', $policy->can(new Actor(7),'person.view',$child)->reason);
+        self::assertFalse($policy->can(new Actor(7),'person.edit',$child)->allowed, 'Registration grant must not provide edit authority');
         self::assertFalse($policy->can(new Actor(7),'person.view',new PolicyObject(2,'person',40))->allowed);
         $db->delegations[0]['status'] = 'revoked';
         self::assertFalse($policy->can(new Actor(7),'person.view',$child)->allowed);

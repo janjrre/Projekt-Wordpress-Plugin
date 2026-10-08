@@ -75,7 +75,7 @@ final class AssignmentService {
 				if ( ! $this->policy->can( $actor, 'organization.manage', $domain_object )->allowed ) {
 					throw new RuntimeException( 'Assignment no longer permitted.' );
 				}
-				$id = $this->assignments->grant( $scope, $user_id, $role_key, $scope_type, $scope_id, $ceiling, $utc_now );
+				$id   = $this->assignments->grant( $scope, $user_id, $role_key, $scope_type, $scope_id, $ceiling, $utc_now );
 				$uuid = PublicId::generate();
 				$this->audit->append( $scope, $actor, 'assignment.granted', $domain_object, 'success', $correlation, $uuid );
 				$this->outbox->append( $scope, $uuid, 'assignment', $id, 'assignment.granted', $correlation, array( 'status' => 'active' ) );

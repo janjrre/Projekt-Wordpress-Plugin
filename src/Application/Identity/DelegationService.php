@@ -79,7 +79,7 @@ final class DelegationService {
 		}
 		$relationship = null;
 		if ( null !== $relationship_id ) {
-			$relationship = $this->relationships->find( $scope, $relationship_id );
+			$relationship   = $this->relationships->find( $scope, $relationship_id );
 			$grantee_person = $this->people->by_user( $scope, $grantee_user_id );
 			if ( ! $relationship || ! $grantee_person || 'active' !== $relationship['status'] || (int) $relationship['from_person_id'] !== (int) $grantee_person['id'] || (int) $relationship['to_person_id'] !== (int) $subject['id'] ) {
 				throw new RuntimeException( 'Delegation relationship evidence mismatch.' );
@@ -96,8 +96,8 @@ final class DelegationService {
 				if ( ! $grant ) {
 					throw new RuntimeException( 'Delegation could not be verified.' );
 				}
-				$public_id = PublicId::from_binary( $grant['public_id'] );
-				$event = PublicId::generate();
+				$public_id     = PublicId::from_binary( $grant['public_id'] );
+				$event         = PublicId::generate();
 				$domain_object = new PolicyObject( $scope->id, 'delegation', (int) $grant['id'], (int) $subject['id'] );
 				$this->audit->append( $scope, $manager, 'delegation.granted', $domain_object, 'success', $correlation, $event );
 				$this->outbox->append( $scope, $event, 'delegation', (int) $grant['id'], 'delegation.granted', $correlation, array( 'public_id' => $public_id->to_string() ) );
@@ -124,7 +124,7 @@ final class DelegationService {
 				if ( ! $grant || ! $this->policy->can( $manager, 'delegation.manage', new PolicyObject( $scope->id, 'delegation', (int) $grant['id'], (int) $grant['subject_person_id'] ) )->allowed || ! $this->delegations->revoke( $scope, $public_id, $utc_now ) ) {
 					throw new RuntimeException( 'Delegation revocation denied or already processed.' );
 				}
-				$event = PublicId::generate();
+				$event         = PublicId::generate();
 				$domain_object = new PolicyObject( $scope->id, 'delegation', (int) $grant['id'], (int) $grant['subject_person_id'] );
 				$this->audit->append( $scope, $manager, 'delegation.revoked', $domain_object, 'success', $correlation, $event );
 				$this->outbox->append( $scope, $event, 'delegation', (int) $grant['id'], 'delegation.revoked', $correlation, array( 'public_id' => $public_id->to_string() ) );

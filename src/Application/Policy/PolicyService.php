@@ -103,8 +103,13 @@ final class PolicyService {
 				if ( $self && 'active' === $self['status'] && (int) $self['id'] === $subject_id ) {
 					$mode = 'self';
 				} else {
-					$permission = in_array( $action, array( 'person.view', 'registration.view' ), true ) ? 'profile_view' : 'registration_manage';
-					if ( $this->delegations->allows( $scope, $actor->user_id, $subject_id, $permission, $event_id ) || $this->delegations->allows( $scope, $actor->user_id, $subject_id, 'registration_manage', $event_id ) ) {
+					$permission = match ( $action ) {
+						'person.view', 'registration.view' => 'profile_view',
+						'person.edit' => 'profile_edit',
+						default => 'registration_manage',
+					};
+					if ( $this->delegations->allows( $scope, $actor->user_id, $subject_id, $permission, $event_id )
+						|| ( 'person.view' === $action && $this->delegations->allows( $scope, $actor->user_id, $subject_id, 'registration_manage', $event_id ) ) ) {
 						$mode = 'delegate';
 					}
 				}
