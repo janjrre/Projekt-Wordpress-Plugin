@@ -91,6 +91,10 @@ jobs:
           wp core install --path=/tmp/uop-wordpress --url=http://127.0.0.1:8080 --title=UOP-Test --admin_user=uop_test_admin --admin_password="$password" --admin_email=uop@example.invalid --skip-email
           ln -s "$GITHUB_WORKSPACE" /tmp/uop-wordpress/wp-content/plugins/uop-core
       - run: composer test:integration
+      - name: M4 fifty-worker capacity concurrency regression
+        if: ${{ matrix.php == '8.3' && matrix.db == 'mysql:8.0' || matrix.php == '8.5' && matrix.db == 'mariadb:10.11' }}
+        timeout-minutes: 5
+        run: php tests/Fixtures/m4-capacity-stress.php
       - name: WP CLI activation and deactivation
         run: |
           wp plugin activate uop-core --path="$WP_ROOT"
