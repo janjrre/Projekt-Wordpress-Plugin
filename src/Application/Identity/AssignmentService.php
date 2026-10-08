@@ -10,6 +10,7 @@ namespace UOP\Application\Identity;
 use RuntimeException;
 use UOP\Application\Event\PostCommitPublisher;
 use UOP\Application\Policy\Actor;
+use UOP\Application\Policy\FieldDefinition;
 use UOP\Application\Policy\PolicyObject;
 use UOP\Application\Policy\PolicyService;
 use UOP\Core\CorrelationId;
@@ -72,13 +73,39 @@ final class AssignmentService {
 		}
 		$this->tx->run(
 			function () use ( $actor, $scope, $user_id, $role_key, $scope_type, $scope_id, $ceiling, $utc_now, $correlation, $domain_object ): void {
-				if ( ! $this->policy->can( $actor, 'organization.manage', $domain_object )->allowed ) {
+				if ( ! $this->policy->can( $actor, 'organization.manage', $domain_object )->allowed
+					|| ! $this->policy->can( $actor, 'person.view', $domain_object, new FieldDefinition( 'assignment_ceiling', $ceiling, true, true, true, true ) )->allowed ) {
 					throw new RuntimeException( 'Assignment no longer permitted.' );
 				}
 				$id   = $this->assignments->grant( $scope, $user_id, $role_key, $scope_type, $scope_id, $ceiling, $utc_now );
 				$uuid = PublicId::generate();
 				$this->audit->append( $scope, $actor, 'assignment.granted', $domain_object, 'success', $correlation, $uuid );
 				$this->outbox->append( $scope, $uuid, 'assignment', $id, 'assignment.granted', $correlation, array( 'status' => 'active' ) );
+			}
+		);
+	}
+	/**
+	 * Revoke one scoped assignment and emit matching audit/outbox evidence.
+	 *
+	 * @param Actor         $actor       Manager performing the revoke.
+	 * @param OrgScope      $scope       Trusted organization.
+	 * @param int           $id          Internal assignment key, never public REST input.
+	 * @param string        $utc_now     UTC revocation timestamp.
+	 * @param CorrelationId $correlation Request correlation.
+	 * @throws RuntimeException When assignment is inaccessible or not active.
+	 */
+	public function revoke( Actor $actor, OrgScope $scope, int $id, string $utc_now, CorrelationId $correlation ): void {
+		$this->tx->run(
+			function () use ( $actor, $scope, $id, $utc_now, $correlation ): void {
+				$object = new PolicyObject( $scope->id, 'organization', $scope->id );
+				$row    = $this->assignments->find( $scope, $id );
+				if ( ! $row || ! $this->policy->can( $actor, 'organization.manage', $object )->allowed
+					|| ! $this->assignments->revoke( $scope, $id, $utc_now ) ) {
+					throw new RuntimeException( 'Assignment revocation not permitted.' );
+				}
+				$event = PublicId::generate();
+				$this->audit->append( $scope, $actor, 'assignment.revoked', $object, 'success', $correlation, $event );
+				$this->outbox->append( $scope, $event, 'assignment', $id, 'assignment.revoked', $correlation, array( 'status' => 'revoked' ) );
 			}
 		);
 	}

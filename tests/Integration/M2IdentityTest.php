@@ -4,7 +4,7 @@ namespace UOP\Tests\Integration;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use UOP\Application\Event\PostCommitPublisher;
-use UOP\Application\Identity\{AccountDeletionListener, AccountLinkService, DelegationService, PersonService};
+use UOP\Application\Identity\{AccountDeletionListener, AccountLinkService, AssignmentService, DelegationService, PersonService};
 use UOP\Application\Policy\{Actor, PolicyObject, PolicyService};
 use UOP\Core\{CorrelationId, PublicId, TransactionManager};
 use UOP\Domain\Organization\OrgScope;
@@ -94,6 +94,29 @@ final class M2IdentityTest extends TestCase {
             $dispatcher->consume($this->scope->id,$first->to_string());
             self::assertSame(1,$delivered,'Duplicate worker invocation cannot republish completed event');
         } finally { remove_action('uop_domain_event',$listener); }
+    }
+
+
+    public function test_assignment_grant_and_revoke_are_scoped_and_audited(): void {
+        $f=$this->fixture();
+        $manager=new Actor($f['admin']);
+        $target=wp_create_user('uop_target_' . bin2hex(random_bytes(4)),wp_generate_password(20),'target_' . bin2hex(random_bytes(4)) . '@example.invalid');
+        self::assertIsInt($target);
+        $service=new AssignmentService($f['assignments'],$this->db,$f['policy'],$f['tx'],$f['audit'],$f['outbox']);
+        $service->grant($manager,$this->scope,$target,'viewer','organization',0,'personal','2030-01-02 03:04:05',CorrelationId::generate());
+        $assignments=$f['assignments']->active_for($this->scope,$target);
+        self::assertCount(1,$assignments);
+        $id=(int)$assignments[0]['id'];
+        try {
+            $service->revoke($manager,new OrgScope($this->scope->id+100),$id,'2030-01-02 03:04:05',CorrelationId::generate());
+            self::fail('Cross-org revocation succeeded');
+        } catch (RuntimeException) {
+            self::assertCount(1,$f['assignments']->active_for($this->scope,$target));
+        }
+        $service->revoke($manager,$this->scope,$id,'2030-01-02 03:04:05',CorrelationId::generate());
+        self::assertSame([],$f['assignments']->active_for($this->scope,$target));
+        $entries=$this->db->rows('SELECT action FROM %i WHERE organization_id = %d AND action IN (%s,%s)',[$this->prefix.'audit_log',$this->scope->id,'assignment.granted','assignment.revoked']);
+        self::assertCount(2,$entries);
     }
 
     public function test_audit_and_outbox_share_rollback_boundary(): void {

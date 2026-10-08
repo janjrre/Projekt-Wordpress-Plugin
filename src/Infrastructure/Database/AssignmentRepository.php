@@ -96,4 +96,18 @@ final class AssignmentRepository {
 			array( $this->prefix . 'actor_assignments', $utc_now, $scope->id, $id )
 		);
 	}
+	/**
+	 * Resolve an assignment by internal ID only inside the current organization.
+	 *
+	 * @param OrgScope $scope Trusted organization scope.
+	 * @param int      $id    Internal assignment identity.
+	 * @return array<string, mixed>|null
+	 */
+	public function find( OrgScope $scope, int $id ): ?array {
+		$rows = $this->db->rows(
+			'SELECT id, organization_id, user_id, role_key, scope_type, scope_id, sensitivity_ceiling, status FROM %i WHERE organization_id = %d AND id = %d LIMIT 1',
+			array( $this->prefix . 'actor_assignments', $scope->id, $id )
+		);
+		return $rows[0] ?? null;
+	}
 }
