@@ -78,7 +78,7 @@ final class CapacityLifecycleService {
 				if ( $lookup !== $bucket_id ) {
 					throw new RuntimeException( 'Registration moved to another bucket.' );
 				}
-				$row    = $this->registration_from_public( $scope, $registration, $bucket_id );
+				$row           = $this->registration_from_public( $scope, $registration, $bucket_id );
 				$domain_object = $this->resource( $scope, $row );
 				if ( ! $this->policy->can( $actor, 'registration.cancel', $domain_object )->allowed ) {
 					throw new RuntimeException( 'Cancellation is not authorized.' );
