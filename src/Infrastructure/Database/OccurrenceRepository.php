@@ -60,5 +60,4 @@ final class OccurrenceRepository extends ScopedRepository {
 			array( $this->prefix . 'event_occurrences', $scope->id, $event_post_id )
 		);
 	}
-
 }

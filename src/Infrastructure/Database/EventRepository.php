@@ -77,5 +77,4 @@ final class EventRepository {
 			array( $this->prefix . 'event_settings', $scope->id )
 		);
 	}
-
 }

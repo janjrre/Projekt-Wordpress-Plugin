@@ -121,11 +121,11 @@ final class M3ReadService {
 				continue;
 			}
 			$result[] = array(
-				'public_id' => PublicId::from_binary( $row['public_id'] )->to_string(),
-				'title'     => get_the_title( $event_id ),
-				'status'    => (string) $row['status'],
+				'public_id'  => PublicId::from_binary( $row['public_id'] )->to_string(),
+				'title'      => get_the_title( $event_id ),
+				'status'     => (string) $row['status'],
 				'visibility' => (string) $row['visibility'],
-				'timezone'  => (string) $row['timezone'],
+				'timezone'   => (string) $row['timezone'],
 			);
 		}
 		return $result;
@@ -151,19 +151,19 @@ final class M3ReadService {
 		$occurrences = array();
 		foreach ( $this->occurrences->for_event( $scope, $event_id ) as $occurrence ) {
 			$occurrences[] = array(
-				'public_id' => PublicId::from_binary( $occurrence['public_id'] )->to_string(),
+				'public_id'     => PublicId::from_binary( $occurrence['public_id'] )->to_string(),
 				'starts_at_utc' => (string) $occurrence['start_at'],
-				'ends_at_utc' => (string) $occurrence['end_at'],
-				'timezone' => (string) $occurrence['timezone'],
-				'status' => (string) $occurrence['status'],
+				'ends_at_utc'   => (string) $occurrence['end_at'],
+				'timezone'      => (string) $occurrence['timezone'],
+				'status'        => (string) $occurrence['status'],
 			);
 		}
 		return array(
-			'public_id'  => $uuid->to_string(),
-			'title'      => get_the_title( $event_id ),
-			'status'     => (string) $row['status'],
-			'visibility' => (string) $row['visibility'],
-			'timezone'   => (string) $row['timezone'],
+			'public_id'   => $uuid->to_string(),
+			'title'       => get_the_title( $event_id ),
+			'status'      => (string) $row['status'],
+			'visibility'  => (string) $row['visibility'],
+			'timezone'    => (string) $row['timezone'],
 			'occurrences' => $occurrences,
 		);
 	}
@@ -185,19 +185,19 @@ final class M3ReadService {
 		if ( ! $this->policy->can( $actor, 'person.view', $object )->allowed ) {
 			return null;
 		}
-		$rows = $this->values->for_person( $scope, (int) $person['id'] );
+		$rows    = $this->values->for_person( $scope, (int) $person['id'] );
 		$grouped = array();
 		foreach ( $rows as $row ) {
 			$id = (int) $row['field_id'];
 			$grouped[ $id ][] = $row;
 		}
 		$definitions = array();
-		$values = array();
+		$values      = array();
 		foreach ( $this->fields->page( $scope, new PageRequest( 100 ) ) as $field ) {
 			if ( 'active' !== $field['status'] ) {
 				continue;
 			}
-			$key = (string) $field['field_key'];
+			$key                 = (string) $field['field_key'];
 			$definitions[ $key ] = new FieldDefinition(
 				$key,
 				(string) $field['sensitivity'],
@@ -206,7 +206,7 @@ final class M3ReadService {
 				(bool) $field['delegate_view'],
 				(bool) $field['delegate_edit']
 			);
-			$items = $grouped[ (int) $field['id'] ] ?? array();
+			$items          = $grouped[ (int) $field['id'] ] ?? array();
 			$values[ $key ] = 'multiselect' === $field['data_type']
 				? array_map( static fn ( array $item ): mixed => $item['value_string'], $items )
 				: ( $items ? self::decode_value( $items[0] ) : null );

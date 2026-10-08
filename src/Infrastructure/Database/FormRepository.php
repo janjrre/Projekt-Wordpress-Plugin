@@ -158,5 +158,4 @@ final class FormRepository extends ScopedRepository {
 		);
 		return $rows[0] ?? null;
 	}
-
 }

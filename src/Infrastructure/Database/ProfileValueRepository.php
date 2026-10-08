@@ -67,5 +67,4 @@ final class ProfileValueRepository {
 			array( $this->prefix . 'profile_values', $this->prefix . 'profile_fields', $this->prefix . 'persons', $scope->id, $scope->id, $person_id )
 		);
 	}
-
 }

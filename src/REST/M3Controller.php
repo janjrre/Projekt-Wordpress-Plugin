@@ -108,10 +108,9 @@ final class M3Controller {
 	/**
 	 * Check organization-wide form authoring scope for form collection.
 	 *
-	 * @param WP_REST_Request $request Incoming request.
 	 * @return bool
 	 */
-	public function can_manage_forms( WP_REST_Request $request ): bool {
+	public function can_manage_forms(): bool {
 		$scope = $this->scope();
 		return null !== $scope && $this->policy->can( $this->actor(), 'form.manage', new PolicyObject( $scope->id, 'organization', $scope->id ) )->allowed;
 	}
@@ -131,10 +130,9 @@ final class M3Controller {
 	/**
 	 * Ensure event collection read authorization.
 	 *
-	 * @param WP_REST_Request $request Incoming request.
 	 * @return bool
 	 */
-	public function can_manage_events( WP_REST_Request $request ): bool {
+	public function can_manage_events(): bool {
 		$scope = $this->scope();
 		return null !== $scope && $this->policy->can( $this->actor(), 'event.manage', new PolicyObject( $scope->id, 'organization', $scope->id ) )->allowed;
 	}
@@ -166,10 +164,9 @@ final class M3Controller {
 	/**
 	 * Project a bounded organization form list.
 	 *
-	 * @param WP_REST_Request $request Incoming request.
 	 * @return array<string, mixed>
 	 */
-	public function forms( WP_REST_Request $request ): array {
+	public function forms(): array {
 		return array( 'items' => $this->reads->forms( $this->actor(), $this->required_scope() ) );
 	}
 
@@ -197,7 +194,7 @@ final class M3Controller {
 			}
 			$uuid = $this->forms->create( $this->actor(), $this->required_scope(), $body['key'], $body['title'], $body['context'], $body['draft'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 			return (array) $this->reads->form( $this->actor(), $this->required_scope(), $uuid );
-		} catch ( InvalidArgumentException|RuntimeException $error ) {
+		} catch ( InvalidArgumentException | RuntimeException $error ) {
 			return new WP_Error( 'uop_invalid_form', 'Form creation was rejected.', array( 'status' => 400 ) );
 		}
 	}
@@ -237,7 +234,7 @@ final class M3Controller {
 			}
 			$this->forms->publish( $this->actor(), $this->required_scope(), $this->required_uuid( $request ), $body['revision'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 			return $this->form( $request );
-		} catch ( InvalidArgumentException|RuntimeException $error ) {
+		} catch ( InvalidArgumentException | RuntimeException $error ) {
 			return new WP_Error( 'uop_publish_rejected', 'Publication rejected: stale revision or unresolved consent.', array( 'status' => 409 ) );
 		}
 	}
@@ -245,10 +242,9 @@ final class M3Controller {
 	/**
 	 * Return authorized event summaries.
 	 *
-	 * @param WP_REST_Request $request Incoming request.
 	 * @return array<string, mixed>
 	 */
-	public function events( WP_REST_Request $request ): array {
+	public function events(): array {
 		return array( 'items' => $this->reads->events( $this->actor(), $this->required_scope() ) );
 	}
 
@@ -276,7 +272,8 @@ final class M3Controller {
 	 * Parse a JSON object, rejecting unknown server-owned properties.
 	 *
 	 * @param WP_REST_Request $request Incoming request.
-	 * @param list<string>    $keys Exact required keys.
+	 * @param array $keys Exact required keys.
+	 * @phpstan-param list<string> $keys
 	 * @return array<string, mixed>
 	 * @throws InvalidArgumentException For invalid transport shape.
 	 */
