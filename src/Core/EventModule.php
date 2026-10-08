@@ -9,10 +9,10 @@ namespace UOP\Core;
 
 use UOP\Extension\ModuleInterface;
 
-/** CPT is editorial only; never add operational duplicate post meta. */
+/** CPT stores editorial content only; operations are organization-owned rows. */
 final class EventModule implements ModuleInterface {
 	/**
-	 * Return the registered module key.
+	 * Stable module key.
 	 *
 	 * @return string
 	 */
@@ -21,28 +21,28 @@ final class EventModule implements ModuleInterface {
 	}
 
 	/**
-	 * Register the event content type only after database/environment gates.
+	 * Register editorial CPT on the proper WordPress init lifecycle.
 	 *
-	 * @param ServiceContainer $container Kernel service container.
+	 * @param ServiceContainer $container Kernel composition.
 	 */
 	public function register( ServiceContainer $container ): void {
 		add_action(
 			'init',
 			static function (): void {
 				register_post_type(
-						'uop_event',
-						array(
-							'labels'          => array(
-						'name'          => __( 'Events', 'uop-core' ),
-						'singular_name' => __( 'Event', 'uop-core' ),
-					),
-				'public'          => true,
-				'show_in_rest'    => true,
-				'has_archive'     => false,
-				'supports'        => array( 'title', 'editor', 'thumbnail', 'excerpt', 'revisions' ),
-				'capability_type' => 'post',
-				'map_meta_cap'    => true,
-			)
+					'uop_event',
+					array(
+						'labels'          => array(
+							'name'          => __( 'Events', 'uop-core' ),
+							'singular_name' => __( 'Event', 'uop-core' ),
+						),
+						'public'          => true,
+						'show_in_rest'    => true,
+						'has_archive'     => false,
+						'supports'        => array( 'title', 'editor', 'thumbnail', 'excerpt', 'revisions' ),
+						'capability_type' => 'post',
+						'map_meta_cap'    => true,
+					)
 				);
 			}
 		);
