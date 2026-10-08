@@ -182,6 +182,8 @@ final class M4RegistrationTest extends TestCase {
 		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,$command,$now,CorrelationId::generate()));
 		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,$command,$now,CorrelationId::generate()));
 		self::assertSame('waitlisted',$s['capacity']->decide($s['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$actual_occupancy=(new CapacityRepository($this->db,$this->prefix))->occupied($this->scope,(int)$this->db->rows('SELECT id FROM %i WHERE public_id = %s',[$this->prefix.'capacity_buckets',$bucket->to_binary()])[0]['id']);
+		self::assertSame(1,$actual_occupancy,'Occupied count must be scoped to the actual bucket, not the organization id');
 		$claims=$this->db->rows('SELECT status,registration_id FROM %i',[$this->prefix.'capacity_claims']);
 		self::assertCount(1,$claims);
 		self::assertSame('confirmed',$claims[0]['status']);

@@ -106,7 +106,7 @@ final class CapacityRepository {
 	 */
 	public function occupied( OrgScope $scope, int $bucket_id ): int {
 		$rows = $this->db->rows(
-			"SELECT COUNT(*) AS occupied FROM %i WHERE bucket_id = %d AND status IN ('held','confirmed')",
+			"SELECT COUNT(*) AS occupied FROM %i WHERE organization_id = %d AND bucket_id = %d AND status IN ('held','confirmed')",
 			array( $this->prefix . 'capacity_claims', $scope->id, $bucket_id )
 		);
 		return (int) $rows[0]['occupied'];
@@ -126,6 +126,20 @@ final class CapacityRepository {
 		) || (bool) $this->db->rows(
 			'SELECT id FROM %i WHERE organization_id = %d AND registration_id = %d LIMIT 1',
 			array( $this->prefix . 'waitlist_entries', $scope->id, $registration_id )
+		);
+	}
+
+	/**
+	 * Count currently waiting registrations; a free seat must serve FIFO first.
+	 *
+	 * @param OrgScope $scope     Trusted organization.
+	 * @param int      $bucket_id Locked bucket primary key.
+	 * @return bool True if the bucket has an outstanding queue.
+	 */
+	public function has_waiters( OrgScope $scope, int $bucket_id ): bool {
+		return (bool) $this->db->rows(
+			"SELECT id FROM %i WHERE organization_id = %d AND bucket_id = %d AND status IN ('waiting','offered') LIMIT 1",
+			array( $this->prefix . 'waitlist_entries', $scope->id, $bucket_id )
 		);
 	}
 

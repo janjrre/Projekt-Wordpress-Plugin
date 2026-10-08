@@ -136,7 +136,7 @@ final class CapacityAllocationService {
 					throw new RuntimeException( 'Email verification is required before acceptance.' );
 				}
 				$occupied = $this->capacity->occupied( $scope, (int) $locked['id'] );
-				$target   = $occupied < (int) $locked['capacity'] ? 'accepted' : 'waitlisted';
+				$target   = $occupied < (int) $locked['capacity'] && ! $this->capacity->has_waiters( $scope, (int) $locked['id'] ) ? 'accepted' : 'waitlisted';
 				$this->states->assert_transition( (string) $row['status'], $target );
 				if ( 'accepted' === $target ) {
 					$this->capacity->confirm( $scope, (int) $locked['id'], (int) $row['id'], $utc_now );
