@@ -21,12 +21,12 @@ final class ProjectionService {
 	/**
 	 * Filter all fields using one authoritative projection boundary.
 	 *
-	 * @param Actor    $actor actor input.
-	 * @param string   $action action input.
+	 * @param Actor        $actor actor input.
+	 * @param string       $action action input.
 	 * @param PolicyObject $domain_object object input.
-	 * @param PublicId $public_id public id input.
-	 * @param array    $definitions definitions input.
-	 * @param array    $values values input.
+	 * @param PublicId     $public_id public id input.
+	 * @param array        $definitions definitions input.
+	 * @param array        $values values input.
 	 * @return array<string, mixed>|null Null is a hidden object.
 	 */
 	public function project( Actor $actor, string $action, PolicyObject $domain_object, PublicId $public_id, array $definitions, array $values ): ?array {

@@ -44,11 +44,11 @@ final class PersonService {
 	/**
 	 * Create an organization-owned person after authoritative policy checks.
 	 *
-	 * @param Actor       $actor       Request actor.
-	 * @param OrgScope    $scope       Trusted organization.
-	 * @param string      $name        Validated display name.
-	 * @param string|null $email       Optional contact email, never an identity key.
-	 * @param string      $utc_now     UTC timestamp.
+	 * @param Actor         $actor       Request actor.
+	 * @param OrgScope      $scope       Trusted organization.
+	 * @param string        $name        Validated display name.
+	 * @param string|null   $email       Optional contact email, never an identity key.
+	 * @param string        $utc_now     UTC timestamp.
 	 * @param CorrelationId $correlation Command trace.
 	 * @return PublicId
 	 * @throws RuntimeException If the actor lacks permission.

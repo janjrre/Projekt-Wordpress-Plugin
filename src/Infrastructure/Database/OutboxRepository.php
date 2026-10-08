@@ -53,7 +53,7 @@ final class OutboxRepository {
 				$aggregate_id,
 				$event_name,
 				$correlation->to_binary(),
-				wp_json_encode( $payload, JSON_THROW_ON_ERROR )
+				(string) wp_json_encode( $payload, JSON_THROW_ON_ERROR ),
 			)
 		);
 	}

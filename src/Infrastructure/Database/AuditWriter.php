@@ -27,18 +27,18 @@ final class AuditWriter {
 	/**
 	 * Append one auditable result within the caller's transaction.
 	 *
-	 * @param OrgScope            $scope       Trusted organization boundary.
-	 * @param Actor               $actor       WordPress actor, or system actor zero.
-	 * @param string              $action      Stable domain action key.
-	 * @param PolicyObject        $object      Scoped object reference.
-	 * @param string              $result      Allowed or rejected outcome.
-	 * @param CorrelationId       $correlation Request correlation identifier.
-	 * @param PublicId|null      $event       Domain event public ID.
+	 * @param OrgScope                  $scope       Trusted organization boundary.
+	 * @param Actor                     $actor       WordPress actor, or system actor zero.
+	 * @param string                    $action      Stable domain action key.
+	 * @param PolicyObject              $domain_object      Scoped object reference.
+	 * @param string                    $result      Allowed or rejected outcome.
+	 * @param CorrelationId             $correlation Request correlation identifier.
+	 * @param PublicId|null             $event       Domain event public ID.
 	 * @param array<string, int|string> $metadata Safe, allowlisted diagnostic values.
 	 * @throws InvalidArgumentException When metadata contains unsafe content.
 	 */
-	public function append( OrgScope $scope, Actor $actor, string $action, PolicyObject $object, string $result, CorrelationId $correlation, ?PublicId $event = null, array $metadata = array() ): void {
-		if ( $scope->id !== $object->organization_id || ! preg_match( '/^[a-z][a-z0-9_.]{1,99}$/D', $action ) || ! in_array( $result, array( 'allowed', 'denied', 'success', 'failed' ), true ) ) {
+	public function append( OrgScope $scope, Actor $actor, string $action, PolicyObject $domain_object, string $result, CorrelationId $correlation, ?PublicId $event = null, array $metadata = array() ): void {
+		if ( $scope->id !== $domain_object->organization_id || ! preg_match( '/^[a-z][a-z0-9_.]{1,99}$/D', $action ) || ! in_array( $result, array( 'allowed', 'denied', 'success', 'failed' ), true ) ) {
 			throw new InvalidArgumentException( 'Invalid audit boundary.' );
 		}
 		foreach ( $metadata as $key => $value ) {
@@ -53,14 +53,14 @@ final class AuditWriter {
 				$scope->id,
 				$actor->user_id,
 				$action,
-				$object->type,
-				$object->id,
-				$object->subject_person_id ?? 0,
+				$domain_object->type,
+				$domain_object->id,
+				$domain_object->subject_person_id ?? 0,
 				$result,
 				$correlation->to_binary(),
 				$event?->to_binary() ?? '',
 				'',
-				wp_json_encode( $metadata, JSON_THROW_ON_ERROR )
+				(string) wp_json_encode( $metadata, JSON_THROW_ON_ERROR ),
 			)
 		);
 	}

@@ -26,15 +26,15 @@ final class AccountDeletionListener {
 	/**
 	 * Compose database-backed identity cleanup.
 	 *
-	 * @param Connection          $db          Database connection.
-	 * @param string              $prefix      Site table prefix.
-	 * @param PersonRepository    $people      People persistence.
+	 * @param Connection           $db          Database connection.
+	 * @param string               $prefix      Site table prefix.
+	 * @param PersonRepository     $people      People persistence.
 	 * @param DelegationRepository $delegations Delegations to revoke.
 	 * @param AssignmentRepository $assignments Assignments to revoke.
-	 * @param TransactionManager  $tx          Atomic transaction manager.
-	 * @param AuditWriter         $audit       Audit persistence.
-	 * @param OutboxRepository    $outbox      Transactional event storage.
-	 * @param PostCommitPublisher $publisher   Post-commit hooks.
+	 * @param TransactionManager   $tx          Atomic transaction manager.
+	 * @param AuditWriter          $audit       Audit persistence.
+	 * @param OutboxRepository     $outbox      Transactional event storage.
+	 * @param PostCommitPublisher  $publisher   Post-commit hooks.
 	 */
 	public function __construct(
 		private Connection $db,

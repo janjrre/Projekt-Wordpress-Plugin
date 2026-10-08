@@ -15,7 +15,9 @@ use UOP\Infrastructure\Database\PersonRepository;
 
 /** The same service must guard Admin, REST, Portal, CSV and background jobs. */
 final class PolicyService {
-	/** Injected WordPress capability resolver.
+	/**
+	 * Injected WordPress capability resolver.
+	 *
 	 * @var Closure(int,string): bool
 	 */
 	private Closure $has_capability;
@@ -68,7 +70,7 @@ final class PolicyService {
 	 *
 	 * @param Actor            $actor actor input.
 	 * @param string           $action action input.
-	 * @param PolicyObject         $domain_object object input.
+	 * @param PolicyObject     $domain_object object input.
 	 * @param ?FieldDefinition $field field input.
 	 * @return Decision
 	 */
