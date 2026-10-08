@@ -98,12 +98,12 @@ final class FormRepository extends ScopedRepository {
 	 * @throws RuntimeException When a version cannot be loaded.
 	 */
 	public function append_published( OrgScope $scope, array $root, PublicId $uuid, array $published, int $actor_id, string $utc_now ): array {
-		$rows = $this->db->rows(
+		$rows    = $this->db->rows(
 			'SELECT COALESCE(MAX(version),0) AS v FROM %i WHERE form_id = %d',
 			array( $this->prefix . 'form_versions', (int) $root['id'] )
 		);
 		$version = (int) $rows[0]['v'] + 1;
-		$json = wp_json_encode( $published, JSON_THROW_ON_ERROR );
+		$json    = wp_json_encode( $published, JSON_THROW_ON_ERROR );
 		$this->db->execute(
 			'INSERT INTO %i (public_id, form_id, version, schema_json, checksum, created_by_user_id, published_at) VALUES (%s,%d,%d,%s,%s,%d,%s)',
 			array( $this->prefix . 'form_versions', $uuid->to_binary(), (int) $root['id'], $version, $json, hash( 'sha256', $json, true ), $actor_id, $utc_now )

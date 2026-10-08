@@ -55,7 +55,7 @@ final class FormService {
 			function () use ( $actor, $scope, $key, $title, $context, $draft, $utc_now, $correlation, $uuid, $domain_object ): void {
 				$this->authorize( $actor, $domain_object );
 				$this->forms->create( $scope, $uuid, $actor->user_id, $key, $title, $context, $draft, $utc_now );
-				$root   = $this->forms->find( $scope, $uuid );
+				$root = $this->forms->find( $scope, $uuid );
 				if ( ! $root ) {
 					throw new RuntimeException( 'New form not found.' );
 				}
@@ -134,8 +134,8 @@ final class FormService {
 				}
 				unset( $field );
 				$version = PublicId::generate();
-				$saved = $this->forms->append_published( $scope, $root, $version, $schema, $actor->user_id, $utc_now );
-				$event = PublicId::generate();
+				$saved   = $this->forms->append_published( $scope, $root, $version, $schema, $actor->user_id, $utc_now );
+				$event   = PublicId::generate();
 				$this->audit->append( $scope, $actor, 'form.published', $domain_object, 'success', $correlation, $event );
 				$this->outbox->append( $scope, $event, 'form', (int) $root['id'], 'form.published', $correlation, array( 'public_id' => $version->to_string() ) );
 				return $version;

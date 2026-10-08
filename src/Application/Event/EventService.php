@@ -57,7 +57,7 @@ final class EventService {
 	 * @throws RuntimeException For unauthorized or wrong post type.
 	 */
 	public function configure( Actor $actor, OrgScope $scope, int $post_id, string $zone, string $utc_now, CorrelationId $correlation ): PublicId {
-		$post = get_post( $post_id );
+		$post     = get_post( $post_id );
 		$resource = new PolicyObject( $scope->id, 'event', $post_id, null, $post_id );
 		if ( ! $post || 'uop_event' !== $post->post_type || ! user_can( $actor->user_id, 'edit_post', $post_id )
 			|| ! $this->policy->can( $actor, 'event.manage', $resource )->allowed
@@ -93,7 +93,7 @@ final class EventService {
 	 */
 	public function add_occurrence( Actor $actor, OrgScope $scope, int $post_id, OccurrenceWindow $window, string $utc_now, CorrelationId $correlation ): PublicId {
 		$resource = new PolicyObject( $scope->id, 'event', $post_id, null, $post_id );
-		$uuid = PublicId::generate();
+		$uuid     = PublicId::generate();
 		$this->tx->run(
 			function () use ( $actor, $scope, $post_id, $window, $utc_now, $correlation, $resource, $uuid ): void {
 				$event = $this->events->find( $scope, $post_id );

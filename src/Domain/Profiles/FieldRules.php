@@ -96,8 +96,8 @@ final class FieldRules {
 			}
 			$result = array();
 			foreach ( array_values( $value ) as $ordinal => $item ) {
-				$normalized   = self::normalize( 'select', $item, $choices );
-				$result[] = array(
+				$normalized = self::normalize( 'select', $item, $choices );
+				$result[]   = array(
 					'slot'    => 'value_string',
 					'value'   => $normalized[0]['value'],
 					'ordinal' => $ordinal,
