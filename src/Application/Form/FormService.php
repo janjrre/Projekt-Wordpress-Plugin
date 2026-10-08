@@ -47,20 +47,20 @@ final class FormService {
 	 * @return PublicId
 	 */
 	public function create( Actor $actor, OrgScope $scope, string $key, string $title, string $context, array $draft, string $utc_now, CorrelationId $correlation ): PublicId {
-		$object = new PolicyObject( $scope->id, 'organization', $scope->id );
-		$this->authorize( $actor, $object );
+		$domain_object = new PolicyObject( $scope->id, 'organization', $scope->id );
+		$this->authorize( $actor, $domain_object );
 		( new FormSchema() )->validate_draft( $draft );
 		$uuid = PublicId::generate();
 		$this->tx->run(
-			function () use ( $actor, $scope, $key, $title, $context, $draft, $utc_now, $correlation, $uuid, $object ): void {
-				$this->authorize( $actor, $object );
+			function () use ( $actor, $scope, $key, $title, $context, $draft, $utc_now, $correlation, $uuid, $domain_object ): void {
+				$this->authorize( $actor, $domain_object );
 				$this->forms->create( $scope, $uuid, $actor->user_id, $key, $title, $context, $draft, $utc_now );
-				$root = $this->forms->find( $scope, $uuid );
+				$root   = $this->forms->find( $scope, $uuid );
 				if ( ! $root ) {
 					throw new RuntimeException( 'New form not found.' );
 				}
 				$event = PublicId::generate();
-				$this->audit->append( $scope, $actor, 'form.created', $object, 'success', $correlation, $event );
+				$this->audit->append( $scope, $actor, 'form.created', $domain_object, 'success', $correlation, $event );
 				$this->outbox->append( $scope, $event, 'form', (int) $root['id'], 'form.created', $correlation, array( 'public_id' => $uuid->to_string() ) );
 			}
 		);
@@ -87,13 +87,13 @@ final class FormService {
 				if ( ! $root ) {
 					throw new RuntimeException( 'Form unavailable.' );
 				}
-				$object = new PolicyObject( $scope->id, 'form', (int) $root['id'] );
-				$this->authorize( $actor, $object );
+				$domain_object = new PolicyObject( $scope->id, 'form', (int) $root['id'] );
+				$this->authorize( $actor, $domain_object );
 				if ( ! $this->forms->save_draft( $scope, $form_id, $expected, $schema, $utc_now ) ) {
 					throw new RuntimeException( 'Stale form draft revision.' );
 				}
 				$event = PublicId::generate();
-				$this->audit->append( $scope, $actor, 'form.draft_saved', $object, 'success', $correlation, $event );
+				$this->audit->append( $scope, $actor, 'form.draft_saved', $domain_object, 'success', $correlation, $event );
 				$this->outbox->append( $scope, $event, 'form', (int) $root['id'], 'form.draft_saved', $correlation, array( 'public_id' => $form_id->to_string() ) );
 			}
 		);
@@ -118,14 +118,14 @@ final class FormService {
 				if ( ! $root || null !== $root['archived_at'] || (int) $root['draft_revision'] !== $expected ) {
 					throw new RuntimeException( 'Form unavailable or stale.' );
 				}
-				$object = new PolicyObject( $scope->id, 'form', (int) $root['id'] );
-				$this->authorize( $actor, $object );
+				$domain_object = new PolicyObject( $scope->id, 'form', (int) $root['id'] );
+				$this->authorize( $actor, $domain_object );
 				$schema = json_decode( (string) $root['draft_schema_json'], true, 64, JSON_THROW_ON_ERROR );
 				( new FormSchema() )->validate_draft( $schema );
 				foreach ( $schema['fields'] as &$field ) {
 					if ( 'consent' === $field['type'] ) {
 						$definition = PublicId::from_string( $field['consent_definition_public_id'] );
-						$pinned = $this->forms->current_consent( $scope, $definition );
+						$pinned     = $this->forms->current_consent( $scope, $definition );
 						if ( ! $pinned ) {
 							throw new RuntimeException( 'Consent definition has no active immutable version.' );
 						}
@@ -136,7 +136,7 @@ final class FormService {
 				$version = PublicId::generate();
 				$saved = $this->forms->append_published( $scope, $root, $version, $schema, $actor->user_id, $utc_now );
 				$event = PublicId::generate();
-				$this->audit->append( $scope, $actor, 'form.published', $object, 'success', $correlation, $event );
+				$this->audit->append( $scope, $actor, 'form.published', $domain_object, 'success', $correlation, $event );
 				$this->outbox->append( $scope, $event, 'form', (int) $root['id'], 'form.published', $correlation, array( 'public_id' => $version->to_string() ) );
 				return $version;
 			}
@@ -147,11 +147,11 @@ final class FormService {
 	 * Deny all unknown actions and cross-organization objects.
 	 *
 	 * @param Actor        $actor Trusted WordPress actor.
-	 * @param PolicyObject $object Trusted policy resource.
+	 * @param PolicyObject $domain_object Trusted policy resource.
 	 * @throws RuntimeException When scope or capability is missing.
 	 */
-	private function authorize( Actor $actor, PolicyObject $object ): void {
-		if ( ! $this->policy->can( $actor, 'form.manage', $object )->allowed ) {
+	private function authorize( Actor $actor, PolicyObject $domain_object ): void {
+		if ( ! $this->policy->can( $actor, 'form.manage', $domain_object )->allowed ) {
 			throw new RuntimeException( 'Form access denied.' );
 		}
 	}

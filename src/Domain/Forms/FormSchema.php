@@ -26,7 +26,7 @@ final class FormSchema {
 			|| ! $schema['fields'] || count( $schema['fields'] ) > 100 ) {
 			throw new InvalidArgumentException( 'Invalid V1 form draft envelope.' );
 		}
-		$keys = array();
+		$keys   = array();
 		$engine = new ConditionEngine();
 		foreach ( $schema['fields'] as $field ) {
 			if ( ! is_array( $field ) || array_diff( array_keys( $field ), array( 'key', 'type', 'label', 'required', 'options', 'visible_when', 'consent_definition_public_id' ) )

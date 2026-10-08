@@ -34,7 +34,7 @@ final class FormRepository extends ScopedRepository {
 	 * @param string   $key Validated immutable form key.
 	 * @param string   $title Form title.
 	 * @param string   $context Domain context.
-	 * @param array<string,mixed> $schema Validated draft schema.
+	 * @param array    $schema Validated draft schema.
 	 * @param string   $utc_now UTC timestamp.
 	 * @throws InvalidArgumentException If author properties are out of contract.
 	 */
@@ -55,7 +55,7 @@ final class FormRepository extends ScopedRepository {
 	 * @param OrgScope $scope Trusted organization.
 	 * @param PublicId $form_id Form public ID.
 	 * @param int      $expected Client-observed draft revision.
-	 * @param array<string,mixed> $schema Validated author DTO.
+	 * @param array    $schema Validated author DTO.
 	 * @param string   $utc_now UTC timestamp.
 	 * @return bool True only when expected revision matched.
 	 */
@@ -89,9 +89,9 @@ final class FormRepository extends ScopedRepository {
 	 * Atomically append a version and update the pointer under the root lock.
 	 *
 	 * @param OrgScope $scope Trusted organization.
-	 * @param array<string,mixed> $root Locked form root.
+	 * @param array    $root Locked form root.
 	 * @param PublicId $uuid Immutable version UUID.
-	 * @param array<string,mixed> $published Verified schema with consent pins.
+	 * @param array    $published Verified schema with consent pins.
 	 * @param int      $actor_id Verified editor.
 	 * @param string   $utc_now UTC timestamp.
 	 * @return array{id:int,public_id:PublicId,version:int}
