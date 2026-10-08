@@ -123,7 +123,17 @@ jobs:
             cat /tmp/uop-server.log
             exit 1
           fi
-          npm run test:browser
+          if ! npm run test:browser; then
+            echo "::group::Disposable WordPress test server diagnostics"
+            tail -n 160 /tmp/uop-server.log || true
+            echo "::endgroup::"
+            echo "::group::Disposable WordPress PHP diagnostics"
+            if [ -f "$WP_ROOT/wp-content/debug.log" ]; then
+              tail -n 80 "$WP_ROOT/wp-content/debug.log"
+            fi
+            echo "::endgroup::"
+            exit 1
+          fi
       - name: Multisite persistence regression
         run: |
           wp core multisite-convert --path="$WP_ROOT" --title=UOP-Network
