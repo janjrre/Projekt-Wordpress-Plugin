@@ -2,7 +2,7 @@
 namespace UOP\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use UOP\Application\Policy\{Actor, Decision, FieldDefinition, PolicyService, ProjectionService, Resource};
+use UOP\Application\Policy\{Actor, Decision, FieldDefinition, PolicyService, ProjectionService, PolicyObject};
 use UOP\Core\PublicId;
 use UOP\Infrastructure\Database\{AssignmentRepository, Connection, DelegationRepository, PersonRepository};
 
@@ -40,11 +40,11 @@ final class PolicyTest extends TestCase {
     public function test_relationship_is_not_permission_and_cross_org_isolation(): void {
         $db = new PolicyFixtureConnection();
         $policy = $this->policy($db, []);
-        $child = new Resource(1, 'person', 40);
+        $child = new PolicyObject(1, 'person', 40);
         self::assertFalse($policy->can(new Actor(7), 'person.view', $child)->allowed);
         $db->delegations[] = ['organization_id'=>1,'actor_user_id'=>7,'subject_person_id'=>40,'permission_set'=>'registration_manage','scope_type'=>'organization','scope_id'=>0,'status'=>'active'];
         self::assertSame('ALLOW_DELEGATION', $policy->can(new Actor(7),'person.view',$child)->reason);
-        self::assertFalse($policy->can(new Actor(7),'person.view',new Resource(2,'person',40))->allowed);
+        self::assertFalse($policy->can(new Actor(7),'person.view',new PolicyObject(2,'person',40))->allowed);
         $db->delegations[0]['status'] = 'revoked';
         self::assertFalse($policy->can(new Actor(7),'person.view',$child)->allowed);
     }
@@ -54,8 +54,8 @@ final class PolicyTest extends TestCase {
         $db->assignments[] = ['organization_id'=>1,'user_id'=>8,'role_key'=>'event_manager','scope_type'=>'event','scope_id'=>10,'sensitivity_ceiling'=>'personal','status'=>'active'];
         $caps = [8=>['uop_view_people', 'uop_view_registrations', 'uop_view_sensitive_data']];
         $policy = $this->policy($db,$caps);
-        $same = new Resource(1, 'registration', 100, 40, 10);
-        $other = new Resource(1, 'registration', 101, 40, 11);
+        $same = new PolicyObject(1, 'registration', 100, 40, 10);
+        $other = new PolicyObject(1, 'registration', 101, 40, 11);
         self::assertTrue($policy->can(new Actor(8), 'registration.view', $same)->allowed);
         self::assertFalse($policy->can(new Actor(8), 'registration.view', $other)->allowed);
         $fields = [
@@ -77,7 +77,7 @@ final class PolicyTest extends TestCase {
         $db->people[] = ['organization_id'=>1,'id'=>13,'wp_user_id'=>6,'status'=>'active'];
         $policy = $this->policy($db,[]);
         $actor = new Actor(6);
-        $person = new Resource(1,'person',13);
+        $person = new PolicyObject(1,'person',13);
         self::assertSame('ALLOW_SELF', $policy->can($actor,'person.view',$person)->reason);
         self::assertFalse($policy->can($actor,'person.edit',$person,new FieldDefinition('private','medical',true,false,true,false))->allowed);
         self::assertTrue($policy->can($actor,'person.view',$person,new FieldDefinition('private','medical',true,false,true,false))->allowed);

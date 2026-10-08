@@ -23,13 +23,13 @@ final class ProjectionService {
 	 *
 	 * @param Actor    $actor actor input.
 	 * @param string   $action action input.
-	 * @param Resource $domain_object object input.
+	 * @param PolicyObject $domain_object object input.
 	 * @param PublicId $public_id public id input.
 	 * @param array    $definitions definitions input.
 	 * @param array    $values values input.
 	 * @return array<string, mixed>|null Null is a hidden object.
 	 */
-	public function project( Actor $actor, string $action, Resource $domain_object, PublicId $public_id, array $definitions, array $values ): ?array {
+	public function project( Actor $actor, string $action, PolicyObject $domain_object, PublicId $public_id, array $definitions, array $values ): ?array {
 		if ( ! $this->policy->can( $actor, $action, $domain_object )->allowed ) {
 			return null;
 		}

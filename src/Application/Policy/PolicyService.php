@@ -68,11 +68,11 @@ final class PolicyService {
 	 *
 	 * @param Actor            $actor actor input.
 	 * @param string           $action action input.
-	 * @param Resource         $domain_object object input.
+	 * @param PolicyObject         $domain_object object input.
 	 * @param ?FieldDefinition $field field input.
 	 * @return Decision
 	 */
-	public function can( Actor $actor, string $action, Resource $domain_object, ?FieldDefinition $field = null ): Decision {
+	public function can( Actor $actor, string $action, PolicyObject $domain_object, ?FieldDefinition $field = null ): Decision {
 		$capabilities = self::capabilities();
 		if ( ! isset( $capabilities[ $action ] ) ) {
 			return Decision::deny( 'DENY_CAPABILITY' );

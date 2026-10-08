@@ -10,7 +10,7 @@ namespace UOP\Application\Identity;
 use RuntimeException;
 use UOP\Application\Policy\Actor;
 use UOP\Application\Policy\PolicyService;
-use UOP\Application\Policy\Resource;
+use UOP\Application\Policy\PolicyObject;
 use UOP\Core\PublicId;
 use UOP\Core\TransactionManager;
 use UOP\Domain\Organization\OrgScope;
@@ -44,7 +44,7 @@ final class AccountLinkService {
 	 */
 	public function link( Actor $actor, OrgScope $scope, PublicId $person_id, int $user_id, string $utc_now ): void {
 		$row = $this->persons->find( $scope, $person_id );
-		if ( ! $row || ! $this->policy->can( $actor, 'person.link', new Resource( $scope->id, 'person', (int) $row['id'] ) )->allowed ) {
+		if ( ! $row || ! $this->policy->can( $actor, 'person.link', new PolicyObject( $scope->id, 'person', (int) $row['id'] ) )->allowed ) {
 			throw new RuntimeException( 'Account link not permitted.' );
 		}
 		if ( ! get_user_by( 'id', $user_id ) ) {

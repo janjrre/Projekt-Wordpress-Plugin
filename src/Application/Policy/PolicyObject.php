@@ -10,7 +10,7 @@ namespace UOP\Application\Policy;
 use InvalidArgumentException;
 
 /** Not a client-supplied authorization claim. */
-final readonly class Resource {
+final readonly class PolicyObject {
 	/**
 	 * Initialize required dependencies and validated values.
 	 *

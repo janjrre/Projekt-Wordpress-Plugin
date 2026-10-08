@@ -13,9 +13,17 @@ use UOP\Domain\Organization\OrgScope;
 
 /** Internal rows are never API response objects. */
 final class PersonRepository extends ScopedRepository {
-	/** Organization-owned table name. */
+	/**
+	 * Organization-owned table name.
+	 *
+	 * @var string
+	 */
 	private string $table;
-	/** Database adapter for scoped queries. */
+	/**
+	 * Database adapter for scoped queries.
+	 *
+	 * @var Connection
+	 */
 	private Connection $db;
 
 	/**
