@@ -24,7 +24,10 @@ test('form builder supports accessible keyboard reorder, saving and immutable pu
   await expect(page.getByRole('heading', { name: 'Keyboard Form' })).toBeVisible();
   await page.getByRole('button', { name: 'Add field' }).click();
   await expect(page.locator('.uop-m3__form-fields li')).toHaveCount(2);
-  await page.getByRole('button', { name: 'Move field up: New field' }).click();
+  const upButton = page.getByRole('button', { name: 'Move field up: New field' });
+  await upButton.focus();
+  await expect(upButton).toBeFocused();
+  await page.keyboard.press('Enter');
   await expect(page.locator('.uop-m3__form-fields li').first()).toContainText('New field');
   await page.getByRole('button', { name: 'Save draft' }).click();
   await expect(page.getByRole('status')).toContainText('Draft saved');
