@@ -116,4 +116,22 @@ final class DelegationRepository {
 			array( $this->prefix . 'delegations', $utc_now, $scope->id, $id->to_binary() )
 		);
 	}
+	/**
+	 * Resolve the actual durable delegation identity, including explicit regrants.
+	 *
+	 * @param OrgScope $scope      Trusted organization.
+	 * @param int      $actor_id   Delegated WordPress user.
+	 * @param int      $subject_id Target person.
+	 * @param string   $permission Named permission set.
+	 * @param string   $scope_type Organization or event.
+	 * @param int      $scope_id   Zero or event post ID.
+	 * @return array<string, mixed>|null
+	 */
+	public function by_grant_key( OrgScope $scope, int $actor_id, int $subject_id, string $permission, string $scope_type, int $scope_id ): ?array {
+		$rows = $this->db->rows(
+			'SELECT id, public_id, status FROM %i WHERE organization_id = %d AND actor_user_id = %d AND subject_person_id = %d AND permission_set = %s AND scope_type = %s AND scope_id = %d LIMIT 1',
+			array( $this->prefix . 'delegations', $scope->id, $actor_id, $subject_id, $permission, $scope_type, $scope_id )
+		);
+		return $rows[0] ?? null;
+	}
 }

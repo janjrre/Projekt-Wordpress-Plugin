@@ -10,6 +10,8 @@ namespace UOP\Core;
 use UOP\Application\Event\PostCommitPublisher;
 use UOP\Application\Identity\AccountDeletionListener;
 use UOP\Application\Identity\AccountLinkService;
+use UOP\Application\Identity\AssignmentService;
+use UOP\Application\Identity\DelegationService;
 use UOP\Application\Identity\PersonService;
 use UOP\Application\Policy\CapabilityRegistry;
 use UOP\Application\Policy\PolicyService;
@@ -121,6 +123,32 @@ final class IdentityModule implements ModuleInterface {
 				$c->get( Connection::class ),
 				$c->get( OutboxRepository::class ),
 				$prefix
+			)
+		);
+
+		$container->set(
+			AssignmentService::class,
+			static fn ( ServiceContainer $c ) => new AssignmentService(
+				$c->get( AssignmentRepository::class ),
+				$c->get( Connection::class ),
+				$c->get( PolicyService::class ),
+				$c->get( TransactionManager::class ),
+				$c->get( AuditWriter::class ),
+				$c->get( OutboxRepository::class )
+			)
+		);
+		$container->set(
+			DelegationService::class,
+			static fn ( ServiceContainer $c ) => new DelegationService(
+				$c->get( PersonRepository::class ),
+				$c->get( RelationshipRepository::class ),
+				$c->get( DelegationRepository::class ),
+				$c->get( Connection::class ),
+				$c->get( PolicyService::class ),
+				$c->get( TransactionManager::class ),
+				$c->get( AuditWriter::class ),
+				$c->get( OutboxRepository::class ),
+				$c->get( PostCommitPublisher::class )
 			)
 		);
 		CapabilityRegistry::install();

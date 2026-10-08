@@ -50,6 +50,7 @@ final class PolicyService {
 			'person.view'         => 'uop_view_people',
 			'person.edit'         => 'uop_edit_people',
 			'person.link'         => 'uop_manage_organization',
+			'organization.manage' => 'uop_manage_organization',
 			'delegation.manage'   => 'uop_manage_delegations',
 			'event.manage'        => 'uop_manage_events',
 			'form.manage'         => 'uop_manage_forms',
