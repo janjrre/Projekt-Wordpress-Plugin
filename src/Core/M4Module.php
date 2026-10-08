@@ -10,6 +10,7 @@ namespace UOP\Core;
 use UOP\Application\Registration\RegistrationConfigurationService;
 use UOP\Application\Registration\CapacityAllocationService;
 use UOP\Application\Registration\CapacityLifecycleService;
+use UOP\Application\Registration\EmailVerificationService;
 use UOP\Application\Registration\RegistrationService;
 use UOP\Application\Registration\RegistrationTransitionService;
 use UOP\Domain\Registrations\RegistrationStateMachine;
@@ -71,6 +72,16 @@ final class M4Module implements ModuleInterface {
 			static fn ( ServiceContainer $c ) => new RegistrationTransitionService(
 				$c->get( RegistrationRepository::class ),
 				$c->get( RegistrationStateMachine::class ),
+				$c->get( PolicyService::class ),
+				$c->get( TransactionManager::class ),
+				$c->get( AuditWriter::class ),
+				$c->get( OutboxRepository::class )
+			)
+		);
+		$container->set(
+			EmailVerificationService::class,
+			static fn ( ServiceContainer $c ) => new EmailVerificationService(
+				$c->get( RegistrationRepository::class ),
 				$c->get( PolicyService::class ),
 				$c->get( TransactionManager::class ),
 				$c->get( AuditWriter::class ),
