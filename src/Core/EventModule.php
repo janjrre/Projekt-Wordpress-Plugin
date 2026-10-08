@@ -26,7 +26,8 @@ final class EventModule implements ModuleInterface {
 	 * @param ServiceContainer $container Kernel service container.
 	 */
 	public function register( ServiceContainer $container ): void {
-		register_post_type(
+		add_action( 'init', static function (): void {
+			register_post_type(
 			'uop_event',
 			array(
 				'labels'          => array(
@@ -41,5 +42,6 @@ final class EventModule implements ModuleInterface {
 				'map_meta_cap'    => true,
 			)
 		);
+		} );
 	}
 }
