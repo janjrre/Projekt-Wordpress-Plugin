@@ -99,7 +99,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Browser activation smoke
         run: |
-          php -S 127.0.0.1:8080 -t "$WP_ROOT" > /tmp/uop-server.log 2>&1 &
+          PHP_CLI_SERVER_WORKERS=4 php -d max_execution_time=90 -d memory_limit=512M -S 127.0.0.1:8080 -t "$WP_ROOT" > /tmp/uop-server.log 2>&1 &
           server_pid=$!
           ready=0
           for attempt in $(seq 1 40); do

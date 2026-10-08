@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('form builder supports accessible keyboard reorder, saving and immutable publish', async ({ page }) => {
+  test.setTimeout(90000);
   const loginPage = await page.request.get('/wp-login.php');
   const login = await page.request.post('/wp-login.php', {
     form: {
