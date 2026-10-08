@@ -35,6 +35,7 @@ final class FormRepository extends ScopedRepository {
 	 * @param string   $title Form title.
 	 * @param string   $context Domain context.
 	 * @param array    $schema Validated draft schema.
+	 * @phpstan-param array<string, mixed> $schema
 	 * @param string   $utc_now UTC timestamp.
 	 * @throws InvalidArgumentException If author properties are out of contract.
 	 */
@@ -56,6 +57,7 @@ final class FormRepository extends ScopedRepository {
 	 * @param PublicId $form_id Form public ID.
 	 * @param int      $expected Client-observed draft revision.
 	 * @param array    $schema Validated author DTO.
+	 * @phpstan-param array<string, mixed> $schema
 	 * @param string   $utc_now UTC timestamp.
 	 * @return bool True only when expected revision matched.
 	 */
@@ -90,8 +92,10 @@ final class FormRepository extends ScopedRepository {
 	 *
 	 * @param OrgScope $scope Trusted organization.
 	 * @param array    $root Locked form root.
+	 * @phpstan-param array<string, mixed> $root
 	 * @param PublicId $uuid Immutable version UUID.
 	 * @param array    $published Verified schema with consent pins.
+	 * @phpstan-param array<string, mixed> $published
 	 * @param int      $actor_id Verified editor.
 	 * @param string   $utc_now UTC timestamp.
 	 * @return array{id:int,public_id:PublicId,version:int}
