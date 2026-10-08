@@ -7,7 +7,8 @@ use RuntimeException;
 use UOP\Application\Policy\{Actor, PolicyService};
 use UOP\Application\Event\EventService;
 use UOP\Application\Form\FormService;
-use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService};
+use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService, RegistrationTransitionService};
+use UOP\Domain\Registrations\RegistrationStateMachine;
 use UOP\Core\{CorrelationId, PublicId, TransactionManager};
 use UOP\Domain\Organization\OrgScope;
 use UOP\Infrastructure\Database\{AssignmentRepository, AuditWriter, DelegationRepository, EventRepository, FormRepository, Installer, OccurrenceRepository, OutboxRepository, PersonRepository, RegistrationRepository, SchemaManifest, WpdbConnection};
@@ -50,6 +51,7 @@ final class M4RegistrationTest extends TestCase {
 			'event'=>new EventService(new EventRepository($this->db,$this->prefix),new OccurrenceRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
 			'config'=>new RegistrationConfigurationService($this->db,$this->prefix,$policy,$tx,$audit,$outbox),
 			'submit'=>new RegistrationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
+			'transition'=>new RegistrationTransitionService(new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
 		];
 	}
 
@@ -142,4 +144,29 @@ final class M4RegistrationTest extends TestCase {
 			self::assertTrue(true);
 		}
 	}
+	public function test_review_and_rejection_are_idempotent_without_capacity_mutations(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$uuid=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'Member'],$now,CorrelationId::generate());
+		$review=PublicId::generate();
+		$s['transition']->transition($s['actor'],$this->scope,$uuid,'review',$review,$now,CorrelationId::generate());
+		$s['transition']->transition($s['actor'],$this->scope,$uuid,'review',$review,$now,CorrelationId::generate());
+		$reject=PublicId::generate();
+		$s['transition']->transition($s['actor'],$this->scope,$uuid,'rejected',$reject,$now,CorrelationId::generate());
+		$rows=$this->db->rows('SELECT id,status,version FROM %i WHERE organization_id = %d AND public_id = %s',[$this->prefix.'registrations',$this->scope->id,$uuid->to_binary()]);
+		self::assertSame('rejected',$rows[0]['status']);
+		self::assertSame(3,(int)$rows[0]['version']);
+		$history=$this->db->rows('SELECT from_status,to_status FROM %i WHERE registration_id = %d ORDER BY id',[$this->prefix.'registration_history',(int)$rows[0]['id']]);
+		self::assertSame(['submitted','review','rejected'],array_column($history,'to_status'));
+		self::assertSame([], $this->db->rows('SELECT id FROM %i',[$this->prefix.'capacity_claims']));
+		try {
+			$s['transition']->transition($s['actor'],$this->scope,$uuid,'accepted',PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Capacity-dependent target accepted');
+		} catch (InvalidArgumentException) { self::assertTrue(true); }
+		try {
+			$s['transition']->transition($s['actor'],$this->scope,$uuid,'cancelled',PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Terminal registration cancelled');
+		} catch (RuntimeException) { self::assertTrue(true); }
+	}
+
 }

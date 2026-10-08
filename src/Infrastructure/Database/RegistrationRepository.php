@@ -198,4 +198,60 @@ final class RegistrationRepository {
 		);
 		return $id;
 	}
+	/**
+	 * Lock one current registration under its owner organization.
+	 *
+	 * @param OrgScope $scope Trusted organization.
+	 * @param PublicId $uuid  Registration public identity.
+	 * @return array<string, mixed>|null
+	 */
+	public function lock_registration( OrgScope $scope, PublicId $uuid ): ?array {
+		$rows = $this->db->rows(
+			'SELECT id, public_id, person_id, event_post_id, status FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1 FOR UPDATE',
+			array( $this->prefix . 'registrations', $scope->id, $uuid->to_binary() )
+		);
+		return $rows[0] ?? null;
+	}
+
+	/**
+	 * Resolve a previously committed transition command within organization.
+	 *
+	 * @param OrgScope $scope   Trusted organization.
+	 * @param PublicId $command Command UUID.
+	 * @return array<string, mixed>|null
+	 */
+	public function transition_by_command( OrgScope $scope, PublicId $command ): ?array {
+		$rows = $this->db->rows(
+			'SELECT h.registration_id, h.to_status FROM %i h INNER JOIN %i r ON r.id = h.registration_id WHERE r.organization_id = %d AND h.command_id = %s LIMIT 1',
+			array( $this->prefix . 'registration_history', $this->prefix . 'registrations', $scope->id, $command->to_binary() )
+		);
+		return $rows[0] ?? null;
+	}
+
+	/**
+	 * Persist an authorized non-capacity transition and history atomically.
+	 *
+	 * @param OrgScope      $scope       Trusted organization.
+	 * @param int           $id          Locked registration ID.
+	 * @param string        $from        Current status.
+	 * @param string        $to          Validated target status.
+	 * @param PublicId      $command     Idempotent command UUID.
+	 * @param int           $actor_id    Authorized actor ID.
+	 * @param string        $utc_now     UTC timestamp.
+	 * @param CorrelationId $correlation Trace identity.
+	 * @throws RuntimeException When optimistic transition fails.
+	 */
+	public function transition( OrgScope $scope, int $id, string $from, string $to, PublicId $command, int $actor_id, string $utc_now, CorrelationId $correlation ): void {
+		$updated = $this->db->execute(
+			'UPDATE %i SET status = %s, version = version + 1, updated_at = %s WHERE organization_id = %d AND id = %d AND status = %s',
+			array( $this->prefix . 'registrations', $to, $utc_now, $scope->id, $id, $from )
+		);
+		if ( 1 !== $updated ) {
+			throw new RuntimeException( 'Registration state changed during transition.' );
+		}
+		$this->db->execute(
+			'INSERT INTO %i (registration_id, command_id, from_status, to_status, actor_user_id, correlation_id, created_at) VALUES (%d,%s,%s,%s,%d,%s,%s)',
+			array( $this->prefix . 'registration_history', $id, $command->to_binary(), $from, $to, $actor_id, $correlation->to_binary(), $utc_now )
+		);
+	}
 }
