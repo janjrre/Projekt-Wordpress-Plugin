@@ -134,4 +134,18 @@ final class DelegationRepository {
 		);
 		return $rows[0] ?? null;
 	}
+	/**
+	 * Load one delegation by public identity inside its organization.
+	 *
+	 * @param OrgScope $scope Trusted organization.
+	 * @param PublicId $id    Validated public UUID.
+	 * @return array<string, mixed>|null
+	 */
+	public function find( OrgScope $scope, PublicId $id ): ?array {
+		$rows = $this->db->rows(
+			'SELECT id, public_id, organization_id, actor_user_id, subject_person_id, permission_set, scope_type, scope_id, status FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1',
+			array( $this->prefix . 'delegations', $scope->id, $id->to_binary() )
+		);
+		return $rows[0] ?? null;
+	}
 }
