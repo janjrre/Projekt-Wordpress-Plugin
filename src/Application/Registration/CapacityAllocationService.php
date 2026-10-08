@@ -58,8 +58,7 @@ final class CapacityAllocationService {
 	 * @param string        $utc_now     Trusted UTC instant.
 	 * @param CorrelationId $correlation Request trace.
 	 * @return PublicId Bucket public identity.
-	 * @throws InvalidArgumentException For invalid capacity.
-	 * @throws RuntimeException For denied or nonexistent event.
+	 * @throws \Exception When capacity is invalid or actor/event is ineligible.
 	 */
 	public function create_general_bucket( Actor $actor, OrgScope $scope, PublicId $event_id, int $limit, string $utc_now, CorrelationId $correlation ): PublicId {
 		if ( $limit < 1 || $limit > 1000000 ) {
@@ -76,8 +75,8 @@ final class CapacityAllocationService {
 					|| ! user_can( $actor->user_id, 'edit_post', $event_post ) ) {
 					throw new RuntimeException( 'Capacity configuration not permitted.' );
 				}
-				$uuid = PublicId::generate();
-				$id   = $this->capacity->create_general( $scope, $uuid, $event_post, $limit, $utc_now );
+				$uuid         = PublicId::generate();
+				$id           = $this->capacity->create_general( $scope, $uuid, $event_post, $limit, $utc_now );
 				$domain_event = PublicId::generate();
 				$this->audit->append( $scope, $actor, 'capacity.created', $resource, 'success', $correlation, $domain_event );
 				$this->outbox->append( $scope, $domain_event, 'capacity', $id, 'capacity.created', $correlation, array( 'public_id' => $uuid->to_string() ) );
@@ -109,7 +108,7 @@ final class CapacityAllocationService {
 				}
 				$row = $this->registrations->lock_registration( $scope, $registration );
 				if ( ! $row || (int) $row['event_post_id'] !== (int) $locked['event_post_id']
-					|| (int) $locked['occurrence_id'] !== 0 ) {
+					|| 0 !== (int) $locked['occurrence_id'] ) {
 					throw new RuntimeException( 'Registration and bucket scope mismatch.' );
 				}
 				$resource = new PolicyObject( $scope->id, 'registration', (int) $row['id'], (int) $row['person_id'], (int) $row['event_post_id'] );
@@ -119,7 +118,7 @@ final class CapacityAllocationService {
 				}
 				$prior = $this->capacity->prior_decision( $scope, $command_id );
 				if ( $prior ) {
-					if ( (int) $prior['registration_id'] !== (int) $row['id'] || $prior['reason_code'] !== 'bucket:' . $bucket->to_string()
+					if ( (int) $prior['registration_id'] !== (int) $row['id'] || ( 'bucket:' . $bucket->to_string() ) !== $prior['reason_code']
 						|| ! in_array( $prior['to_status'], array( 'accepted', 'waitlisted' ), true ) ) {
 						throw new RuntimeException( 'Idempotency command has another owner.' );
 					}
@@ -147,7 +146,18 @@ final class CapacityAllocationService {
 				$this->capacity->record_decision( $scope, (int) $row['id'], (string) $row['status'], $target, $bucket, $command_id, $actor->user_id, $utc_now, $correlation );
 				$event = PublicId::generate();
 				$this->audit->append( $scope, $actor, 'registration.capacity_decided', $resource, 'success', $correlation, $event, array( 'new_status' => $target ) );
-				$this->outbox->append( $scope, $event, 'registration', (int) $row['id'], 'registration.capacity_decided', $correlation, array( 'public_id' => $registration->to_string(), 'new_status' => $target ) );
+				$this->outbox->append(
+					$scope,
+					$event,
+					'registration',
+					(int) $row['id'],
+					'registration.capacity_decided',
+					$correlation,
+					array(
+						'public_id'  => $registration->to_string(),
+						'new_status' => $target,
+					)
+				);
 				return $target;
 			}
 		);

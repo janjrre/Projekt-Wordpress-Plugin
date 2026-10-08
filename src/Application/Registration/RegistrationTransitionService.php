@@ -55,8 +55,7 @@ final class RegistrationTransitionService {
 	 * @param PublicId      $command_id  Stable idempotent command ID.
 	 * @param string        $utc_now     Trusted UTC clock.
 	 * @param CorrelationId $correlation Trace identity.
-	 * @throws RuntimeException When authorization or current state prohibits transition.
-	 * @throws InvalidArgumentException For a forbidden target transition.
+	 * @throws \Exception When permission or state prohibits this transition.
 	 */
 	public function transition( Actor $actor, OrgScope $scope, PublicId $id, string $target, PublicId $command_id, string $utc_now, CorrelationId $correlation ): void {
 		if ( ! in_array( $target, array( 'review', 'rejected', 'cancelled' ), true ) ) {
@@ -69,7 +68,7 @@ final class RegistrationTransitionService {
 					throw new RuntimeException( 'Registration unavailable.' );
 				}
 				$resource = new PolicyObject( $scope->id, 'registration', (int) $row['id'], (int) $row['person_id'], (int) $row['event_post_id'] );
-				$action = 'cancelled' === $target ? 'registration.cancel' : 'registration.review';
+				$action   = 'cancelled' === $target ? 'registration.cancel' : 'registration.review';
 				if ( ! $this->policy->can( $actor, $action, $resource )->allowed ) {
 					throw new RuntimeException( 'Registration transition denied.' );
 				}
@@ -86,8 +85,32 @@ final class RegistrationTransitionService {
 				$this->states->assert_transition( (string) $row['status'], $target );
 				$this->registrations->transition( $scope, (int) $row['id'], (string) $row['status'], $target, $command_id, $actor->user_id, $utc_now, $correlation );
 				$event = PublicId::generate();
-				$this->audit->append( $scope, $actor, 'registration.transitioned', $resource, 'success', $correlation, $event, array( 'previous_status' => (string) $row['status'], 'new_status' => $target ) );
-				$this->outbox->append( $scope, $event, 'registration', (int) $row['id'], 'registration.transitioned', $correlation, array( 'public_id' => $id->to_string(), 'previous_status' => (string) $row['status'], 'new_status' => $target ) );
+				$this->audit->append(
+					$scope,
+					$actor,
+					'registration.transitioned',
+					$resource,
+					'success',
+					$correlation,
+					$event,
+					array(
+						'previous_status' => (string) $row['status'],
+						'new_status'      => $target,
+					)
+				);
+				$this->outbox->append(
+					$scope,
+					$event,
+					'registration',
+					(int) $row['id'],
+					'registration.transitioned',
+					$correlation,
+					array(
+						'public_id'       => $id->to_string(),
+						'previous_status' => (string) $row['status'],
+						'new_status'      => $target,
+					)
+				);
 			}
 		);
 	}
