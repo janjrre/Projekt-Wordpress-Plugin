@@ -125,7 +125,7 @@ final class CapacityAllocationService {
 					return (string) $prior['to_status'];
 				}
 				if ( ! in_array( $row['status'], array( 'submitted', 'review' ), true )
-					|| $this->capacity->has_allocation( (int) $row['id'] ) ) {
+					|| $this->capacity->has_allocation( $scope, (int) $row['id'] ) ) {
 					throw new RuntimeException( 'Registration requires a dedicated release or offer command.' );
 				}
 				if ( null !== $locked['eligibility_json'] && '' !== $locked['eligibility_json'] ) {
@@ -135,7 +135,7 @@ final class CapacityAllocationService {
 					&& null === $row['email_verified_at'] ) {
 					throw new RuntimeException( 'Email verification is required before acceptance.' );
 				}
-				$occupied = $this->capacity->occupied( (int) $locked['id'] );
+				$occupied = $this->capacity->occupied( $scope, (int) $locked['id'] );
 				$target   = $occupied < (int) $locked['capacity'] ? 'accepted' : 'waitlisted';
 				$this->states->assert_transition( (string) $row['status'], $target );
 				if ( 'accepted' === $target ) {

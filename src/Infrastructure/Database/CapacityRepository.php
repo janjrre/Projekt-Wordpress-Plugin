@@ -100,13 +100,14 @@ final class CapacityRepository {
 	/**
 	 * Count actual occupied claim rows while owning the bucket row lock.
 	 *
-	 * @param int $bucket_id Locked internal bucket ID.
+	 * @param OrgScope $scope     Trusted organization.
+	 * @param int      $bucket_id Locked internal bucket ID.
 	 * @return int Confirmed and held claims only.
 	 */
-	public function occupied( int $bucket_id ): int {
+	public function occupied( OrgScope $scope, int $bucket_id ): int {
 		$rows = $this->db->rows(
 			"SELECT COUNT(*) AS occupied FROM %i WHERE bucket_id = %d AND status IN ('held','confirmed')",
-			array( $this->prefix . 'capacity_claims', $bucket_id )
+			array( $this->prefix . 'capacity_claims', $scope->id, $bucket_id )
 		);
 		return (int) $rows[0]['occupied'];
 	}
@@ -114,16 +115,17 @@ final class CapacityRepository {
 	/**
 	 * Reject bypassing a pre-existing queue entry or claim.
 	 *
-	 * @param int $registration_id Locked registration ID.
+	 * @param OrgScope $scope           Trusted organization.
+	 * @param int      $registration_id Locked registration ID.
 	 * @return bool Whether any allocation or queue history exists.
 	 */
-	public function has_allocation( int $registration_id ): bool {
+	public function has_allocation( OrgScope $scope, int $registration_id ): bool {
 		return (bool) $this->db->rows(
-			'SELECT id FROM %i WHERE registration_id = %d LIMIT 1',
-			array( $this->prefix . 'capacity_claims', $registration_id )
+			'SELECT id FROM %i WHERE organization_id = %d AND registration_id = %d LIMIT 1',
+			array( $this->prefix . 'capacity_claims', $scope->id, $registration_id )
 		) || (bool) $this->db->rows(
-			'SELECT id FROM %i WHERE registration_id = %d LIMIT 1',
-			array( $this->prefix . 'waitlist_entries', $registration_id )
+			'SELECT id FROM %i WHERE organization_id = %d AND registration_id = %d LIMIT 1',
+			array( $this->prefix . 'waitlist_entries', $scope->id, $registration_id )
 		);
 	}
 
