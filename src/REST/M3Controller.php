@@ -278,8 +278,8 @@ final class M3Controller {
 	 * @throws InvalidArgumentException For invalid transport shape.
 	 */
 	private function body( WP_REST_Request $request, array $keys ): array {
-		$body = $request->get_json_params();
-		if ( ! is_array( $body ) || count( $body ) !== count( $keys ) || array_diff( array_keys( $body ), $keys ) || array_diff( $keys, array_keys( $body ) ) ) {
+		$body = (array) $request->get_json_params();
+		if ( count( $body ) !== count( $keys ) || array_diff( array_keys( $body ), $keys ) || array_diff( $keys, array_keys( $body ) ) ) {
 			throw new InvalidArgumentException( 'Unknown or missing input keys.' );
 		}
 		return $body;
