@@ -37,7 +37,7 @@ final class ProjectionService {
 		}
 		$visible = array();
 		foreach ( $definitions as $key => $definition ) {
-			if ( ! $definition instanceof FieldDefinition || $key !== $definition->key || ! array_key_exists( $key, $values ) ) {
+			if ( $key !== $definition->key || ! array_key_exists( $key, $values ) ) {
 				continue;
 			}
 			if ( $this->policy->can( $actor, $action, $domain_object, $definition )->allowed ) {

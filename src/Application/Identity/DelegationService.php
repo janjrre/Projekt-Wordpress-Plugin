@@ -86,7 +86,7 @@ final class DelegationService {
 			}
 		}
 		return $this->tx->run(
-			function () use ( $manager, $scope, $grantee_user_id, $subject_id, $subject, $permission, $scope_type, $scope_id, $relationship, $utc_now, $correlation ): PublicId {
+			function () use ( $manager, $scope, $grantee_user_id, $subject, $permission, $scope_type, $scope_id, $relationship, $utc_now, $correlation ): PublicId {
 				if ( ! $this->policy->can( $manager, 'delegation.manage', new PolicyObject( $scope->id, 'person', (int) $subject['id'] ) )->allowed ) {
 					throw new RuntimeException( 'Delegation no longer permitted.' );
 				}
