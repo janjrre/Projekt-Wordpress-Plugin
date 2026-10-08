@@ -58,13 +58,13 @@ final class M3FormBuilderScreen {
 			return;
 		}
 		$url     = plugin_dir_url( dirname( __DIR__, 2 ) . '/uop-core.php' );
-		$version = defined( '$version' ) ? (string) constant( 'UOP_CORE_VERSION' ) : '0.1.0-alpha.2';
-		wp_enqueue_style( 'uop-m3-form-builder', $url . 'assets/m3-form-builder.css', array(), UOP_CORE_VERSION );
+		$version = defined( 'UOP_CORE_VERSION' ) ? (string) constant( 'UOP_CORE_VERSION' ) : '0.1.0-alpha.2';
+		wp_enqueue_style( 'uop-m3-form-builder', $url . 'assets/m3-form-builder.css', array(), $version );
 		wp_enqueue_script(
 			'uop-m3-form-builder',
 			$url . 'assets/m3-form-builder.js',
 			array( 'wp-element', 'wp-api-fetch', 'wp-i18n' ),
-			UOP_CORE_VERSION,
+			$version,
 			true
 		);
 		wp_add_inline_script(
