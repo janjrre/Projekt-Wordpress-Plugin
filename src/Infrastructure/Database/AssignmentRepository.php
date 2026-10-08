@@ -61,7 +61,7 @@ final class AssignmentRepository {
 	 * @param string   $ceiling    Sensitivity ceiling.
 	 * @param string   $utc_now    UTC timestamp.
 	 * @return int Assignment primary key, internal only.
-	 * @throws \\InvalidArgumentException For unsupported grant metadata.
+	 * @throws \InvalidArgumentException For unsupported grant metadata.
 	 */
 	public function grant( OrgScope $scope, int $user_id, string $role_key, string $scope_type, int $scope_id, string $ceiling, string $utc_now ): int {
 		if ( $user_id < 1 || ! in_array( $role_key, array( 'org_manager', 'event_manager', 'staff', 'viewer' ), true )
@@ -69,7 +69,7 @@ final class AssignmentRepository {
 			|| ! in_array( $scope_type, array( 'organization', 'event' ), true )
 			|| ( 'organization' === $scope_type && 0 !== $scope_id )
 			|| ( 'event' === $scope_type && $scope_id < 1 ) ) {
-			throw new \\InvalidArgumentException( 'Invalid actor assignment.' );
+			throw new \InvalidArgumentException( 'Invalid actor assignment.' );
 		}
 		$this->db->execute(
 			"INSERT INTO %i (organization_id, user_id, role_key, scope_type, scope_id, sensitivity_ceiling, status, created_at, updated_at) VALUES (%d,%d,%s,%s,%d,%s,'active',%s,%s) ON DUPLICATE KEY UPDATE sensitivity_ceiling = VALUES(sensitivity_ceiling), status = 'active', valid_from = NULL, valid_to = NULL, updated_at = VALUES(updated_at)",
