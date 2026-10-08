@@ -30,13 +30,13 @@ final class CapacityLifecycleService {
 	/**
 	 * Compose the capacity-aware command boundary.
 	 *
-	 * @param WaitlistRepository      $queue    Scoped waitlist/claim persistence.
-	 * @param CapacityRepository      $capacity Current occupancy queries.
+	 * @param WaitlistRepository       $queue    Scoped waitlist/claim persistence.
+	 * @param CapacityRepository       $capacity Current occupancy queries.
 	 * @param RegistrationStateMachine $states  Fixed transition graph.
-	 * @param PolicyService           $policy   Current capability and object policy.
-	 * @param TransactionManager      $tx       Atomic InnoDB transaction.
-	 * @param AuditWriter             $audit    Minimal append-only evidence.
-	 * @param OutboxRepository        $outbox   Durable domain events.
+	 * @param PolicyService            $policy   Current capability and object policy.
+	 * @param TransactionManager       $tx       Atomic InnoDB transaction.
+	 * @param AuditWriter              $audit    Minimal append-only evidence.
+	 * @param OutboxRepository         $outbox   Durable domain events.
 	 */
 	public function __construct(
 		private WaitlistRepository $queue,
@@ -78,9 +78,9 @@ final class CapacityLifecycleService {
 				if ( $lookup !== $bucket_id ) {
 					throw new RuntimeException( 'Registration moved to another bucket.' );
 				}
-				$row = $this->registration_from_public( $scope, $registration, $bucket_id );
-				$resource = $this->resource( $scope, $row );
-				if ( ! $this->policy->can( $actor, 'registration.cancel', $resource )->allowed ) {
+				$row    = $this->registration_from_public( $scope, $registration, $bucket_id );
+				$domain_object = $this->resource( $scope, $row );
+				if ( ! $this->policy->can( $actor, 'registration.cancel', $domain_object )->allowed ) {
 					throw new RuntimeException( 'Cancellation is not authorized.' );
 				}
 				if ( 'cancelled' === $row['status'] ) {
@@ -92,7 +92,7 @@ final class CapacityLifecycleService {
 				$this->states->assert_transition( (string) $row['status'], 'cancelled' );
 				$this->queue->release( $scope, (int) $row['id'], $bucket_id, $utc_now );
 				$this->queue->transition( $scope, (int) $row['id'], (string) $row['status'], 'cancelled', $command, $actor->user_id, $utc_now, $correlation );
-				$this->record( $scope, $actor, $resource, 'registration.cancelled', $registration, 'cancelled', $correlation );
+				$this->record( $scope, $actor, $domain_object, 'registration.cancelled', $registration, 'cancelled', $correlation );
 			}
 		);
 	}
@@ -142,8 +142,8 @@ final class CapacityLifecycleService {
 					throw new RuntimeException( 'Queue head requires verification.' );
 				}
 				$this->states->assert_transition( 'waitlisted', 'offered' );
-				$token  = bin2hex( random_bytes( 32 ) );
-				$offer  = PublicId::generate();
+				$token   = bin2hex( random_bytes( 32 ) );
+				$offer   = PublicId::generate();
 				$expires = gmdate( 'Y-m-d H:i:s', strtotime( $utc_now . ' UTC +48 hours' ) );
 				$this->queue->hold( $scope, (int) $bucket['id'], (int) $waiting['id'], (int) $row['id'], $offer, hash( 'sha256', $token, true ), $utc_now, $expires );
 				$this->queue->transition( $scope, (int) $row['id'], 'waitlisted', 'offered', $command, $actor->user_id, $utc_now, $correlation );
@@ -279,20 +279,20 @@ final class CapacityLifecycleService {
 	 *
 	 * @param OrgScope      $scope       Trusted organization.
 	 * @param Actor         $actor       Authorized acting user.
-	 * @param PolicyObject  $resource    Current registration reference.
+	 * @param PolicyObject  $domain_object    Current registration reference.
 	 * @param string        $action      Stable event name.
 	 * @param PublicId      $registration Registration public UUID.
 	 * @param string        $new_status  Business result.
 	 * @param CorrelationId $correlation Trace identifier.
 	 */
-	private function record( OrgScope $scope, Actor $actor, PolicyObject $resource, string $action, PublicId $registration, string $new_status, CorrelationId $correlation ): void {
+	private function record( OrgScope $scope, Actor $actor, PolicyObject $domain_object, string $action, PublicId $registration, string $new_status, CorrelationId $correlation ): void {
 		$event = PublicId::generate();
-		$this->audit->append( $scope, $actor, $action, $resource, 'success', $correlation, $event, array( 'new_status' => $new_status ) );
+		$this->audit->append( $scope, $actor, $action, $domain_object, 'success', $correlation, $event, array( 'new_status' => $new_status ) );
 		$this->outbox->append(
 			$scope,
 			$event,
 			'registration',
-			$resource->id,
+			$domain_object->id,
 			$action,
 			$correlation,
 			array(
