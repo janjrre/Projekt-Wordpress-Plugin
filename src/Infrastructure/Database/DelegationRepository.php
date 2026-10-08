@@ -49,7 +49,7 @@ final class DelegationRepository {
 			throw new InvalidArgumentException( 'Delegation subject is outside the organization.' );
 		}
 		$this->db->execute(
-			"INSERT INTO %i (public_id, organization_id, actor_user_id, subject_person_id, relationship_id, permission_set, scope_type, scope_id, status, created_at) VALUES (%s,%d,%d,%d,%d,%s,%s,%d,'active',%s) ON DUPLICATE KEY UPDATE status = 'active', revoked_at = NULL, valid_from = NULL, valid_to = NULL",
+			"INSERT INTO %i (public_id, organization_id, actor_user_id, subject_person_id, relationship_id, permission_set, scope_type, scope_id, status, created_at) VALUES (%s,%d,%d,%d,NULLIF(%d, 0),%s,%s,%d,'active',%s) ON DUPLICATE KEY UPDATE status = 'active', revoked_at = NULL, valid_from = NULL, valid_to = NULL",
 			array( $this->prefix . 'delegations', $id->to_binary(), $scope->id, $actor_id, $subject_id, $relationship_id ?? 0, $permission, $scope_type, $scope_id, $utc_now )
 		);
 	}
