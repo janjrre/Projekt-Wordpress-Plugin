@@ -105,8 +105,10 @@ final class CapacityRepository {
 	 * @return int Confirmed and held claims only.
 	 */
 	public function occupied( OrgScope $scope, int $bucket_id ): int {
+		// Locking/current read is mandatory: MySQL REPEATABLE READ can reuse
+		// an earlier transaction snapshot despite our serialized bucket lock.
 		$rows = $this->db->rows(
-			"SELECT COUNT(*) AS occupied FROM %i WHERE organization_id = %d AND bucket_id = %d AND status IN ('held','confirmed')",
+			"SELECT COUNT(*) AS occupied FROM %i WHERE organization_id = %d AND bucket_id = %d AND status IN ('held','confirmed') FOR UPDATE",
 			array( $this->prefix . 'capacity_claims', $scope->id, $bucket_id )
 		);
 		return (int) $rows[0]['occupied'];
@@ -138,7 +140,7 @@ final class CapacityRepository {
 	 */
 	public function has_waiters( OrgScope $scope, int $bucket_id ): bool {
 		return (bool) $this->db->rows(
-			"SELECT id FROM %i WHERE organization_id = %d AND bucket_id = %d AND status IN ('waiting','offered') LIMIT 1",
+			"SELECT id FROM %i WHERE organization_id = %d AND bucket_id = %d AND status IN ('waiting','offered') LIMIT 1 FOR UPDATE",
 			array( $this->prefix . 'waitlist_entries', $scope->id, $bucket_id )
 		);
 	}
