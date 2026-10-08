@@ -272,7 +272,7 @@ final class M3Controller {
 	 * Parse a JSON object, rejecting unknown server-owned properties.
 	 *
 	 * @param WP_REST_Request $request Incoming request.
-	 * @param array $keys Exact required keys.
+	 * @param array           $keys Exact required keys.
 	 * @phpstan-param list<string> $keys
 	 * @return array<string, mixed>
 	 * @throws InvalidArgumentException For invalid transport shape.

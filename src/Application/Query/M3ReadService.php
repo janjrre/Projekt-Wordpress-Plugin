@@ -188,7 +188,7 @@ final class M3ReadService {
 		$rows    = $this->values->for_person( $scope, (int) $person['id'] );
 		$grouped = array();
 		foreach ( $rows as $row ) {
-			$id = (int) $row['field_id'];
+			$id               = (int) $row['field_id'];
 			$grouped[ $id ][] = $row;
 		}
 		$definitions = array();
@@ -206,8 +206,8 @@ final class M3ReadService {
 				(bool) $field['delegate_view'],
 				(bool) $field['delegate_edit']
 			);
-			$items          = $grouped[ (int) $field['id'] ] ?? array();
-			$values[ $key ] = 'multiselect' === $field['data_type']
+			$items               = $grouped[ (int) $field['id'] ] ?? array();
+			$values[ $key ]      = 'multiselect' === $field['data_type']
 				? array_map( static fn ( array $item ): mixed => $item['value_string'], $items )
 				: ( $items ? self::decode_value( $items[0] ) : null );
 		}
