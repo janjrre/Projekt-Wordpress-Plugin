@@ -98,6 +98,21 @@ final class WaitlistRepository {
 	}
 
 	/**
+	 * Resolve a public registration to its internal key within one organization.
+	 *
+	 * @param OrgScope $scope Trusted organization.
+	 * @param PublicId $id    Registration public UUID.
+	 * @return int|null
+	 */
+	public function registration_id( OrgScope $scope, PublicId $id ): ?int {
+		$rows = $this->db->rows(
+			'SELECT id FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1',
+			array( $this->prefix . 'registrations', $scope->id, $id->to_binary() )
+		);
+		return $rows ? (int) $rows[0]['id'] : null;
+	}
+
+	/**
 	 * Return the current offer while holding the corresponding bucket lock.
 	 *
 	 * @param OrgScope $scope Trusted organization.
@@ -133,15 +148,32 @@ final class WaitlistRepository {
 		if ( 1 !== $updated ) {
 			throw new RuntimeException( 'Waitlist entry changed before offer.' );
 		}
-		$claim = PublicId::generate();
-		$this->db->execute(
-			"INSERT INTO %i (public_id, organization_id, bucket_id, registration_id, status, expires_at, created_at, updated_at) VALUES (%s,%d,%d,%d,'held',%s,%s,%s)",
-			array( $this->prefix . 'capacity_claims', $claim->to_binary(), $scope->id, $bucket, $registration, $expires, $utc_now, $utc_now )
-		);
 		$rows = $this->db->rows(
-			'SELECT id FROM %i WHERE organization_id = %d AND registration_id = %d AND public_id = %s LIMIT 1',
-			array( $this->prefix . 'capacity_claims', $scope->id, $registration, $claim->to_binary() )
+			'SELECT id, status FROM %i WHERE organization_id = %d AND registration_id = %d LIMIT 1',
+			array( $this->prefix . 'capacity_claims', $scope->id, $registration )
 		);
+		if ( $rows ) {
+			if ( 'released' !== $rows[0]['status'] ) {
+				throw new RuntimeException( 'Registration already holds an occupied claim.' );
+			}
+			$changed = $this->db->execute(
+				"UPDATE %i SET status = 'held', expires_at = %s, released_at = NULL, updated_at = %s WHERE organization_id = %d AND id = %d AND status = 'released'",
+				array( $this->prefix . 'capacity_claims', $expires, $utc_now, $scope->id, (int) $rows[0]['id'] )
+			);
+			if ( 1 !== $changed ) {
+				throw new RuntimeException( 'Released claim changed during re-offer.' );
+			}
+		} else {
+			$claim = PublicId::generate();
+			$this->db->execute(
+				"INSERT INTO %i (public_id, organization_id, bucket_id, registration_id, status, expires_at, created_at, updated_at) VALUES (%s,%d,%d,%d,'held',%s,%s,%s)",
+				array( $this->prefix . 'capacity_claims', $claim->to_binary(), $scope->id, $bucket, $registration, $expires, $utc_now, $utc_now )
+			);
+			$rows = $this->db->rows(
+				'SELECT id, status FROM %i WHERE organization_id = %d AND registration_id = %d AND public_id = %s LIMIT 1',
+				array( $this->prefix . 'capacity_claims', $scope->id, $registration, $claim->to_binary() )
+			);
+		}
 		if ( ! $rows ) {
 			throw new RuntimeException( 'Held claim missing.' );
 		}
