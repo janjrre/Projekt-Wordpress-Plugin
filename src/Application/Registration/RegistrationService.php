@@ -82,7 +82,7 @@ final class RegistrationService {
 					throw new RuntimeException( 'Registration window is closed.' );
 				}
 				$occurrence_id = $this->registrations->occurrence_id( $scope, $event_post_id, $occurrence );
-				$resource      = new PolicyObject( $scope->id, 'registration', 0, (int) $person['id'], $event_post_id );
+				$resource      = new PolicyObject( $scope->id, 'registration', (int) $person['id'], (int) $person['id'], $event_post_id );
 				if ( ! $this->policy->can( $actor, 'registration.create', $resource )->allowed ) {
 					throw new RuntimeException( 'Registration not permitted.' );
 				}
@@ -154,7 +154,8 @@ final class RegistrationService {
 				$version_id = PublicId::from_binary( $form['form_version_public_id'] );
 				$id         = $this->registrations->insert( $scope, $uuid, $command_id, (int) $person['id'], $actor->user_id, $event_post_id, $occurrence_id, (int) $form['form_version_id'], $version_id, $stored, $values, $types, $utc_now, $correlation );
 				$event      = PublicId::generate();
-				$this->audit->append( $scope, $actor, 'registration.submitted', $resource, 'success', $correlation, $event );
+				$registered = new PolicyObject( $scope->id, 'registration', $id, (int) $person['id'], $event_post_id );
+				$this->audit->append( $scope, $actor, 'registration.submitted', $registered, 'success', $correlation, $event );
 				$this->outbox->append( $scope, $event, 'registration', $id, 'registration.submitted', $correlation, array(
 					'public_id' => $uuid->to_string(),
 					'status'    => 'submitted',
