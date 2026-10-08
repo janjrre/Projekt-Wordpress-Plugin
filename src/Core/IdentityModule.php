@@ -58,7 +58,7 @@ final class IdentityModule implements ModuleInterface {
 			static fn ( ServiceContainer $c ) => new TransactionManager(
 				$c->get( Connection::class ),
 				static fn ( int $microseconds ) => usleep( $microseconds ),
-				static function ( \\Throwable $error ): void {
+				static function ( \Throwable $error ): void {
 					update_option(
 						'uop_post_commit_error',
 						array(
