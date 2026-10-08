@@ -7,11 +7,11 @@ use RuntimeException;
 use UOP\Application\Policy\{Actor, PolicyService};
 use UOP\Application\Event\EventService;
 use UOP\Application\Form\FormService;
-use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService, RegistrationTransitionService, CapacityAllocationService};
+use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService, RegistrationTransitionService, CapacityAllocationService, CapacityLifecycleService};
 use UOP\Domain\Registrations\RegistrationStateMachine;
 use UOP\Core\{CorrelationId, PublicId, TransactionManager};
 use UOP\Domain\Organization\OrgScope;
-use UOP\Infrastructure\Database\{AssignmentRepository, AuditWriter, CapacityRepository, DelegationRepository, EventRepository, FormRepository, Installer, OccurrenceRepository, OutboxRepository, PersonRepository, RegistrationRepository, SchemaManifest, WpdbConnection};
+use UOP\Infrastructure\Database\{AssignmentRepository, AuditWriter, CapacityRepository, DelegationRepository, EventRepository, FormRepository, Installer, OccurrenceRepository, OutboxRepository, PersonRepository, RegistrationRepository, WaitlistRepository, SchemaManifest, WpdbConnection};
 
 final class M4RegistrationTest extends TestCase {
 	private WpdbConnection $db;
@@ -51,6 +51,7 @@ final class M4RegistrationTest extends TestCase {
 			'event'=>new EventService(new EventRepository($this->db,$this->prefix),new OccurrenceRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
 			'config'=>new RegistrationConfigurationService($this->db,$this->prefix,$policy,$tx,$audit,$outbox),
 			'submit'=>new RegistrationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
+			'lifecycle'=>new CapacityLifecycleService(new WaitlistRepository($this->db,$this->prefix),new CapacityRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
 			'capacity'=>new CapacityAllocationService(new CapacityRepository($this->db,$this->prefix),new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
 			'transition'=>new RegistrationTransitionService(new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
 		];
@@ -198,6 +199,68 @@ final class M4RegistrationTest extends TestCase {
 			$s['capacity']->decide($s['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate());
 			self::fail('Waitlisted registration bypassed queue');
 		} catch (RuntimeException) { self::assertTrue(true); }
+	}
+
+	public function test_capacity_cancel_and_private_waitlist_offer_acceptance(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$first_person,$event,$form,$now]=$this->setup_registration($draft);
+		$second_person=PublicId::generate();
+		$s['people']->create($this->scope,$second_person,'Waiting Guest',null,$now);
+		$first=$s['submit']->submit($s['actor'],$this->scope,$first_person,$event,null,PublicId::generate(),['name'=>'First'],$now,CorrelationId::generate());
+		$second=$s['submit']->submit($s['actor'],$this->scope,$second_person,$event,null,PublicId::generate(),['name'=>'Second'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		self::assertSame('waitlisted',$s['capacity']->decide($s['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$s['lifecycle']->cancel($s['actor'],$this->scope,$first,PublicId::generate(),$now,CorrelationId::generate());
+		$offer=$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		self::assertSame(64,strlen($offer['token']));
+		$claim=$this->db->rows('SELECT status, expires_at FROM %i WHERE registration_id = %d',[$this->prefix.'capacity_claims',(int)$this->db->rows('SELECT id FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0]['id']]);
+		self::assertSame('held',$claim[0]['status']);
+		try {
+			$s['lifecycle']->accept_offer($s['actor'],$this->scope,PublicId::from_string($offer['public_id']),str_repeat('a',64),PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Wrong bearer token accepted');
+		} catch (RuntimeException) {
+			self::assertTrue(true);
+		}
+		$s['lifecycle']->accept_offer($s['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+		self::assertSame('confirmed',$this->db->rows('SELECT status FROM %i WHERE registration_id = %d',[$this->prefix.'capacity_claims',(int)$this->db->rows('SELECT id FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0]['id']])[0]['status']);
+		$states=$this->db->rows('SELECT status FROM %i ORDER BY id',[$this->prefix.'registrations']);
+		self::assertSame(['cancelled','accepted'],array_column($states,'status'));
+		$offer_entry=$this->db->rows('SELECT status,token_hash FROM %i WHERE public_id = %s',[$this->prefix.'waitlist_offers',PublicId::from_string($offer['public_id'])->to_binary()])[0];
+		self::assertSame('accepted',$offer_entry['status']);
+		self::assertNotSame($offer['token'],$offer_entry['token_hash']);
+		$meta=$this->db->rows('SELECT payload_json FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','registration.offered']);
+		self::assertCount(1,$meta);
+		self::assertStringNotContainsString($offer['token'],$meta[0]['payload_json']);
+	}
+
+	public function test_expired_offer_releases_and_reuses_exactly_one_claim(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$first_person,$event,$form,$now]=$this->setup_registration($draft);
+		$second_person=PublicId::generate();
+		$s['people']->create($this->scope,$second_person,'Waiting Guest',null,$now);
+		$first=$s['submit']->submit($s['actor'],$this->scope,$first_person,$event,null,PublicId::generate(),['name'=>'First'],$now,CorrelationId::generate());
+		$second=$s['submit']->submit($s['actor'],$this->scope,$second_person,$event,null,PublicId::generate(),['name'=>'Second'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$s['lifecycle']->cancel($s['actor'],$this->scope,$first,PublicId::generate(),$now,CorrelationId::generate());
+		$old=$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($old);
+		self::assertFalse($s['lifecycle']->expire_offer($s['actor'],$this->scope,PublicId::from_string($old['public_id']),PublicId::generate(),$now,CorrelationId::generate()));
+		$later='2030-01-05 10:00:00';
+		self::assertTrue($s['lifecycle']->expire_offer($s['actor'],$this->scope,PublicId::from_string($old['public_id']),PublicId::generate(),$later,CorrelationId::generate()));
+		self::assertFalse($s['lifecycle']->expire_offer($s['actor'],$this->scope,PublicId::from_string($old['public_id']),PublicId::generate(),$later,CorrelationId::generate()));
+		$new=$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$later,CorrelationId::generate());
+		self::assertNotNull($new);
+		self::assertNotSame($old['public_id'],$new['public_id']);
+		$claims=$this->db->rows('SELECT status FROM %i WHERE status IN (%s,%s)',[$this->prefix.'capacity_claims','held','confirmed']);
+		self::assertCount(1,$claims);
+		$offers=$this->db->rows('SELECT status FROM %i ORDER BY id',[$this->prefix.'waitlist_offers']);
+		self::assertSame(['expired','offered'],array_column($offers,'status'));
+		$s['lifecycle']->accept_offer($s['actor'],$this->scope,PublicId::from_string($new['public_id']),$new['token'],PublicId::generate(),$later,CorrelationId::generate());
+		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i WHERE status = %s',[$this->prefix.'capacity_claims','confirmed'])[0]['n']);
 	}
 
 }
