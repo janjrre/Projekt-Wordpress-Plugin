@@ -7,7 +7,7 @@ use RuntimeException;
 use UOP\Application\Policy\{Actor, PolicyService};
 use UOP\Application\Event\EventService;
 use UOP\Application\Form\FormService;
-use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService, RegistrationTransitionService, CapacityAllocationService, CapacityLifecycleService};
+use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService, RegistrationTransitionService, CapacityAllocationService, CapacityLifecycleService, EmailVerificationService};
 use UOP\Domain\Registrations\RegistrationStateMachine;
 use UOP\Core\{CorrelationId, PublicId, TransactionManager};
 use UOP\Domain\Organization\OrgScope;
@@ -51,6 +51,7 @@ final class M4RegistrationTest extends TestCase {
 			'event'=>new EventService(new EventRepository($this->db,$this->prefix),new OccurrenceRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
 			'config'=>new RegistrationConfigurationService($this->db,$this->prefix,$policy,$tx,$audit,$outbox),
 			'submit'=>new RegistrationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
+			'verification'=>new EmailVerificationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
 			'lifecycle'=>new CapacityLifecycleService(new WaitlistRepository($this->db,$this->prefix),new CapacityRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
 			'capacity'=>new CapacityAllocationService(new CapacityRepository($this->db,$this->prefix),new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
 			'transition'=>new RegistrationTransitionService(new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
@@ -261,6 +262,45 @@ final class M4RegistrationTest extends TestCase {
 		self::assertSame(['expired','offered'],array_column($offers,'status'));
 		$s['lifecycle']->accept_offer($s['actor'],$this->scope,PublicId::from_string($new['public_id']),$new['token'],PublicId::generate(),$later,CorrelationId::generate());
 		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i WHERE status = %s',[$this->prefix.'capacity_claims','confirmed'])[0]['n']);
+	}
+
+	public function test_single_use_contact_verification_gates_capacity_without_linking_a_user(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'contact','type'=>'email','label'=>'Contact email','required'=>true],
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+		]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$this->db->execute(
+			'UPDATE %i SET require_email_verification = 1 WHERE organization_id = %d AND public_id = %s',
+			[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]
+		);
+		try {
+			$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'No email'],$now,CorrelationId::generate());
+			self::fail('Mandatory verification without email was accepted');
+		} catch (InvalidArgumentException) { self::assertTrue(true); }
+		$registration=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),[
+			'contact'=>'recipient@example.invalid','name'=>'Attendee'
+		],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		try {
+			$s['capacity']->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Capacity acceptance without verified contact was permitted');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		$one=$s['verification']->issue($s['actor'],$this->scope,$registration,$now,CorrelationId::generate());
+		self::assertSame('recipient@example.invalid',$one['email']);
+		self::assertSame(64,strlen($one['token']));
+		$two=$s['verification']->issue($s['actor'],$this->scope,$registration,$now,CorrelationId::generate());
+		self::assertNotSame($one['token'],$two['token']);
+		self::assertFalse($s['verification']->verify($this->scope,$registration,$one['token'],$now,CorrelationId::generate()));
+		self::assertTrue($s['verification']->verify($this->scope,$registration,$two['token'],$now,CorrelationId::generate()));
+		self::assertFalse($s['verification']->verify($this->scope,$registration,$two['token'],$now,CorrelationId::generate()));
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$row=$this->db->rows('SELECT contact_email, email_verification_token_hash, email_verified_at FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0];
+		self::assertSame('recipient@example.invalid',$row['contact_email']);
+		self::assertNull($row['email_verification_token_hash']);
+		self::assertSame($now,$row['email_verified_at']);
+		$owner=$this->db->rows('SELECT wp_user_id FROM %i WHERE public_id = %s',[$this->prefix.'persons',$person->to_binary()])[0];
+		self::assertNull($owner['wp_user_id'],'A verified email may not silently link a WP user');
 	}
 
 }
