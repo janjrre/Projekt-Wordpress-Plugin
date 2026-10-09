@@ -60,7 +60,7 @@ final class M4RegistrationTest extends TestCase {
 			'form'=>new FormService(new FormRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
 			'event'=>new EventService(new EventRepository($this->db,$this->prefix),new OccurrenceRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
 			'config'=>new RegistrationConfigurationService($this->db,$this->prefix,$policy,$tx,$audit,$outbox),
-			'submit'=>new RegistrationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox,new RegistrationFactsService(new RegistrationFactsRepository($this->db,$this->prefix),$policy)),
+			'submit'=>new RegistrationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox,new RegistrationFactsService(new RegistrationFactsRepository($this->db,$this->prefix),$policy),$people),
 			'verification'=>new EmailVerificationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
 			'lifecycle'=>new CapacityLifecycleService(new WaitlistRepository($this->db,$this->prefix),new CapacityRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
 			'cancel_event'=>new EventCancellationService(new EventCancellationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
@@ -662,5 +662,55 @@ final class M4RegistrationTest extends TestCase {
 		self::assertCount(102,$events);
 		self::assertSame($baseline,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registration_snapshots'])[0]['n']);
 		self::assertSame(0,$services['cancel_event']->cancel($services['actor'],$this->scope,$event,PublicId::generate(),$now,CorrelationId::generate()));
+	}
+
+	/** Public guests do not gain seats before private contact verification. */
+	public function test_public_guest_submission_requires_contact_verification_and_remains_unlinked(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'contact','type'=>'email','label'=>'Contact','required'=>true],
+		]];
+		[$s,$existing,$event,$form,$now]=$this->setup_registration($draft);
+		$this->db->execute("UPDATE %i SET visibility = 'public', require_email_verification = 1 WHERE public_id = %s",[$this->prefix.'event_settings',$event->to_binary()]);
+		$input=['name'=>'Guest','contact'=>'guest@example.invalid'];
+		$key=PublicId::generate();
+		$registration=$s['submit']->submit_guest($this->scope,$event,null,$key,$input,$now,CorrelationId::generate());
+		self::assertSame($registration->to_string(),$s['submit']->submit_guest($this->scope,$event,null,$key,$input,$now,CorrelationId::generate())->to_string());
+		$row=$this->db->rows('SELECT person_id,actor_user_id,source,email_verified_at FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0];
+		self::assertSame('guest',$row['source']);
+		self::assertNull($row['actor_user_id']);
+		self::assertNull($row['email_verified_at']);
+		self::assertNull($this->db->rows('SELECT wp_user_id FROM %i WHERE id = %d',[$this->prefix.'persons',(int)$row['person_id']])[0]['wp_user_id']);
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		try {
+			$s['capacity']->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Unverified guest was allocated a seat');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		$challenge=$s['verification']->issue($s['actor'],$this->scope,$registration,$now,CorrelationId::generate());
+		self::assertSame('guest@example.invalid',$challenge['email']);
+		self::assertTrue($s['verification']->verify($this->scope,$registration,$challenge['token'],$now,CorrelationId::generate()));
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$signals=$this->db->rows('SELECT payload_json FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','registration.email_verification_required']);
+		self::assertCount(1,$signals);
+		self::assertStringNotContainsString($challenge['token'],$signals[0]['payload_json']);
+	}
+	/** Unauthorized private guests and invalid contact must leave no orphan person. */
+	public function test_guest_request_rejects_private_event_and_invalid_contact_atomically(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'contact','type'=>'email','label'=>'Contact','required'=>true],
+		]];
+		[$s,$existing,$event,$form,$now]=$this->setup_registration($draft);
+		try {
+			$s['submit']->submit_guest($this->scope,$event,null,PublicId::generate(),['name'=>'Guest','contact'=>'guest@example.invalid'],$now,CorrelationId::generate());
+			self::fail('Guest registration accepted for private event');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		$this->db->execute("UPDATE %i SET visibility = 'public', require_email_verification = 1 WHERE public_id = %s",[$this->prefix.'event_settings',$event->to_binary()]);
+		try {
+			$s['submit']->submit_guest($this->scope,$event,null,PublicId::generate(),['name'=>'Guest','contact'=>'invalid'],$now,CorrelationId::generate());
+			self::fail('Invalid contact submitted as public guest');
+		} catch (RuntimeException | InvalidArgumentException) { self::assertTrue(true); }
+		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'persons'])[0]['n']);
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'registrations']));
 	}
 }

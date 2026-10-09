@@ -46,7 +46,7 @@ final class RegistrationRepository {
 	 */
 	public function active_event_form( OrgScope $scope, PublicId $event ): ?array {
 		$rows = $this->db->rows(
-			"SELECT e.event_post_id, e.registration_open_at, e.registration_close_at, e.require_email_verification, e.eligibility_json, e.status, f.id AS form_id, v.id AS form_version_id, v.public_id AS form_version_public_id, v.schema_json, v.checksum FROM %i e INNER JOIN %i f ON f.id = e.default_form_id AND f.organization_id = e.organization_id INNER JOIN %i v ON v.id = f.current_version_id WHERE e.organization_id = %d AND e.public_id = %s AND e.status = 'active' AND f.status = 'published' AND f.context = 'event' LIMIT 1 FOR UPDATE",
+			"SELECT e.event_post_id, e.registration_open_at, e.registration_close_at, e.require_email_verification, e.eligibility_json, e.visibility, e.status, f.id AS form_id, v.id AS form_version_id, v.public_id AS form_version_public_id, v.schema_json, v.checksum FROM %i e INNER JOIN %i f ON f.id = e.default_form_id AND f.organization_id = e.organization_id INNER JOIN %i v ON v.id = f.current_version_id WHERE e.organization_id = %d AND e.public_id = %s AND e.status = 'active' AND f.status = 'published' AND f.context = 'event' LIMIT 1 FOR UPDATE",
 			array( $this->prefix . 'event_settings', $this->prefix . 'forms', $this->prefix . 'form_versions', $scope->id, $event->to_binary() )
 		);
 		return $rows[0] ?? null;
@@ -84,7 +84,7 @@ final class RegistrationRepository {
 	 */
 	public function by_submission_key( OrgScope $scope, PublicId $key ): ?array {
 		$rows = $this->db->rows(
-			'SELECT r.id, r.public_id, r.person_id, r.event_post_id, r.occurrence_id, r.form_version_id, s.payload_json FROM %i r INNER JOIN %i s ON s.id = r.current_snapshot_id WHERE r.organization_id = %d AND r.submission_key = %s LIMIT 1',
+			'SELECT r.id, r.public_id, r.person_id, r.event_post_id, r.occurrence_id, r.form_version_id, r.source, s.payload_json FROM %i r INNER JOIN %i s ON s.id = r.current_snapshot_id WHERE r.organization_id = %d AND r.submission_key = %s LIMIT 1',
 			array( $this->prefix . 'registrations', $this->prefix . 'registration_snapshots', $scope->id, $key->to_binary() )
 		);
 		return $rows[0] ?? null;
@@ -127,6 +127,7 @@ final class RegistrationRepository {
 	 * @param string|null   $contact_email Contact email validated from published form.
 	 * @param string        $utc_now     Timestamp.
 	 * @param CorrelationId $correlation Command trace.
+	 * @param string        $source      Internal portal or guest source.
 	 * @return int Registration internal ID.
 	 * @throws RuntimeException If any required write fails.
 	 */
@@ -145,11 +146,15 @@ final class RegistrationRepository {
 		array $types,
 		?string $contact_email,
 		string $utc_now,
-		CorrelationId $correlation
+		CorrelationId $correlation,
+		string $source = 'portal'
 	): int {
+		if ( ! in_array( $source, array( 'portal', 'guest' ), true ) ) {
+			throw new RuntimeException( 'Unsupported registration source.' );
+		}
 		$this->db->execute(
-			"INSERT INTO %i (public_id, submission_key, organization_id, person_id, actor_user_id, event_post_id, occurrence_id, form_version_id, status, source, contact_email, submitted_at, created_at, updated_at) VALUES (%s,%s,%d,%d,%d,%d,%d,%d,'submitted','portal',NULLIF(%s,''),%s,%s,%s)",
-			array( $this->prefix . 'registrations', $public_id->to_binary(), $submission->to_binary(), $scope->id, $person_id, $actor_id, $event_post, $occurrence, $form_version, $contact_email ?? '', $utc_now, $utc_now, $utc_now )
+			"INSERT INTO %i (public_id, submission_key, organization_id, person_id, actor_user_id, event_post_id, occurrence_id, form_version_id, status, source, contact_email, submitted_at, created_at, updated_at) VALUES (%s,%s,%d,%d,NULLIF(%d,0),%d,%d,%d,'submitted',%s,NULLIF(%s,''),%s,%s,%s)",
+			array( $this->prefix . 'registrations', $public_id->to_binary(), $submission->to_binary(), $scope->id, $person_id, $actor_id, $event_post, $occurrence, $form_version, $source, $contact_email ?? '', $utc_now, $utc_now, $utc_now )
 		);
 		$ids = $this->db->rows(
 			'SELECT id FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1',

@@ -24,6 +24,7 @@ use UOP\Infrastructure\Database\Connection;
 use UOP\Infrastructure\Database\EventCancellationRepository;
 use UOP\Infrastructure\Database\OutboxRepository;
 use UOP\Infrastructure\Database\RegistrationRepository;
+use UOP\Infrastructure\Database\PersonRepository;
 use UOP\Infrastructure\Database\RegistrationFactsRepository;
 use UOP\Infrastructure\Database\WaitlistRepository;
 
@@ -61,7 +62,8 @@ final class M4Module implements ModuleInterface {
 				$c->get( TransactionManager::class ),
 				$c->get( AuditWriter::class ),
 				$c->get( OutboxRepository::class ),
-				$c->get( RegistrationFactsService::class )
+				$c->get( RegistrationFactsService::class ),
+				$c->get( PersonRepository::class )
 			)
 		);
 		$container->set(
