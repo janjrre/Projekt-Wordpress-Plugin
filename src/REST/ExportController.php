@@ -95,7 +95,13 @@ final class ExportController {
 				gmdate( 'Y-m-d H:i:s' ),
 				CorrelationId::generate()
 			);
-			return new WP_REST_Response( array( 'public_id' => $uuid->to_string(), 'status' => 'queued' ), 202 );
+			return new WP_REST_Response(
+				array(
+					'public_id' => $uuid->to_string(),
+					'status'    => 'queued',
+				),
+				202
+			);
 		} catch ( InvalidArgumentException ) {
 			return new WP_Error( 'uop_invalid_export', 'Invalid export request.', array( 'status' => 400 ) );
 		} catch ( RuntimeException ) {
@@ -144,14 +150,14 @@ final class ExportController {
 	/**
 	 * Serve only a previously permission-checked export response as raw CSV.
 	 *
-	 * @param bool            $served Whether another handler already served.
+	 * @param bool             $served Whether another handler already served.
 	 * @param WP_REST_Response $response Current HTTP response.
 	 * @param WP_REST_Request  $request  Current REST request.
 	 * @param WP_REST_Server   $server   WordPress REST server.
 	 * @return bool True only when this controller served the private CSV.
 	 */
 	public function serve_download( bool $served, $response, WP_REST_Request $request, $server ): bool {
-		if ( $served || 'GET' !== $request->get_method()
+		if ( $served || ! $server instanceof WP_REST_Server || 'GET' !== $request->get_method()
 			|| ! preg_match( '#^/uop/v1/exports/[0-9a-f-]{36}/download$#D', $request->get_route() )
 			|| ! $response instanceof WP_REST_Response || 200 !== $response->get_status() ) {
 			return $served;

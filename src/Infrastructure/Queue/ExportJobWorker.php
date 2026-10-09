@@ -36,7 +36,10 @@ final class ExportJobWorker {
 				if ( ! function_exists( 'as_schedule_recurring_action' ) || ! function_exists( 'as_next_scheduled_action' ) ) {
 					return;
 				}
-				foreach ( array( 'uop_export_sweep' => 300, 'uop_export_cleanup' => 3600 ) as $hook => $interval ) {
+				foreach ( array(
+					'uop_export_sweep'   => 300,
+					'uop_export_cleanup' => 3600,
+				) as $hook => $interval ) {
 					if ( false === as_next_scheduled_action( $hook, array(), 'uop' ) ) {
 						as_schedule_recurring_action( time() + 60, $interval, $hook, array(), 'uop', true );
 					}
