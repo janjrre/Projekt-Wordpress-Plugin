@@ -91,10 +91,19 @@ final class EventCancellationService {
 						$this->events->cancel_registration( $scope, $id, $previous, PublicId::generate(), $actor->user_id, $utc_now, $correlation );
 						$registration = new PolicyObject( $scope->id, 'registration', $id, (int) $row['person_id'], $post_id );
 						$event_uuid   = PublicId::generate();
-						$this->audit->append( $scope, $actor, 'registration.event_cancelled', $registration, 'success', $correlation, $event_uuid, array(
-							'previous_status' => $previous,
-							'new_status'      => 'cancelled',
-						) );
+						$this->audit->append(
+							$scope,
+							$actor,
+							'registration.event_cancelled',
+							$registration,
+							'success',
+							$correlation,
+							$event_uuid,
+							array(
+								'previous_status' => $previous,
+								'new_status'      => 'cancelled',
+							)
+						);
 						$this->outbox->append(
 							$scope,
 							$event_uuid,
