@@ -61,7 +61,6 @@ final class EmailMessageService {
 	 * @param string               $now         UTC timestamp.
 	 * @param CorrelationId        $correlation Request trace.
 	 * @return PublicId Message public UUID.
-	 * @throws RuntimeException When sender or registration is not authorized.
 	 * @throws InvalidArgumentException When the recipient is invalid.
 	 */
 	public function queue( Actor $actor, OrgScope $scope, PublicId $command, string $recipient, string $template, string $locale, array $variables, ?PublicId $registration, string $now, CorrelationId $correlation ): PublicId {
