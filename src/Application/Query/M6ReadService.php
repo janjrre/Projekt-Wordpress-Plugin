@@ -22,10 +22,10 @@ final class M6ReadService {
 	/**
 	 * Shared API contract or operation.
 	 *
-	 * @param PersonRepository     $people      Organization-scoped person storage.
-	 * @param DelegationRepository $delegations Live per-person delegation grants.
+	 * @param PersonRepository           $people      Organization-scoped person storage.
+	 * @param DelegationRepository       $delegations Live per-person delegation grants.
 	 * @param RegistrationReadRepository $registrations Read-only registration persistence.
-	 * @param PolicyService        $policy      Authoritative object and field authorization.
+	 * @param PolicyService              $policy      Authoritative object and field authorization.
 	 */
 	public function __construct(
 		private PersonRepository $people,
