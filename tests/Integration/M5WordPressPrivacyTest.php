@@ -5,14 +5,14 @@ use PHPUnit\Framework\TestCase;
 use UOP\Application\Privacy\WordPressPrivacyAdapter;
 use UOP\Core\{PublicId, TransactionManager};
 use UOP\Domain\Organization\OrgScope;
-use UOP\Infrastructure\Database\{AuditWriter, Installer, OutboxRepository, PersonRepository, PrivacyRepository, SchemaManifest, WpdbConnection};
+use UOP\Infrastructure\Database\{AuditWriter, Installer, OutboxRepository, PersonRepository, PrivacyAccountGateway, SchemaManifest, WpdbConnection};
 
 final class M5WordPressPrivacyTest extends TestCase {
 	private WpdbConnection $db;
 	private OrgScope $scope;
 	private string $prefix;
 	private PersonRepository $people;
-	private PrivacyRepository $privacy;
+	private PrivacyAccountGateway $privacy;
 	private WordPressPrivacyAdapter $adapter;
 
 	protected function setUp(): void {
@@ -27,7 +27,7 @@ final class M5WordPressPrivacyTest extends TestCase {
 		Installer::runner()->run();
 		$this->scope = new OrgScope((int)get_option('uop_default_organization_id'));
 		$this->people = new PersonRepository($this->db,$this->prefix);
-		$this->privacy = new PrivacyRepository($this->db,$this->prefix);
+		$this->privacy = new PrivacyAccountGateway($this->db,$this->prefix);
 		$tx = new TransactionManager($this->db,static function(int $attempt): void {},static function(\Throwable $error): void {});
 		$this->adapter = new WordPressPrivacyAdapter($this->privacy,$tx,new AuditWriter($this->db,$this->prefix),new OutboxRepository($this->db,$this->prefix));
 		$this->adapter->register_hooks();
