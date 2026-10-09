@@ -183,7 +183,7 @@ final class M5ExportJobsTest extends TestCase {
         self::assertSame(200,$download->get_status());
         self::assertSame('text/csv; charset=utf-8',$download->get_headers()['Content-Type']);
         ob_start();
-        $served=$controller->serve_download(false,$download,$dl_request,rest_get_server());
+        $served=$controller->serve_download(false,$download,$dl_request);
         $file=ob_get_clean();
         self::assertTrue($served);
         self::assertStringContainsString('REST member',$file);

@@ -19,7 +19,6 @@ use UOP\Domain\Organization\OrgScope;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
-use WP_REST_Server;
 
 /** No export path, tenant ID, raw SQL filter or arbitrary column name is accepted. */
 final class ExportController {
@@ -60,7 +59,7 @@ final class ExportController {
 				'permission_callback' => array( $this, 'can_export' ),
 			)
 		);
-		add_filter( 'rest_pre_serve_request', array( $this, 'serve_download' ), 10, 4 );
+		add_filter( 'rest_pre_serve_request', array( $this, 'serve_download' ), 10, 3 );
 	}
 
 	/**
@@ -81,8 +80,8 @@ final class ExportController {
 	 */
 	public function create( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
-			$body = $request->get_json_params();
-			if ( ! is_array( $body ) || count( $body ) !== 3 || array_diff( array_keys( $body ), array( 'command_id', 'columns', 'status' ) )
+			$body = (array) $request->get_json_params();
+			if ( count( $body ) !== 3 || array_diff( array_keys( $body ), array( 'command_id', 'columns', 'status' ) )
 				|| ! is_string( $body['command_id'] ?? null ) || ! is_array( $body['columns'] ?? null ) || ! is_string( $body['status'] ?? null ) ) {
 				return new WP_Error( 'uop_invalid_export', 'Invalid export request.', array( 'status' => 400 ) );
 			}
@@ -153,13 +152,12 @@ final class ExportController {
 	 * @param bool             $served Whether another handler already served.
 	 * @param WP_REST_Response $response Current HTTP response.
 	 * @param WP_REST_Request  $request  Current REST request.
-	 * @param WP_REST_Server   $server   WordPress REST server.
 	 * @return bool True only when this controller served the private CSV.
 	 */
-	public function serve_download( bool $served, $response, WP_REST_Request $request, $server ): bool {
-		if ( $served || ! $server instanceof WP_REST_Server || 'GET' !== $request->get_method()
+	public function serve_download( bool $served, WP_REST_Response $response, WP_REST_Request $request ): bool {
+		if ( $served || 'GET' !== $request->get_method()
 			|| ! preg_match( '#^/uop/v1/exports/[0-9a-f-]{36}/download$#D', $request->get_route() )
-			|| ! $response instanceof WP_REST_Response || 200 !== $response->get_status() ) {
+			|| 200 !== $response->get_status() ) {
 			return $served;
 		}
 		$data = $response->get_data();

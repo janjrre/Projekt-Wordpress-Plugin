@@ -21,7 +21,7 @@ final class LocalExportStorage implements ExportStorageInterface {
 		if ( false === $base ) {
 			throw new RuntimeException( 'Private export storage is unavailable.' );
 		}
-		$base = rtrim( $base, DIRECTORY_SEPARATOR );
+		$base   = rtrim( $base, DIRECTORY_SEPARATOR );
 		$upload = wp_upload_dir( null, false );
 		$roots  = array( ABSPATH, WP_CONTENT_DIR, $upload['basedir'] ?? '' );
 		foreach ( $roots as $webroot ) {
