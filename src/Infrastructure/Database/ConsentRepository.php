@@ -61,12 +61,12 @@ final class ConsentRepository {
 	/**
 	 * Append an immutable text version and move only the current pointer.
 	 *
-	 * @param OrgScope              $scope    Trusted organization.
-	 * @param array<string, mixed>  $root     Locked definition.
-	 * @param PublicId              $uuid     New immutable document public ID.
-	 * @param string                $content Plain-text informed-consent document.
-	 * @param int                   $actor_id WordPress editor.
-	 * @param string                $now      UTC timestamp.
+	 * @param OrgScope             $scope    Trusted organization.
+	 * @param array<string, mixed> $root     Locked definition.
+	 * @param PublicId             $uuid     New immutable document public ID.
+	 * @param string               $content Plain-text informed-consent document.
+	 * @param int                  $actor_id WordPress editor.
+	 * @param string               $now      UTC timestamp.
 	 * @return int New version number.
 	 * @throws RuntimeException For archived definitions or repeated content.
 	 */
