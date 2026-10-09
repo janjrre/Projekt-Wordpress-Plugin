@@ -73,4 +73,5 @@ final class RegistrationEligibilityService {
 				throw new RuntimeException( 'Current event or bucket eligibility requirements were not met.' );
 			}
 		}
-	}}
+	}
+}
