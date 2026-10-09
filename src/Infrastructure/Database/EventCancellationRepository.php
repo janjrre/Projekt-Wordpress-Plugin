@@ -18,6 +18,8 @@ use UOP\Domain\Organization\OrgScope;
  */
 final class EventCancellationRepository {
 	/**
+	 * Initialize organization-safe database storage.
+	 *
 	 * @param Connection $db     Transaction-bound database.
 	 * @param string     $prefix Trusted WordPress site prefix.
 	 */
@@ -58,6 +60,7 @@ final class EventCancellationRepository {
 	 * @param OrgScope $scope   Organization boundary.
 	 * @param int      $post    Locked event post.
 	 * @param string   $utc_now Trusted UTC time.
+	 * @throws RuntimeException When event state was concurrently changed.
 	 */
 	public function close_event( OrgScope $scope, int $post, string $utc_now ): void {
 		$updated = $this->db->execute(
@@ -120,6 +123,7 @@ final class EventCancellationRepository {
 	 * @param int           $actor_id     Manager user ID.
 	 * @param string        $utc_now      Trusted UTC time.
 	 * @param CorrelationId $correlation  Request correlation.
+	 * @throws RuntimeException When the registration was concurrently changed.
 	 */
 	public function cancel_registration( OrgScope $scope, int $registration, string $previous, PublicId $command, int $actor_id, string $utc_now, CorrelationId $correlation ): void {
 		$updated = $this->db->execute(
