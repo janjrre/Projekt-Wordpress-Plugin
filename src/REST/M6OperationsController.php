@@ -23,7 +23,7 @@ final class M6OperationsController extends BaseController {
 	/**
 	 * Bind shared projection and existing application commands.
 	 *
-	 * @param M6OperationsReadService $reads       Live, policy-projected views.
+	 * @param M6OperationsReadService  $reads       Live, policy-projected views.
 	 * @param ConsentDefinitionService $definitions Approved immutable documents.
 	 * @param ConsentRecordService     $records     Authorized withdrawal service.
 	 */
@@ -157,7 +157,7 @@ final class M6OperationsController extends BaseController {
 	 */
 	public function withdraw( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
-			$body = $this->strict_json_object(
+			$body    = $this->strict_json_object(
 				$request,
 				array( 'command_id' => array( 'type' => 'string' ) ),
 				array( 'command_id' )
@@ -169,7 +169,13 @@ final class M6OperationsController extends BaseController {
 				return RestError::for_kind( 'not_found' );
 			}
 			$uuid = $this->records->withdraw( $this->current_actor(), $scope, $id, $command, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
-			return new WP_REST_Response( array( 'public_id' => $uuid->to_string(), 'decision' => 'withdrawn' ), 201 );
+			return new WP_REST_Response(
+				array(
+					'public_id' => $uuid->to_string(),
+					'decision'  => 'withdrawn',
+				),
+				201
+			);
 		} catch ( InvalidArgumentException ) {
 			return RestError::for_kind( 'invalid_schema' );
 		} catch ( RuntimeException ) {
@@ -185,11 +191,19 @@ final class M6OperationsController extends BaseController {
 	 */
 	public function definition( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
-			$body = $this->strict_json_object(
+			$body  = $this->strict_json_object(
 				$request,
 				array(
-					'key'   => array( 'type' => 'string', 'minLength' => 1, 'maxLength' => 100 ),
-					'title' => array( 'type' => 'string', 'minLength' => 1, 'maxLength' => 191 ),
+					'key'   => array(
+						'type'      => 'string',
+						'minLength' => 1,
+						'maxLength' => 100,
+					),
+					'title' => array(
+						'type'      => 'string',
+						'minLength' => 1,
+						'maxLength' => 191,
+					),
 				),
 				array( 'key', 'title' )
 			);
@@ -214,9 +228,15 @@ final class M6OperationsController extends BaseController {
 	 */
 	public function publish( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
-			$body = $this->strict_json_object(
+			$body  = $this->strict_json_object(
 				$request,
-				array( 'content' => array( 'type' => 'string', 'minLength' => 20, 'maxLength' => 100000 ) ),
+				array(
+					'content' => array(
+						'type'      => 'string',
+						'minLength' => 20,
+						'maxLength' => 100000,
+					),
+				),
 				array( 'content' )
 			);
 			$scope = $this->organization_scope();

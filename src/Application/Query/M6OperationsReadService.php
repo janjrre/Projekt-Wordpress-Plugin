@@ -22,7 +22,7 @@ final class M6OperationsReadService {
 	/**
 	 * Bind only current policy and tenant-scoped read repositories.
 	 *
-	 * @param M6OperationsRepository    $operations    Bounded operational summaries.
+	 * @param M6OperationsRepository     $operations    Bounded operational summaries.
 	 * @param RegistrationReadRepository $registrations Scoped registration lookup.
 	 * @param EventRepository            $events        Scoped event lookup.
 	 * @param ConsentRepository          $documents     Immutable published consent versions.
@@ -64,7 +64,10 @@ final class M6OperationsReadService {
 				'status'    => (string) $bucket['status'],
 			);
 		}
-		return array( 'event_id' => $event->to_string(), 'buckets' => $items );
+		return array(
+			'event_id' => $event->to_string(),
+			'buckets'  => $items,
+		);
 	}
 
 	/**
@@ -84,7 +87,10 @@ final class M6OperationsReadService {
 		foreach ( $this->operations->consents( $scope, (int) $row['id'] ) as $evidence ) {
 			$items[] = $this->evidence( $evidence );
 		}
-		return array( 'registration_id' => $id->to_string(), 'items' => $items );
+		return array(
+			'registration_id' => $id->to_string(),
+			'items'           => $items,
+		);
 	}
 
 	/**
@@ -173,11 +179,11 @@ final class M6OperationsReadService {
 	 */
 	private function evidence( array $row ): array {
 		return array(
-			'public_id' => PublicId::from_binary( (string) $row['public_id'] )->to_string(),
-			'key'       => (string) $row['consent_key'],
-			'version'   => PublicId::from_binary( (string) $row['version_public_id'] )->to_string(),
-			'decision'  => (string) $row['decision'],
-			'decided_at'=> (string) $row['decided_at'],
+			'public_id'  => PublicId::from_binary( (string) $row['public_id'] )->to_string(),
+			'key'        => (string) $row['consent_key'],
+			'version'    => PublicId::from_binary( (string) $row['version_public_id'] )->to_string(),
+			'decision'   => (string) $row['decision'],
+			'decided_at' => (string) $row['decided_at'],
 		);
 	}
 }
