@@ -21,7 +21,7 @@ use UOP\Infrastructure\Database\Connection;
 use UOP\Infrastructure\Database\ConsentRepository;
 use UOP\Infrastructure\Database\ConsentRecordRepository;
 use UOP\Infrastructure\Database\OutboxRepository;
-use UOP\Infrastructure\Database\PrivacyRepository;
+use UOP\Infrastructure\Database\PrivacyAccountGateway;
 use UOP\Infrastructure\Database\EmailTemplateRepository;
 use UOP\Infrastructure\Database\EmailMessageRepository;
 use UOP\Infrastructure\Queue\EmailDeliveryWorker;
@@ -83,11 +83,11 @@ final class M5Module implements ModuleInterface {
 			)
 		);
 		$container->get( EmailDeliveryWorker::class )->register_hooks();
-		$container->set( PrivacyRepository::class, static fn ( ServiceContainer $c ) => new PrivacyRepository( $c->get( Connection::class ), $prefix ) );
+		$container->set( PrivacyAccountGateway::class, static fn ( ServiceContainer $c ) => new PrivacyAccountGateway( $c->get( Connection::class ), $prefix ) );
 		$container->set(
 			WordPressPrivacyAdapter::class,
 			static fn ( ServiceContainer $c ) => new WordPressPrivacyAdapter(
-				$c->get( PrivacyRepository::class ),
+				$c->get( PrivacyAccountGateway::class ),
 				$c->get( TransactionManager::class ),
 				$c->get( AuditWriter::class ),
 				$c->get( OutboxRepository::class )
