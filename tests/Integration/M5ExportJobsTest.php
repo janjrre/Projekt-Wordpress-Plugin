@@ -184,6 +184,7 @@ final class M5ExportJobsTest extends TestCase {
         self::assertSame($this->actor->user_id,get_current_user_id(),'REST dispatch unexpectedly replaced the WordPress current actor');
         self::assertSame($this->scope->id,(int)get_option('uop_default_organization_id'),'REST dispatch changed tenant scope');
         $dl_request=new \WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string().'/download');
+        $dl_request->set_url_params(['uuid'=>$job->to_string()]);
         $download=$controller->download($dl_request);
         self::assertInstanceOf(\WP_REST_Response::class,$download,$download instanceof \WP_Error ? $download->get_error_code().':'.$download->get_error_message() : 'Unexpected export response');
         self::assertSame(200,$download->get_status());
