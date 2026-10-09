@@ -109,7 +109,8 @@ final class M4Module implements ModuleInterface {
 				$c->get( PolicyService::class ),
 				$c->get( TransactionManager::class ),
 				$c->get( AuditWriter::class ),
-				$c->get( OutboxRepository::class )
+				$c->get( OutboxRepository::class ),
+				$c->get( RegistrationEligibilityService::class )
 			)
 		);
 		$container->set(
@@ -120,8 +121,7 @@ final class M4Module implements ModuleInterface {
 				$c->get( PolicyService::class ),
 				$c->get( TransactionManager::class ),
 				$c->get( AuditWriter::class ),
-				$c->get( OutboxRepository::class ),
-				$c->get( RegistrationEligibilityService::class )
+				$c->get( OutboxRepository::class )
 			)
 		);
 		$container->set(
