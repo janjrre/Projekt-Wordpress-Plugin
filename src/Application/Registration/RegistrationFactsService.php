@@ -60,7 +60,7 @@ final class RegistrationFactsService {
 			if ( ! $rows || count( $rows ) > 100 ) {
 				throw new RuntimeException( 'Required authoritative profile field is unavailable.' );
 			}
-			$field = $rows[0];
+			$field      = $rows[0];
 			$definition = new FieldDefinition(
 				(string) $field['field_key'],
 				(string) $field['sensitivity'],
