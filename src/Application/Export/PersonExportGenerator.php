@@ -7,6 +7,7 @@
 
 namespace UOP\Application\Export;
 
+use InvalidArgumentException;
 use RuntimeException;
 use UOP\Application\Policy\Actor;
 use UOP\Application\Policy\FieldDefinition;
@@ -37,26 +38,26 @@ final class PersonExportGenerator {
 	 * @param string   $status Optional fixed equality filter.
 	 * @phpstan-param list<string> $columns
 	 * @return array{body:string,count:int} Private CSV bytes and count.
-	 * @throws RuntimeException If authorization, encoding, storage or size fails.
+	 * @throws InvalidArgumentException For unsupported CSV columns.
 	 */
 	public function generate( Actor $actor, OrgScope $scope, array $columns, string $status ): array {
 		CsvExportSchema::columns( $columns );
-		$csv = new CsvStreamEncoder( $columns );
+		$csv       = new CsvStreamEncoder( $columns );
 		$projector = new ProjectionService( $this->policy );
 		$definitions = array(
-			'display_name' => new FieldDefinition( 'display_name', 'personal', true, false, true, false ),
-			'status'       => new FieldDefinition( 'status', 'internal', false, false, false, false ),
+			'display_name'  => new FieldDefinition( 'display_name', 'personal', true, false, true, false ),
+			'status'        => new FieldDefinition( 'status', 'internal', false, false, false, false ),
 			'primary_email' => new FieldDefinition( 'primary_email', 'personal', false, false, false, false ),
 		);
 		try {
 			$after = 0;
 			do {
-				$rows = $this->people->page( $scope, new PageRequest( 100, $after ), '' === $status ? array() : array( 'status' => $status ) );
+				$rows      = $this->people->page( $scope, new PageRequest( 100, $after ), '' === $status ? array() : array( 'status' => $status ) );
 				$page_size = count( $rows );
 				foreach ( $rows as $row ) {
 					$after = (int) $row['id'];
-					$object = new PolicyObject( $scope->id, 'person', $after, null, null, null !== $row['archived_at'] );
-					$id = PublicId::from_binary( $row['public_id'] );
+					$object    = new PolicyObject( $scope->id, 'person', $after, null, null, null !== $row['archived_at'] );
+					$id        = PublicId::from_binary( $row['public_id'] );
 					$projected = $projector->project(
 						$actor,
 						'person.view',
@@ -73,7 +74,7 @@ final class PersonExportGenerator {
 						continue;
 					}
 					$available = array_merge( array( 'public_id' => $projected['public_id'] ), $projected['fields'] );
-					$values = array();
+					$values    = array();
 					foreach ( $columns as $column ) {
 						if ( ! array_key_exists( $column, $available ) ) {
 							throw new RuntimeException( 'CSV field-level authorization denied.' );

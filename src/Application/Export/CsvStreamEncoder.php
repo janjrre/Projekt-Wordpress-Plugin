@@ -18,7 +18,11 @@ final class CsvStreamEncoder {
 	 */
 	private $handle;
 
-	/** Included data row count, excluding header. */
+	/**
+	 * Included data row count, excluding header.
+	 *
+	 * @var int
+	 */
 	private int $count = 0;
 
 	/**

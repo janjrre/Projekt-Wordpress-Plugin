@@ -27,13 +27,16 @@ final class CsvExportSchema {
 	 * @throws InvalidArgumentException When selection is unsafe or unsupported.
 	 */
 	public static function columns( array $columns ): array {
-		if ( ! array_is_list( $columns ) || ! $columns || count( $columns ) > count( self::ALLOWED ) || count( array_unique( $columns ) ) !== count( $columns ) ) {
+		if ( ! array_is_list( $columns ) || ! $columns || count( $columns ) > count( self::ALLOWED ) ) {
 			throw new InvalidArgumentException( 'Unsupported CSV column selection.' );
 		}
 		foreach ( $columns as $column ) {
 			if ( ! is_string( $column ) || ! in_array( $column, self::ALLOWED, true ) ) {
 				throw new InvalidArgumentException( 'Unsupported CSV column selection.' );
 			}
+		}
+		if ( count( array_unique( $columns ) ) !== count( $columns ) ) {
+			throw new InvalidArgumentException( 'Duplicate CSV columns are not allowed.' );
 		}
 		return $columns;
 	}
