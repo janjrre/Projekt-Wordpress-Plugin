@@ -33,15 +33,23 @@ final class RegistrationEligibilityService {
 	 * @throws RuntimeException When a rule is malformed or no longer satisfied.
 	 */
 	public function assert_eligible( Actor $actor, OrgScope $scope, array $registration, array $bucket ): void {
-		if ( null === ( $bucket['eligibility_json'] ?? null ) || '' === $bucket['eligibility_json'] ) {
-			return;
-		}
 		if ( (int) $registration['event_post_id'] !== (int) $bucket['event_post_id'] ) {
 			throw new RuntimeException( 'Eligibility and event scope mismatch.' );
 		}
-		$ast = json_decode( (string) $bucket['eligibility_json'], true, 64, JSON_THROW_ON_ERROR );
-		if ( ! is_array( $ast ) ) {
-			throw new RuntimeException( 'Bucket eligibility is malformed.' );
+		$event_rule = $this->registrations->active_eligibility_for_event( $scope, (int) $bucket['event_post_id'] );
+		$rules      = array();
+		foreach ( array( $event_rule, $bucket['eligibility_json'] ?? null ) as $json ) {
+			if ( null === $json || '' === $json ) {
+				continue;
+			}
+			$node = json_decode( (string) $json, true, 64, JSON_THROW_ON_ERROR );
+			if ( ! is_array( $node ) ) {
+				throw new RuntimeException( 'Registration eligibility is malformed.' );
+			}
+			$rules[] = $node;
+		}
+		if ( ! $rules ) {
+			return;
 		}
 		$trusted = $this->facts->load(
 			$actor,
@@ -49,19 +57,20 @@ final class RegistrationEligibilityService {
 			(int) $registration['person_id'],
 			(int) $registration['event_post_id'],
 			(int) $registration['occurrence_id'],
-			array( $ast )
+			$rules
 		);
-		$stored  = $this->registrations->snapshot_fields( $scope, (int) $registration['id'] );
-		$engine  = new ConditionEngine();
-		if ( ! $engine->evaluate(
-			$ast,
-			array(
-				'profile'      => $trusted['profile'],
-				'registration' => $stored,
-			),
-			$trusted['contexts']
-		) ) {
-			throw new RuntimeException( 'Bucket eligibility requirements were not met.' );
+		$stored = $this->registrations->snapshot_fields( $scope, (int) $registration['id'] );
+		$engine = new ConditionEngine();
+		foreach ( $rules as $rule ) {
+			if ( ! $engine->evaluate(
+				$rule,
+				array(
+					'profile'      => $trusted['profile'],
+					'registration' => $stored,
+				),
+				$trusted['contexts']
+			) ) {
+				throw new RuntimeException( 'Current event or bucket eligibility requirements were not met.' );
+			}
 		}
-	}
-}
+	}}

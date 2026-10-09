@@ -263,6 +263,25 @@ final class RegistrationRepository {
 	}
 
 	/**
+	 * Read the currently active event-level eligibility when allocating seats.
+	 *
+	 * @param OrgScope $scope Organization boundary.
+	 * @param int      $post  Trusted event post ID.
+	 * @return string|null Event condition JSON or null when unrestricted.
+	 * @throws RuntimeException When the event is no longer active.
+	 */
+	public function active_eligibility_for_event( OrgScope $scope, int $post ): ?string {
+		$rows = $this->db->rows(
+			"SELECT eligibility_json FROM %i WHERE organization_id = %d AND event_post_id = %d AND status = 'active' LIMIT 1 FOR UPDATE",
+			array( $this->prefix . 'event_settings', $scope->id, $post )
+		);
+		if ( ! $rows ) {
+			throw new RuntimeException( 'Capacity event no longer permits admission.' );
+		}
+		return null === $rows[0]['eligibility_json'] ? null : (string) $rows[0]['eligibility_json'];
+	}
+
+	/**
 	 * Load canonical immutable form inputs for live capacity eligibility.
 	 *
 	 * @param OrgScope $scope       Trusted organization.

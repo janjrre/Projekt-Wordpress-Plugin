@@ -950,4 +950,32 @@ final class M4RegistrationTest extends TestCase {
 		$services['transition']->transition($self,$this->scope,$id,'cancelled',PublicId::generate(),$now,CorrelationId::generate());
 		self::assertSame('cancelled',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$id->to_binary()])[0]['status']);
 	}
+
+	/** Changing event admission rules invalidates still-outstanding waitlist offers. */
+	public function test_current_event_eligibility_is_rechecked_before_offer_acceptance(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$services,$one,$event,$form,$now]=$this->setup_registration($draft);
+		$two=PublicId::generate();
+		$services['people']->create($this->scope,$two,'Queued participant',null,$now);
+		$first=$services['submit']->submit($services['actor'],$this->scope,$one,$event,null,PublicId::generate(),['name'=>'Primary'],$now,CorrelationId::generate());
+		$second=$services['submit']->submit($services['actor'],$this->scope,$two,$event,null,PublicId::generate(),['name'=>'Ordinary'],$now,CorrelationId::generate());
+		$bucket=$services['capacity']->create_general_bucket($services['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		self::assertSame('accepted',$services['capacity']->decide($services['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		self::assertSame('waitlisted',$services['capacity']->decide($services['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$services['lifecycle']->cancel($services['actor'],$this->scope,$first,PublicId::generate(),$now,CorrelationId::generate());
+		$offer=$services['lifecycle']->offer_next($services['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		$rule=['schema_version'=>1,'all'=>[[
+			'source'=>'registration','field'=>'name','operator'=>'eq','value'=>'Premium',
+		]]];
+		$this->db->execute('UPDATE %i SET eligibility_json = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'event_settings',wp_json_encode($rule),$this->scope->id,$event->to_binary()]);
+		try {
+			$services['lifecycle']->accept_offer($services['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Offer accepted despite newly tightened event-level condition');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame('held',$this->db->rows('SELECT status FROM %i WHERE registration_id = (SELECT id FROM %i WHERE public_id = %s)',[$this->prefix.'capacity_claims',$this->prefix.'registrations',$second->to_binary()])[0]['status']);
+		$this->db->execute('UPDATE %i SET eligibility_json = NULL WHERE organization_id = %d AND public_id = %s',[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]);
+		$services['lifecycle']->accept_offer($services['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+		self::assertSame('accepted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0]['status']);
+	}
 }
