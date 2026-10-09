@@ -1,0 +1,1017 @@
+<?php
+namespace UOP\Tests\Integration;
+
+use PHPUnit\Framework\TestCase;
+use InvalidArgumentException;
+use RuntimeException;
+use UOP\Application\Policy\{Actor, PolicyService};
+use UOP\Application\Event\EventService;
+use UOP\Application\Event\PostCommitPublisher;
+use UOP\Application\Identity\DelegationService;
+use UOP\Application\Form\FormService;
+use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService, RegistrationTransitionService, CapacityAllocationService, CapacityLifecycleService, EventCancellationService, RegistrationFactsService, RegistrationEligibilityService, EmailVerificationService};
+use UOP\Domain\Registrations\RegistrationStateMachine;
+use UOP\Domain\Events\OccurrenceWindow;
+use UOP\Domain\Profiles\FieldRules;
+use UOP\Core\{CorrelationId, PublicId, TransactionManager};
+use UOP\Domain\Organization\OrgScope;
+use UOP\Infrastructure\Database\{AssignmentRepository, AuditWriter, CapacityRepository, DelegationRepository, EventRepository, FormRepository, Installer, OccurrenceRepository, OutboxRepository, PersonRepository, RegistrationRepository, WaitlistRepository, EventCancellationRepository, RelationshipRepository, RegistrationFactsRepository, ProfileFieldRepository, ProfileValueRepository, SchemaManifest, WpdbConnection};
+
+final class M4RegistrationTest extends TestCase {
+	private WpdbConnection $db;
+	private OrgScope $scope;
+	private string $prefix;
+
+	protected function setUp(): void {
+		global $wpdb;
+		$this->db = new WpdbConnection($wpdb);
+		$this->prefix = $wpdb->prefix . 'uop_';
+		$manifest = new SchemaManifest(dirname(__DIR__,2).'/schema/manifest.json');
+		foreach (array_keys($manifest->tables()) as $table) {
+			$this->db->execute('DROP TABLE IF EXISTS %i',[$this->prefix.$table]);
+		}
+		foreach (array('uop_db_version','uop_data_version','uop_migration_progress_1','uop_migration_status','uop_default_organization_id') as $key) delete_option($key);
+		Installer::runner()->run();
+		$this->scope = new OrgScope((int)get_option('uop_default_organization_id'));
+	}
+
+	private function fixture(): array {
+		if (!post_type_exists('uop_event')) register_post_type('uop_event',array('public'=>true));
+		$user_id = wp_create_user('uop_m4_'.bin2hex(random_bytes(4)),wp_generate_password(24),'m4_'.bin2hex(random_bytes(4)).'@example.invalid');
+		self::assertIsInt($user_id);
+		$user = new \WP_User($user_id);
+		$user->set_role('administrator');
+		wp_set_current_user($user_id);
+		$actor = new Actor($user_id);
+		$people = new PersonRepository($this->db,$this->prefix);
+		$policy = new PolicyService($people,new DelegationRepository($this->db,$this->prefix),new AssignmentRepository($this->db,$this->prefix),static fn(int $id,string $cap): bool => $id === $user_id);
+		$tx = new TransactionManager($this->db,static function(int $n): void {},static function(\Throwable $e): void {});
+		$audit = new AuditWriter($this->db,$this->prefix);
+		$outbox = new OutboxRepository($this->db,$this->prefix);
+		return [
+			'actor'=>$actor,
+			'people'=>$people,
+			'delegations'=>new DelegationRepository($this->db,$this->prefix),
+			'relations'=>new RelationshipRepository($this->db,$this->prefix),
+			'policy'=>$policy,
+			'tx'=>$tx,
+			'audit'=>$audit,
+			'outbox'=>$outbox,
+			'form'=>new FormService(new FormRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
+			'event'=>new EventService(new EventRepository($this->db,$this->prefix),new OccurrenceRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
+			'config'=>new RegistrationConfigurationService($this->db,$this->prefix,$policy,$tx,$audit,$outbox),
+			'submit'=>new RegistrationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox,new RegistrationFactsService(new RegistrationFactsRepository($this->db,$this->prefix),$policy),$people),
+			'verification'=>new EmailVerificationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
+			'lifecycle'=>new CapacityLifecycleService(new WaitlistRepository($this->db,$this->prefix),new CapacityRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox,new RegistrationEligibilityService(new RegistrationRepository($this->db,$this->prefix),new RegistrationFactsService(new RegistrationFactsRepository($this->db,$this->prefix),$policy))),
+			'cancel_event'=>new EventCancellationService(new EventCancellationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
+			'capacity'=>new CapacityAllocationService(new CapacityRepository($this->db,$this->prefix),new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox,new RegistrationEligibilityService(new RegistrationRepository($this->db,$this->prefix),new RegistrationFactsService(new RegistrationFactsRepository($this->db,$this->prefix),$policy))),
+			'transition'=>new RegistrationTransitionService(new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
+		];
+	}
+
+	private function setup_registration(array $draft): array {
+		$s = $this->fixture();
+		$now = '2030-01-02 10:00:00';
+		$post_id = wp_insert_post(array('post_type'=>'uop_event','post_title'=>'Open Event','post_status'=>'publish'),true);
+		self::assertIsInt($post_id);
+		$event = $s['event']->configure($s['actor'],$this->scope,$post_id,'Europe/Berlin',$now,CorrelationId::generate());
+		$form = $s['form']->create($s['actor'],$this->scope,'entry_form','Entry Form','event',$draft,$now,CorrelationId::generate());
+		$s['form']->publish($s['actor'],$this->scope,$form,1,$now,CorrelationId::generate());
+		$s['config']->bind($s['actor'],$this->scope,$event,$form,$now,CorrelationId::generate());
+		$person = PublicId::generate();
+		$s['people']->create($this->scope,$person,'Attendee',null,$now);
+		return [$s,$person,$event,$form,$now];
+	}
+
+	public function test_idempotent_submission_snapshots_and_immutable_query_values(): void {
+		$draft = ['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'extras','type'=>'multiselect','label'=>'Extras','required'=>false,'options'=>['food','music']],
+			['key'=>'adult','type'=>'checkbox','label'=>'Adult','required'=>false],
+		]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$key=PublicId::generate();
+		$input=['name'=>'A Guest','extras'=>['music','food'],'adult'=>false];
+		$id=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,$key,$input,$now,CorrelationId::generate());
+		$again=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,$key,$input,$now,CorrelationId::generate());
+		self::assertSame($id->to_string(),$again->to_string());
+		try {
+			$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,$key,['name'=>'Changed','extras'=>['music','food'],'adult'=>false],$now,CorrelationId::generate());
+			self::fail('Reusing the key with a different body must be rejected');
+		} catch (RuntimeException) {
+			self::assertTrue(true);
+		}
+		$rows=$this->db->rows('SELECT id, current_snapshot_id, status, email_verified_at FROM %i WHERE organization_id = %d',[$this->prefix.'registrations',$this->scope->id]);
+		self::assertCount(1,$rows);
+		self::assertSame('submitted',$rows[0]['status']);
+		self::assertNull($rows[0]['email_verified_at']);
+		$snapshot=$this->db->rows('SELECT payload_json, payload_hash FROM %i WHERE registration_id = %d',[$this->prefix.'registration_snapshots',(int)$rows[0]['id']]);
+		self::assertCount(1,$snapshot);
+		self::assertSame(hash('sha256',$snapshot[0]['payload_json'],true),$snapshot[0]['payload_hash']);
+		$data=json_decode($snapshot[0]['payload_json'],true);
+		self::assertSame($input,$data['fields']);
+		$values=$this->db->rows('SELECT field_key, ordinal, value_string, value_boolean FROM %i WHERE registration_id = %d ORDER BY field_key, ordinal',[$this->prefix.'registration_values',(int)$rows[0]['id']]);
+		self::assertCount(4,$values);
+		self::assertSame(0,(int)array_values(array_filter($values,static fn($r)=>$r['field_key']==='adult'))[0]['value_boolean']);
+		self::assertSame([0,1],array_map(static fn($r)=>(int)$r['ordinal'],array_values(array_filter($values,static fn($r)=>$r['field_key']==='extras'))));
+		$hist=$this->db->rows('SELECT id FROM %i WHERE registration_id = %d',[$this->prefix.'registration_history',(int)$rows[0]['id']]);
+		self::assertCount(1,$hist);
+		$out=$this->db->rows('SELECT id FROM %i WHERE aggregate_type = %s AND event_name = %s',[$this->prefix.'domain_events','registration','registration.submitted']);
+		self::assertCount(1,$out);
+	}
+
+	public function test_rejects_hidden_values_missing_required_and_cross_org_subject(): void {
+		$condition=['schema_version'=>1,'all'=>[['source'=>'registration','field'=>'mode','operator'=>'eq','value'=>'extra']]];
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'mode','type'=>'select','label'=>'Mode','required'=>true,'options'=>['basic','extra']],
+			['key'=>'note','type'=>'text','label'=>'Note','required'=>true,'visible_when'=>$condition],
+		]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$cases=[
+			['mode'=>'basic','note'=>'hidden'],
+			['mode'=>'extra'],
+			['mode'=>'unknown'],
+			['mode'=>'basic','unlisted'=>'x'],
+		];
+		foreach ($cases as $input) {
+			try {
+				$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),$input,$now,CorrelationId::generate());
+				self::fail('Invalid input accepted');
+			} catch (RuntimeException | InvalidArgumentException) {
+				self::assertTrue(true);
+			}
+		}
+		try {
+			$s['submit']->submit($s['actor'],new OrgScope($this->scope->id+10),$person,$event,null,PublicId::generate(),['mode'=>'basic'],$now,CorrelationId::generate());
+			self::fail('Cross-organization submission accepted');
+		} catch (RuntimeException) {
+			self::assertTrue(true);
+		}
+		$rows=$this->db->rows('SELECT id FROM %i',[$this->prefix.'registrations']);
+		self::assertSame([],$rows);
+		$key=PublicId::generate();
+		$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,$key,['mode'=>'basic'],$now,CorrelationId::generate());
+		try {
+			$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['mode'=>'basic'],$now,CorrelationId::generate());
+			self::fail('Duplicate active registration permitted');
+		} catch (RuntimeException) {
+			self::assertTrue(true);
+		}
+	}
+	public function test_review_and_rejection_are_idempotent_without_capacity_mutations(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$uuid=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'Member'],$now,CorrelationId::generate());
+		$review=PublicId::generate();
+		$s['transition']->transition($s['actor'],$this->scope,$uuid,'review',$review,$now,CorrelationId::generate());
+		$s['transition']->transition($s['actor'],$this->scope,$uuid,'review',$review,$now,CorrelationId::generate());
+		$reject=PublicId::generate();
+		$s['transition']->transition($s['actor'],$this->scope,$uuid,'rejected',$reject,$now,CorrelationId::generate());
+		$rows=$this->db->rows('SELECT id,status,version FROM %i WHERE organization_id = %d AND public_id = %s',[$this->prefix.'registrations',$this->scope->id,$uuid->to_binary()]);
+		self::assertSame('rejected',$rows[0]['status']);
+		self::assertSame(3,(int)$rows[0]['version']);
+		$history=$this->db->rows('SELECT from_status,to_status FROM %i WHERE registration_id = %d ORDER BY id',[$this->prefix.'registration_history',(int)$rows[0]['id']]);
+		self::assertSame(['submitted','review','rejected'],array_column($history,'to_status'));
+		self::assertSame([], $this->db->rows('SELECT id FROM %i',[$this->prefix.'capacity_claims']));
+		try {
+			$s['transition']->transition($s['actor'],$this->scope,$uuid,'accepted',PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Capacity-dependent target accepted');
+		} catch (InvalidArgumentException) { self::assertTrue(true); }
+		try {
+			$s['transition']->transition($s['actor'],$this->scope,$uuid,'cancelled',PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Terminal registration cancelled');
+		} catch (RuntimeException) { self::assertTrue(true); }
+	}
+
+	public function test_last_available_seat_creates_one_claim_and_fifo_waitlist_entry(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$other=PublicId::generate();
+		$s['people']->create($this->scope,$other,'Second Person',null,$now);
+		$first=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'One'],$now,CorrelationId::generate());
+		$second=$s['submit']->submit($s['actor'],$this->scope,$other,$event,null,PublicId::generate(),['name'=>'Two'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$command=PublicId::generate();
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,$command,$now,CorrelationId::generate()));
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,$command,$now,CorrelationId::generate()));
+		self::assertSame('waitlisted',$s['capacity']->decide($s['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$actual_occupancy=(new CapacityRepository($this->db,$this->prefix))->occupied($this->scope,(int)$this->db->rows('SELECT id FROM %i WHERE public_id = %s',[$this->prefix.'capacity_buckets',$bucket->to_binary()])[0]['id']);
+		self::assertSame(1,$actual_occupancy,'Occupied count must be scoped to the actual bucket, not the organization id');
+		$claims=$this->db->rows('SELECT status,registration_id FROM %i',[$this->prefix.'capacity_claims']);
+		self::assertCount(1,$claims);
+		self::assertSame('confirmed',$claims[0]['status']);
+		$queue=$this->db->rows('SELECT priority,status,joined_at FROM %i',[$this->prefix.'waitlist_entries']);
+		self::assertCount(1,$queue);
+		self::assertSame('waiting',$queue[0]['status']);
+		$states=$this->db->rows('SELECT status FROM %i ORDER BY id',[$this->prefix.'registrations']);
+		self::assertSame(['accepted','waitlisted'],array_column($states,'status'));
+		$evidence=$this->db->rows('SELECT command_id FROM %i WHERE to_status IN (%s,%s)',[$this->prefix.'registration_history','accepted','waitlisted']);
+		self::assertCount(2,$evidence);
+		try {
+			$s['capacity']->decide($s['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Waitlisted registration bypassed queue');
+		} catch (RuntimeException) { self::assertTrue(true); }
+	}
+
+	public function test_capacity_cancel_and_private_waitlist_offer_acceptance(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$first_person,$event,$form,$now]=$this->setup_registration($draft);
+		$second_person=PublicId::generate();
+		$s['people']->create($this->scope,$second_person,'Waiting Guest',null,$now);
+		$first=$s['submit']->submit($s['actor'],$this->scope,$first_person,$event,null,PublicId::generate(),['name'=>'First'],$now,CorrelationId::generate());
+		$second=$s['submit']->submit($s['actor'],$this->scope,$second_person,$event,null,PublicId::generate(),['name'=>'Second'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		self::assertSame('waitlisted',$s['capacity']->decide($s['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$s['lifecycle']->cancel($s['actor'],$this->scope,$first,PublicId::generate(),$now,CorrelationId::generate());
+		$offer=$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		self::assertSame(64,strlen($offer['token']));
+		$claim=$this->db->rows('SELECT status, expires_at FROM %i WHERE registration_id = %d',[$this->prefix.'capacity_claims',(int)$this->db->rows('SELECT id FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0]['id']]);
+		self::assertSame('held',$claim[0]['status']);
+		try {
+			$s['lifecycle']->accept_offer($s['actor'],$this->scope,PublicId::from_string($offer['public_id']),str_repeat('a',64),PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Wrong bearer token accepted');
+		} catch (RuntimeException) {
+			self::assertTrue(true);
+		}
+		$s['lifecycle']->accept_offer($s['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+		self::assertSame('confirmed',$this->db->rows('SELECT status FROM %i WHERE registration_id = %d',[$this->prefix.'capacity_claims',(int)$this->db->rows('SELECT id FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0]['id']])[0]['status']);
+		$states=$this->db->rows('SELECT status FROM %i ORDER BY id',[$this->prefix.'registrations']);
+		self::assertSame(['cancelled','accepted'],array_column($states,'status'));
+		$offer_entry=$this->db->rows('SELECT status,token_hash FROM %i WHERE public_id = %s',[$this->prefix.'waitlist_offers',PublicId::from_string($offer['public_id'])->to_binary()])[0];
+		self::assertSame('accepted',$offer_entry['status']);
+		self::assertNotSame($offer['token'],$offer_entry['token_hash']);
+		$meta=$this->db->rows('SELECT payload_json FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','registration.offered']);
+		self::assertCount(1,$meta);
+		self::assertStringNotContainsString($offer['token'],$meta[0]['payload_json']);
+	}
+
+	public function test_expired_offer_releases_and_reuses_exactly_one_claim(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$first_person,$event,$form,$now]=$this->setup_registration($draft);
+		$second_person=PublicId::generate();
+		$s['people']->create($this->scope,$second_person,'Waiting Guest',null,$now);
+		$first=$s['submit']->submit($s['actor'],$this->scope,$first_person,$event,null,PublicId::generate(),['name'=>'First'],$now,CorrelationId::generate());
+		$second=$s['submit']->submit($s['actor'],$this->scope,$second_person,$event,null,PublicId::generate(),['name'=>'Second'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$s['lifecycle']->cancel($s['actor'],$this->scope,$first,PublicId::generate(),$now,CorrelationId::generate());
+		$old=$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($old);
+		self::assertFalse($s['lifecycle']->expire_offer($s['actor'],$this->scope,PublicId::from_string($old['public_id']),PublicId::generate(),$now,CorrelationId::generate()));
+		$later='2030-01-05 10:00:00';
+		self::assertTrue($s['lifecycle']->expire_offer($s['actor'],$this->scope,PublicId::from_string($old['public_id']),PublicId::generate(),$later,CorrelationId::generate()));
+		self::assertFalse($s['lifecycle']->expire_offer($s['actor'],$this->scope,PublicId::from_string($old['public_id']),PublicId::generate(),$later,CorrelationId::generate()));
+		$new=$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$later,CorrelationId::generate());
+		self::assertNotNull($new);
+		self::assertNotSame($old['public_id'],$new['public_id']);
+		$claims=$this->db->rows('SELECT status FROM %i WHERE status IN (%s,%s)',[$this->prefix.'capacity_claims','held','confirmed']);
+		self::assertCount(1,$claims);
+		$offers=$this->db->rows('SELECT status FROM %i ORDER BY id',[$this->prefix.'waitlist_offers']);
+		self::assertSame(['expired','offered'],array_column($offers,'status'));
+		$s['lifecycle']->accept_offer($s['actor'],$this->scope,PublicId::from_string($new['public_id']),$new['token'],PublicId::generate(),$later,CorrelationId::generate());
+		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i WHERE status = %s',[$this->prefix.'capacity_claims','confirmed'])[0]['n']);
+	}
+
+	public function test_single_use_contact_verification_gates_capacity_without_linking_a_user(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'contact','type'=>'email','label'=>'Contact email','required'=>true],
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+		]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$this->db->execute(
+			'UPDATE %i SET require_email_verification = 1 WHERE organization_id = %d AND public_id = %s',
+			[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]
+		);
+		try {
+			$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'No email'],$now,CorrelationId::generate());
+			self::fail('Mandatory verification without email was accepted');
+		} catch (InvalidArgumentException) { self::assertTrue(true); }
+		$registration=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),[
+			'contact'=>'recipient@example.invalid','name'=>'Attendee'
+		],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		try {
+			$s['capacity']->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Capacity acceptance without verified contact was permitted');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		$one=$s['verification']->issue($s['actor'],$this->scope,$registration,$now,CorrelationId::generate());
+		self::assertSame('recipient@example.invalid',$one['email']);
+		self::assertSame(64,strlen($one['token']));
+		$two=$s['verification']->issue($s['actor'],$this->scope,$registration,$now,CorrelationId::generate());
+		self::assertNotSame($one['token'],$two['token']);
+		self::assertFalse($s['verification']->verify($this->scope,$registration,$one['token'],$now,CorrelationId::generate()));
+		self::assertTrue($s['verification']->verify($this->scope,$registration,$two['token'],$now,CorrelationId::generate()));
+		self::assertFalse($s['verification']->verify($this->scope,$registration,$two['token'],$now,CorrelationId::generate()));
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$row=$this->db->rows('SELECT contact_email, email_verification_token_hash, email_verified_at FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0];
+		self::assertSame('recipient@example.invalid',$row['contact_email']);
+		self::assertNull($row['email_verification_token_hash']);
+		self::assertSame($now,$row['email_verified_at']);
+		$owner=$this->db->rows('SELECT wp_user_id FROM %i WHERE public_id = %s',[$this->prefix.'persons',$person->to_binary()])[0];
+		self::assertNull($owner['wp_user_id'],'A verified email may not silently link a WP user');
+	}
+
+	public function test_manager_cancellation_and_next_offer_share_one_atomic_capacity_boundary(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$first_person,$event,$form,$now]=$this->setup_registration($draft);
+		$people=[$first_person];
+		for ($i=1;$i<3;++$i) {
+			$person=PublicId::generate();
+			$s['people']->create($this->scope,$person,'FIFO Guest '.$i,null,$now);
+			$people[]=$person;
+		}
+		$registrations=[];
+		foreach ($people as $i=>$person) {
+			$registrations[]=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'Guest '.$i],$now,CorrelationId::generate());
+		}
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		foreach ($registrations as $i=>$id) {
+			self::assertSame(0===$i?'accepted':'waitlisted',$s['capacity']->decide($s['actor'],$this->scope,$id,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		}
+		$command=PublicId::generate();
+		$offer=$s['lifecycle']->cancel_and_offer_next($s['actor'],$this->scope,$registrations[0],$command,$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		self::assertSame(64,strlen($offer['token']));
+		self::assertNull($s['lifecycle']->cancel_and_offer_next($s['actor'],$this->scope,$registrations[0],$command,$now,CorrelationId::generate()),'Replay must not grant another held seat');
+		$states=$this->db->rows('SELECT status FROM %i ORDER BY id',[$this->prefix.'registrations']);
+		self::assertSame(['cancelled','offered','waitlisted'],array_column($states,'status'));
+		$claims=$this->db->rows("SELECT status FROM %i WHERE status IN ('confirmed','held')",[$this->prefix.'capacity_claims']);
+		self::assertCount(1,$claims);
+		self::assertSame('held',$claims[0]['status']);
+		$offers=$this->db->rows('SELECT registration_id,token_hash FROM %i',[$this->prefix.'waitlist_offers']);
+		self::assertCount(1,$offers);
+		$second_id=$this->db->rows('SELECT id FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registrations[1]->to_binary()]);
+		self::assertSame((int)$second_id[0]['id'],(int)$offers[0]['registration_id'],'Oldest waiting applicant must be selected');
+		self::assertNotSame($offer['token'],$offers[0]['token_hash']);
+		$history=$this->db->rows("SELECT to_status FROM %i WHERE to_status IN ('cancelled','offered')",[$this->prefix.'registration_history']);
+		self::assertSame(['cancelled','offered'],array_column($history,'to_status'));
+		$events=$this->db->rows('SELECT event_name,payload_json FROM %i WHERE event_name IN (%s,%s) ORDER BY id',[$this->prefix.'domain_events','registration.cancelled','registration.offered']);
+		self::assertSame(['registration.cancelled','registration.offered'],array_column($events,'event_name'));
+		foreach ($events as $row) {
+			self::assertStringNotContainsString($offer['token'],$row['payload_json']);
+		}
+		$s['lifecycle']->accept_offer($s['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+		$occupied=$this->db->rows("SELECT COUNT(*) AS n FROM %i WHERE status IN ('held','confirmed')",[$this->prefix.'capacity_claims']);
+		self::assertSame(1,(int)$occupied[0]['n']);
+	}
+
+	public function test_atomic_manager_cancellation_rolls_back_when_next_waiter_cannot_be_verified(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$first_person,$event,$form,$now]=$this->setup_registration($draft);
+		$second_person=PublicId::generate();
+		$s['people']->create($this->scope,$second_person,'Unverified Applicant',null,$now);
+		$first=$s['submit']->submit($s['actor'],$this->scope,$first_person,$event,null,PublicId::generate(),['name'=>'First'],$now,CorrelationId::generate());
+		$second=$s['submit']->submit($s['actor'],$this->scope,$second_person,$event,null,PublicId::generate(),['name'=>'Second'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$this->db->execute('UPDATE %i SET require_email_verification = 1 WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()]);
+		try {
+			$s['lifecycle']->cancel_and_offer_next($s['actor'],$this->scope,$first,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Unverifiable FIFO offer was allowed');
+		} catch (RuntimeException) {
+			self::assertTrue(true);
+		}
+		$states=$this->db->rows('SELECT status FROM %i ORDER BY id',[$this->prefix.'registrations']);
+		self::assertSame(['accepted','waitlisted'],array_column($states,'status'),'Cancellation must roll back with failed offer');
+		self::assertSame(1,(int)$this->db->rows("SELECT COUNT(*) AS n FROM %i WHERE status = 'confirmed'",[$this->prefix.'capacity_claims'])[0]['n']);
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'waitlist_offers']));
+		self::assertSame([],$this->db->rows("SELECT id FROM %i WHERE event_name = 'registration.cancelled'",[$this->prefix.'domain_events']));
+	}
+
+
+	public function test_offered_seat_cannot_be_accepted_when_event_is_closed_or_unpublished(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$waiting_person=PublicId::generate();
+		$s['people']->create($this->scope,$waiting_person,'Waitlisted guest',null,$now);
+		$first=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'First'],$now,CorrelationId::generate());
+		$second=$s['submit']->submit($s['actor'],$this->scope,$waiting_person,$event,null,PublicId::generate(),['name'=>'Second'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$s['lifecycle']->cancel($s['actor'],$this->scope,$first,PublicId::generate(),$now,CorrelationId::generate());
+		$offer=$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		$offer_id=PublicId::from_string($offer['public_id']);
+		$this->db->execute("UPDATE %i SET status = 'cancelled' WHERE organization_id = %d AND public_id = %s",[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]);
+		try {
+			$s['lifecycle']->accept_offer($s['actor'],$this->scope,$offer_id,$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Closed event accepted an outstanding waitlist offer');
+		} catch (RuntimeException) {
+			self::assertTrue(true);
+		}
+		$this->db->execute("UPDATE %i SET status = 'active' WHERE organization_id = %d AND public_id = %s",[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]);
+		$event_post=(int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		wp_update_post(['ID'=>$event_post,'post_status'=>'draft']);
+		try {
+			$s['lifecycle']->accept_offer($s['actor'],$this->scope,$offer_id,$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Unpublished event accepted an outstanding waitlist offer');
+		} catch (RuntimeException) {
+			self::assertTrue(true);
+		}
+		wp_update_post(['ID'=>$event_post,'post_status'=>'publish']);
+		$this->db->execute('UPDATE %i SET require_email_verification = 1 WHERE organization_id = %d AND public_id = %s',[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]);
+		try {
+			$s['lifecycle']->accept_offer($s['actor'],$this->scope,$offer_id,$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Newly required email verification was bypassed');
+		} catch (RuntimeException) {
+			self::assertTrue(true);
+		}
+		$this->db->execute('UPDATE %i SET require_email_verification = 0 WHERE organization_id = %d AND public_id = %s',[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]);
+		$still_waiting=$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0];
+		self::assertSame('offered',$still_waiting['status'],'Closed-event rejections must not mutate registration state');
+		self::assertSame('held',$this->db->rows('SELECT status FROM %i WHERE registration_id = (SELECT id FROM %i WHERE public_id = %s)',[$this->prefix.'capacity_claims',$this->prefix.'registrations',$second->to_binary()])[0]['status']);
+		$s['lifecycle']->accept_offer($s['actor'],$this->scope,$offer_id,$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+		self::assertSame('accepted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0]['status']);
+	}
+
+	/**
+	 * Cancellation closes every state and real held/confirmed claim while keeping
+	 * all original snapshots and unrelated registrations intact.
+	 */
+	public function test_event_cancellation_releases_offers_claims_and_emits_per_recipient_events(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$post_id=(int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		$occurrence=$s['event']->add_occurrence($s['actor'],$this->scope,$post_id,new OccurrenceWindow('2030-04-15T12:00:00+02:00','2030-04-15T14:00:00+02:00','Europe/Berlin'),$now,CorrelationId::generate());
+		$people=[$person];
+		for ($i=1;$i<7;++$i) {
+			$id=PublicId::generate();
+			$s['people']->create($this->scope,$id,'Participant '.$i,null,$now);
+			$people[]=$id;
+		}
+		$registrations=[];
+		foreach ($people as $i=>$subject) {
+			$registrations[]=$s['submit']->submit($s['actor'],$this->scope,$subject,$event,null,PublicId::generate(),['name'=>'Member '.$i],$now,CorrelationId::generate());
+		}
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,2,$now,CorrelationId::generate());
+		for ($i=0;$i<4;++$i) {
+			self::assertSame($i<2?'accepted':'waitlisted',$s['capacity']->decide($s['actor'],$this->scope,$registrations[$i],$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		}
+		$s['lifecycle']->cancel($s['actor'],$this->scope,$registrations[0],PublicId::generate(),$now,CorrelationId::generate());
+		$offer=$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		$s['transition']->transition($s['actor'],$this->scope,$registrations[4],'review',PublicId::generate(),$now,CorrelationId::generate());
+		$s['transition']->transition($s['actor'],$this->scope,$registrations[5],'rejected',PublicId::generate(),$now,CorrelationId::generate());
+		$snapshots=$this->db->rows('SELECT registration_id,payload_hash,payload_json FROM %i ORDER BY registration_id',[$this->prefix.'registration_snapshots']);
+		$old_events=(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'domain_events'])[0]['n'];
+		self::assertSame(5,$s['cancel_event']->cancel($s['actor'],$this->scope,$event,PublicId::generate(),$now,CorrelationId::generate()));
+		$states=$this->db->rows('SELECT status,status_reason_code FROM %i ORDER BY id',[$this->prefix.'registrations']);
+		self::assertSame(['cancelled','cancelled','cancelled','cancelled','cancelled','rejected','cancelled'],array_column($states,'status'));
+		self::assertSame('event_cancelled',$states[1]['status_reason_code']);
+		self::assertNull($states[5]['status_reason_code']);
+		self::assertSame('cancelled',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['status']);
+		self::assertSame('cancelled',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'event_occurrences',$occurrence->to_binary()])[0]['status']);
+		try {
+			$s['event']->add_occurrence($s['actor'],$this->scope,$post_id,new OccurrenceWindow('2030-04-16T12:00:00+02:00','2030-04-16T14:00:00+02:00','Europe/Berlin'),$now,CorrelationId::generate());
+			self::fail('Cancelled event permitted a new scheduled occurrence');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame('cancelled',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'capacity_buckets',$bucket->to_binary()])[0]['status']);
+		self::assertSame([], $this->db->rows("SELECT id FROM %i WHERE status IN ('held','confirmed')",[$this->prefix.'capacity_claims']));
+		self::assertSame('cancelled',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'waitlist_offers',PublicId::from_string($offer['public_id'])->to_binary()])[0]['status']);
+		self::assertSame([], $this->db->rows("SELECT id FROM %i WHERE status IN ('waiting','offered')",[$this->prefix.'waitlist_entries']));
+		self::assertSame($snapshots,$this->db->rows('SELECT registration_id,payload_hash,payload_json FROM %i ORDER BY registration_id',[$this->prefix.'registration_snapshots']));
+		$hist=$this->db->rows("SELECT reason_code FROM %i WHERE reason_code = 'event_cancelled'",[$this->prefix.'registration_history']);
+		self::assertCount(5,$hist);
+		$notifications=$this->db->rows("SELECT event_name,payload_json FROM %i WHERE event_name IN ('registration.event_cancelled','event.cancelled') ORDER BY id",[$this->prefix.'domain_events']);
+		self::assertSame(6,count($notifications));
+		self::assertSame(5,count(array_filter($notifications,static fn($row)=>$row['event_name']==='registration.event_cancelled')));
+		foreach ($notifications as $row) {
+			self::assertStringNotContainsString($offer['token'],$row['payload_json']);
+		}
+		$event_count=(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'domain_events'])[0]['n'];
+		self::assertSame($old_events+6,$event_count);
+		self::assertSame(0,$s['cancel_event']->cancel($s['actor'],$this->scope,$event,PublicId::generate(),$now,CorrelationId::generate()));
+		self::assertSame($event_count,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'domain_events'])[0]['n']);
+		try {
+			$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Cancelled bucket still issued an offer');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		try {
+			$s['lifecycle']->accept_offer($s['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Cancelled offer remained usable');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		try {
+			$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'Late arrival'],$now,CorrelationId::generate());
+			self::fail('Cancelled event accepted submission');
+		} catch (RuntimeException) { self::assertTrue(true); }
+	}
+
+	/** Unauthorized or cross-organization attempts cannot close an event. */
+	public function test_event_cancellation_respects_live_actor_and_organization_scope(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		foreach ([
+			[new Actor(999999),$this->scope],
+			[$s['actor'],new OrgScope($this->scope->id+10)],
+		] as [$actor,$scope]) {
+			try {
+				$s['cancel_event']->cancel($actor,$scope,$event,PublicId::generate(),$now,CorrelationId::generate());
+				self::fail('Unauthorized event cancellation succeeded');
+			} catch (RuntimeException) { self::assertTrue(true); }
+		}
+		self::assertSame('active',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['status']);
+		self::assertSame([], $this->db->rows("SELECT id FROM %i WHERE event_name = 'event.cancelled'",[$this->prefix.'domain_events']));
+	}
+
+	/** An outbox failure aborts the entire event + seat + history transaction. */
+	public function test_event_cancellation_rolls_back_all_state_when_outbox_is_unavailable(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$registration=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'Preserved'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$this->db->execute('DROP TABLE %i',[$this->prefix.'domain_events']);
+		try {
+			$s['cancel_event']->cancel($s['actor'],$this->scope,$event,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Cancellation completed without mandatory outbox');
+		} catch (\Throwable $error) {
+			self::assertNotInstanceOf(\PHPUnit\Framework\AssertionFailedError::class,$error);
+		}
+		self::assertSame('active',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['status']);
+		self::assertSame('active',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'capacity_buckets',$bucket->to_binary()])[0]['status']);
+		self::assertSame('accepted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
+		self::assertSame('confirmed',$this->db->rows('SELECT status FROM %i WHERE registration_id = (SELECT id FROM %i WHERE public_id = %s)',[$this->prefix.'capacity_claims',$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
+		self::assertSame([], $this->db->rows("SELECT id FROM %i WHERE reason_code = 'event_cancelled'",[$this->prefix.'registration_history']));
+	}
+
+	/** A parent may submit for a child only while the explicit delegation is live. */
+	public function test_guardian_family_registration_uses_current_delegation_not_relationship(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$child,$event,$form,$now]=$this->setup_registration($draft);
+		$parent=PublicId::generate();
+		$s['people']->create($this->scope,$parent,'Responsible Adult',null,$now);
+		$guardian=wp_create_user('uop_m4_parent_'.bin2hex(random_bytes(4)),wp_generate_password(24),'parent_'.bin2hex(random_bytes(4)).'@example.invalid');
+		self::assertIsInt($guardian);
+		self::assertTrue($s['people']->link($this->scope,$parent,$guardian,$now));
+		$parent_row=$s['people']->find($this->scope,$parent);
+		$child_row=$s['people']->find($this->scope,$child);
+		$relationship=PublicId::generate();
+		$s['relations']->create($this->scope,$relationship,(int)$parent_row['id'],(int)$child_row['id'],'guardian_of',$now);
+		$as_parent=new Actor($guardian);
+		$input=['name'=>'Child Guest'];
+		try {
+			$s['submit']->submit($as_parent,$this->scope,$child,$event,null,PublicId::generate(),$input,$now,CorrelationId::generate());
+			self::fail('Family relationship granted implicit registration rights');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		$delegation=new DelegationService($s['people'],$s['relations'],$s['delegations'],$this->db,$s['policy'],$s['tx'],$s['audit'],$s['outbox'],new PostCommitPublisher($s['tx']));
+		$grant=$delegation->grant($s['actor'],$this->scope,$guardian,$child,'registration_manage','organization',0,$relationship,$now,CorrelationId::generate());
+		$registration=$s['submit']->submit($as_parent,$this->scope,$child,$event,null,PublicId::generate(),$input,$now,CorrelationId::generate());
+		self::assertSame('submitted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
+		$s['transition']->transition($s['actor'],$this->scope,$registration,'cancelled',PublicId::generate(),$now,CorrelationId::generate());
+		$delegation->revoke($s['actor'],$this->scope,$grant,$now,CorrelationId::generate());
+		try {
+			$s['submit']->submit($as_parent,$this->scope,$child,$event,null,PublicId::generate(),$input,$now,CorrelationId::generate());
+			self::fail('Revoked guardian still submitted for the child');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		self::assertSame('cancelled',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
+		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registrations'])[0]['n']);
+	}
+
+	/** Age and profile conditions are evaluated against database facts, never form assertions. */
+	public function test_authoritative_age_and_profile_conditions_use_scheduled_event_start(): void {
+		$condition=['schema_version'=>1,'all'=>[[
+			'source'=>'profile','field'=>'date_of_birth','operator'=>'age_gte_at','value'=>18,'context'=>'event.start',
+		]]];
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'adult_note','type'=>'text','label'=>'Adult note','required'=>false,'visible_when'=>$condition],
+		]];
+		[$s,$adult,$event,$form,$now]=$this->setup_registration($draft);
+		$event_post=(int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		$occurrence=$s['event']->add_occurrence($s['actor'],$this->scope,$event_post,new OccurrenceWindow('2030-04-15T12:00:00+02:00','2030-04-15T14:00:00+02:00','Europe/Berlin'),$now,CorrelationId::generate());
+		$field=PublicId::generate();
+		$fields=new ProfileFieldRepository($this->db,$this->prefix);
+		$values=new ProfileValueRepository($this->db,$this->prefix);
+		$fields->create($this->scope,$field,['key'=>'date_of_birth','type'=>'date','label'=>'Date of birth','subject_view'=>true],$now);
+		$field_id=(int)$fields->find($this->scope,$field)['id'];
+		$adult_id=(int)$s['people']->find($this->scope,$adult)['id'];
+		$values->replace($this->scope,$adult_id,$field_id,FieldRules::normalize('date','2000-01-01'),$now);
+		$adult_registration=$s['submit']->submit($s['actor'],$this->scope,$adult,$event,$occurrence,PublicId::generate(),['name'=>'Adult','adult_note'=>'Allowed'],$now,CorrelationId::generate());
+		self::assertSame('submitted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$adult_registration->to_binary()])[0]['status']);
+		$child=PublicId::generate();
+		$s['people']->create($this->scope,$child,'Minor',null,$now);
+		$child_id=(int)$s['people']->find($this->scope,$child)['id'];
+		$values->replace($this->scope,$child_id,$field_id,FieldRules::normalize('date','2020-01-01'),$now);
+		try {
+			$s['submit']->submit($s['actor'],$this->scope,$child,$event,$occurrence,PublicId::generate(),['name'=>'Child','adult_note'=>'Forge adult status'],$now,CorrelationId::generate());
+			self::fail('Applicant forged profile condition');
+		} catch (InvalidArgumentException) { self::assertTrue(true); }
+		$this->db->execute('UPDATE %i SET eligibility_json = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'event_settings',wp_json_encode($condition),$this->scope->id,$event->to_binary()]);
+		try {
+			$s['submit']->submit($s['actor'],$this->scope,$child,$event,$occurrence,PublicId::generate(),['name'=>'Child'],$now,CorrelationId::generate());
+			self::fail('Underage applicant bypassed event eligibility');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registrations'])[0]['n']);
+	}
+
+	/** An age requirement without a trustworthy scheduled start must not evaluate to today. */
+	public function test_age_condition_fails_closed_without_unique_event_start(): void {
+		$condition=['schema_version'=>1,'all'=>[[
+			'source'=>'profile','field'=>'date_of_birth','operator'=>'age_gte_at','value'=>18,'context'=>'event.start',
+		]]];
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'adult_note','type'=>'text','label'=>'Note','required'=>false,'visible_when'=>$condition],
+		]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		try {
+			$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'No schedule'],$now,CorrelationId::generate());
+			self::fail('Event without start silently evaluated age');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'registrations']));
+	}
+
+	/** A reviewed registration cannot acquire a seat while its event is unpublished. */
+	public function test_capacity_decision_rejects_unpublished_event_without_occupying_a_seat(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$registration=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'Applicant'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$post_id=(int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		wp_update_post(['ID'=>$post_id,'post_status'=>'draft']);
+		try {
+			$s['capacity']->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Unpublished event allocated a capacity claim');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'capacity_claims']));
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'waitlist_entries']));
+		self::assertSame('submitted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
+		wp_update_post(['ID'=>$post_id,'post_status'=>'publish']);
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+	}
+
+	/** The page cursor must cancel more than 100 attendees without skipping anyone. */
+	public function test_event_cancellation_completes_multiple_registration_pages(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$services,$first,$event,$form,$now]=$this->setup_registration($draft);
+		for ($i=0;$i<102;++$i) {
+			$person=0===$i?$first:PublicId::generate();
+			if ($i>0) {
+				$services['people']->create($this->scope,$person,'Bulk '.$i,null,$now);
+			}
+			$services['submit']->submit($services['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'Bulk '.$i],$now,CorrelationId::generate());
+		}
+		$baseline=(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registration_snapshots'])[0]['n'];
+		self::assertSame(102,$baseline);
+		$cancelled=$services['cancel_event']->cancel($services['actor'],$this->scope,$event,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertSame(102,$cancelled);
+		$rows=$this->db->rows('SELECT id FROM %i WHERE status = %s',[$this->prefix.'registrations','cancelled']);
+		self::assertCount(102,$rows);
+		$history=$this->db->rows('SELECT id FROM %i WHERE reason_code = %s',[$this->prefix.'registration_history','event_cancelled']);
+		self::assertCount(102,$history);
+		$events=$this->db->rows('SELECT id FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','registration.event_cancelled']);
+		self::assertCount(102,$events);
+		self::assertSame($baseline,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registration_snapshots'])[0]['n']);
+		self::assertSame(0,$services['cancel_event']->cancel($services['actor'],$this->scope,$event,PublicId::generate(),$now,CorrelationId::generate()));
+	}
+
+	/** Public guests do not gain seats before private contact verification. */
+	public function test_public_guest_submission_requires_contact_verification_and_remains_unlinked(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'contact','type'=>'email','label'=>'Contact','required'=>true],
+		]];
+		[$s,$existing,$event,$form,$now]=$this->setup_registration($draft);
+		$this->db->execute("UPDATE %i SET visibility = 'public', require_email_verification = 1 WHERE public_id = %s",[$this->prefix.'event_settings',$event->to_binary()]);
+		$input=['name'=>'Guest','contact'=>'guest@example.invalid'];
+		$key=PublicId::generate();
+		$registration=$s['submit']->submit_guest($this->scope,$event,null,$key,$input,$now,CorrelationId::generate());
+		self::assertSame($registration->to_string(),$s['submit']->submit_guest($this->scope,$event,null,$key,$input,$now,CorrelationId::generate())->to_string());
+		$row=$this->db->rows('SELECT person_id,actor_user_id,source,email_verified_at FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0];
+		self::assertSame('guest',$row['source']);
+		self::assertNull($row['actor_user_id']);
+		self::assertNull($row['email_verified_at']);
+		self::assertNull($this->db->rows('SELECT wp_user_id FROM %i WHERE id = %d',[$this->prefix.'persons',(int)$row['person_id']])[0]['wp_user_id']);
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		try {
+			$s['capacity']->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Unverified guest was allocated a seat');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		$challenge=$s['verification']->issue($s['actor'],$this->scope,$registration,$now,CorrelationId::generate());
+		self::assertSame('guest@example.invalid',$challenge['email']);
+		self::assertTrue($s['verification']->verify($this->scope,$registration,$challenge['token'],$now,CorrelationId::generate()));
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$signals=$this->db->rows('SELECT payload_json FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','registration.email_verification_required']);
+		self::assertCount(1,$signals);
+		self::assertStringNotContainsString($challenge['token'],$signals[0]['payload_json']);
+	}
+	/** Unauthorized private guests and invalid contact must leave no orphan person. */
+	public function test_guest_request_rejects_private_event_and_invalid_contact_atomically(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'contact','type'=>'email','label'=>'Contact','required'=>true],
+		]];
+		[$s,$existing,$event,$form,$now]=$this->setup_registration($draft);
+		try {
+			$s['submit']->submit_guest($this->scope,$event,null,PublicId::generate(),['name'=>'Guest','contact'=>'guest@example.invalid'],$now,CorrelationId::generate());
+			self::fail('Guest registration accepted for private event');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		$this->db->execute("UPDATE %i SET visibility = 'public', require_email_verification = 1 WHERE public_id = %s",[$this->prefix.'event_settings',$event->to_binary()]);
+		try {
+			$s['submit']->submit_guest($this->scope,$event,null,PublicId::generate(),['name'=>'Guest','contact'=>'invalid'],$now,CorrelationId::generate());
+			self::fail('Invalid contact submitted as public guest');
+		} catch (RuntimeException | InvalidArgumentException) { self::assertTrue(true); }
+		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'persons'])[0]['n']);
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'registrations']));
+	}
+
+	/**
+	 * Self-service releases request safe promotion without exposing secrets.
+	 * The trusted M5 worker can later perform the privileged FIFO offer step.
+	 */
+	public function test_self_cancellation_queues_private_promotion_handoff_once(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$waiter=PublicId::generate();
+		$s['people']->create($this->scope,$waiter,'Waiting participant',null,$now);
+		$first=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'First'],$now,CorrelationId::generate());
+		$next=$s['submit']->submit($s['actor'],$this->scope,$waiter,$event,null,PublicId::generate(),['name'=>'Next'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$next,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$cancel=PublicId::generate();
+		$s['lifecycle']->cancel($s['actor'],$this->scope,$first,$cancel,$now,CorrelationId::generate());
+		$s['lifecycle']->cancel($s['actor'],$this->scope,$first,$cancel,$now,CorrelationId::generate());
+		$signals=$this->db->rows('SELECT payload_json FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','capacity.promotion_requested']);
+		self::assertCount(1,$signals);
+		$payload=json_decode($signals[0]['payload_json'],true);
+		self::assertSame(['public_id'=>$bucket->to_string()],$payload);
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'waitlist_offers']));
+		$offer=$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		self::assertNull($s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		self::assertSame('offered',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$next->to_binary()])[0]['status']);
+		self::assertStringNotContainsString($offer['token'],$signals[0]['payload_json']);
+	}
+
+	/** Guest verification remains mandatory even if an admin disables the event flag. */
+	public function test_guest_cannot_bypass_verification_when_event_rule_is_relaxed(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'contact','type'=>'email','label'=>'Contact','required'=>true],
+		]];
+		[$s,$existing,$event,$form,$now]=$this->setup_registration($draft);
+		$this->db->execute("UPDATE %i SET visibility = 'public', require_email_verification = 1 WHERE public_id = %s",[$this->prefix.'event_settings',$event->to_binary()]);
+		$guest=$s['submit']->submit_guest($this->scope,$event,null,PublicId::generate(),['name'=>'Guest','contact'=>'guest@example.invalid'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$this->db->execute('UPDATE %i SET require_email_verification = 0 WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()]);
+		try {
+			$s['capacity']->decide($s['actor'],$this->scope,$guest,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Guest bypassed verification after settings change');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'capacity_claims']));
+		$challenge=$s['verification']->issue($s['actor'],$this->scope,$guest,$now,CorrelationId::generate());
+		self::assertTrue($s['verification']->verify($this->scope,$guest,$challenge['token'],$now,CorrelationId::generate()));
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$guest,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+	}
+
+	/** Cancelled registrations cannot subsequently use a stale email challenge. */
+	public function test_cancelled_registration_rejects_outstanding_contact_token(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'contact','type'=>'email','label'=>'Contact','required'=>true],
+		]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$registration=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'Member','contact'=>'member@example.invalid'],$now,CorrelationId::generate());
+		$challenge=$s['verification']->issue($s['actor'],$this->scope,$registration,$now,CorrelationId::generate());
+		$s['transition']->transition($s['actor'],$this->scope,$registration,'cancelled',PublicId::generate(),$now,CorrelationId::generate());
+		self::assertFalse($s['verification']->verify($this->scope,$registration,$challenge['token'],$now,CorrelationId::generate()));
+		self::assertSame([],$this->db->rows('SELECT id FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','registration.email_verified']));
+	}
+
+	/** Live assignment removal immediately blocks otherwise capable reviewers. */
+	public function test_revoked_event_manager_assignment_blocks_capacity_allocation(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$registration=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'Participant'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$event_post=(int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		$assignments=new AssignmentRepository($this->db,$this->prefix);
+		$grant_id=$assignments->grant($this->scope,$s['actor']->user_id,'event_manager','event',$event_post,'personal',$now);
+		$manager=$s['actor']->user_id;
+		$policy=new PolicyService($s['people'],$s['delegations'],$assignments,static fn(int $user,string $cap): bool => $user===$manager && 'uop_manage_settings'!==$cap);
+		$service=new CapacityAllocationService(new CapacityRepository($this->db,$this->prefix),new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$s['tx'],$s['audit'],$s['outbox'],new RegistrationEligibilityService(new RegistrationRepository($this->db,$this->prefix),new RegistrationFactsService(new RegistrationFactsRepository($this->db,$this->prefix),$policy)));
+		self::assertTrue($assignments->revoke($this->scope,$grant_id,$now));
+		try {
+			$service->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Revoked manager allocated an event seat');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'capacity_claims']));
+		self::assertSame('submitted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
+		$assignments->grant($this->scope,$manager,'event_manager','event',$event_post,'personal',$now);
+		self::assertSame('accepted',$service->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+	}
+
+	/**
+	 * Full manager/guest golden path: verify, allocate, waitlist, release,
+	 * privately promote, accept and cancel the event without losing evidence.
+	 */
+	public function test_m4_golden_path_public_guest_through_event_cancellation(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'contact','type'=>'email','label'=>'Email','required'=>true],
+		]];
+		[$s,$member,$event,$form,$now]=$this->setup_registration($draft);
+		$this->db->execute("UPDATE %i SET visibility = 'public', require_email_verification = 1 WHERE organization_id = %d AND public_id = %s",[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]);
+		$guest=$s['submit']->submit_guest($this->scope,$event,null,PublicId::generate(),['name'=>'Guest','contact'=>'guest@example.invalid'],$now,CorrelationId::generate());
+		$waiting=$s['submit']->submit($s['actor'],$this->scope,$member,$event,null,PublicId::generate(),['name'=>'Member','contact'=>'member@example.invalid'],$now,CorrelationId::generate());
+		foreach ([$guest,$waiting] as $id) {
+			$challenge=$s['verification']->issue($s['actor'],$this->scope,$id,$now,CorrelationId::generate());
+			self::assertTrue($s['verification']->verify($this->scope,$id,$challenge['token'],$now,CorrelationId::generate()));
+			self::assertFalse($s['verification']->verify($this->scope,$id,$challenge['token'],$now,CorrelationId::generate()));
+		}
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$guest,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		self::assertSame('waitlisted',$s['capacity']->decide($s['actor'],$this->scope,$waiting,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$snapshot_count=(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registration_snapshots'])[0]['n'];
+		self::assertSame(2,$snapshot_count);
+		$s['lifecycle']->cancel($s['actor'],$this->scope,$guest,PublicId::generate(),$now,CorrelationId::generate());
+		$requests=$this->db->rows('SELECT payload_json FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','capacity.promotion_requested']);
+		self::assertCount(1,$requests);
+		$offer=$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		self::assertStringNotContainsString($offer['token'],$requests[0]['payload_json']);
+		$offer_id=PublicId::from_string($offer['public_id']);
+		$s['lifecycle']->accept_offer($s['actor'],$this->scope,$offer_id,$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+		self::assertSame(1,$s['cancel_event']->cancel($s['actor'],$this->scope,$event,PublicId::generate(),$now,CorrelationId::generate()));
+		self::assertSame(['cancelled','cancelled'],array_column($this->db->rows('SELECT status FROM %i ORDER BY id',[$this->prefix.'registrations']),'status'));
+		self::assertSame($snapshot_count,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registration_snapshots'])[0]['n']);
+		self::assertSame([],$this->db->rows("SELECT id FROM %i WHERE status IN ('held','confirmed')",[$this->prefix.'capacity_claims']));
+		try {
+			$s['lifecycle']->accept_offer($s['actor'],$this->scope,$offer_id,$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Accepted and event-cancelled offer remained usable');
+		} catch (RuntimeException) { self::assertTrue(true); }
+	}
+
+	/** Bucket age conditions re-check authoritative profiles at every seat transition. */
+	public function test_bucket_age_eligibility_is_rechecked_before_offer_and_acceptance(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$services,$adult,$event,$form,$now]=$this->setup_registration($draft);
+		$other=PublicId::generate();
+		$services['people']->create($this->scope,$other,'Queued Adult',null,$now);
+		$post_id=(int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		$services['event']->add_occurrence($services['actor'],$this->scope,$post_id,new OccurrenceWindow('2030-04-15T12:00:00+02:00','2030-04-15T14:00:00+02:00','Europe/Berlin'),$now,CorrelationId::generate());
+		$fields=new ProfileFieldRepository($this->db,$this->prefix);
+		$values=new ProfileValueRepository($this->db,$this->prefix);
+		$field=PublicId::generate();
+		$fields->create($this->scope,$field,['key'=>'date_of_birth','type'=>'date','label'=>'Birth date','subject_view'=>true],$now);
+		$field_id=(int)$fields->find($this->scope,$field)['id'];
+		$one_id=(int)$services['people']->find($this->scope,$adult)['id'];
+		$two_id=(int)$services['people']->find($this->scope,$other)['id'];
+		$values->replace($this->scope,$one_id,$field_id,FieldRules::normalize('date','2000-01-01'),$now);
+		$values->replace($this->scope,$two_id,$field_id,FieldRules::normalize('date','2000-01-01'),$now);
+		$first=$services['submit']->submit($services['actor'],$this->scope,$adult,$event,null,PublicId::generate(),['name'=>'First'],$now,CorrelationId::generate());
+		$second=$services['submit']->submit($services['actor'],$this->scope,$other,$event,null,PublicId::generate(),['name'=>'Second'],$now,CorrelationId::generate());
+		$bucket=$services['capacity']->create_general_bucket($services['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$rule=['schema_version'=>1,'all'=>[[
+			'source'=>'profile','field'=>'date_of_birth','operator'=>'age_gte_at','value'=>18,'context'=>'event.start',
+		]]];
+		$this->db->execute('UPDATE %i SET eligibility_json = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'capacity_buckets',wp_json_encode($rule),$this->scope->id,$bucket->to_binary()]);
+		self::assertSame('accepted',$services['capacity']->decide($services['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		self::assertSame('waitlisted',$services['capacity']->decide($services['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$values->replace($this->scope,$two_id,$field_id,FieldRules::normalize('date','2020-01-01'),$now);
+		$services['lifecycle']->cancel($services['actor'],$this->scope,$first,PublicId::generate(),$now,CorrelationId::generate());
+		try {
+			$services['lifecycle']->offer_next($services['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Underage waitlist member was offered a place');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame('waitlisted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0]['status']);
+		$values->replace($this->scope,$two_id,$field_id,FieldRules::normalize('date','2000-01-01'),$now);
+		$offer=$services['lifecycle']->offer_next($services['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		$values->replace($this->scope,$two_id,$field_id,FieldRules::normalize('date','2020-01-01'),$now);
+		try {
+			$services['lifecycle']->accept_offer($services['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Offer accepted despite new age ineligibility');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame('held',$this->db->rows('SELECT status FROM %i WHERE registration_id = (SELECT id FROM %i WHERE public_id = %s)',[$this->prefix.'capacity_claims',$this->prefix.'registrations',$second->to_binary()])[0]['status']);
+		$values->replace($this->scope,$two_id,$field_id,FieldRules::normalize('date','2000-01-01'),$now);
+		$services['lifecycle']->accept_offer($services['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+		self::assertSame('accepted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0]['status']);
+		self::assertSame(1,(int)$this->db->rows("SELECT COUNT(*) AS n FROM %i WHERE status IN ('held','confirmed')",[$this->prefix.'capacity_claims'])[0]['n']);
+	}
+
+	/** Capacity conditions use the immutable submission snapshot, not caller hints. */
+	public function test_bucket_registration_eligibility_uses_hashed_historical_snapshot(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'tier','type'=>'select','label'=>'Ticket','required'=>true,'options'=>['standard','vip']],
+		]];
+		[$services,$one,$event,$form,$now]=$this->setup_registration($draft);
+		$two=PublicId::generate();
+		$services['people']->create($this->scope,$two,'VIP',null,$now);
+		$standard=$services['submit']->submit($services['actor'],$this->scope,$one,$event,null,PublicId::generate(),['tier'=>'standard'],$now,CorrelationId::generate());
+		$vip=$services['submit']->submit($services['actor'],$this->scope,$two,$event,null,PublicId::generate(),['tier'=>'vip'],$now,CorrelationId::generate());
+		$bucket=$services['capacity']->create_general_bucket($services['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$rule=['schema_version'=>1,'all'=>[[
+			'source'=>'registration','field'=>'tier','operator'=>'eq','value'=>'vip',
+		]]];
+		$this->db->execute('UPDATE %i SET eligibility_json = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'capacity_buckets',wp_json_encode($rule),$this->scope->id,$bucket->to_binary()]);
+		try {
+			$services['capacity']->decide($services['actor'],$this->scope,$standard,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Unqualified standard ticket was accepted');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame('accepted',$services['capacity']->decide($services['actor'],$this->scope,$vip,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$vip_id=(int)$this->db->rows('SELECT id FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$vip->to_binary()])[0]['id'];
+		$this->db->execute('UPDATE %i SET payload_json = %s WHERE registration_id = %d',[$this->prefix.'registration_snapshots','{"schema_version":1,"fields":{"tier":"standard"}}',$vip_id]);
+		$eligibility=new RegistrationEligibilityService(
+			new RegistrationRepository($this->db,$this->prefix),
+			new RegistrationFactsService(new RegistrationFactsRepository($this->db,$this->prefix),$services['policy'])
+		);
+		$registration_row=(new WaitlistRepository($this->db,$this->prefix))->registration($this->scope,$vip_id);
+		$bucket_row=(new CapacityRepository($this->db,$this->prefix))->lock_bucket($this->scope,$bucket);
+		try {
+			$eligibility->assert_eligible($services['actor'],$this->scope,$registration_row,$bucket_row);
+			self::fail('Tampered frozen submission passed integrity check');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		$accepted=$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$vip->to_binary()]);
+		self::assertSame('accepted',$accepted[0]['status']);
+		self::assertSame(1,(int)$this->db->rows("SELECT COUNT(*) AS n FROM %i WHERE status = 'confirmed'",[$this->prefix.'capacity_claims'])[0]['n']);
+	}
+
+	/** A linked account may register itself but cannot register an unrelated subject. */
+	public function test_self_registration_is_authorized_only_for_linked_person(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$services,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$self_user=wp_create_user('uop_m4_self_'.bin2hex(random_bytes(4)),wp_generate_password(24),'self_'.bin2hex(random_bytes(4)).'@example.invalid');
+		self::assertIsInt($self_user);
+		self::assertTrue($services['people']->link($this->scope,$person,$self_user,$now));
+		$self=new Actor($self_user);
+		$other=PublicId::generate();
+		$services['people']->create($this->scope,$other,'Unrelated attendee',null,$now);
+		try {
+			$services['submit']->submit($self,$this->scope,$other,$event,null,PublicId::generate(),['name'=>'Not me'],$now,CorrelationId::generate());
+			self::fail('Self account registered an unrelated subject without delegation');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		$key=PublicId::generate();
+		$id=$services['submit']->submit($self,$this->scope,$person,$event,null,$key,['name'=>'Own signup'],$now,CorrelationId::generate());
+		self::assertSame($id->to_string(),$services['submit']->submit($self,$this->scope,$person,$event,null,$key,['name'=>'Own signup'],$now,CorrelationId::generate())->to_string());
+		$record=$this->db->rows('SELECT actor_user_id,source,status FROM %i WHERE organization_id = %d AND public_id = %s',[$this->prefix.'registrations',$this->scope->id,$id->to_binary()])[0];
+		self::assertSame($self_user,(int)$record['actor_user_id']);
+		self::assertSame('portal',$record['source']);
+		$services['transition']->transition($self,$this->scope,$id,'cancelled',PublicId::generate(),$now,CorrelationId::generate());
+		self::assertSame('cancelled',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$id->to_binary()])[0]['status']);
+	}
+
+	/** Changing event admission rules invalidates still-outstanding waitlist offers. */
+	public function test_current_event_eligibility_is_rechecked_before_offer_acceptance(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$services,$one,$event,$form,$now]=$this->setup_registration($draft);
+		$two=PublicId::generate();
+		$services['people']->create($this->scope,$two,'Queued participant',null,$now);
+		$first=$services['submit']->submit($services['actor'],$this->scope,$one,$event,null,PublicId::generate(),['name'=>'Primary'],$now,CorrelationId::generate());
+		$second=$services['submit']->submit($services['actor'],$this->scope,$two,$event,null,PublicId::generate(),['name'=>'Ordinary'],$now,CorrelationId::generate());
+		$bucket=$services['capacity']->create_general_bucket($services['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		self::assertSame('accepted',$services['capacity']->decide($services['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		self::assertSame('waitlisted',$services['capacity']->decide($services['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$services['lifecycle']->cancel($services['actor'],$this->scope,$first,PublicId::generate(),$now,CorrelationId::generate());
+		$offer=$services['lifecycle']->offer_next($services['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		$rule=['schema_version'=>1,'all'=>[[
+			'source'=>'registration','field'=>'name','operator'=>'eq','value'=>'Premium',
+		]]];
+		$this->db->execute('UPDATE %i SET eligibility_json = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'event_settings',wp_json_encode($rule),$this->scope->id,$event->to_binary()]);
+		try {
+			$services['lifecycle']->accept_offer($services['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Offer accepted despite newly tightened event-level condition');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame('held',$this->db->rows('SELECT status FROM %i WHERE registration_id = (SELECT id FROM %i WHERE public_id = %s)',[$this->prefix.'capacity_claims',$this->prefix.'registrations',$second->to_binary()])[0]['status']);
+		$this->db->execute('UPDATE %i SET eligibility_json = NULL WHERE organization_id = %d AND public_id = %s',[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]);
+		$services['lifecycle']->accept_offer($services['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+		self::assertSame('accepted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0]['status']);
+	}
+
+	/** An audited event time change never mutates the registration's frozen form. */
+	public function test_rescheduling_occurrence_preserves_submitted_snapshots_and_denies_other_scope(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$services,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$post_id=(int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		$original=new OccurrenceWindow('2030-04-15T12:00:00+02:00','2030-04-15T14:00:00+02:00','Europe/Berlin');
+		$occurrence=$services['event']->add_occurrence($services['actor'],$this->scope,$post_id,$original,$now,CorrelationId::generate());
+		$registration=$services['submit']->submit($services['actor'],$this->scope,$person,$event,$occurrence,PublicId::generate(),['name'=>'Unchanged participant'],$now,CorrelationId::generate());
+		$reg_id=(int)$this->db->rows('SELECT id FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['id'];
+		$before=$this->db->rows('SELECT payload_json,payload_hash FROM %i WHERE registration_id = %d',[$this->prefix.'registration_snapshots',$reg_id]);
+		$window=new OccurrenceWindow('2030-04-16T13:00:00+02:00','2030-04-16T15:00:00+02:00','Europe/Berlin');
+		try {
+			$services['event']->reschedule_occurrence(new Actor(999999),$this->scope,$post_id,$occurrence,$window,$now,CorrelationId::generate());
+			self::fail('Unknown actor changed the schedule');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		try {
+			$services['event']->reschedule_occurrence($services['actor'],new OrgScope($this->scope->id+1),$post_id,$occurrence,$window,$now,CorrelationId::generate());
+			self::fail('Other organization changed the schedule');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertTrue($services['event']->reschedule_occurrence($services['actor'],$this->scope,$post_id,$occurrence,$window,$now,CorrelationId::generate()));
+		self::assertFalse($services['event']->reschedule_occurrence($services['actor'],$this->scope,$post_id,$occurrence,$window,$now,CorrelationId::generate()));
+		$after=$this->db->rows('SELECT payload_json,payload_hash FROM %i WHERE registration_id = %d',[$this->prefix.'registration_snapshots',$reg_id]);
+		self::assertSame($before,$after);
+		self::assertSame($window->start_utc(),$this->db->rows('SELECT start_at FROM %i WHERE public_id = %s',[$this->prefix.'event_occurrences',$occurrence->to_binary()])[0]['start_at']);
+		self::assertSame('submitted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
+		self::assertCount(1,$this->db->rows('SELECT id FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','event.occurrence_rescheduled']));
+		self::assertCount(1,$this->db->rows('SELECT id FROM %i WHERE action = %s',[$this->prefix.'audit_log','event.occurrence_rescheduled']));
+	}
+}

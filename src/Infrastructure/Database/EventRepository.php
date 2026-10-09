@@ -36,6 +36,21 @@ final class EventRepository {
 	}
 
 	/**
+	 * Lock the tenant-owned event before changing its occurrence schedule.
+	 *
+	 * @param OrgScope $scope   Trusted tenant boundary.
+	 * @param int      $post_id WordPress event CPT ID.
+	 * @return array<string,mixed>|null Current operational state.
+	 */
+	public function lock_for_update( OrgScope $scope, int $post_id ): ?array {
+		$rows = $this->db->rows(
+			'SELECT event_post_id, status, timezone FROM %i WHERE organization_id = %d AND event_post_id = %d LIMIT 1 FOR UPDATE',
+			array( $this->prefix . 'event_settings', $scope->id, $post_id )
+		);
+		return $rows[0] ?? null;
+	}
+
+	/**
 	 * Insert audited operational settings for an existing CPT record.
 	 *
 	 * @param OrgScope $scope Trusted organization.

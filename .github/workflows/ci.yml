@@ -69,6 +69,8 @@ jobs:
           extensions: mysqli, mbstring, zip
           tools: composer:v2, wp-cli
           coverage: none
+      - name: Ensure verified WP-CLI binary
+        run: bash bin/ensure-wp-cli.sh
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -91,6 +93,10 @@ jobs:
           wp core install --path=/tmp/uop-wordpress --url=http://127.0.0.1:8080 --title=UOP-Test --admin_user=uop_test_admin --admin_password="$password" --admin_email=uop@example.invalid --skip-email
           ln -s "$GITHUB_WORKSPACE" /tmp/uop-wordpress/wp-content/plugins/uop-core
       - run: composer test:integration
+      - name: M4 fifty-worker capacity concurrency regression
+        if: ${{ matrix.php == '8.3' && matrix.db == 'mysql:8.0' || matrix.php == '8.5' && matrix.db == 'mariadb:10.11' }}
+        timeout-minutes: 5
+        run: php tests/Fixtures/m4-capacity-stress.php
       - name: WP CLI activation and deactivation
         run: |
           wp plugin activate uop-core --path="$WP_ROOT"
@@ -119,7 +125,17 @@ jobs:
             cat /tmp/uop-server.log
             exit 1
           fi
-          npm run test:browser
+          if ! npm run test:browser; then
+            echo "::group::Disposable WordPress test server diagnostics"
+            tail -n 160 /tmp/uop-server.log || true
+            echo "::endgroup::"
+            echo "::group::Disposable WordPress PHP diagnostics"
+            if [ -f "$WP_ROOT/wp-content/debug.log" ]; then
+              tail -n 80 "$WP_ROOT/wp-content/debug.log"
+            fi
+            echo "::endgroup::"
+            exit 1
+          fi
       - name: Multisite persistence regression
         run: |
           wp core multisite-convert --path="$WP_ROOT" --title=UOP-Network
@@ -146,6 +162,7 @@ jobs:
           --health-cmd="mysqladmin ping -h localhost -puop_disposable_test"
           --health-interval=10s --health-timeout=5s --health-retries=12
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: uop-core
@@ -155,6 +172,8 @@ jobs:
           extensions: mysqli, mbstring, zip
           tools: wp-cli
           coverage: none
+      - name: Ensure verified WP-CLI binary
+        run: bash bin/ensure-wp-cli.sh
       - run: |
           wp core download --version=6.9 --path=/tmp/wordpress
           wp config create --path=/tmp/wordpress --dbname=uop_artifact --dbuser=root --dbpass=uop_disposable_test --dbhost=127.0.0.1 --dbcharset=utf8mb4
