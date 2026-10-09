@@ -44,7 +44,9 @@ final class WordPressPrivacyAdapter {
 	 * Register the exporter for WordPress's confirmed requests.
 	 *
 	 * @param array $exporters Other active exporters.
+	 * @phpstan-param array<string,mixed> $exporters
 	 * @return array All exporters.
+	 * @phpstan-return array<string,mixed>
 	 */
 	public function register_exporter( array $exporters ): array {
 		$exporters['uop-core'] = array(
@@ -58,7 +60,9 @@ final class WordPressPrivacyAdapter {
 	 * Register the eraser for WordPress's confirmed requests.
 	 *
 	 * @param array $erasers Other active erasers.
+	 * @phpstan-param array<string,mixed> $erasers
 	 * @return array All erasers.
+	 * @phpstan-return array<string,mixed>
 	 */
 	public function register_eraser( array $erasers ): array {
 		$erasers['uop-core'] = array(
@@ -74,6 +78,7 @@ final class WordPressPrivacyAdapter {
 	 * @param string $email Verified WordPress privacy request address.
 	 * @param int    $page  One-based privacy page.
 	 * @return array|\WP_Error Core exporter data or a safe error.
+	 * @phpstan-return array{data:list<array<string,mixed>>,done:bool}|\WP_Error
 	 */
 	public function export( string $email, int $page = 1 ): array|\WP_Error {
 		if ( ! current_user_can( 'export_others_personal_data' ) ) {
