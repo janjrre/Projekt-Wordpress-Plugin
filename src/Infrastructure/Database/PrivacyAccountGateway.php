@@ -28,7 +28,7 @@ final class PrivacyAccountGateway {
 	 */
 	public function resolve( string $email ): array {
 		if ( ! is_email( $email ) ) {
-			return array( 'status' => 'unmatched', 'user_id' => 0 );
+			return $this->resolution( 'unmatched', 0 );
 		}
 		$user   = get_user_by( 'email', $email );
 		$userid = $user instanceof \WP_User ? (int) $user->ID : 0;
@@ -40,7 +40,7 @@ final class PrivacyAccountGateway {
 			);
 			$linked = count( $rows );
 			if ( $linked > 100 ) {
-				return array( 'status' => 'manual', 'user_id' => 0 );
+				return $this->resolution( 'manual', 0 );
 			}
 		}
 		$other = $this->db->rows(
@@ -48,23 +48,23 @@ final class PrivacyAccountGateway {
 			array( $this->prefix . 'persons', $email, $userid )
 		);
 		if ( $other ) {
-			return array( 'status' => 'manual', 'user_id' => 0 );
+			return $this->resolution( 'manual', 0 );
 		}
 		$other_registration = $this->db->rows(
 			'SELECT r.id FROM %i r INNER JOIN %i p ON p.id = r.person_id AND p.organization_id = r.organization_id WHERE r.contact_email = %s AND (p.wp_user_id IS NULL OR p.wp_user_id <> %d) LIMIT 1',
 			array( $this->prefix . 'registrations', $this->prefix . 'persons', $email, $userid )
 		);
 		if ( $other_registration ) {
-			return array( 'status' => 'manual', 'user_id' => 0 );
+			return $this->resolution( 'manual', 0 );
 		}
 		$other_mail = $this->db->rows(
 			'SELECT m.id FROM %i m LEFT JOIN %i r ON r.id = m.registration_id AND r.organization_id = m.organization_id LEFT JOIN %i p ON p.id = r.person_id AND p.organization_id = r.organization_id WHERE m.recipient = %s AND (p.id IS NULL OR p.wp_user_id IS NULL OR p.wp_user_id <> %d) LIMIT 1',
 			array( $this->prefix . 'email_messages', $this->prefix . 'registrations', $this->prefix . 'persons', $email, $userid )
 		);
 		if ( $other_mail ) {
-			return array( 'status' => 'manual', 'user_id' => 0 );
+			return $this->resolution( 'manual', 0 );
 		}
-		return array( 'status' => $linked > 0 ? 'resolved' : 'unmatched', 'user_id' => $userid );
+		return $this->resolution( $linked > 0 ? 'resolved' : 'unmatched', $userid );
 	}
 
 	/**
@@ -77,7 +77,7 @@ final class PrivacyAccountGateway {
 	 */
 	public function export_page( int $user_id, int $page ): array {
 		if ( $user_id < 1 || $page < 1 || $page > 100000 ) {
-			return array( 'data' => array(), 'done' => true );
+			return $this->export_result( array(), true );
 		}
 		$limit = 25;
 		$after = ( $page - 1 ) * $limit;
@@ -90,14 +90,15 @@ final class PrivacyAccountGateway {
 		$done  = $done && count( $rows ) < $limit;
 		foreach ( $rows as $row ) {
 			$data[] = $this->item(
-				'uop-person', 'UOP person',
+				'uop-person',
+				'UOP person',
 				PublicId::from_binary( $row['public_id'] )->to_string(),
 				array(
-					array( 'name' => 'Organization', 'value' => (string) $row['organization_id'] ),
-					array( 'name' => 'Display name', 'value' => (string) $row['display_name'] ),
-					array( 'name' => 'Contact email', 'value' => (string) ( $row['primary_email'] ?? '' ) ),
-					array( 'name' => 'Status', 'value' => (string) $row['status'] ),
-					array( 'name' => 'Created', 'value' => (string) $row['created_at'] ),
+					$this->datum( 'Organization', (string) $row['organization_id'] ),
+					$this->datum( 'Display name', (string) $row['display_name'] ),
+					$this->datum( 'Contact email', (string) ( $row['primary_email'] ?? '' ) ),
+					$this->datum( 'Status', (string) $row['status'] ),
+					$this->datum( 'Created', (string) $row['created_at'] ),
 				)
 			);
 		}
@@ -106,7 +107,7 @@ final class PrivacyAccountGateway {
 			'SELECT v.id, v.ordinal, v.value_string, v.value_text, v.value_integer, v.value_decimal, v.value_date, v.value_datetime, v.value_boolean, f.label, p.public_id FROM %i v INNER JOIN %i p ON p.id = v.person_id INNER JOIN %i f ON f.id = v.field_id AND f.organization_id = p.organization_id WHERE p.wp_user_id = %d ORDER BY v.id ASC LIMIT %d OFFSET %d',
 			array( $this->prefix . 'profile_values', $this->prefix . 'persons', $this->prefix . 'profile_fields', $user_id, $limit, $after )
 		);
-		$done = $done && count( $values ) < $limit;
+		$done   = $done && count( $values ) < $limit;
 		foreach ( $values as $row ) {
 			$value = '';
 			foreach ( array( 'value_string', 'value_text', 'value_integer', 'value_decimal', 'value_date', 'value_datetime', 'value_boolean' ) as $slot ) {
@@ -116,11 +117,13 @@ final class PrivacyAccountGateway {
 				}
 			}
 			$data[] = $this->item(
-				'uop-profile', 'UOP profile values', (string) $row['id'],
+				'uop-profile',
+				'UOP profile values',
+				(string) $row['id'],
 				array(
-					array( 'name' => 'Person', 'value' => PublicId::from_binary( $row['public_id'] )->to_string() ),
-					array( 'name' => 'Field', 'value' => (string) $row['label'] ),
-					array( 'name' => 'Value', 'value' => $value ),
+					$this->datum( 'Person', PublicId::from_binary( $row['public_id'] )->to_string() ),
+					$this->datum( 'Field', (string) $row['label'] ),
+					$this->datum( 'Value', $value ),
 				)
 			);
 		}
@@ -129,20 +132,22 @@ final class PrivacyAccountGateway {
 			'SELECT s.id, s.payload_json, s.payload_hash, s.redacted_at, s.revision, r.public_id AS registration_public_id, r.status, r.contact_email, r.event_post_id FROM %i s INNER JOIN %i r ON r.id = s.registration_id INNER JOIN %i p ON p.id = r.person_id AND p.organization_id = r.organization_id WHERE p.wp_user_id = %d ORDER BY s.id ASC LIMIT %d OFFSET %d',
 			array( $this->prefix . 'registration_snapshots', $this->prefix . 'registrations', $this->prefix . 'persons', $user_id, $limit, $after )
 		);
-		$done = $done && count( $snapshots ) < $limit;
+		$done      = $done && count( $snapshots ) < $limit;
 		foreach ( $snapshots as $row ) {
 			if ( null === $row['redacted_at'] && ! hash_equals( (string) $row['payload_hash'], hash( 'sha256', (string) $row['payload_json'], true ) ) ) {
 				throw new RuntimeException( 'Stored registration history integrity violation.' );
 			}
 			$data[] = $this->item(
-				'uop-registration', 'UOP registrations', (string) $row['id'],
+				'uop-registration',
+				'UOP registrations',
+				(string) $row['id'],
 				array(
-					array( 'name' => 'Registration', 'value' => PublicId::from_binary( $row['registration_public_id'] )->to_string() ),
-					array( 'name' => 'Revision', 'value' => (string) $row['revision'] ),
-					array( 'name' => 'Status', 'value' => (string) $row['status'] ),
-					array( 'name' => 'Event', 'value' => (string) $row['event_post_id'] ),
-					array( 'name' => 'Contact email', 'value' => (string) ( $row['contact_email'] ?? '' ) ),
-					array( 'name' => 'Answers', 'value' => null === $row['redacted_at'] ? (string) $row['payload_json'] : '[redacted]' ),
+					$this->datum( 'Registration', PublicId::from_binary( $row['registration_public_id'] )->to_string() ),
+					$this->datum( 'Revision', (string) $row['revision'] ),
+					$this->datum( 'Status', (string) $row['status'] ),
+					$this->datum( 'Event', (string) $row['event_post_id'] ),
+					$this->datum( 'Contact email', (string) ( $row['contact_email'] ?? '' ) ),
+					$this->datum( 'Answers', null === $row['redacted_at'] ? (string) $row['payload_json'] : '[redacted]' ),
 				)
 			);
 		}
@@ -151,17 +156,18 @@ final class PrivacyAccountGateway {
 			'SELECT c.id, c.public_id, c.decision, c.auth_context, c.decided_at, v.version, d.consent_key FROM %i c INNER JOIN %i p ON p.id = c.subject_person_id AND p.organization_id = c.organization_id INNER JOIN %i v ON v.id = c.definition_version_id INNER JOIN %i d ON d.id = v.definition_id AND d.organization_id = c.organization_id WHERE p.wp_user_id = %d ORDER BY c.id ASC LIMIT %d OFFSET %d',
 			array( $this->prefix . 'consent_records', $this->prefix . 'persons', $this->prefix . 'consent_versions', $this->prefix . 'consent_definitions', $user_id, $limit, $after )
 		);
-		$done = $done && count( $consents ) < $limit;
+		$done     = $done && count( $consents ) < $limit;
 		foreach ( $consents as $row ) {
 			$data[] = $this->item(
-				'uop-consent', 'UOP consent evidence',
+				'uop-consent',
+				'UOP consent evidence',
 				PublicId::from_binary( $row['public_id'] )->to_string(),
 				array(
-					array( 'name' => 'Definition', 'value' => (string) $row['consent_key'] ),
-					array( 'name' => 'Version', 'value' => (string) $row['version'] ),
-					array( 'name' => 'Decision', 'value' => (string) $row['decision'] ),
-					array( 'name' => 'Acting context', 'value' => (string) $row['auth_context'] ),
-					array( 'name' => 'Decided', 'value' => (string) $row['decided_at'] ),
+					$this->datum( 'Definition', (string) $row['consent_key'] ),
+					$this->datum( 'Version', (string) $row['version'] ),
+					$this->datum( 'Decision', (string) $row['decision'] ),
+					$this->datum( 'Acting context', (string) $row['auth_context'] ),
+					$this->datum( 'Decided', (string) $row['decided_at'] ),
 				)
 			);
 		}
@@ -170,19 +176,21 @@ final class PrivacyAccountGateway {
 			'SELECT m.id, m.public_id, m.template_key, m.status, m.queued_at, m.recipient FROM %i m INNER JOIN %i r ON r.id = m.registration_id AND r.organization_id = m.organization_id INNER JOIN %i p ON p.id = r.person_id AND p.organization_id = r.organization_id WHERE p.wp_user_id = %d ORDER BY m.id ASC LIMIT %d OFFSET %d',
 			array( $this->prefix . 'email_messages', $this->prefix . 'registrations', $this->prefix . 'persons', $user_id, $limit, $after )
 		);
-		$done = $done && count( $messages ) < $limit;
+		$done     = $done && count( $messages ) < $limit;
 		foreach ( $messages as $row ) {
 			$data[] = $this->item(
-				'uop-mail', 'UOP communications', PublicId::from_binary( $row['public_id'] )->to_string(),
+				'uop-mail',
+				'UOP communications',
+				PublicId::from_binary( $row['public_id'] )->to_string(),
 				array(
-					array( 'name' => 'Template', 'value' => (string) $row['template_key'] ),
-					array( 'name' => 'Recipient', 'value' => (string) $row['recipient'] ),
-					array( 'name' => 'Status', 'value' => (string) $row['status'] ),
-					array( 'name' => 'Queued', 'value' => (string) $row['queued_at'] ),
+					$this->datum( 'Template', (string) $row['template_key'] ),
+					$this->datum( 'Recipient', (string) $row['recipient'] ),
+					$this->datum( 'Status', (string) $row['status'] ),
+					$this->datum( 'Queued', (string) $row['queued_at'] ),
 				)
 			);
 		}
-		return array( 'data' => $data, 'done' => $done );
+		return $this->export_result( $data, $done );
 	}
 
 	/**
@@ -203,7 +211,7 @@ final class PrivacyAccountGateway {
 		foreach ( $rows as $person ) {
 			$id  = (int) $person['id'];
 			$org = (int) $person['organization_id'];
-			$hold = $this->db->rows(
+			$hold              = $this->db->rows(
 				'SELECT id FROM %i WHERE id = %d AND organization_id = %d AND retention_hold_until > UTC_TIMESTAMP() LIMIT 1',
 				array( $this->prefix . 'persons', $id, $org )
 			);
@@ -223,7 +231,10 @@ final class PrivacyAccountGateway {
 				array( $this->prefix . 'persons', 'Erased person', $org, $id, $user_id, 'Erased person' )
 			);
 			if ( $deleted > 0 || $updated > 0 ) {
-				$removed[] = array( 'id' => $id, 'organization_id' => $org );
+				$removed[] = array(
+					'id'              => $id,
+					'organization_id' => $org,
+				);
 			}
 		}
 		return $removed;
@@ -246,4 +257,46 @@ final class PrivacyAccountGateway {
 			'data'        => $data,
 		);
 	}
+	/**
+	 * Create one consistent WordPress privacy field.
+	 *
+	 * @param string $name  Human-readable label.
+	 * @param string $value Plain-text data.
+	 * @return array{name:string,value:string}
+	 */
+	private function datum( string $name, string $value ): array {
+		return array(
+			'name'  => $name,
+			'value' => $value,
+		);
+	}
+
+	/**
+	 * Format one account-resolution result.
+	 *
+	 * @param string $status  Resolved, manual or unmatched.
+	 * @param int    $user_id Account ID when resolved.
+	 * @return array{status:string,user_id:int}
+	 */
+	private function resolution( string $status, int $user_id ): array {
+		return array(
+			'status'  => $status,
+			'user_id' => $user_id,
+		);
+	}
+
+	/**
+	 * Format the WordPress exporter response.
+	 *
+	 * @param array $data Bounded privacy data.
+	 * @param bool  $done Whether all pages have been processed.
+	 * @return array{data:list<array<string,mixed>>,done:bool}
+	 */
+	private function export_result( array $data, bool $done ): array {
+		return array(
+			'data' => $data,
+			'done' => $done,
+		);
+	}
+
 }
