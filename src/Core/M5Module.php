@@ -15,6 +15,7 @@ use UOP\Application\Communication\EmailTemplateService;
 use UOP\Application\Communication\EmailMessageService;
 use UOP\Application\Policy\PolicyService;
 use UOP\Application\Privacy\WordPressPrivacyAdapter;
+use UOP\Application\Privacy\RetentionService;
 use UOP\Extension\ModuleInterface;
 use UOP\Infrastructure\Database\AuditWriter;
 use UOP\Infrastructure\Database\Connection;
@@ -22,6 +23,7 @@ use UOP\Infrastructure\Database\ConsentRepository;
 use UOP\Infrastructure\Database\ConsentRecordRepository;
 use UOP\Infrastructure\Database\OutboxRepository;
 use UOP\Infrastructure\Database\PrivacyAccountGateway;
+use UOP\Infrastructure\Database\RetentionRepository;
 use UOP\Infrastructure\Database\EmailTemplateRepository;
 use UOP\Infrastructure\Database\EmailMessageRepository;
 use UOP\Infrastructure\Queue\EmailDeliveryWorker;
@@ -83,6 +85,17 @@ final class M5Module implements ModuleInterface {
 			)
 		);
 		$container->get( EmailDeliveryWorker::class )->register_hooks();
+		$container->set( RetentionRepository::class, static fn ( ServiceContainer $c ) => new RetentionRepository( $c->get( Connection::class ), $prefix ) );
+		$container->set(
+			RetentionService::class,
+			static fn ( ServiceContainer $c ) => new RetentionService(
+				$c->get( RetentionRepository::class ),
+				$c->get( PolicyService::class ),
+				$c->get( TransactionManager::class ),
+				$c->get( AuditWriter::class ),
+				$c->get( OutboxRepository::class )
+			)
+		);
 		$container->set( PrivacyAccountGateway::class, static fn ( ServiceContainer $c ) => new PrivacyAccountGateway( $c->get( Connection::class ), $prefix ) );
 		$container->set(
 			WordPressPrivacyAdapter::class,
