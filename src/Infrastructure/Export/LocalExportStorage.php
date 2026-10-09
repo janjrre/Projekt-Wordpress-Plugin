@@ -81,13 +81,18 @@ final class LocalExportStorage implements ExportStorageInterface {
 		if ( false === $handle ) {
 			throw new RuntimeException( 'Cannot create private export file.' );
 		}
+		$written = false;
 		try {
 			// phpcs:ignore -- Enforce OS permissions on a private temporary file; never use public media filesystem APIs.
 			if ( ! chmod( $temp, 0600 ) || strlen( $contents ) !== fwrite( $handle, $contents ) || ! fflush( $handle ) ) {
 				throw new RuntimeException( 'Private export write failed.' );
 			}
+			$written = true;
 		} finally {
 			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close protected local file.
+			if ( ! $written ) {
+				unlink( $temp ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- Remove failed private partial content immediately.
+			}
 		}
 		// phpcs:ignore -- Private atomic rename within one system-temp directory, outside all web roots.
 		if ( ! rename( $temp, $path ) ) {
