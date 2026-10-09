@@ -100,6 +100,7 @@ final class Bootstrap {
 		$modules->add( new EventModule() );
 		$modules->add( new M3Module() );
 		$modules->add( new M4Module() );
+		$modules->add( new M5Module() );
 		self::$kernel = new Kernel( $container, $modules );
 		self::$kernel->boot();
 	}
