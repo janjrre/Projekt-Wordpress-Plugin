@@ -289,8 +289,8 @@ final class RegistrationRepository {
 	 */
 	public function verify( OrgScope $scope, int $id, string $hash, string $utc_now ): bool {
 		return 1 === $this->db->execute(
-			'UPDATE %i SET email_verified_at = %s, email_verification_token_hash = NULL, verification_expires_at = NULL, updated_at = %s WHERE organization_id = %d AND id = %d AND email_verified_at IS NULL AND email_verification_token_hash = %s AND verification_expires_at > %s AND status IN ('submitted','review')',
-			array( $this->prefix . 'registrations', $utc_now, $utc_now, $scope->id, $id, $hash, $utc_now )
+			'UPDATE %i SET email_verified_at = %s, email_verification_token_hash = NULL, verification_expires_at = NULL, updated_at = %s WHERE organization_id = %d AND id = %d AND email_verified_at IS NULL AND email_verification_token_hash = %s AND verification_expires_at > %s AND status IN (%s,%s)',
+			array( $this->prefix . 'registrations', $utc_now, $utc_now, $scope->id, $id, $hash, $utc_now, 'submitted', 'review' )
 		);
 	}
 }
