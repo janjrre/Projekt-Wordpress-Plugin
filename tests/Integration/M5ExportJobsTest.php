@@ -177,7 +177,7 @@ final class M5ExportJobsTest extends TestCase {
         $status=rest_do_request(new \WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string()));
         self::assertSame(200,$status->get_status());
         self::assertArrayNotHasKey('storage_key',$status->get_data());
-        $this->exports->process($this->scope,$job,self::NOW);
+        $this->exports->process($this->scope,$job,gmdate('Y-m-d H:i:s'));
         $dl_request=new \WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string().'/download');
         $download=$controller->download($dl_request);
         self::assertSame(200,$download->get_status());
