@@ -133,6 +133,21 @@ final class ExportJobRepository {
 	}
 
 	/**
+	 * Recover bounded queued jobs for an explicitly scoped worker sweep.
+	 *
+	 * @param OrgScope $scope Tenant boundary.
+	 * @param string   $now Trusted UTC point of service.
+	 * @return list<string> Export public UUIDs as binary database bytes.
+	 */
+	public function pending( OrgScope $scope, string $now ): array {
+		$rows = $this->db->rows(
+			"SELECT public_id FROM %i WHERE organization_id = %d AND status = 'queued' AND expires_at > %s ORDER BY id ASC LIMIT 50",
+			array( $this->prefix . 'export_jobs', $scope->id, $now )
+		);
+		return array_map( static fn ( array $row ): string => (string) $row['public_id'], $rows );
+	}
+
+	/**
 	 * Timestamp an authorized download without modifying the bytes.
 	 *
 	 * @param OrgScope $scope Scoped organization.
