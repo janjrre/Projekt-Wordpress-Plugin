@@ -177,7 +177,9 @@ final class M6ConsoleScreensTest extends TestCase {
 		self::assertStringContainsString( 'consent.version_published', $html );
 		self::assertStringContainsString( 'Correlation', $html );
 		self::assertStringNotContainsString( 'safe_event', $html );
-		self::assertStringNotContainsString( (string) $s['admin'], $html );
+		self::assertStringNotContainsString( 'actor_user_id', $html );
+		self::assertStringNotContainsString( 'data_json', $html );
+		self::assertStringNotContainsString( 'object_id', $html );
 		self::assertSame( 1, count( $s['reads']->audit( $s['actor'], $this->scope )['items'] ) );
 		wp_set_current_user( $s['other'] );
 		self::assertNull( $s['reads']->audit( new Actor( $s['other'] ), $this->scope ) );
