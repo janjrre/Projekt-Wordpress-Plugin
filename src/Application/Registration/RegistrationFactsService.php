@@ -39,7 +39,11 @@ final class RegistrationFactsService {
 	 * @throws RuntimeException When a fact, policy or date context is unreliable.
 	 */
 	public function load( Actor $actor, OrgScope $scope, int $person_id, int $event_post, int $occurrence, array $conditions ): array {
-		/** @var array<string, bool> $keys */
+		/**
+		 * Profile fact fields referenced by the eligibility tree.
+		 *
+		 * @var array<string, bool> $keys
+		 */
 		$keys      = array();
 		$needs_age = false;
 		$engine    = new ConditionEngine();
