@@ -11,6 +11,7 @@ use UOP\Core\{CorrelationId,PublicId,TransactionManager};
 use UOP\Domain\Organization\OrgScope;
 use UOP\Infrastructure\Database\{AssignmentRepository,AuditWriter,DelegationRepository,ExportJobRepository,Installer,OutboxRepository,PersonRepository,SchemaManifest,WpdbConnection};
 use UOP\Infrastructure\Export\ExportStorageInterface;
+use UOP\Infrastructure\Export\LocalExportStorage;
 
 final class M5ExportJobsTest extends TestCase {
     private WpdbConnection $db;
@@ -189,6 +190,23 @@ final class M5ExportJobsTest extends TestCase {
         self::assertFalse(str_contains($file,'uop_private_csv'));
         $this->authorized=false;
         self::assertSame(403,rest_do_request(new \WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string()))->get_status());
+    }
+
+    public function test_private_local_storage_uses_opaque_references_and_strict_permissions(): void {
+        $storage=new LocalExportStorage();
+        $bytes="public_id,display_name\\nabc,Private user\\n";
+        $key=$storage->write($bytes);
+        self::assertMatchesRegularExpression('/^[0-9a-f]{32}\\.csv$/D',$key);
+        self::assertSame($bytes,$storage->read($key));
+        try {
+            $storage->read('../wp-config.php');
+            self::fail('Private storage accepted traversal key');
+        } catch(RuntimeException) { self::assertTrue(true); }
+        $storage->delete($key);
+        try {
+            $storage->read($key);
+            self::fail('Deleted export remained readable');
+        } catch(RuntimeException) { self::assertTrue(true); }
     }
 
     public function test_outbox_failure_rolls_back_job_creation(): void {

@@ -269,7 +269,7 @@ final class ExportJobService {
 	 */
 	private function validate( array $columns, string $status ): void {
 		if ( ! $columns || count( $columns ) > 3 || count( array_unique( $columns ) ) !== count( $columns )
-			|| array_diff( $columns, array( 'public_id', 'display_name', 'status' ) ) || ! in_array( $status, array( '', 'active', 'archived' ), true ) ) {
+			|| array_diff( $columns, array( 'public_id', 'display_name', 'status' ) ) || ! in_array( $status, array( '', 'active' ), true ) ) {
 			throw new InvalidArgumentException( 'Export projection is not allowed.' );
 		}
 	}

@@ -22,7 +22,12 @@ final class LocalExportStorage implements ExportStorageInterface {
 			throw new RuntimeException( 'Private export storage is unavailable.' );
 		}
 		$base = rtrim( $base, DIRECTORY_SEPARATOR );
-		foreach ( array( ABSPATH, WP_CONTENT_DIR ) as $webroot ) {
+		$upload = wp_upload_dir( null, false );
+		$roots  = array( ABSPATH, WP_CONTENT_DIR, $upload['basedir'] ?? '' );
+		foreach ( $roots as $webroot ) {
+			if ( ! is_string( $webroot ) || '' === $webroot ) {
+				continue;
+			}
 			$real = realpath( $webroot );
 			if ( false !== $real && ( $base === $real || str_starts_with( $base . DIRECTORY_SEPARATOR, rtrim( $real, DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR ) ) ) {
 				throw new RuntimeException( 'Private export storage is inside a public directory.' );
