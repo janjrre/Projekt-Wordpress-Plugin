@@ -89,13 +89,14 @@ final class EmailTemplateRules {
 	 * @param string               $subject   Template subject.
 	 * @param string               $text      Plain-text source.
 	 * @param string|null          $html      HTML source.
-	 * @param array<string,string> $variables Trusted and bounded render data.
+	 * @param array<string,mixed> $variables Trusted and bounded render data.
 	 * @return array{subject:string,body_text:string,body_html:string|null}
 	 * @throws InvalidArgumentException When any required value is absent.
 	 */
 	public function render( string $key, string $locale, string $subject, string $text, ?string $html, array $variables ): array {
 		$this->validate( $key, $locale, $subject, $text, $html );
 		$allowed = $this->catalog->variables( $key );
+		$safe    = array();
 		foreach ( $variables as $name => $value ) {
 			if ( ! in_array( $name, $allowed, true ) || ! is_string( $value ) || strlen( $value ) > 1000
 				|| ! mb_check_encoding( $value, 'UTF-8' ) || preg_match( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $value ) ) {
@@ -104,15 +105,16 @@ final class EmailTemplateRules {
 			if ( 'action_url' === $name && ( ! preg_match( '/^https:\/\/[^\s<>]+$/D', $value ) || '' === esc_url_raw( $value, array( 'https' ) ) ) ) {
 				throw new InvalidArgumentException( 'Action URL must use HTTPS.' );
 			}
+			$safe[ $name ] = $value;
 		}
-		$render           = static function ( string $source, bool $escape ) use ( $variables ): string {
+		$render           = static function ( string $source, bool $escape ) use ( $safe ): string {
 			return (string) preg_replace_callback(
 				'/\{\{([a-z][a-z0-9_]*)\}\}/',
-				static function ( array $found ) use ( $variables, $escape ): string {
-					if ( ! array_key_exists( $found[1], $variables ) ) {
+				static function ( array $found ) use ( $safe, $escape ): string {
+					if ( ! array_key_exists( $found[1], $safe ) ) {
 						throw new InvalidArgumentException( 'Missing email template render variable.' );
 					}
-					$value = $variables[ $found[1] ];
+					$value = $safe[ $found[1] ];
 					return $escape ? ( 'action_url' === $found[1] ? esc_url( $value ) : esc_html( $value ) ) : $value;
 				},
 				$source
