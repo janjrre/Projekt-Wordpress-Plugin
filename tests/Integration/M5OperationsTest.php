@@ -96,6 +96,6 @@ final class M5OperationsTest extends TestCase {
 		self::assertStringContainsString('Private export jobs',$html);
 		self::assertStringContainsString('Privacy and retention',$html);
 		self::assertStringNotContainsString('password',$html);
-		self::assertStringContainsString('uop_m5_operations',$html);
+		self::assertStringContainsString('name="_wpnonce"',$html);
 	}
 }
