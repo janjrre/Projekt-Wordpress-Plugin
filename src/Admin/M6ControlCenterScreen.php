@@ -79,7 +79,6 @@ final class M6ControlCenterScreen {
 		$actor = new Actor( get_current_user_id() );
 		if ( null === $scope || ! $this->can_overview( $actor, $scope ) ) {
 			wp_die( esc_html__( 'You cannot access this overview.', 'uop-core' ) );
-			return;
 		}
 		echo '<div class="wrap uop-m6-console"><h1>' . esc_html__( 'UOP Control Center', 'uop-core' ) . '</h1>';
 		echo '<p>' . esc_html__( 'Manage organization workflows and review their current health. Each destination rechecks its own permissions.', 'uop-core' ) . '</p>';
@@ -140,12 +139,10 @@ final class M6ControlCenterScreen {
 		$actor = new Actor( get_current_user_id() );
 		if ( null === $scope || ! $this->can_audit( $actor, $scope ) ) {
 			wp_die( esc_html__( 'You cannot view the audit trail.', 'uop-core' ) );
-			return;
 		}
 		$feed = $this->reads->audit( $actor, $scope );
 		if ( null === $feed ) {
 			wp_die( esc_html__( 'You cannot view the audit trail.', 'uop-core' ) );
-			return;
 		}
 		echo '<div class="wrap uop-m6-console"><h1>' . esc_html__( 'UOP Audit', 'uop-core' ) . '</h1>';
 		echo '<p>' . esc_html__( 'The latest 50 audit events are read-only. Actor identifiers, object IDs, original values and private payloads are not displayed.', 'uop-core' ) . '</p>';

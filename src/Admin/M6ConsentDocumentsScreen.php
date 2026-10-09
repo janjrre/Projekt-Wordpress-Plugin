@@ -61,12 +61,10 @@ final class M6ConsentDocumentsScreen {
 	public function render(): void {
 		if ( ! $this->authorized() ) {
 			wp_die( esc_html__( 'You cannot manage consent documents.', 'uop-core' ) );
-			return;
 		}
 		$scope = $this->scope();
 		if ( null === $scope ) {
 			wp_die( esc_html__( 'UOP organization unavailable.', 'uop-core' ) );
-			return;
 		}
 		$message = $this->submit( $scope );
 		echo '<div class="wrap uop-m6-console"><h1>' . esc_html__( 'Consent documents', 'uop-core' ) . '</h1>';
