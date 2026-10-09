@@ -841,4 +841,79 @@ final class M4RegistrationTest extends TestCase {
 			self::fail('Accepted and event-cancelled offer remained usable');
 		} catch (RuntimeException) { self::assertTrue(true); }
 	}
+
+	/** Bucket age conditions re-check authoritative profiles at every seat transition. */
+	public function test_bucket_age_eligibility_is_rechecked_before_offer_and_acceptance(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$services,$adult,$event,$form,$now]=$this->setup_registration($draft);
+		$other=PublicId::generate();
+		$services['people']->create($this->scope,$other,'Queued Adult',null,$now);
+		$post_id=(int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		$services['event']->add_occurrence($services['actor'],$this->scope,$post_id,new OccurrenceWindow('2030-04-15T12:00:00+02:00','2030-04-15T14:00:00+02:00','Europe/Berlin'),$now,CorrelationId::generate());
+		$fields=new ProfileFieldRepository($this->db,$this->prefix);
+		$values=new ProfileValueRepository($this->db,$this->prefix);
+		$field=PublicId::generate();
+		$fields->create($this->scope,$field,['key'=>'date_of_birth','type'=>'date','label'=>'Birth date','subject_view'=>true],$now);
+		$field_id=(int)$fields->find($this->scope,$field)['id'];
+		$one_id=(int)$services['people']->find($this->scope,$adult)['id'];
+		$two_id=(int)$services['people']->find($this->scope,$other)['id'];
+		$values->replace($this->scope,$one_id,$field_id,FieldRules::normalize('date','2000-01-01'),$now);
+		$values->replace($this->scope,$two_id,$field_id,FieldRules::normalize('date','2000-01-01'),$now);
+		$first=$services['submit']->submit($services['actor'],$this->scope,$adult,$event,null,PublicId::generate(),['name'=>'First'],$now,CorrelationId::generate());
+		$second=$services['submit']->submit($services['actor'],$this->scope,$other,$event,null,PublicId::generate(),['name'=>'Second'],$now,CorrelationId::generate());
+		$bucket=$services['capacity']->create_general_bucket($services['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$rule=['schema_version'=>1,'all'=>[[
+			'source'=>'profile','field'=>'date_of_birth','operator'=>'age_gte_at','value'=>18,'context'=>'event.start',
+		]]];
+		$this->db->execute('UPDATE %i SET eligibility_json = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'capacity_buckets',wp_json_encode($rule),$this->scope->id,$bucket->to_binary()]);
+		self::assertSame('accepted',$services['capacity']->decide($services['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		self::assertSame('waitlisted',$services['capacity']->decide($services['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$values->replace($this->scope,$two_id,$field_id,FieldRules::normalize('date','2020-01-01'),$now);
+		$services['lifecycle']->cancel($services['actor'],$this->scope,$first,PublicId::generate(),$now,CorrelationId::generate());
+		try {
+			$services['lifecycle']->offer_next($services['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Underage waitlist member was offered a place');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame('waitlisted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0]['status']);
+		$values->replace($this->scope,$two_id,$field_id,FieldRules::normalize('date','2000-01-01'),$now);
+		$offer=$services['lifecycle']->offer_next($services['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		$values->replace($this->scope,$two_id,$field_id,FieldRules::normalize('date','2020-01-01'),$now);
+		try {
+			$services['lifecycle']->accept_offer($services['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Offer accepted despite new age ineligibility');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame('held',$this->db->rows('SELECT status FROM %i WHERE registration_id = (SELECT id FROM %i WHERE public_id = %s)',[$this->prefix.'capacity_claims',$this->prefix.'registrations',$second->to_binary()])[0]['status']);
+		$values->replace($this->scope,$two_id,$field_id,FieldRules::normalize('date','2000-01-01'),$now);
+		$services['lifecycle']->accept_offer($services['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+		self::assertSame('accepted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0]['status']);
+		self::assertSame(1,(int)$this->db->rows("SELECT COUNT(*) AS n FROM %i WHERE status IN ('held','confirmed')",[$this->prefix.'capacity_claims'])[0]['n']);
+	}
+
+	/** Capacity conditions use the immutable submission snapshot, not caller hints. */
+	public function test_bucket_registration_eligibility_uses_hashed_historical_snapshot(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'tier','type'=>'select','label'=>'Ticket','required'=>true,'options'=>['standard','vip']],
+		]];
+		[$services,$one,$event,$form,$now]=$this->setup_registration($draft);
+		$two=PublicId::generate();
+		$services['people']->create($this->scope,$two,'VIP',null,$now);
+		$standard=$services['submit']->submit($services['actor'],$this->scope,$one,$event,null,PublicId::generate(),['tier'=>'standard'],$now,CorrelationId::generate());
+		$vip=$services['submit']->submit($services['actor'],$this->scope,$two,$event,null,PublicId::generate(),['tier'=>'vip'],$now,CorrelationId::generate());
+		$bucket=$services['capacity']->create_general_bucket($services['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$rule=['schema_version'=>1,'all'=>[[
+			'source'=>'registration','field'=>'tier','operator'=>'eq','value'=>'vip',
+		]]];
+		$this->db->execute('UPDATE %i SET eligibility_json = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'capacity_buckets',wp_json_encode($rule),$this->scope->id,$bucket->to_binary()]);
+		try {
+			$services['capacity']->decide($services['actor'],$this->scope,$standard,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Unqualified standard ticket was accepted');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame('accepted',$services['capacity']->decide($services['actor'],$this->scope,$vip,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$vip_id=(int)$this->db->rows('SELECT id FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$vip->to_binary()])[0]['id'];
+		$this->db->execute('UPDATE %i SET payload_json = %s WHERE registration_id = %d',[$this->prefix.'registration_snapshots','{"schema_version":1,"fields":{"tier":"standard"}}',$vip_id]);
+		$accepted=$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$vip->to_binary()]);
+		self::assertSame('accepted',$accepted[0]['status']);
+		self::assertSame(1,(int)$this->db->rows("SELECT COUNT(*) AS n FROM %i WHERE status = 'confirmed'",[$this->prefix.'capacity_claims'])[0]['n']);
+	}
 }
