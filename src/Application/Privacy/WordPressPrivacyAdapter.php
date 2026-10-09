@@ -49,7 +49,7 @@ final class WordPressPrivacyAdapter {
 	public function register_exporter( array $exporters ): array {
 		$exporters['uop-core'] = array(
 			'exporter_friendly_name' => __( 'UOP Core', 'uop-core' ),
-			'callback'              => array( $this, 'export' ),
+			'callback'               => array( $this, 'export' ),
 		);
 		return $exporters;
 	}
@@ -147,7 +147,7 @@ final class WordPressPrivacyAdapter {
 					}
 					$base['items_removed']  = count( $altered ) > 0;
 					$base['items_retained'] = true;
-					$base['messages'][]    = __( 'UOP retains registration, consent, communication and audit histories for review under configured retention rules. Legal holds may also prevent profile erasure. This request requires additional privacy review.', 'uop-core' );
+					$base['messages'][]     = __( 'UOP retains registration, consent, communication and audit histories for review under configured retention rules. Legal holds may also prevent profile erasure. This request requires additional privacy review.', 'uop-core' );
 					return $base;
 				}
 			);
