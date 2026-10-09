@@ -166,5 +166,4 @@ final class EventService {
 			}
 		);
 	}
-
 }
