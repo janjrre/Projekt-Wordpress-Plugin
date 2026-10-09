@@ -30,9 +30,18 @@ final class RetentionService {
 	 * @var array<string,array{trigger:string,action:string}>
 	 */
 	private const TARGETS = array(
-		'profile_values'         => array( 'trigger' => 'person.created', 'action' => 'erase' ),
-		'registration_snapshots' => array( 'trigger' => 'registration.submitted', 'action' => 'anonymize' ),
-		'persons'                => array( 'trigger' => 'person.created', 'action' => 'archive' ),
+		'profile_values'         => array(
+			'trigger' => 'person.created',
+			'action'  => 'erase',
+		),
+		'registration_snapshots' => array(
+			'trigger' => 'registration.submitted',
+			'action'  => 'anonymize',
+		),
+		'persons'                => array(
+			'trigger' => 'person.created',
+			'action'  => 'archive',
+		),
 	);
 
 	/**
@@ -58,7 +67,7 @@ final class RetentionService {
 	 * @param Actor         $actor Current manager.
 	 * @param OrgScope      $scope Trusted organization.
 	 * @param string        $key Stable unique rule key.
-	 * @param string        $class Supported data class.
+	 * @param string        $data_class Supported data class.
 	 * @param string        $trigger Allowed lifecycle anchor.
 	 * @param int           $delay Delay in whole days (policy-chosen).
 	 * @param string        $action Allowed retention action.
@@ -67,16 +76,16 @@ final class RetentionService {
 	 * @param CorrelationId $correlation Trace without personal values.
 	 * @throws InvalidArgumentException For unsupported configuration.
 	 */
-	public function create_rule( Actor $actor, OrgScope $scope, string $key, string $class, string $trigger, int $delay, string $action, bool $enabled, string $now, CorrelationId $correlation ): void {
+	public function create_rule( Actor $actor, OrgScope $scope, string $key, string $data_class, string $trigger, int $delay, string $action, bool $enabled, string $now, CorrelationId $correlation ): void {
 		if ( ! preg_match( '/^[a-z][a-z0-9_]{0,99}$/D', $key ) || $delay < 0 || $delay > 36500
-			|| ! isset( self::TARGETS[ $class ] ) || self::TARGETS[ $class ]['trigger'] !== $trigger || self::TARGETS[ $class ]['action'] !== $action ) {
+			|| ! isset( self::TARGETS[ $data_class ] ) || self::TARGETS[ $data_class ]['trigger'] !== $trigger || self::TARGETS[ $data_class ]['action'] !== $action ) {
 			throw new InvalidArgumentException( 'Unsupported retention rule.' );
 		}
 		self::cutoff( $now, $delay );
 		$this->tx->run(
-			function () use ( $actor, $scope, $key, $class, $trigger, $delay, $action, $enabled, $now, $correlation ): void {
+			function () use ( $actor, $scope, $key, $data_class, $trigger, $delay, $action, $enabled, $now, $correlation ): void {
 				$this->authorize( $actor, $scope );
-				$this->rules->create( $scope, $key, $class, $trigger, $delay, $action, $enabled, $now );
+				$this->rules->create( $scope, $key, $data_class, $trigger, $delay, $action, $enabled, $now );
 				$rule = $this->rules->rule( $scope, $key );
 				if ( ! $rule ) {
 					throw new RuntimeException( 'Retention rule was not persisted.' );
@@ -98,7 +107,7 @@ final class RetentionService {
 	 * @param int      $cursor Previous page's last internal ID.
 	 * @param string   $now Trusted UTC time.
 	 * @return array{examined:int,eligible:int,held:int,changed:int,next_cursor:int,done:bool,sample:list<string>}
-	 * @throws RuntimeException When the rule is disabled or access denied.
+	 * @throws InvalidArgumentException When the supplied cursor is invalid.
 	 */
 	public function dry_run( Actor $actor, OrgScope $scope, string $key, int $cursor, string $now ): array {
 		$this->authorize( $actor, $scope );
@@ -121,7 +130,7 @@ final class RetentionService {
 	 * @param string        $now Trusted UTC command timestamp.
 	 * @param CorrelationId $correlation One trace for the whole batch.
 	 * @return array{examined:int,eligible:int,held:int,changed:int,next_cursor:int,done:bool,sample:list<string>}
-	 * @throws RuntimeException When execution is prohibited or any write fails.
+	 * @throws InvalidArgumentException When the supplied cursor is invalid.
 	 */
 	public function run_batch( Actor $actor, OrgScope $scope, string $key, int $cursor, string $now, CorrelationId $correlation ): array {
 		if ( $cursor < 0 ) {
@@ -131,10 +140,10 @@ final class RetentionService {
 			function () use ( $actor, $scope, $key, $cursor, $now, $correlation ): array {
 				$this->authorize( $actor, $scope );
 				$rule = $this->active_rule( $scope, $key );
-				$class = (string) $rule['data_class'];
+				$data_class = (string) $rule['data_class'];
 				$cutoff = self::cutoff( $now, (int) $rule['delay_days'] );
-				$rows = $this->rules->candidates( $scope, $class, $cutoff, $cursor );
-				return $this->summary( $scope, $class, $rows, $cursor, $cutoff, $now, true, $actor, $correlation );
+				$rows = $this->rules->candidates( $scope, $data_class, $cutoff, $cursor );
+				return $this->summary( $scope, $data_class, $rows, $cursor, $cutoff, $now, true, $actor, $correlation );
 			}
 		);
 	}
@@ -143,7 +152,7 @@ final class RetentionService {
 	 * Count and process exactly one bounded page, with hold checks re-evaluated.
 	 *
 	 * @param OrgScope           $scope Tenant boundary.
-	 * @param string             $class Fixed retention target.
+	 * @param string             $data_class Fixed retention target.
 	 * @param array              $rows Bounded candidate page.
 	 * @phpstan-param list<array<string,mixed>> $rows
 	 * @param int                $cursor Previous examined key.
@@ -153,8 +162,9 @@ final class RetentionService {
 	 * @param Actor|null         $actor Live actor during mutation.
 	 * @param CorrelationId|null $correlation Batch trace.
 	 * @return array{examined:int,eligible:int,held:int,changed:int,next_cursor:int,done:bool,sample:list<string>}
+	 * @throws RuntimeException When an eligible target could not be changed.
 	 */
-	private function summary( OrgScope $scope, string $class, array $rows, int $cursor, string $cutoff, string $now, bool $execute, ?Actor $actor = null, ?CorrelationId $correlation = null ): array {
+	private function summary( OrgScope $scope, string $data_class, array $rows, int $cursor, string $cutoff, string $now, bool $execute, ?Actor $actor = null, ?CorrelationId $correlation = null ): array {
 		$eligible = 0;
 		$held = 0;
 		$changed = 0;
@@ -162,7 +172,7 @@ final class RetentionService {
 		foreach ( $rows as $row ) {
 			$id = (int) $row['id'];
 			$cursor = $id;
-			$target = $this->rules->eligible( $scope, $class, $id, $cutoff, $now, $execute );
+			$target = $this->rules->eligible( $scope, $data_class, $id, $cutoff, $now, $execute );
 			if ( null === $target ) {
 				++$held;
 				continue;
@@ -174,12 +184,15 @@ final class RetentionService {
 			if ( ! $execute ) {
 				continue;
 			}
-			$count = $this->rules->apply( $scope, $class, $id, $now );
+			if ( null === $actor || null === $correlation ) {
+				throw new RuntimeException( 'Retention execution lacks a trusted actor or trace.' );
+			}
+			$count = $this->rules->apply( $scope, $data_class, $id, $now );
 			if ( $count < 1 ) {
 				throw new RuntimeException( 'Eligible retention target did not change.' );
 			}
 			++$changed;
-			$object_type = 'registration_snapshots' === $class ? 'registration' : 'person';
+			$object_type = 'registration_snapshots' === $data_class ? 'registration' : 'person';
 			$object = new PolicyObject( $scope->id, $object_type, $target['object_id'], $target['subject_id'] );
 			$event = PublicId::generate();
 			$this->audit->append( $scope, $actor, 'privacy.retention_executed', $object, 'success', $correlation, $event, array( 'reason_code' => 'retention' ) );
@@ -209,10 +222,10 @@ final class RetentionService {
 		if ( ! $rule || 1 !== (int) $rule['enabled'] ) {
 			throw new RuntimeException( 'Retention rule is not enabled.' );
 		}
-		$class = (string) $rule['data_class'];
-		if ( ! isset( self::TARGETS[ $class ] )
-			|| self::TARGETS[ $class ]['trigger'] !== $rule['trigger_type']
-			|| self::TARGETS[ $class ]['action'] !== $rule['action'] ) {
+		$data_class = (string) $rule['data_class'];
+		if ( ! isset( self::TARGETS[ $data_class ] )
+			|| self::TARGETS[ $data_class ]['trigger'] !== $rule['trigger_type']
+			|| self::TARGETS[ $data_class ]['action'] !== $rule['action'] ) {
 			throw new RuntimeException( 'Retention rule configuration is no longer supported.' );
 		}
 		return $rule;
