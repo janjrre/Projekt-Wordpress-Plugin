@@ -43,7 +43,8 @@ abstract class BaseController {
 	 *
 	 * @param WP_REST_Request      $request    Request body.
 	 * @param array<string, mixed> $properties Explicit accepted DTO properties.
-	 * @param list<string>         $required   Required property keys.
+	 * @param array                $required   Required property keys.
+	 * @phpstan-param list<string> $required
 	 * @return array<string, mixed> Validated, still-untrusted DTO for application services.
 	 * @throws InvalidArgumentException On malformed JSON, unexpected keys, or type errors.
 	 */

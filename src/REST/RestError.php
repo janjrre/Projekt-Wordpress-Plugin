@@ -19,15 +19,15 @@ final class RestError {
 	 */
 	public static function for_kind( string $kind ): WP_Error {
 		$errors = array(
-			'invalid_schema'   => array( 400, 'Request does not match the expected schema.' ),
-			'unauthenticated'  => array( 401, 'Authentication required.' ),
-			'forbidden'        => array( 403, 'Not permitted.' ),
-			'not_found'        => array( 404, 'Resource not found.' ),
-			'conflict'         => array( 409, 'The resource has changed or the action conflicts with its current state.' ),
-			'validation'       => array( 422, 'The request could not be accepted.' ),
-			'rate_limited'     => array( 429, 'Too many requests.' ),
-			'internal'         => array( 500, 'Unexpected server error.' ),
-			'unavailable'      => array( 503, 'Required service is currently unavailable.' ),
+			'invalid_schema' => array( 400, 'Request does not match the expected schema.' ),
+			'unauthenticated' => array( 401, 'Authentication required.' ),
+			'forbidden'      => array( 403, 'Not permitted.' ),
+			'not_found'      => array( 404, 'Resource not found.' ),
+			'conflict'       => array( 409, 'The resource has changed or the action conflicts with its current state.' ),
+			'validation'     => array( 422, 'The request could not be accepted.' ),
+			'rate_limited'   => array( 429, 'Too many requests.' ),
+			'internal'       => array( 500, 'Unexpected server error.' ),
+			'unavailable'    => array( 503, 'Required service is currently unavailable.' ),
 		);
 		if ( ! isset( $errors[ $kind ] ) ) {
 			$kind = 'internal';
