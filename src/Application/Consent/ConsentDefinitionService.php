@@ -81,7 +81,7 @@ final class ConsentDefinitionService {
 	 * @param CorrelationId $correlation Request trace.
 	 * @return PublicId Newly published immutable version identity.
 	 * @throws InvalidArgumentException When content is invalid.
-	 	 */
+	 */
 	public function publish( Actor $actor, OrgScope $scope, PublicId $definition, string $content, string $now, CorrelationId $correlation ): PublicId {
 		if ( strlen( $content ) < 20 || strlen( $content ) > 100000 || trim( $content ) !== $content
 			|| preg_match( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F<>]/', $content ) ) {
