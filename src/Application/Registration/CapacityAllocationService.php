@@ -30,14 +30,14 @@ final class CapacityAllocationService {
 	/**
 	 * Compose the authoritative allocation boundary.
 	 *
-	 * @param CapacityRepository       $capacity      Scoped bucket persistence.
-	 * @param RegistrationRepository   $registrations Locked registration access.
-	 * @param RegistrationStateMachine $states        Frozen transitions.
-	 * @param PolicyService            $policy        Live permission decisions.
-	 * @param TransactionManager       $tx            Deadlock-aware transaction boundary.
-	 * @param AuditWriter              $audit         Append-only minimal audit.
-	 * @param OutboxRepository         $outbox        Durable domain events.
-	 * @param RegistrationEligibilityService $eligibility Bucket-specific server-side checks.
+	 * @param CapacityRepository             $capacity      Scoped bucket persistence.
+	 * @param RegistrationRepository         $registrations Locked registration access.
+	 * @param RegistrationStateMachine       $states        Frozen transitions.
+	 * @param PolicyService                  $policy        Live permission decisions.
+	 * @param TransactionManager             $tx            Deadlock-aware transaction boundary.
+	 * @param AuditWriter                    $audit         Append-only minimal audit.
+	 * @param OutboxRepository               $outbox        Durable domain events.
+	 * @param RegistrationEligibilityService $eligibility   Bucket-specific server-side checks.
 	 */
 	public function __construct(
 		private CapacityRepository $capacity,

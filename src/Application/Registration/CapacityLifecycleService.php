@@ -30,13 +30,13 @@ final class CapacityLifecycleService {
 	/**
 	 * Compose the capacity-aware command boundary.
 	 *
-	 * @param WaitlistRepository       $queue    Scoped waitlist/claim persistence.
-	 * @param CapacityRepository       $capacity Current occupancy queries.
-	 * @param RegistrationStateMachine $states  Fixed transition graph.
-	 * @param PolicyService            $policy   Current capability and object policy.
-	 * @param TransactionManager       $tx       Atomic InnoDB transaction.
-	 * @param AuditWriter              $audit    Minimal append-only evidence.
-	 * @param OutboxRepository         $outbox   Durable domain events.
+	 * @param WaitlistRepository             $queue       Scoped waitlist/claim persistence.
+	 * @param CapacityRepository             $capacity    Current occupancy queries.
+	 * @param RegistrationStateMachine       $states      Fixed transition graph.
+	 * @param PolicyService                  $policy      Current capability and object policy.
+	 * @param TransactionManager             $tx          Atomic InnoDB transaction.
+	 * @param AuditWriter                    $audit       Minimal append-only evidence.
+	 * @param OutboxRepository               $outbox      Durable domain events.
 	 * @param RegistrationEligibilityService $eligibility Server-verified admission.
 	 */
 	public function __construct(

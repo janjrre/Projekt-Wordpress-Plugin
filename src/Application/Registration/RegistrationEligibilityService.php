@@ -51,8 +51,8 @@ final class RegistrationEligibilityService {
 			(int) $registration['occurrence_id'],
 			array( $ast )
 		);
-		$stored = $this->registrations->snapshot_fields( $scope, (int) $registration['id'] );
-		$engine = new ConditionEngine();
+		$stored  = $this->registrations->snapshot_fields( $scope, (int) $registration['id'] );
+		$engine  = new ConditionEngine();
 		if ( ! $engine->evaluate(
 			$ast,
 			array(
