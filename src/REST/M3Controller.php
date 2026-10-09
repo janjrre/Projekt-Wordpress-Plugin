@@ -132,7 +132,9 @@ final class M3Controller extends BaseController {
 			}
 			$uuid = $this->forms->create( $this->actor(), $this->required_scope(), $body['key'], $body['title'], $body['context'], $body['draft'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 			return (array) $this->reads->form( $this->actor(), $this->required_scope(), $uuid );
-		} catch ( InvalidArgumentException | RuntimeException $error ) {
+		} catch ( InvalidArgumentException $error ) {
+			return RestError::for_kind( 'invalid_schema' );
+		} catch ( RuntimeException $error ) {
 			return RestError::for_kind( 'validation' );
 		}
 	}
@@ -154,7 +156,7 @@ final class M3Controller extends BaseController {
 		} catch ( RuntimeException $error ) {
 			return RestError::for_kind( 'conflict' );
 		} catch ( InvalidArgumentException $error ) {
-			return RestError::for_kind( 'validation' );
+			return RestError::for_kind( 'invalid_schema' );
 		}
 	}
 
@@ -172,7 +174,9 @@ final class M3Controller extends BaseController {
 			}
 			$this->forms->publish( $this->actor(), $this->required_scope(), $this->required_uuid( $request ), $body['revision'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 			return $this->form( $request );
-		} catch ( InvalidArgumentException | RuntimeException $error ) {
+		} catch ( InvalidArgumentException $error ) {
+			return RestError::for_kind( 'invalid_schema' );
+		} catch ( RuntimeException $error ) {
 			return RestError::for_kind( 'conflict' );
 		}
 	}
