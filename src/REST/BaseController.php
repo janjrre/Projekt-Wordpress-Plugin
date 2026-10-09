@@ -80,6 +80,16 @@ abstract class BaseController {
 	}
 
 	/**
+	 * Return a stable denial without disclosing hidden object existence.
+	 *
+	 * @param bool $hidden Hide unauthorized resource as a 404.
+	 * @return \WP_Error Safe API error.
+	 */
+	protected function denied( bool $hidden = false ): \WP_Error {
+		return RestError::for_kind( 0 === get_current_user_id() ? 'unauthenticated' : ( $hidden ? 'not_found' : 'forbidden' ) );
+	}
+
+	/**
 	 * Return server-authenticated identity, never a client-supplied user ID.
 	 *
 	 * @return Actor Actor for current request.

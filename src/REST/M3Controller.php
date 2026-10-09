@@ -46,57 +46,57 @@ final class M3Controller extends BaseController {
 	/**
 	 * Check organization-wide form authoring scope for form collection.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
-	public function can_manage_forms(): bool {
+	public function can_manage_forms(): bool|WP_Error {
 		$scope = $this->scope();
-		return null !== $scope && $this->policy->can( $this->actor(), 'form.manage', new PolicyObject( $scope->id, 'organization', $scope->id ) )->allowed;
+		return null !== $scope && $this->policy->can( $this->actor(), 'form.manage', new PolicyObject( $scope->id, 'organization', $scope->id ) )->allowed ? true : $this->denied();
 	}
 
 	/**
 	 * Verify scope and object before disclosing or modifying a form.
 	 *
 	 * @param WP_REST_Request $request Incoming request.
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
-	public function can_view_form( WP_REST_Request $request ): bool {
+	public function can_view_form( WP_REST_Request $request ): bool|WP_Error {
 		$scope = $this->scope();
 		$uuid  = $this->uuid( $request );
-		return null !== $scope && null !== $uuid && null !== $this->reads->form( $this->actor(), $scope, $uuid );
+		return null !== $scope && null !== $uuid && null !== $this->reads->form( $this->actor(), $scope, $uuid ) ? true : $this->denied( true );
 	}
 
 	/**
 	 * Ensure event collection read authorization.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
-	public function can_manage_events(): bool {
+	public function can_manage_events(): bool|WP_Error {
 		$scope = $this->scope();
-		return null !== $scope && $this->policy->can( $this->actor(), 'event.manage', new PolicyObject( $scope->id, 'organization', $scope->id ) )->allowed;
+		return null !== $scope && $this->policy->can( $this->actor(), 'event.manage', new PolicyObject( $scope->id, 'organization', $scope->id ) )->allowed ? true : $this->denied();
 	}
 
 	/**
 	 * Ensure object-level event permission.
 	 *
 	 * @param WP_REST_Request $request Incoming request.
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
-	public function can_view_event( WP_REST_Request $request ): bool {
+	public function can_view_event( WP_REST_Request $request ): bool|WP_Error {
 		$scope = $this->scope();
 		$uuid  = $this->uuid( $request );
-		return null !== $scope && null !== $uuid && null !== $this->reads->event( $this->actor(), $scope, $uuid );
+		return null !== $scope && null !== $uuid && null !== $this->reads->event( $this->actor(), $scope, $uuid ) ? true : $this->denied( true );
 	}
 
 	/**
 	 * Hide inaccessible profile objects and fields from API clients.
 	 *
 	 * @param WP_REST_Request $request Incoming request.
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
-	public function can_view_profile( WP_REST_Request $request ): bool {
+	public function can_view_profile( WP_REST_Request $request ): bool|WP_Error {
 		$scope = $this->scope();
 		$uuid  = $this->uuid( $request );
-		return null !== $scope && null !== $uuid && null !== $this->reads->profile( $this->actor(), $scope, $uuid );
+		return null !== $scope && null !== $uuid && null !== $this->reads->profile( $this->actor(), $scope, $uuid ) ? true : $this->denied( true );
 	}
 
 	/**
@@ -128,12 +128,12 @@ final class M3Controller extends BaseController {
 		try {
 			$body = $this->body( $request, array( 'key', 'title', 'context', 'draft' ) );
 			if ( ! is_string( $body['key'] ) || ! is_string( $body['title'] ) || ! is_string( $body['context'] ) || ! is_array( $body['draft'] ) ) {
-				return new WP_Error( 'uop_invalid_input', 'Invalid form content.', array( 'status' => 400 ) );
+				return RestError::for_kind( 'invalid_schema' );
 			}
 			$uuid = $this->forms->create( $this->actor(), $this->required_scope(), $body['key'], $body['title'], $body['context'], $body['draft'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 			return (array) $this->reads->form( $this->actor(), $this->required_scope(), $uuid );
 		} catch ( InvalidArgumentException | RuntimeException $error ) {
-			return new WP_Error( 'uop_invalid_form', 'Form creation was rejected.', array( 'status' => 400 ) );
+			return RestError::for_kind( 'validation' );
 		}
 	}
 
@@ -147,14 +147,14 @@ final class M3Controller extends BaseController {
 		try {
 			$body = $this->body( $request, array( 'revision', 'draft' ) );
 			if ( ! is_int( $body['revision'] ) || ! is_array( $body['draft'] ) ) {
-				return new WP_Error( 'uop_invalid_input', 'Invalid form revision.', array( 'status' => 400 ) );
+				return RestError::for_kind( 'invalid_schema' );
 			}
 			$this->forms->save_draft( $this->actor(), $this->required_scope(), $this->required_uuid( $request ), $body['revision'], $body['draft'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 			return $this->form( $request );
 		} catch ( RuntimeException $error ) {
-			return new WP_Error( 'uop_conflict', 'Draft changed or access was revoked. Reload before saving.', array( 'status' => 409 ) );
+			return RestError::for_kind( 'conflict' );
 		} catch ( InvalidArgumentException $error ) {
-			return new WP_Error( 'uop_invalid_form', 'Form draft was not valid.', array( 'status' => 400 ) );
+			return RestError::for_kind( 'validation' );
 		}
 	}
 
@@ -168,12 +168,12 @@ final class M3Controller extends BaseController {
 		try {
 			$body = $this->body( $request, array( 'revision' ) );
 			if ( ! is_int( $body['revision'] ) ) {
-				return new WP_Error( 'uop_invalid_input', 'Revision must be numeric.', array( 'status' => 400 ) );
+				return RestError::for_kind( 'invalid_schema' );
 			}
 			$this->forms->publish( $this->actor(), $this->required_scope(), $this->required_uuid( $request ), $body['revision'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 			return $this->form( $request );
 		} catch ( InvalidArgumentException | RuntimeException $error ) {
-			return new WP_Error( 'uop_publish_rejected', 'Publication rejected: stale revision or unresolved consent.', array( 'status' => 409 ) );
+			return RestError::for_kind( 'conflict' );
 		}
 	}
 

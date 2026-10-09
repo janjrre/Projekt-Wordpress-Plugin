@@ -41,11 +41,11 @@ final class ExportController extends BaseController {
 	/**
 	 * Enforce current WordPress and organization capabilities on every route.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
-	public function can_export(): bool {
+	public function can_export(): bool|WP_Error {
 		$scope = $this->scope();
-		return null !== $scope && $this->policy->can( new Actor( get_current_user_id() ), 'export.create', new PolicyObject( $scope->id, 'organization', $scope->id ) )->allowed;
+		return null !== $scope && $this->policy->can( new Actor( get_current_user_id() ), 'export.create', new PolicyObject( $scope->id, 'organization', $scope->id ) )->allowed ? true : $this->denied();
 	}
 
 	/**
@@ -85,9 +85,9 @@ final class ExportController extends BaseController {
 				202
 			);
 		} catch ( InvalidArgumentException ) {
-			return new WP_Error( 'uop_invalid_export', 'Invalid export request.', array( 'status' => 400 ) );
+			return RestError::for_kind( 'invalid_schema' );
 		} catch ( RuntimeException ) {
-			return new WP_Error( 'uop_export_conflict', 'Export request is unavailable.', array( 'status' => 409 ) );
+			return RestError::for_kind( 'conflict' );
 		}
 	}
 
@@ -104,7 +104,7 @@ final class ExportController extends BaseController {
 				200
 			);
 		} catch ( InvalidArgumentException | RuntimeException ) {
-			return new WP_Error( 'uop_export_unavailable', 'Export is not available.', array( 'status' => 404 ) );
+			return RestError::for_kind( 'not_found' );
 		}
 	}
 
@@ -125,7 +125,7 @@ final class ExportController extends BaseController {
 			$response->header( 'X-Content-Type-Options', 'nosniff' );
 			return $response;
 		} catch ( InvalidArgumentException | RuntimeException ) {
-			return new WP_Error( 'uop_export_unavailable', 'Export is not available.', array( 'status' => 404 ) );
+			return RestError::for_kind( 'not_found' );
 		}
 	}
 
