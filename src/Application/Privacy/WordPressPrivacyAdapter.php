@@ -49,7 +49,7 @@ final class WordPressPrivacyAdapter {
 	public function register_exporter( array $exporters ): array {
 		$exporters['uop-core'] = array(
 			'exporter_friendly_name' => __( 'UOP Core', 'uop-core' ),
-			'callback'               => array( $this, 'export' ),
+			'callback'              => array( $this, 'export' ),
 		);
 		return $exporters;
 	}
@@ -91,7 +91,10 @@ final class WordPressPrivacyAdapter {
 				);
 			}
 			if ( 'resolved' !== $resolution['status'] ) {
-				return array( 'data' => array(), 'done' => true );
+				return array(
+					'data' => array(),
+					'done' => true,
+				);
 			}
 			return $this->privacy->export_page( $resolution['user_id'], $page );
 		} catch ( \Throwable ) {
