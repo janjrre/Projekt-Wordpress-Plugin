@@ -84,9 +84,12 @@ final class RegistrationRepository {
 	 */
 	public function by_submission_key( OrgScope $scope, PublicId $key ): ?array {
 		$rows = $this->db->rows(
-			'SELECT r.id, r.public_id, r.person_id, r.event_post_id, r.occurrence_id, r.form_version_id, r.source, s.payload_json FROM %i r INNER JOIN %i s ON s.id = r.current_snapshot_id WHERE r.organization_id = %d AND r.submission_key = %s LIMIT 1',
+			'SELECT r.id, r.public_id, r.person_id, r.event_post_id, r.occurrence_id, r.form_version_id, r.source, s.payload_json, s.payload_hash FROM %i r INNER JOIN %i s ON s.id = r.current_snapshot_id WHERE r.organization_id = %d AND r.submission_key = %s LIMIT 1',
 			array( $this->prefix . 'registrations', $this->prefix . 'registration_snapshots', $scope->id, $key->to_binary() )
 		);
+		if ( $rows && ! hash_equals( (string) $rows[0]['payload_hash'], hash( 'sha256', (string) $rows[0]['payload_json'], true ) ) ) {
+			throw new RuntimeException( 'Registration submission history integrity check failed.' );
+		}
 		return $rows[0] ?? null;
 	}
 
