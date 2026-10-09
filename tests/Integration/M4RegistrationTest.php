@@ -713,4 +713,33 @@ final class M4RegistrationTest extends TestCase {
 		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'persons'])[0]['n']);
 		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'registrations']));
 	}
+
+	/**
+	 * Self-service releases request safe promotion without exposing secrets.
+	 * The trusted M5 worker can later perform the privileged FIFO offer step.
+	 */
+	public function test_self_cancellation_queues_private_promotion_handoff_once(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$waiter=PublicId::generate();
+		$s['people']->create($this->scope,$waiter,'Waiting participant',null,$now);
+		$first=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'First'],$now,CorrelationId::generate());
+		$next=$s['submit']->submit($s['actor'],$this->scope,$waiter,$event,null,PublicId::generate(),['name'=>'Next'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$next,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$cancel=PublicId::generate();
+		$s['lifecycle']->cancel($s['actor'],$this->scope,$first,$cancel,$now,CorrelationId::generate());
+		$s['lifecycle']->cancel($s['actor'],$this->scope,$first,$cancel,$now,CorrelationId::generate());
+		$signals=$this->db->rows('SELECT payload_json FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','capacity.promotion_requested']);
+		self::assertCount(1,$signals);
+		$payload=json_decode($signals[0]['payload_json'],true);
+		self::assertSame(['public_id'=>$bucket->to_string()],$payload);
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'waitlist_offers']));
+		$offer=$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		self::assertNull($s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		self::assertSame('offered',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$next->to_binary()])[0]['status']);
+		self::assertStringNotContainsString($offer['token'],$signals[0]['payload_json']);
+	}
 }

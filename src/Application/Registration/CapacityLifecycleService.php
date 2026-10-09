@@ -93,6 +93,7 @@ final class CapacityLifecycleService {
 				$this->queue->release( $scope, (int) $row['id'], $bucket_id, $utc_now );
 				$this->queue->transition( $scope, (int) $row['id'], (string) $row['status'], 'cancelled', $command, $actor->user_id, $utc_now, $correlation );
 				$this->record( $scope, $actor, $domain_object, 'registration.cancelled', $registration, 'cancelled', $correlation );
+				$this->request_promotion( $scope, $bucket, $correlation );
 			}
 		);
 	}
@@ -334,8 +335,42 @@ final class CapacityLifecycleService {
 				$this->queue->expire( $scope, $offer, $utc_now );
 				$this->queue->transition( $scope, (int) $row['id'], 'offered', 'waitlisted', $command, $actor->user_id, $utc_now, $correlation );
 				$this->record( $scope, $actor, $this->resource( $scope, $row ), 'registration.offer_expired', PublicId::from_binary( $row['public_id'] ), 'waitlisted', $correlation );
+				$this->request_promotion( $scope, $bucket, $correlation );
 				return true;
 			}
+		);
+	}
+
+
+	/**
+	 * Signal a serialized free seat to the future privileged mail worker.
+	 *
+	 * This never returns an offer token to a self-service applicant. M5 may
+	 * handle the durable event under a trusted manager execution context and
+	 * deliver the generated bearer secret only to its intended recipient.
+	 *
+	 * @param OrgScope             $scope       Trusted tenant.
+	 * @param array<string, mixed> $bucket      Bucket locked for this transaction.
+	 * @param CorrelationId        $correlation Request trace.
+	 */
+	private function request_promotion( OrgScope $scope, array $bucket, CorrelationId $correlation ): void {
+		$post = get_post( (int) $bucket['event_post_id'] );
+		if ( 'active' !== $bucket['status'] || ! $post || 'uop_event' !== $post->post_type
+			|| 'publish' !== $post->post_status
+			|| $this->capacity->occupied( $scope, (int) $bucket['id'] ) >= (int) $bucket['capacity']
+			|| ! $this->queue->next_waiter( $scope, (int) $bucket['id'] ) ) {
+			return;
+		}
+		$this->outbox->append(
+			$scope,
+			PublicId::generate(),
+			'capacity',
+			(int) $bucket['id'],
+			'capacity.promotion_requested',
+			$correlation,
+			array(
+				'public_id' => PublicId::from_binary( $bucket['public_id'] )->to_string(),
+			)
 		);
 	}
 

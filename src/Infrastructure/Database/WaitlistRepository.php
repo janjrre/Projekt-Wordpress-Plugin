@@ -61,7 +61,7 @@ final class WaitlistRepository {
 	 */
 	public function lock_bucket( OrgScope $scope, int $id ): ?array {
 		$rows = $this->db->rows(
-			'SELECT id, event_post_id, occurrence_id, eligibility_json, capacity, status FROM %i WHERE organization_id = %d AND id = %d LIMIT 1 FOR UPDATE',
+			'SELECT id, public_id, event_post_id, occurrence_id, eligibility_json, capacity, status FROM %i WHERE organization_id = %d AND id = %d LIMIT 1 FOR UPDATE',
 			array( $this->prefix . 'capacity_buckets', $scope->id, $id )
 		);
 		return $rows[0] ?? null;
