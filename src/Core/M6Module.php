@@ -9,6 +9,7 @@ namespace UOP\Core;
 
 use UOP\Admin\M6PeopleRegistrationScreen;
 use UOP\Admin\M6ControlCenterScreen;
+use UOP\Admin\M6ConsentDocumentsScreen;
 use UOP\Application\Consent\ConsentDefinitionService;
 use UOP\Application\Consent\ConsentRecordService;
 use UOP\Application\Identity\PersonService;
@@ -136,6 +137,16 @@ final class M6Module implements ModuleInterface {
 		);
 		add_action( 'admin_menu', array( $container->get( M6ControlCenterScreen::class ), 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $container->get( M6ControlCenterScreen::class ), 'assets' ) );
+		$container->set(
+			M6ConsentDocumentsScreen::class,
+			static fn ( ServiceContainer $c ) => new M6ConsentDocumentsScreen(
+				$c->get( M6OperationsReadService::class ),
+				$c->get( ConsentRepository::class ),
+				$c->get( ConsentDefinitionService::class )
+			)
+		);
+		add_action( 'admin_menu', array( $container->get( M6ConsentDocumentsScreen::class ), 'menu' ) );
+		add_action( 'admin_enqueue_scripts', array( $container->get( M6ConsentDocumentsScreen::class ), 'assets' ) );
 		add_action( 'rest_api_init', array( $container->get( M6AdminController::class ), 'register' ) );
 		add_action( 'admin_menu', array( $container->get( M6PeopleRegistrationScreen::class ), 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $container->get( M6PeopleRegistrationScreen::class ), 'assets' ) );

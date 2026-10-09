@@ -88,6 +88,7 @@ final class M6ControlCenterScreen {
 		$this->link( $actor, $scope, 'person.view', 'uop_view_people', 'uop-people', __( 'People', 'uop-core' ) );
 		$this->link( $actor, $scope, 'registration.view', 'uop_view_registrations', 'uop-registrations', __( 'Registrations', 'uop-core' ) );
 		$this->link( $actor, $scope, 'communication.send', 'uop_manage_settings', 'uop-operations', __( 'Communication and privacy', 'uop-core' ) );
+		$this->link( $actor, $scope, 'privacy.manage', 'uop_manage_privacy', 'uop-consents', __( 'Consent documents', 'uop-core' ) );
 		$this->link( $actor, $scope, 'audit.view', 'uop_view_audit', 'uop-audit', __( 'Audit trail', 'uop-core' ) );
 		echo '</nav><div class="uop-m6-console__grid">';
 
@@ -109,7 +110,8 @@ final class M6ControlCenterScreen {
 			echo '<p>' . esc_html( sprintf( __( 'Active retention rules: %d', 'uop-core' ), $active ) ) . '</p>';
 			/* translators: %d: Number of failed durable outbox categories. */
 			echo '<p>' . esc_html( sprintf( __( 'Retention recovery categories: %d', 'uop-core' ), count( $failures ) ) ) . '</p>';
-			echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=uop-operations#uop-privacy' ) ) . '">' . esc_html__( 'Open privacy operations', 'uop-core' ) . '</a></p></section>';
+			echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=uop-operations#uop-privacy' ) ) . '">' . esc_html__( 'Open privacy operations', 'uop-core' ) . '</a></p>';
+			echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=uop-consents' ) ) . '">' . esc_html__( 'Manage consent documents', 'uop-core' ) . '</a></p></section>';
 		}
 		if ( $this->allowed( $actor, $scope, 'export.create', 'uop_export_data' ) ) {
 			$this->heading( __( 'Private exports', 'uop-core' ), __( 'Export jobs are restricted, time-limited and never downloadable from this overview.', 'uop-core' ) );
