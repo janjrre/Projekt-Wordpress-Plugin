@@ -19,6 +19,8 @@ use WP_REST_Request;
 /** Auth never follows email addresses; only linked or live delegated people. */
 final class PeopleController extends BaseController {
 	/**
+	 * Shared API contract or operation.
+	 *
 	 * @param M6ReadService $reads  Field-policy filtered DTOs.
 	 * @param PersonService $people Audited, optimistic edit commands.
 	 */
@@ -37,6 +39,8 @@ final class PeopleController extends BaseController {
 	}
 
 	/**
+	 * Shared API contract or operation.
+	 *
 	 * @param WP_REST_Request $request Current request.
 	 * @return bool|WP_Error
 	 */
@@ -53,6 +57,8 @@ final class PeopleController extends BaseController {
 	}
 
 	/**
+	 * Shared API contract or operation.
+	 *
 	 * @param WP_REST_Request $request Current request.
 	 * @return array<string, mixed>|WP_Error
 	 */
@@ -73,8 +79,15 @@ final class PeopleController extends BaseController {
 			$body = $this->strict_json_object(
 				$request,
 				array(
-					'display_name' => array( 'type' => 'string', 'minLength' => 1, 'maxLength' => 191 ),
-					'version'      => array( 'type' => 'integer', 'minimum' => 1 ),
+					'display_name' => array(
+						'type'      => 'string',
+						'minLength' => 1,
+						'maxLength' => 191,
+					),
+					'version'      => array(
+						'type'    => 'integer',
+						'minimum' => 1,
+					),
 				),
 				array( 'display_name', 'version' )
 			);

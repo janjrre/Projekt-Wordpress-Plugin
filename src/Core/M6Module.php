@@ -29,6 +29,8 @@ final class M6Module implements ModuleInterface {
 	}
 
 	/**
+	 * Shared API contract or operation.
+	 *
 	 * @param ServiceContainer $container Shared scoped dependencies.
 	 */
 	public function register( ServiceContainer $container ): void {

@@ -90,7 +90,6 @@ final class PersonService {
 	 * @param string        $utc_now     UTC change timestamp.
 	 * @param CorrelationId $correlation Command trace.
 	 * @throws InvalidArgumentException When the new name is invalid.
-	 * @throws RuntimeException When unauthorized, absent or version-conflicted.
 	 */
 	public function rename( Actor $actor, OrgScope $scope, PublicId $person, int $version, string $name, string $utc_now, CorrelationId $correlation ): void {
 		$name = trim( $name );

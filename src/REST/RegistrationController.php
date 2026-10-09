@@ -23,6 +23,8 @@ use WP_REST_Response;
 /** Every command delegates to the existing auditable application services. */
 final class RegistrationController extends BaseController {
 	/**
+	 * Shared API contract or operation.
+	 *
 	 * @param M6ReadService                 $reads        Safe projected registration read models.
 	 * @param RegistrationService           $registrations Idempotent submission writer.
 	 * @param RegistrationTransitionService $transitions  Non-capacity state transitions.
@@ -53,6 +55,8 @@ final class RegistrationController extends BaseController {
 	}
 
 	/**
+	 * Shared API contract or operation.
+	 *
 	 * @param WP_REST_Request $request Current request.
 	 * @return bool|WP_Error
 	 */
@@ -93,6 +97,8 @@ final class RegistrationController extends BaseController {
 	}
 
 	/**
+	 * Shared API contract or operation.
+	 *
 	 * @param WP_REST_Request $request Route request.
 	 * @return array<string, mixed>|WP_Error
 	 */
@@ -139,7 +145,10 @@ final class RegistrationController extends BaseController {
 		}
 		try {
 			$id = $this->registrations->submit( $this->current_actor(), $scope, $person, $event, $when, $command, $body['fields'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
-			return new WP_REST_Response( array( 'public_id' => $id->to_string(), 'status' => 'submitted' ), 201 );
+			return new WP_REST_Response( array(
+				'public_id' => $id->to_string(),
+				'status'    => 'submitted',
+			), 201 );
 		} catch ( InvalidArgumentException ) {
 			return RestError::for_kind( 'validation' );
 		} catch ( RuntimeException ) {
@@ -155,7 +164,10 @@ final class RegistrationController extends BaseController {
 	 */
 	public function cancel( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
-			$body = $this->strict_json_object( $request, array( 'command_id' => array( 'type' => 'string' ) ), array( 'command_id' ) );
+			$body = $this->strict_json_object( $request, array(
+				'command_id' => array( 'type' => 'string' ),
+			),
+			array( 'command_id' ) );
 			$command = PublicId::from_string( $body['command_id'] );
 		} catch ( InvalidArgumentException ) {
 			return RestError::for_kind( 'invalid_schema' );
@@ -180,7 +192,10 @@ final class RegistrationController extends BaseController {
 			} elseif ( 'cancelled' !== $status ) {
 				return RestError::for_kind( 'conflict' );
 			}
-			return new WP_REST_Response( array( 'public_id' => $id->to_string(), 'status' => 'cancelled' ), 200 );
+			return new WP_REST_Response( array(
+				'public_id' => $id->to_string(),
+				'status'    => 'cancelled',
+			), 200 );
 		} catch ( InvalidArgumentException | RuntimeException ) {
 			return RestError::for_kind( 'conflict' );
 		}
@@ -213,7 +228,10 @@ final class RegistrationController extends BaseController {
 		}
 		try {
 			$this->transitions->transition( $this->current_actor(), $scope, $id, $body['target'], $command, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
-			return new WP_REST_Response( array( 'public_id' => $id->to_string(), 'status' => $body['target'] ), 200 );
+			return new WP_REST_Response( array(
+				'public_id' => $id->to_string(),
+				'status'    => $body['target'],
+			), 200 );
 		} catch ( InvalidArgumentException | RuntimeException ) {
 			return RestError::for_kind( 'conflict' );
 		}
@@ -232,7 +250,39 @@ final class RegistrationController extends BaseController {
 				$request,
 				array(
 					'registration_id' => array( 'type' => 'string' ),
-					'token'           => array( 'type' => 'string', 'pattern' => '^[0-9a-f]{64}$' ),
+					'token'           => array(
+						'type'    => 'string',
+						'pattern' => '^[0-9a-f]{64},
+				),
+				array( 'registration_id', 'token' )
+			);
+			$id = PublicId::from_string( $body['registration_id'] );
+		} catch ( InvalidArgumentException ) {
+			return RestError::for_kind( 'invalid_schema' );
+		}
+		$scope = $this->organization_scope();
+		if ( ! $scope ) {
+			return RestError::for_kind( 'unavailable' );
+		}
+		$key   = 'uop_verify_' . hash( 'sha256', $scope->id . ':' . $id->to_string() );
+		$tries = (int) get_transient( $key );
+		if ( $tries >= 10 ) {
+			return RestError::for_kind( 'rate_limited' );
+		}
+		// WordPress transients are a secondary abuse guard; bearer secrets remain 256-bit.
+		set_transient( $key, $tries + 1, 15 * MINUTE_IN_SECONDS );
+		try {
+			$this->verification->verify( $scope, $id, $body['token'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
+		} catch ( InvalidArgumentException | RuntimeException ) {
+			return RestError::for_kind( 'unavailable' );
+		}
+		$response = new WP_REST_Response( array( 'status' => 'received' ), 202 );
+		$response->header( 'Cache-Control', 'private, no-store, max-age=0' );
+		return $response;
+	}
+}
+,
+					),
 				),
 				array( 'registration_id', 'token' )
 			);

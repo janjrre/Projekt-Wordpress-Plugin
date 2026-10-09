@@ -20,6 +20,8 @@ use UOP\Infrastructure\Database\PersonRepository;
 /** This service is shared by REST and the upcoming admin and portal screens. */
 final class M6ReadService {
 	/**
+	 * Shared API contract or operation.
+	 *
 	 * @param PersonRepository     $people      Organization-scoped person storage.
 	 * @param DelegationRepository $delegations Live per-person delegation grants.
 	 * @param Connection           $db          Scoped database adapter.
@@ -63,7 +65,7 @@ final class M6ReadService {
 				continue;
 			}
 			$seen[ $id ] = true;
-			$row = $this->people->by_internal_id( $scope, $id );
+			$row        = $this->people->by_internal_id( $scope, $id );
 			if ( ! $row || 'active' !== $row['status'] ) {
 				continue;
 			}
@@ -101,7 +103,7 @@ final class M6ReadService {
 		if ( ! $this->policy->can( $actor, 'person.view', $resource )->allowed ) {
 			return null;
 		}
-		$dto = array(
+		$dto      = array(
 			'public_id'    => PublicId::from_binary( (string) $row['public_id'] )->to_string(),
 			'display_name' => (string) $row['display_name'],
 			'status'       => (string) $row['status'],
@@ -150,7 +152,12 @@ final class M6ReadService {
 		if ( null !== $after ) {
 			$cursor = $this->db->rows(
 				'SELECT id FROM %i WHERE organization_id = %d AND person_id = %d AND public_id = %s LIMIT 1',
-				array( $this->prefix . 'registrations', $scope->id, $person_id, $after->to_binary() )
+				array(
+					$this->prefix . 'registrations',
+					$scope->id,
+					$person_id,
+					$after->to_binary(),
+				)
 			);
 			if ( ! $cursor || null === $this->registration( $actor, $scope, $after ) ) {
 				return null;
