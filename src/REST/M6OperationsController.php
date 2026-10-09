@@ -24,8 +24,8 @@ final class M6OperationsController extends BaseController {
 	/**
 	 * Bind shared projection and existing application commands.
 	 *
-	 * @param M6OperationsReadService  $reads       Live, policy-projected views.
-	 * @param ConsentDefinitionService $definitions Approved immutable documents.
+	 * @param M6OperationsReadService   $reads       Live, policy-projected views.
+	 * @param ConsentDefinitionService  $definitions Approved immutable documents.
 	 * @param ConsentRecordService      $records    Authorized withdrawal service.
 	 * @param CapacityAllocationService $allocation Transaction-safe seat allocation.
 	 */
@@ -208,7 +208,7 @@ final class M6OperationsController extends BaseController {
 	 */
 	public function allocate( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
-			$body = $this->strict_json_object(
+			$body    = $this->strict_json_object(
 				$request,
 				array(
 					'bucket_id'  => array( 'type' => 'string' ),
