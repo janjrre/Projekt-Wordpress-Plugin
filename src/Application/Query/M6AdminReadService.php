@@ -76,6 +76,7 @@ final class M6AdminReadService {
 				$field    = new FieldDefinition( 'display_name', 'personal', true, true, true, true );
 
 				$dto['can_edit'] = $this->policy->can( $actor, 'person.edit', $resource, $field )->allowed;
+
 				$items[] = $dto;
 			}
 		}
