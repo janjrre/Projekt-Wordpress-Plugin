@@ -638,4 +638,29 @@ final class M4RegistrationTest extends TestCase {
 		wp_update_post(['ID'=>$post_id,'post_status'=>'publish']);
 		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
 	}
+
+	/** The page cursor must cancel more than 100 attendees without skipping anyone. */
+	public function test_event_cancellation_completes_multiple_registration_pages(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$services,$first,$event,$form,$now]=$this->setup_registration($draft);
+		for ($i=0;$i<102;++$i) {
+			$person=0===$i?$first:PublicId::generate();
+			if ($i>0) {
+				$services['people']->create($this->scope,$person,'Bulk '.$i,null,$now);
+			}
+			$services['submit']->submit($services['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'Bulk '.$i],$now,CorrelationId::generate());
+		}
+		$baseline=(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registration_snapshots'])[0]['n'];
+		self::assertSame(102,$baseline);
+		$cancelled=$services['cancel_event']->cancel($services['actor'],$this->scope,$event,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertSame(102,$cancelled);
+		$rows=$this->db->rows('SELECT id FROM %i WHERE status = %s',[$this->prefix.'registrations','cancelled']);
+		self::assertCount(102,$rows);
+		$history=$this->db->rows('SELECT id FROM %i WHERE reason_code = %s',[$this->prefix.'registration_history','event_cancelled']);
+		self::assertCount(102,$history);
+		$events=$this->db->rows('SELECT id FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','registration.event_cancelled']);
+		self::assertCount(102,$events);
+		self::assertSame($baseline,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registration_snapshots'])[0]['n']);
+		self::assertSame(0,$services['cancel_event']->cancel($services['actor'],$this->scope,$event,PublicId::generate(),$now,CorrelationId::generate()));
+	}
 }
