@@ -52,7 +52,8 @@ final class M5EmailTemplatesTest extends TestCase {
 				self::assertSame(0,$default['revision']);
 				self::assertNull($default['public_id']);
 				self::assertSame(64,strlen($default['hash']));
-				$out=$s['service']->preview($s['actor'],$this->scope,$key,$locale,$preview_vars);
+				$allowed=array_intersect_key($preview_vars,array_flip($s['catalog']->variables($key)));
+				$out=$s['service']->preview($s['actor'],$this->scope,$key,$locale,$allowed);
 				self::assertStringNotContainsString('<Alex & Co>',$out['body_html']);
 				self::assertStringContainsString('&lt;Alex &amp; Co&gt;',$out['body_html']);
 				self::assertStringNotContainsString('<script>',$out['subject']);
@@ -89,7 +90,7 @@ final class M5EmailTemplatesTest extends TestCase {
 			self::fail('No-op update advanced revision');
 		} catch(RuntimeException) { self::assertTrue(true); }
 		self::assertSame(2,(int)$this->db->rows('SELECT revision FROM %i WHERE organization_id = %d',[$this->prefix.'email_templates',$this->scope->id])[0]['revision']);
-		self::assertCount(2,$this->db->rows("SELECT id FROM %i WHERE event_name='email_template.saved'",[$this->prefix.'domain_events']));
+		self::assertCount(2,$this->db->rows("SELECT id FROM %i WHERE event_name='mail.template_saved'",[$this->prefix.'domain_events']));
 		self::assertCount(2,$this->db->rows("SELECT id FROM %i WHERE action='email_template.saved'",[$this->prefix.'audit_log']));
 	}
 

@@ -115,7 +115,7 @@ final class EmailTemplateService {
 				$event    = PublicId::generate();
 				$object   = new PolicyObject( $scope->id, 'organization', $scope->id );
 				$this->audit->append( $scope, $actor, 'email_template.saved', $object, 'success', $correlation, $event );
-				$this->outbox->append( $scope, $event, 'email_template', $override['id'], 'email_template.saved', $correlation, array( 'public_id' => $override['public_id'] ) );
+				$this->outbox->append( $scope, $event, 'email_template', $override['id'], 'mail.template_saved', $correlation, array( 'public_id' => $override['public_id'] ) );
 				return array(
 					'public_id' => $override['public_id'],
 					'revision'  => $override['revision'],
