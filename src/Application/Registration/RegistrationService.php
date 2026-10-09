@@ -32,14 +32,14 @@ final class RegistrationService {
 	/**
 	 * Bind the M2 authorization, historical persistence and audit boundary.
 	 *
-	 * @param RegistrationRepository   $registrations Scoped registration storage.
-	 * @param PolicyService            $policy        Central authorization.
-	 * @param TransactionManager       $tx            Atomic command transaction.
-	 * @param AuditWriter              $audit         Durable minimal audit.
-	 * @param OutboxRepository         $outbox        Transactional domain events.
-	 * @param RegistrationFactsService $facts       Scoped and policy-filtered eligibility facts.
-	 * @param PersonRepository         $people      Scoped guest person persistence.
-	 * @param ConsentRecordService|null $consents  Optional immutable consent evidence writer.
+	 * @param RegistrationRepository    $registrations Scoped registration storage.
+	 * @param PolicyService             $policy        Central authorization.
+	 * @param TransactionManager        $tx            Atomic command transaction.
+	 * @param AuditWriter               $audit         Durable minimal audit.
+	 * @param OutboxRepository          $outbox        Transactional domain events.
+	 * @param RegistrationFactsService  $facts         Scoped and policy-filtered eligibility facts.
+	 * @param PersonRepository          $people        Scoped guest person persistence.
+	 * @param ConsentRecordService|null $consents      Optional immutable consent evidence writer.
 	 */
 	public function __construct(
 		private RegistrationRepository $registrations,
@@ -219,9 +219,9 @@ final class RegistrationService {
 		if ( array_diff( array_keys( $input ), array_keys( $types ) ) ) {
 			throw new InvalidArgumentException( 'Unknown form field.' );
 		}
-		$trusted = $this->facts->load( $actor, $scope, (int) $person['id'], $event_post_id, $occurrence_id, $conditions );
-		$engine  = new ConditionEngine();
-		$stored  = array();
+		$trusted          = $this->facts->load( $actor, $scope, (int) $person['id'], $event_post_id, $occurrence_id, $conditions );
+		$engine           = new ConditionEngine();
+		$stored           = array();
 		$pending_consents = array();
 		foreach ( $schema['fields'] as $field ) {
 			$key     = $field['key'];
@@ -296,8 +296,8 @@ final class RegistrationService {
 		if ( 1 === (int) $form['require_email_verification'] && null === $contact_email ) {
 			throw new InvalidArgumentException( 'Contact email is required for verification.' );
 		}
-		$uuid       = PublicId::generate();
-		$version_id = PublicId::from_binary( $form['form_version_public_id'] );
+		$uuid            = PublicId::generate();
+		$version_id      = PublicId::from_binary( $form['form_version_public_id'] );
 		$evidence_writer = null;
 		if ( $pending_consents ) {
 			$evidence_writer = function ( int $registration_id ) use ( $actor, $scope, $person, $event_post_id, $pending_consents, $stored, $values, $utc_now, $correlation, $guest ): array {
@@ -308,13 +308,31 @@ final class RegistrationService {
 						throw new RuntimeException( 'Consent evidence service unavailable.' );
 					}
 					$record = $this->consents->record_submission(
-						$actor, $scope, (int) $person['id'], $event_post_id, $registration_id,
-						$consent['version'], $consent['decision'], $consent['required'], $guest, $utc_now, $correlation
+						$actor,
+						$scope,
+						(int) $person['id'],
+						$event_post_id,
+						$registration_id,
+						$consent['version'],
+						$consent['decision'],
+						$consent['required'],
+						$guest,
+						$utc_now,
+						$correlation
 					);
 					$historical_fields[ $key ] = $record['evidence'];
-					$reference_values[ $key ]  = array( array( 'slot' => 'value_reference', 'value' => $record['reference_id'], 'ordinal' => 0 ) );
+					$reference_values[ $key ]  = array(
+						array(
+							'slot'    => 'value_reference',
+							'value'   => $record['reference_id'],
+							'ordinal' => 0,
+						),
+					);
 				}
-				return array( 'fields' => $historical_fields, 'values' => $reference_values );
+				return array(
+					'fields' => $historical_fields,
+					'values' => $reference_values,
+				);
 			};
 		}
 		$id         = $this->registrations->insert( $scope, $uuid, $command_id, (int) $person['id'], $actor->user_id, $event_post_id, $occurrence_id, (int) $form['form_version_id'], $version_id, $stored, $values, $types, $contact_email, $utc_now, $correlation, $guest ? 'guest' : 'portal', $evidence_writer );

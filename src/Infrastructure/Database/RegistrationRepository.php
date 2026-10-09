@@ -128,6 +128,7 @@ final class RegistrationRepository {
 	 * @param string        $utc_now     Timestamp.
 	 * @param CorrelationId $correlation Command trace.
 	 * @param string        $source      Internal portal or guest source.
+	 * @param callable|null $evidence_writer Optional post-insert consent evidence callback.
 	 * @return int Registration internal ID.
 	 * @throws RuntimeException If any required write fails.
 	 */

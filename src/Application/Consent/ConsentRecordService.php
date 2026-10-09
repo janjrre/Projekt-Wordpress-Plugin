@@ -87,11 +87,18 @@ final class ConsentRecordService {
 			}
 			$context = self::context( $decision_policy->reason );
 		}
-		$uuid = PublicId::generate();
+		$uuid  = PublicId::generate();
 		$value = $decision ? 'granted' : 'denied';
-		$id = $this->records->record_submission(
-			$scope, $uuid, (int) $document['id'], $person_id, $actor->user_id,
-			$registration, $value, $context, $now
+		$id    = $this->records->record_submission(
+			$scope,
+			$uuid,
+			(int) $document['id'],
+			$person_id,
+			$actor->user_id,
+			$registration,
+			$value,
+			$context,
+			$now
 		);
 		$event = PublicId::generate();
 		$this->audit->append( $scope, $actor, 'consent.decided', $object, 'success', $correlation, $event );
@@ -134,7 +141,7 @@ final class ConsentRecordService {
 					|| (int) ( $old['event_post_id'] ?? 0 ) < 1 ) {
 					throw new RuntimeException( 'Current consent evidence unavailable.' );
 				}
-				$object = new PolicyObject( $scope->id, 'registration', (int) $old['registration_id'], (int) $old['subject_person_id'], (int) $old['event_post_id'] );
+				$object     = new PolicyObject( $scope->id, 'registration', (int) $old['registration_id'], (int) $old['subject_person_id'], (int) $old['event_post_id'] );
 				$permission = $this->policy->can( $actor, 'registration.cancel', $object );
 				if ( ! $permission->allowed ) {
 					throw new RuntimeException( 'Consent withdrawal access denied.' );
@@ -147,8 +154,8 @@ final class ConsentRecordService {
 					throw new RuntimeException( 'Consent grant has already been superseded.' );
 				}
 				$context = self::context( $permission->reason );
-				$id = $this->records->withdraw( $scope, $withdrawal, $old, $actor->user_id, $context, $now );
-				$event = PublicId::generate();
+				$id      = $this->records->withdraw( $scope, $withdrawal, $old, $actor->user_id, $context, $now );
+				$event   = PublicId::generate();
 				$this->audit->append( $scope, $actor, 'consent.withdrawn', $object, 'success', $correlation, $event );
 				$this->outbox->append( $scope, $event, 'consent', $id, 'consent.withdrawn', $correlation, array( 'public_id' => $withdrawal->to_string() ) );
 				return $withdrawal;
