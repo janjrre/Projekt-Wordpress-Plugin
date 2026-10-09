@@ -34,6 +34,7 @@ use UOP\Infrastructure\Database\EmailTemplateRepository;
 use UOP\Infrastructure\Database\EmailMessageRepository;
 use UOP\Infrastructure\Queue\EmailDeliveryWorker;
 use UOP\Infrastructure\Queue\ExportJobWorker;
+use UOP\REST\ExportController;
 
 /** Register private M5 services; public routes require a later M6 gate. */
 final class M5Module implements ModuleInterface {
@@ -79,6 +80,8 @@ final class M5Module implements ModuleInterface {
 			)
 		);
 		$container->get( ExportJobWorker::class )->register_hooks();
+		$container->set( ExportController::class, static fn ( ServiceContainer $c ) => new ExportController( $c->get( ExportJobService::class ), $c->get( PolicyService::class ) ) );
+		add_action( 'rest_api_init', array( $container->get( ExportController::class ), 'register' ) );
 		$container->set( EmailTemplateCatalog::class, static fn () => new EmailTemplateCatalog() );
 		$container->set( EmailTemplateRules::class, static fn ( ServiceContainer $c ) => new EmailTemplateRules( $c->get( EmailTemplateCatalog::class ) ) );
 		$container->set( EmailTemplateRepository::class, static fn ( ServiceContainer $c ) => new EmailTemplateRepository( $c->get( Connection::class ), $prefix ) );
