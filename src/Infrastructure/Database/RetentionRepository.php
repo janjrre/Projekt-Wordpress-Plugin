@@ -109,7 +109,10 @@ final class RetentionRepository {
 			if ( ! $rows || $this->held( $rows[0]['registration_hold'], $now ) || $this->held( $rows[0]['person_hold'], $now ) ) {
 				return null;
 			}
-			return array( 'object_id' => (int) $rows[0]['registration_id'], 'subject_id' => (int) $rows[0]['person_id'] );
+			return array(
+				'object_id'  => (int) $rows[0]['registration_id'],
+				'subject_id' => (int) $rows[0]['person_id'],
+			);
 		}
 		if ( ! in_array( $data_class, array( 'persons', 'profile_values' ), true ) ) {
 			throw new RuntimeException( 'Unsupported retention target.' );
@@ -132,9 +135,9 @@ final class RetentionRepository {
 			return null;
 		}
 		return array(
-				'object_id' => $id,
-				'subject_id' => $id,
-			);
+			'object_id'  => $id,
+			'subject_id' => $id,
+		);
 	}
 
 	/**
