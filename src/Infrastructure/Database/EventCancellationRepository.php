@@ -74,6 +74,10 @@ final class EventCancellationRepository {
 			"UPDATE %i SET status = 'cancelled', updated_at = %s WHERE organization_id = %d AND event_post_id = %d AND status <> 'cancelled'",
 			array( $this->prefix . 'capacity_buckets', $utc_now, $scope->id, $post )
 		);
+		$this->db->execute(
+			"UPDATE %i SET status = 'cancelled', updated_at = %s WHERE organization_id = %d AND event_post_id = %d AND status = 'scheduled'",
+			array( $this->prefix . 'event_occurrences', $utc_now, $scope->id, $post )
+		);
 	}
 
 	/**

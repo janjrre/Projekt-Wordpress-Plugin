@@ -436,6 +436,8 @@ final class M4RegistrationTest extends TestCase {
 	public function test_event_cancellation_releases_offers_claims_and_emits_per_recipient_events(): void {
 		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
 		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$post_id=(int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		$occurrence=$s['event']->add_occurrence($s['actor'],$this->scope,$post_id,new OccurrenceWindow('2030-04-15T12:00:00+02:00','2030-04-15T14:00:00+02:00','Europe/Berlin'),$now,CorrelationId::generate());
 		$people=[$person];
 		for ($i=1;$i<7;++$i) {
 			$id=PublicId::generate();
@@ -463,6 +465,11 @@ final class M4RegistrationTest extends TestCase {
 		self::assertSame('event_cancelled',$states[1]['status_reason_code']);
 		self::assertNull($states[5]['status_reason_code']);
 		self::assertSame('cancelled',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['status']);
+		self::assertSame('cancelled',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'event_occurrences',$occurrence->to_binary()])[0]['status']);
+		try {
+			$s['event']->add_occurrence($s['actor'],$this->scope,$post_id,new OccurrenceWindow('2030-04-16T12:00:00+02:00','2030-04-16T14:00:00+02:00','Europe/Berlin'),$now,CorrelationId::generate());
+			self::fail('Cancelled event permitted a new scheduled occurrence');
+		} catch (RuntimeException) { self::assertTrue(true); }
 		self::assertSame('cancelled',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'capacity_buckets',$bucket->to_binary()])[0]['status']);
 		self::assertSame([], $this->db->rows("SELECT id FROM %i WHERE status IN ('held','confirmed')",[$this->prefix.'capacity_claims']));
 		self::assertSame('cancelled',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'waitlist_offers',PublicId::from_string($offer['public_id'])->to_binary()])[0]['status']);

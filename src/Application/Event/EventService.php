@@ -96,7 +96,7 @@ final class EventService {
 		$uuid     = PublicId::generate();
 		$this->tx->run(
 			function () use ( $actor, $scope, $post_id, $window, $utc_now, $correlation, $resource, $uuid ): void {
-				$event = $this->events->find( $scope, $post_id );
+				$event = $this->events->lock_for_update( $scope, $post_id );
 				if ( ! $event || 'active' !== $event['status'] || $event['timezone'] !== $window->zone
 					|| ! user_can( $actor->user_id, 'edit_post', $post_id )
 					|| ! $this->policy->can( $actor, 'event.manage', $resource )->allowed ) {
