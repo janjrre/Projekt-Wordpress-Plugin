@@ -247,14 +247,11 @@ final class RegistrationService {
 				throw new InvalidArgumentException( 'Required field is missing.' );
 			}
 			if ( 'consent' === $field['type'] ) {
-				if ( null === $value && ! $field['required'] ) {
+				if ( null === $value ) {
 					continue;
 				}
 				if ( ! is_bool( $value ) ) {
 					throw new InvalidArgumentException( 'Consent requires an explicit boolean decision.' );
-				}
-				if ( $field['required'] && ! $value ) {
-					throw new InvalidArgumentException( 'Required consent must be granted.' );
 				}
 				if ( ! $this->consents ) {
 					throw new RuntimeException( 'Consent evidence service unavailable.' );
