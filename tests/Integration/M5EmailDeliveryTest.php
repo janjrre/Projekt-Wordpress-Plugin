@@ -69,7 +69,7 @@ final class M5EmailDeliveryTest extends TestCase {
 		$events=$this->db->rows("SELECT payload_json FROM %i WHERE event_name='mail.queued'",[$this->prefix.'domain_events']);
 		self::assertCount(1,$events);
 		self::assertStringNotContainsString('TOP_SECRET',$events[0]['payload_json']);
-		self::assertSame([['id'=>1]],$this->db->rows('SELECT id FROM %i ORDER BY id',[$this->prefix.'email_messages']));
+		self::assertSame([1],array_map('intval',array_column($this->db->rows('SELECT id FROM %i ORDER BY id',[$this->prefix.'email_messages']),'id')));
 	}
 
 	public function test_duplicate_jobs_send_only_once_and_preserve_content_after_template_edit(): void {
