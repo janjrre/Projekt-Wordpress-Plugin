@@ -65,6 +65,7 @@ final class M5ConsentRecordsTest extends TestCase {
 		$s['definitions']->publish($s['actor'],$this->scope,$newsletter,'I optionally agree to receive updates about future events.',$now,CorrelationId::generate());
 		$draft=['schema_version'=>1,'fields'=>[
 			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'contact','type'=>'email','label'=>'Contact email','required'=>false],
 			['key'=>'portrait','type'=>'consent','label'=>'Portrait consent','required'=>true,'consent_definition_public_id'=>$portrait->to_string()],
 			['key'=>'newsletter','type'=>'consent','label'=>'News consent','required'=>false,'consent_definition_public_id'=>$newsletter->to_string()],
 		]];
@@ -195,5 +196,35 @@ final class M5ConsentRecordsTest extends TestCase {
 		}
 		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'registrations']));
 		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'consent_records']));
+	}
+
+	/** Anonymous consent never becomes an account or an editable boolean value. */
+	public function test_guest_consent_is_attributed_to_subject_without_actor_or_orphan(): void {
+		[$s,$event,$person,$now]=$this->prepared();
+		$this->db->execute("UPDATE %i SET visibility = 'public', require_email_verification = 1 WHERE organization_id = %d AND public_id = %s",[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]);
+		$input=['name'=>'Guest','contact'=>'guest@example.invalid','portrait'=>true,'newsletter'=>false];
+		$key=PublicId::generate();
+		$registration=$s['submit']->submit_guest($this->scope,$event,null,$key,$input,$now,CorrelationId::generate());
+		self::assertSame($registration->to_string(),$s['submit']->submit_guest($this->scope,$event,null,$key,$input,$now,CorrelationId::generate())->to_string());
+		$row=$this->db->rows('SELECT id,person_id,actor_user_id,source FROM %i WHERE organization_id = %d AND public_id = %s',[$this->prefix.'registrations',$this->scope->id,$registration->to_binary()])[0];
+		self::assertSame('guest',$row['source']);
+		self::assertNull($row['actor_user_id']);
+		$evidence=$this->db->rows('SELECT public_id,actor_user_id,subject_person_id,auth_context,decision FROM %i WHERE registration_id = %d ORDER BY id',[$this->prefix.'consent_records',(int)$row['id']]);
+		self::assertCount(2,$evidence);
+		self::assertSame(['guest','guest'],array_column($evidence,'auth_context'));
+		self::assertNull($evidence[0]['actor_user_id']);
+		self::assertSame((int)$row['person_id'],(int)$evidence[0]['subject_person_id']);
+		self::assertSame('granted',$evidence[0]['decision']);
+		self::assertNull($this->db->rows('SELECT wp_user_id FROM %i WHERE id = %d',[$this->prefix.'persons',(int)$row['person_id']])[0]['wp_user_id']);
+		try {
+			$s['consent']->withdraw(new Actor(0),$this->scope,PublicId::from_binary($evidence[0]['public_id']),PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Anonymous actor withdrew a consent record');
+		} catch(RuntimeException) { self::assertTrue(true); }
+		$before=(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'persons'])[0]['n'];
+		try {
+			$s['submit']->submit_guest($this->scope,$event,null,PublicId::generate(),['name'=>'Another guest','contact'=>'second@example.invalid','portrait'=>false],$now,CorrelationId::generate());
+			self::fail('Missing required guest consent accepted');
+		} catch(InvalidArgumentException) { self::assertTrue(true); }
+		self::assertSame($before,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'persons'])[0]['n']);
 	}
 }
