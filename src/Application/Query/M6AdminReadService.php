@@ -25,9 +25,9 @@ final class M6AdminReadService {
 	/**
 	 * Reuse the authoritative M6 detail projection and policy.
 	 *
-	 * @param M6AdminListRepository $lists  Tenant-owned opaque cursors.
-	 * @param M6ReadService         $reads  Shared per-object projection.
-	 * @param PolicyService          $policy        Live authorization.
+	 * @param M6AdminListRepository      $lists         Tenant-owned opaque cursors.
+	 * @param M6ReadService              $reads         Shared per-object projection.
+	 * @param PolicyService              $policy        Live authorization.
 	 * @param RegistrationReadRepository $registrations Trusted registration owner lookup.
 	 */
 	public function __construct( private M6AdminListRepository $lists, private M6ReadService $reads, private PolicyService $policy, private RegistrationReadRepository $registrations ) {}
@@ -74,6 +74,7 @@ final class M6AdminReadService {
 			if ( null !== $dto ) {
 				$resource = new PolicyObject( $scope->id, 'person', (int) $row['id'] );
 				$field    = new FieldDefinition( 'display_name', 'personal', true, true, true, true );
+
 				$dto['can_edit'] = $this->policy->can( $actor, 'person.edit', $resource, $field )->allowed;
 				$items[] = $dto;
 			}
@@ -93,6 +94,7 @@ final class M6AdminReadService {
 	 * @param PublicId|null $cursor Previous opaque page anchor.
 	 * @param string        $status Valid V1 lifecycle state or empty.
 	 * @return array<string,mixed>|null
+	 * @throws InvalidArgumentException For invalid V1 status values.
 	 */
 	public function registrations( Actor $actor, OrgScope $scope, ?PublicId $cursor, string $status ): ?array {
 		if ( ! $this->can_list( $actor, $scope, 'registrations' ) ) {
@@ -113,10 +115,13 @@ final class M6AdminReadService {
 			$dto = $this->reads->registration( $actor, $scope, $id );
 			if ( null !== $dto ) {
 				$person = $this->reads->person( $actor, $scope, PublicId::from_string( (string) $dto['person_id'] ) );
+
 				$dto['person_name'] = $person ? (string) $person['display_name'] : '';
+
 				$owner = $this->registrations->find( $scope, $id );
 				if ( $owner ) {
 					$object = new PolicyObject( $scope->id, 'registration', (int) $owner['id'], (int) $owner['person_id'], (int) $owner['event_post_id'] );
+
 					$dto['can_review']   = $this->policy->can( $actor, 'registration.review', $object )->allowed;
 					$dto['can_cancel']   = $this->policy->can( $actor, 'registration.cancel', $object )->allowed;
 					$dto['can_allocate'] = $dto['can_review'] && $this->policy->can( $actor, 'capacity.manage', $object )->allowed;
