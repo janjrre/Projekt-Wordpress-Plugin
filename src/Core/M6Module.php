@@ -7,11 +7,13 @@
 
 namespace UOP\Core;
 
+use UOP\Admin\M6PeopleRegistrationScreen;
 use UOP\Application\Consent\ConsentDefinitionService;
 use UOP\Application\Consent\ConsentRecordService;
 use UOP\Application\Identity\PersonService;
 use UOP\Application\Policy\PolicyService;
 use UOP\Application\Query\M6ReadService;
+use UOP\Application\Query\M6AdminReadService;
 use UOP\Application\Query\M6OperationsReadService;
 use UOP\Application\Registration\CapacityAllocationService;
 use UOP\Application\Registration\CapacityLifecycleService;
@@ -23,11 +25,13 @@ use UOP\Infrastructure\Database\Connection;
 use UOP\Infrastructure\Database\ConsentRepository;
 use UOP\Infrastructure\Database\EventRepository;
 use UOP\Infrastructure\Database\M6OperationsRepository;
+use UOP\Infrastructure\Database\M6AdminListRepository;
 use UOP\Infrastructure\Database\DelegationRepository;
 use UOP\Infrastructure\Database\PersonRepository;
 use UOP\Infrastructure\Database\RegistrationReadRepository;
 use UOP\REST\PeopleController;
 use UOP\REST\M6OperationsController;
+use UOP\REST\M6AdminController;
 use UOP\REST\RegistrationController;
 
 /** Presentation adapters do not bypass policy, history or capacity locks. */
@@ -99,6 +103,30 @@ final class M6Module implements ModuleInterface {
 				$c->get( CapacityAllocationService::class )
 			)
 		);
+
+		$container->set(
+			M6AdminListRepository::class,
+			static fn ( ServiceContainer $c ) => new M6AdminListRepository( $c->get( Connection::class ), $prefix )
+		);
+		$container->set(
+			M6AdminReadService::class,
+			static fn ( ServiceContainer $c ) => new M6AdminReadService(
+				$c->get( M6AdminListRepository::class ),
+				$c->get( M6ReadService::class ),
+				$c->get( PolicyService::class )
+			)
+		);
+		$container->set(
+			M6AdminController::class,
+			static fn ( ServiceContainer $c ) => new M6AdminController( $c->get( M6AdminReadService::class ) )
+		);
+		$container->set(
+			M6PeopleRegistrationScreen::class,
+			static fn ( ServiceContainer $c ) => new M6PeopleRegistrationScreen( $c->get( M6AdminReadService::class ) )
+		);
+		add_action( 'rest_api_init', array( $container->get( M6AdminController::class ), 'register' ) );
+		add_action( 'admin_menu', array( $container->get( M6PeopleRegistrationScreen::class ), 'menu' ) );
+		add_action( 'admin_enqueue_scripts', array( $container->get( M6PeopleRegistrationScreen::class ), 'assets' ) );
 		add_action( 'rest_api_init', array( $container->get( PeopleController::class ), 'register' ) );
 		add_action( 'rest_api_init', array( $container->get( RegistrationController::class ), 'register' ) );
 		add_action( 'rest_api_init', array( $container->get( M6OperationsController::class ), 'register' ) );
