@@ -619,4 +619,23 @@ final class M4RegistrationTest extends TestCase {
 		} catch (RuntimeException) { self::assertTrue(true); }
 		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'registrations']));
 	}
+
+	/** A reviewed registration cannot acquire a seat while its event is unpublished. */
+	public function test_capacity_decision_rejects_unpublished_event_without_occupying_a_seat(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$registration=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'Applicant'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$post_id=(int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		wp_update_post(['ID'=>$post_id,'post_status'=>'draft']);
+		try {
+			$s['capacity']->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Unpublished event allocated a capacity claim');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'capacity_claims']));
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'waitlist_entries']));
+		self::assertSame('submitted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
+		wp_update_post(['ID'=>$post_id,'post_status'=>'publish']);
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+	}
 }

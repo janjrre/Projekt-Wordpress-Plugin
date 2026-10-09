@@ -106,6 +106,10 @@ final class CapacityAllocationService {
 				if ( ! $locked ) {
 					throw new RuntimeException( 'Capacity bucket unavailable.' );
 				}
+				$post = get_post( (int) $locked['event_post_id'] );
+				if ( ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status ) {
+					throw new RuntimeException( 'Capacity is unavailable for an unpublished event.' );
+				}
 				$row = $this->registrations->lock_registration( $scope, $registration );
 				if ( ! $row || (int) $row['event_post_id'] !== (int) $locked['event_post_id']
 					|| 0 !== (int) $locked['occurrence_id'] ) {
