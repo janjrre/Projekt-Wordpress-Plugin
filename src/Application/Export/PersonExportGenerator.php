@@ -1,6 +1,6 @@
 <?php
 /**
- * Fixed projection for the first safe private CSV export.
+ * Policy-projected, bounded people CSV export.
  *
  * @package UOP
  */
@@ -9,83 +9,83 @@ namespace UOP\Application\Export;
 
 use RuntimeException;
 use UOP\Application\Policy\Actor;
+use UOP\Application\Policy\FieldDefinition;
 use UOP\Application\Policy\PolicyObject;
 use UOP\Application\Policy\PolicyService;
+use UOP\Application\Policy\ProjectionService;
 use UOP\Core\PublicId;
 use UOP\Domain\Organization\OrgScope;
 use UOP\Infrastructure\Database\PageRequest;
 use UOP\Infrastructure\Database\PersonRepository;
 
-/** M5-07 baseline: no arbitrary SQL, private fields, or unbounded export. */
+/** Uses the M2 authoritative object+field policy, not a separate CSV access rule. */
 final class PersonExportGenerator {
 	/**
-	 * Bind the same row-level policy used by admin and REST.
+	 * Bind tenant-scoped people and the same policy as every read channel.
 	 *
-	 * @param PersonRepository $people Scoped people projection.
-	 * @param PolicyService    $policy Live object authorization.
+	 * @param PersonRepository $people Scoped people source.
+	 * @param PolicyService    $policy Live authorization.
 	 */
 	public function __construct( private PersonRepository $people, private PolicyService $policy ) {}
 
 	/**
-	 * Safely construct a bounded, UTF-8 CSV from allowed public metadata.
+	 * Generate a reviewed UTF-8 CSV one bounded keyset page at a time.
 	 *
-	 * @param Actor    $actor Original export owner.
+	 * @param Actor    $actor Original exporting account.
 	 * @param OrgScope $scope Tenant.
-	 * @param array    $columns Strict selectable headers.
-	 * @param string   $status Optional equality status filter.
+	 * @param array    $columns Allowlisted export names.
+	 * @param string   $status Optional fixed equality filter.
 	 * @phpstan-param list<string> $columns
-	 * @return array{body:string,count:int} Private export bytes and included row count.
-	 * @throws RuntimeException When projection exceeds V1 bound.
+	 * @return array{body:string,count:int} Private CSV bytes and count.
+	 * @throws RuntimeException If authorization, encoding, storage or size fails.
 	 */
 	public function generate( Actor $actor, OrgScope $scope, array $columns, string $status ): array {
-		$handle = fopen( 'php://temp/maxmemory:5242880', 'w+b' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Memory-backed ephemeral CSV buffer.
-		if ( false === $handle ) {
-			throw new RuntimeException( 'CSV projection unavailable.' );
-		}
+		CsvExportSchema::columns( $columns );
+		$csv = new CsvStreamEncoder( $columns );
+		$projector = new ProjectionService( $this->policy );
+		$definitions = array(
+			'display_name' => new FieldDefinition( 'display_name', 'personal', true, false, true, false ),
+			'status'       => new FieldDefinition( 'status', 'internal', false, false, false, false ),
+			'primary_email' => new FieldDefinition( 'primary_email', 'personal', false, false, false, false ),
+		);
 		try {
-			if ( false === fputcsv( $handle, $columns, ',', '"', '' ) ) {
-				throw new RuntimeException( 'CSV header encoding failed.' );
-			}
 			$after = 0;
-			$count = 0;
 			do {
-				$rows      = $this->people->page( $scope, new PageRequest( 100, $after ), '' === $status ? array() : array( 'status' => $status ) );
+				$rows = $this->people->page( $scope, new PageRequest( 100, $after ), '' === $status ? array() : array( 'status' => $status ) );
 				$page_size = count( $rows );
 				foreach ( $rows as $row ) {
 					$after = (int) $row['id'];
-					if ( ! $this->policy->can( $actor, 'person.view', new PolicyObject( $scope->id, 'person', $after, null, null, null !== $row['archived_at'] ) )->allowed ) {
+					$object = new PolicyObject( $scope->id, 'person', $after, null, null, null !== $row['archived_at'] );
+					$id = PublicId::from_binary( $row['public_id'] );
+					$projected = $projector->project(
+						$actor,
+						'person.view',
+						$object,
+						$id,
+						$definitions,
+						array(
+							'display_name'  => (string) $row['display_name'],
+							'status'        => (string) $row['status'],
+							'primary_email' => (string) ( $row['primary_email'] ?? '' ),
+						)
+					);
+					if ( null === $projected ) {
 						continue;
 					}
-					$available = array(
-						'public_id'    => PublicId::from_binary( $row['public_id'] )->to_string(),
-						'display_name' => (string) $row['display_name'],
-						'status'       => (string) $row['status'],
-					);
-					$values    = array();
+					$available = array_merge( array( 'public_id' => $projected['public_id'] ), $projected['fields'] );
+					$values = array();
 					foreach ( $columns as $column ) {
-						$value    = $available[ $column ];
-						$values[] = preg_match( '/^\s*[=+\-@\t\r]/u', $value ) ? "'" . $value : $value;
+						if ( ! array_key_exists( $column, $available ) ) {
+							throw new RuntimeException( 'CSV field-level authorization denied.' );
+						}
+						$values[] = (string) $available[ $column ];
 					}
-					if ( false === fputcsv( $handle, $values, ',', '"', '' ) ) {
-						throw new RuntimeException( 'CSV row encoding failed.' );
-					}
-					++$count;
-					if ( $count > 5000 ) {
-						throw new RuntimeException( 'CSV export exceeds the V1 row bound.' );
-					}
+					$csv->row( $values );
 				}
 			} while ( 100 === $page_size );
-			rewind( $handle );
-			$body = stream_get_contents( $handle );
-			if ( false === $body || strlen( $body ) > 5242880 ) {
-				throw new RuntimeException( 'CSV export exceeds the private storage bound.' );
-			}
-			return array(
-				'body'  => $body,
-				'count' => $count,
-			);
+			return $csv->finish();
 		} finally {
-			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close ephemeral buffer.
+			$csv->close();
 		}
 	}
 }
