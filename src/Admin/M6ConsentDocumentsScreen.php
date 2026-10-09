@@ -20,8 +20,8 @@ final class M6ConsentDocumentsScreen {
 	/**
 	 * Bind policy, scoped summaries and the audited M5 consent service.
 	 *
-	 * @param M6OperationsReadService $policy      Central live privacy authorization.
-	 * @param ConsentRepository       $definitions Scoped immutable document metadata.
+	 * @param M6OperationsReadService  $policy      Central live privacy authorization.
+	 * @param ConsentRepository        $definitions Scoped immutable document metadata.
 	 * @param ConsentDefinitionService $commands    Audited create and publish commands.
 	 */
 	public function __construct(
@@ -155,6 +155,7 @@ final class M6ConsentDocumentsScreen {
 			}
 			if ( 'publish' === $action ) {
 				$uuid = isset( $_POST['uop_consent_definition'] ) && is_string( $_POST['uop_consent_definition'] ) ? sanitize_text_field( wp_unslash( $_POST['uop_consent_definition'] ) ) : '';
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Preserve exact legal text for its SHA-256: ConsentDefinitionService validates UTF-8, control bytes, HTML delimiters and length before storage.
 				$body = isset( $_POST['uop_consent_content'] ) && is_string( $_POST['uop_consent_content'] ) ? wp_unslash( $_POST['uop_consent_content'] ) : '';
 				$this->commands->publish( $actor, $scope, PublicId::from_string( $uuid ), $body, $now, CorrelationId::generate() );
 				return __( 'New immutable consent version published.', 'uop-core' );
