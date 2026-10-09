@@ -43,18 +43,18 @@ final class ExportJobRepository {
 	 * @param PublicId            $uuid Job public identity.
 	 * @param PublicId            $command Client command.
 	 * @param int                 $actor_id Owner WordPress user.
-	 * @param string              $resource Fixed resource type.
+	 * @param string              $resource_type Fixed resource type.
 	 * @param string              $format Fixed file format.
 	 * @param array<string,mixed> $filters Strict filters.
 	 * @param array               $columns Allowlisted projection columns.
+	 * @param string              $now UTC creation time.
+	 * @param string              $expires UTC expiry.
 	 * @phpstan-param list<string> $columns
-	 * @param string $now UTC creation time.
-	 * @param string $expires UTC expiry.
 	 */
-	public function create( OrgScope $scope, PublicId $uuid, PublicId $command, int $actor_id, string $resource, string $format, array $filters, array $columns, string $now, string $expires ): void {
+	public function create( OrgScope $scope, PublicId $uuid, PublicId $command, int $actor_id, string $resource_type, string $format, array $filters, array $columns, string $now, string $expires ): void {
 		$this->db->execute(
 			"INSERT INTO %i (public_id,organization_id,command_id,actor_user_id,resource_type,format,status,filters_json,columns_json,expires_at,created_at,updated_at) VALUES (%s,%d,%s,%d,%s,%s,'queued',%s,%s,%s,%s,%s)",
-			array( $this->prefix . 'export_jobs', $uuid->to_binary(), $scope->id, $command->to_binary(), $actor_id, $resource, $format, wp_json_encode( $filters, JSON_THROW_ON_ERROR ), wp_json_encode( $columns, JSON_THROW_ON_ERROR ), $expires, $now, $now )
+			array( $this->prefix . 'export_jobs', $uuid->to_binary(), $scope->id, $command->to_binary(), $actor_id, $resource_type, $format, wp_json_encode( $filters, JSON_THROW_ON_ERROR ), wp_json_encode( $columns, JSON_THROW_ON_ERROR ), $expires, $now, $now )
 		);
 	}
 

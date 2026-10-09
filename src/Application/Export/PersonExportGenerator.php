@@ -32,8 +32,8 @@ final class PersonExportGenerator {
 	 * @param Actor    $actor Original export owner.
 	 * @param OrgScope $scope Tenant.
 	 * @param array    $columns Strict selectable headers.
+	 * @param string   $status Optional equality status filter.
 	 * @phpstan-param list<string> $columns
-	 * @param string $status Optional equality status filter.
 	 * @return array{body:string,count:int} Private export bytes and included row count.
 	 * @throws RuntimeException When projection exceeds V1 bound.
 	 */
@@ -49,7 +49,7 @@ final class PersonExportGenerator {
 			$after = 0;
 			$count = 0;
 			do {
-				$rows = $this->people->page( $scope, new PageRequest( 100, $after ), '' === $status ? array() : array( 'status' => $status ) );
+				$rows      = $this->people->page( $scope, new PageRequest( 100, $after ), '' === $status ? array() : array( 'status' => $status ) );
 				$page_size = count( $rows );
 				foreach ( $rows as $row ) {
 					$after = (int) $row['id'];
@@ -61,7 +61,7 @@ final class PersonExportGenerator {
 						'display_name' => (string) $row['display_name'],
 						'status'       => (string) $row['status'],
 					);
-					$values    = array();
+					$values = array();
 					foreach ( $columns as $column ) {
 						$value = $available[ $column ];
 						$values[] = preg_match( '/^\s*[=+\-@\t\r]/u', $value ) ? "'" . $value : $value;
@@ -74,7 +74,7 @@ final class PersonExportGenerator {
 						throw new RuntimeException( 'CSV export exceeds the V1 row bound.' );
 					}
 				}
-			} while ( $page_size === 100 );
+			} while ( 100 === $page_size );
 			rewind( $handle );
 			$body = stream_get_contents( $handle );
 			if ( false === $body || strlen( $body ) > 5242880 ) {

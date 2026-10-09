@@ -50,14 +50,14 @@ final class ExportJobService {
 	/**
 	 * Create a 24-hour export command. An exact replay does not create another job.
 	 *
-	 * @param Actor    $actor Authenticated exporting user.
-	 * @param OrgScope $scope Organization.
-	 * @param PublicId $command Client-generated idempotency UUID.
-	 * @param array    $columns Safe columns.
-	 * @phpstan-param list<string> $columns
+	 * @param Actor         $actor Authenticated exporting user.
+	 * @param OrgScope      $scope Organization.
+	 * @param PublicId      $command Client-generated idempotency UUID.
+	 * @param array         $columns Safe columns.
 	 * @param string        $status Optional status filter.
 	 * @param string        $now UTC timestamp.
 	 * @param CorrelationId $correlation Audit trace.
+	 * @phpstan-param list<string> $columns
 	 * @return PublicId Private job identity, not a file URL.
 	 * @throws InvalidArgumentException When the input contract is invalid.
 	 * @throws RuntimeException When authorization or idempotency is denied.
@@ -255,9 +255,9 @@ final class ExportJobService {
 	/**
 	 * Reject all unknown filters, duplicate/hidden columns and broad data projections.
 	 *
-	 * @param array $columns Selected columns.
-	 * @phpstan-param list<string> $columns
+	 * @param array  $columns Selected columns.
 	 * @param string $status Exact status filter or empty.
+	 * @phpstan-param list<string> $columns
 	 * @throws InvalidArgumentException For non-allowlisted input.
 	 */
 	private function validate( array $columns, string $status ): void {
