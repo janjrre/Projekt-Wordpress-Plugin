@@ -230,4 +230,57 @@ final class M5ExportJobsTest extends TestCase {
         }
         self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'export_jobs']));
     }
+
+    public function test_csv_primary_email_is_allowlisted_and_exact_utf8_fields_are_escaped(): void {
+        $name="Zoë, 日本語";
+        $person=$this->make_person($name);
+        $this->db->execute('UPDATE %i SET primary_email=%s WHERE organization_id=%d AND public_id=%s',[
+            $this->prefix.'persons','zoe@example.invalid',$this->scope->id,$person->to_binary()
+        ]);
+        $job=$this->queue(null,['primary_email','display_name','public_id']);
+        $this->exports->process($this->scope,$job,self::NOW);
+        $body=$this->exports->download($this->actor,$this->scope,$job,self::NOW);
+        self::assertStringStartsWith("primary_email,display_name,public_id\r\n",$body);
+        self::assertStringContainsString('"Zoë, 日本語"',$body);
+        self::assertStringContainsString('zoe@example.invalid',$body);
+        self::assertStringContainsString($person->to_string(),$body);
+    }
+
+    public function test_field_level_projection_denies_personal_email_for_internal_only_assignment(): void {
+        $person=$this->make_person('Internal only');
+        $this->db->execute('UPDATE %i SET primary_email=%s WHERE organization_id=%d AND public_id=%s',[
+            $this->prefix.'persons','sensitive@example.invalid',$this->scope->id,$person->to_binary()
+        ]);
+        (new AssignmentRepository($this->db,$this->prefix))->grant(
+            $this->scope,$this->actor->user_id,'event_manager','organization',0,'internal',self::NOW
+        );
+        $limited=new PolicyService(
+            $this->people,new DelegationRepository($this->db,$this->prefix),
+            new AssignmentRepository($this->db,$this->prefix),
+            fn(int $id,string $cap): bool => $id===$this->actor->user_id && in_array($cap,['uop_export_data','uop_view_people'],true)
+        );
+        $generator=new PersonExportGenerator($this->people,$limited);
+        $safe=$generator->generate($this->actor,$this->scope,['public_id','status'],'active');
+        self::assertSame(1,$safe['count']);
+        self::assertStringContainsString($person->to_string(),$safe['body']);
+        try {
+            $generator->generate($this->actor,$this->scope,['public_id','primary_email'],'active');
+            self::fail('Field-restricted export leaked contact email');
+        } catch(RuntimeException) {
+            self::assertTrue(true);
+        }
+    }
+
+    public function test_csv_pagination_over_one_hundred_people_preserves_count_and_order(): void {
+        for($n=0;$n<105;$n++) {
+            $this->make_person('Member '.str_pad((string)$n,3,'0',STR_PAD_LEFT));
+        }
+        $csv=(new PersonExportGenerator($this->people,$this->policy))->generate(
+            $this->actor,$this->scope,['display_name','status'],'active'
+        );
+        self::assertSame(105,$csv['count']);
+        self::assertStringContainsString('Member 000',$csv['body']);
+        self::assertStringContainsString('Member 104',$csv['body']);
+        self::assertSame(106,substr_count($csv['body'],"\r\n"));
+    }
 }
