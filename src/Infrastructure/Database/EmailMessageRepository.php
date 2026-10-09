@@ -54,17 +54,17 @@ final class EmailMessageRepository {
 	/**
 	 * Insert the final rendered snapshot, never the variable map or plaintext action secrets in outbox.
 	 *
-	 * @param OrgScope                        $scope    Tenant.
-	 * @param PublicId                        $uuid     Public email identity.
-	 * @param string                          $key      SHA-256 idempotency key.
-	 * @param int|null                        $registration Owned internal registration, if known.
-	 * @param string                          $recipient Validated recipient.
-	 * @param string                          $template  Allowlisted template name.
-	 * @param string                          $locale    Supported locale.
-	 * @param int                             $revision Frozen template revision.
-	 * @param string                          $digest   Binary content digest.
-	 * @param array<string,string|null>       $rendered Subject and full final bodies.
-	 * @param string                          $now      UTC timestamp.
+	 * @param OrgScope                  $scope    Tenant.
+	 * @param PublicId                  $uuid     Public email identity.
+	 * @param string                    $key      SHA-256 idempotency key.
+	 * @param int|null                  $registration Owned internal registration, if known.
+	 * @param string                    $recipient Validated recipient.
+	 * @param string                    $template  Allowlisted template name.
+	 * @param string                    $locale    Supported locale.
+	 * @param int                       $revision Frozen template revision.
+	 * @param string                    $digest   Binary content digest.
+	 * @param array<string,string|null> $rendered Subject and full final bodies.
+	 * @param string                    $now      UTC timestamp.
 	 * @throws RuntimeException If a database insert cannot be reloaded.
 	 */
 	public function enqueue( OrgScope $scope, PublicId $uuid, string $key, ?int $registration, string $recipient, string $template, string $locale, int $revision, string $digest, array $rendered, string $now ): void {
@@ -103,6 +103,7 @@ final class EmailMessageRepository {
 	 * @param OrgScope $scope Tenant.
 	 * @param PublicId $uuid  Message UUID.
 	 * @return array<string,mixed>|null Full frozen delivery snapshot when claimed.
+	 * @throws RuntimeException When a competing writer changes the claim.
 	 */
 	public function claim( OrgScope $scope, PublicId $uuid ): ?array {
 		$rows = $this->db->rows(

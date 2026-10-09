@@ -25,13 +25,13 @@ final class EmailMessageService {
 	/**
 	 * Bind authorized templates, immutability and transactional audit.
 	 *
-	 * @param EmailTemplateService  $templates Authorized template resolution.
-	 * @param EmailTemplateRules    $rules     Safe rendering.
+	 * @param EmailTemplateService   $templates Authorized template resolution.
+	 * @param EmailTemplateRules     $rules     Safe rendering.
 	 * @param EmailMessageRepository $messages Durable frozen messages.
-	 * @param PolicyService         $policy    Live actor authorization.
-	 * @param TransactionManager    $tx        Transaction manager.
-	 * @param AuditWriter           $audit     Minimal audit.
-	 * @param OutboxRepository      $outbox    Token-free domain handoff.
+	 * @param PolicyService          $policy    Live actor authorization.
+	 * @param TransactionManager     $tx        Transaction manager.
+	 * @param AuditWriter            $audit     Minimal audit.
+	 * @param OutboxRepository       $outbox    Token-free domain handoff.
 	 */
 	public function __construct(
 		private EmailTemplateService $templates,
@@ -62,6 +62,7 @@ final class EmailMessageService {
 	 * @param CorrelationId        $correlation Request trace.
 	 * @return PublicId Message public UUID.
 	 * @throws RuntimeException When sender or registration is not authorized.
+	 * @throws InvalidArgumentException When the recipient is invalid.
 	 */
 	public function queue( Actor $actor, OrgScope $scope, PublicId $command, string $recipient, string $template, string $locale, array $variables, ?PublicId $registration, string $now, CorrelationId $correlation ): PublicId {
 		if ( ! is_email( $recipient ) || strlen( $recipient ) > 254 || preg_match( '/[\r\n\x00-\x1F\x7F]/', $recipient ) ) {
@@ -98,8 +99,8 @@ final class EmailMessageService {
 					$template_data['body_html'],
 					$variables
 				);
-				$uuid  = PublicId::generate();
-				$hash  = hex2bin( $template_data['hash'] );
+				$uuid          = PublicId::generate();
+				$hash          = hex2bin( $template_data['hash'] );
 				if ( false === $hash ) {
 					throw new RuntimeException( 'Mail template hash invalid.' );
 				}
