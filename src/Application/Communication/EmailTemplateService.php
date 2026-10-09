@@ -69,7 +69,6 @@ final class EmailTemplateService {
 	 * @param array<string,string>     $variables Sample values; never persisted.
 	 * @param array<string,mixed>|null $candidate Optional unsaved body fields.
 	 * @return array{subject:string,body_text:string,body_html:string|null}
-	 * @throws RuntimeException When caller is unauthorized.
 	 * @throws \InvalidArgumentException For malformed preview candidate fields.
 	 */
 	public function preview( Actor $actor, OrgScope $scope, string $key, string $locale, array $variables, ?array $candidate = null ): array {
@@ -101,7 +100,6 @@ final class EmailTemplateService {
 	 * @param string        $now         Trusted UTC timestamp.
 	 * @param CorrelationId $correlation Stable command correlation.
 	 * @return array{public_id:string,revision:int}
-	 * @throws RuntimeException When caller is unauthorized or revision has changed.
 	 * @throws \InvalidArgumentException For an invalid revision.
 	 */
 	public function save( Actor $actor, OrgScope $scope, string $key, string $locale, int $expected, string $subject, string $text, ?string $html, string $now, CorrelationId $correlation ): array {
