@@ -181,6 +181,54 @@ final class RetentionRepository {
 	}
 
 	/**
+	 * Lock one scoped person or registration to manage its expiry hold.
+	 *
+	 * @param OrgScope $scope Tenant scope.
+	 * @param string   $target Exact protected object type.
+	 * @param PublicId $uuid Public object identifier.
+	 * @return array<string,mixed>|null Scoped current hold state.
+	 * @throws RuntimeException For unsupported hold targets.
+	 */
+	public function lock_hold( OrgScope $scope, string $target, PublicId $uuid ): ?array {
+		$table = match ( $target ) {
+			'person'       => 'persons',
+			'registration' => 'registrations',
+			default        => throw new RuntimeException( 'Unsupported privacy hold target.' ),
+		};
+		$rows = $this->db->rows(
+			'SELECT id, retention_hold_until, retention_hold_reason FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1 FOR UPDATE',
+			array( $this->prefix . $table, $scope->id, $uuid->to_binary() )
+		);
+		return $rows[0] ?? null;
+	}
+
+	/**
+	 * Update exactly one scoped and locked hold without writing private audit content.
+	 *
+	 * @param OrgScope    $scope Tenant boundary.
+	 * @param string      $target Exact protected object type.
+	 * @param int         $id Locked internal object key.
+	 * @param string|null $until New UTC expiry or null for release.
+	 * @param string|null $reason Approved administrative reason code.
+	 * @param string      $now UTC command time.
+	 * @throws RuntimeException When scoped object could not be updated.
+	 */
+	public function store_hold( OrgScope $scope, string $target, int $id, ?string $until, ?string $reason, string $now ): void {
+		$table = match ( $target ) {
+			'person'       => 'persons',
+			'registration' => 'registrations',
+			default        => throw new RuntimeException( 'Unsupported privacy hold target.' ),
+		};
+		$rows = $this->db->execute(
+			"UPDATE %i SET retention_hold_until = NULLIF(%s,''), retention_hold_reason = NULLIF(%s,''), version = version + 1, updated_at = %s WHERE organization_id = %d AND id = %d",
+			array( $this->prefix . $table, $until ?? '', $reason ?? '', $now, $scope->id, $id )
+		);
+		if ( 1 !== $rows ) {
+			throw new RuntimeException( 'Protected retention hold object was not updated.' );
+		}
+	}
+
+	/**
 	 * Compare stored UTC legal hold with the command time.
 	 *
 	 * @param mixed  $until Nullable stored DATETIME.
