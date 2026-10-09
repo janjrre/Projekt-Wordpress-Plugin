@@ -202,10 +202,10 @@
 			);
 		}
 		function registrationDetail() {
-			const reviewable = detail.status === 'submitted';
-			const rejectable = detail.status === 'submitted' || detail.status === 'review';
-			const cancelable = ['submitted', 'review', 'accepted', 'waitlisted', 'offered'].includes(detail.status);
-			const allocatable = rejectable && buckets.length > 0;
+			const reviewable = Boolean(selectedItem && selectedItem.can_review) && detail.status === 'submitted';
+			const rejectable = Boolean(selectedItem && selectedItem.can_review) && (detail.status === 'submitted' || detail.status === 'review');
+			const cancelable = Boolean(selectedItem && selectedItem.can_cancel) && ['submitted', 'review', 'accepted', 'waitlisted', 'offered'].includes(detail.status);
+			const allocatable = Boolean(selectedItem && selectedItem.can_allocate) && rejectable && buckets.length > 0;
 			return h('div', { className: 'uop-m6-detail' },
 				h('dl', null,
 					h('dt', null, t('Registration', 'uop-core')), h('dd', { className: 'uop-m6-id' }, detail.public_id),

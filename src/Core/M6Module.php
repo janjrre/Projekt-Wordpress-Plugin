@@ -113,7 +113,8 @@ final class M6Module implements ModuleInterface {
 			static fn ( ServiceContainer $c ) => new M6AdminReadService(
 				$c->get( M6AdminListRepository::class ),
 				$c->get( M6ReadService::class ),
-				$c->get( PolicyService::class )
+				$c->get( PolicyService::class ),
+				$c->get( RegistrationReadRepository::class )
 			)
 		);
 		$container->set(

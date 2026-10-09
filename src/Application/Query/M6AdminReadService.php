@@ -15,6 +15,7 @@ use UOP\Application\Policy\PolicyService;
 use UOP\Core\PublicId;
 use UOP\Domain\Organization\OrgScope;
 use UOP\Infrastructure\Database\M6AdminListRepository;
+use UOP\Infrastructure\Database\RegistrationReadRepository;
 
 /**
  * Staff-wide queries demand organization authorization; each returned object
@@ -26,9 +27,10 @@ final class M6AdminReadService {
 	 *
 	 * @param M6AdminListRepository $lists  Tenant-owned opaque cursors.
 	 * @param M6ReadService         $reads  Shared per-object projection.
-	 * @param PolicyService         $policy Live authorization.
+	 * @param PolicyService          $policy        Live authorization.
+	 * @param RegistrationReadRepository $registrations Trusted registration owner lookup.
 	 */
-	public function __construct( private M6AdminListRepository $lists, private M6ReadService $reads, private PolicyService $policy ) {}
+	public function __construct( private M6AdminListRepository $lists, private M6ReadService $reads, private PolicyService $policy, private RegistrationReadRepository $registrations ) {}
 
 	/**
 	 * Authorize an organization-wide administrative list, never a self grant.
@@ -112,6 +114,13 @@ final class M6AdminReadService {
 			if ( null !== $dto ) {
 				$person = $this->reads->person( $actor, $scope, PublicId::from_string( (string) $dto['person_id'] ) );
 				$dto['person_name'] = $person ? (string) $person['display_name'] : '';
+				$owner = $this->registrations->find( $scope, $id );
+				if ( $owner ) {
+					$object = new PolicyObject( $scope->id, 'registration', (int) $owner['id'], (int) $owner['person_id'], (int) $owner['event_post_id'] );
+					$dto['can_review']   = $this->policy->can( $actor, 'registration.review', $object )->allowed;
+					$dto['can_cancel']   = $this->policy->can( $actor, 'registration.cancel', $object )->allowed;
+					$dto['can_allocate'] = $dto['can_review'] && $this->policy->can( $actor, 'capacity.manage', $object )->allowed;
+				}
 				$items[] = $dto;
 			}
 		}

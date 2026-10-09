@@ -87,7 +87,8 @@ final class M6AdminScreensTest extends TestCase {
 		$reads = new M6AdminReadService(
 			new M6AdminListRepository( $this->db, $this->prefix ),
 			new M6ReadService( $people, $delegations, new RegistrationReadRepository( $this->db, $this->prefix ), $policy ),
-			$policy
+			$policy,
+			new RegistrationReadRepository( $this->db, $this->prefix )
 		);
 		( new M6AdminController( $reads ) )->register();
 		$tx     = new TransactionManager( $this->db, static function ( int $delay ): void {}, static function ( \Throwable $error ): void {} );
@@ -174,6 +175,9 @@ final class M6AdminScreensTest extends TestCase {
 		self::assertSame( 200, $all->get_status(), wp_json_encode( $all->get_data() ) );
 		self::assertSame( $registration->to_string(), $all->get_data()['items'][0]['public_id'] );
 		self::assertSame( 'Registration owner', $all->get_data()['items'][0]['person_name'] );
+		self::assertTrue( $all->get_data()['items'][0]['can_review'] );
+		self::assertTrue( $all->get_data()['items'][0]['can_cancel'] );
+		self::assertTrue( $all->get_data()['items'][0]['can_allocate'] );
 		self::assertArrayNotHasKey( 'payload_json', $all->get_data()['items'][0] );
 		$submitted = $this->get( '/uop/v1/admin/registrations?status=submitted' );
 		self::assertCount( 1, $submitted->get_data()['items'] );
