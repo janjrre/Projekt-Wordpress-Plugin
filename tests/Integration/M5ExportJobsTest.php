@@ -179,7 +179,7 @@ final class M5ExportJobsTest extends TestCase {
         self::assertArrayNotHasKey('storage_key',$status->get_data());
         $this->exports->process($this->scope,$job,self::NOW);
         $dl_request=new \WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string().'/download');
-        $download=rest_do_request($dl_request);
+        $download=$controller->download($dl_request);
         self::assertSame(200,$download->get_status());
         self::assertSame('text/csv; charset=utf-8',$download->get_headers()['Content-Type']);
         ob_start();
