@@ -139,10 +139,10 @@ final class RetentionService {
 		return $this->tx->run(
 			function () use ( $actor, $scope, $key, $cursor, $now, $correlation ): array {
 				$this->authorize( $actor, $scope );
-				$rule = $this->active_rule( $scope, $key );
+				$rule       = $this->active_rule( $scope, $key );
 				$data_class = (string) $rule['data_class'];
-				$cutoff = self::cutoff( $now, (int) $rule['delay_days'] );
-				$rows = $this->rules->candidates( $scope, $data_class, $cutoff, $cursor );
+				$cutoff     = self::cutoff( $now, (int) $rule['delay_days'] );
+				$rows       = $this->rules->candidates( $scope, $data_class, $cutoff, $cursor );
 				return $this->summary( $scope, $data_class, $rows, $cursor, $cutoff, $now, true, $actor, $correlation );
 			}
 		);
@@ -166,11 +166,11 @@ final class RetentionService {
 	 */
 	private function summary( OrgScope $scope, string $data_class, array $rows, int $cursor, string $cutoff, string $now, bool $execute, ?Actor $actor = null, ?CorrelationId $correlation = null ): array {
 		$eligible = 0;
-		$held = 0;
-		$changed = 0;
-		$sample = array();
+		$held     = 0;
+		$changed  = 0;
+		$sample   = array();
 		foreach ( $rows as $row ) {
-			$id = (int) $row['id'];
+			$id     = (int) $row['id'];
 			$cursor = $id;
 			$target = $this->rules->eligible( $scope, $data_class, $id, $cutoff, $now, $execute );
 			if ( null === $target ) {
@@ -193,19 +193,19 @@ final class RetentionService {
 			}
 			++$changed;
 			$object_type = 'registration_snapshots' === $data_class ? 'registration' : 'person';
-			$object = new PolicyObject( $scope->id, $object_type, $target['object_id'], $target['subject_id'] );
-			$event = PublicId::generate();
+			$object      = new PolicyObject( $scope->id, $object_type, $target['object_id'], $target['subject_id'] );
+			$event       = PublicId::generate();
 			$this->audit->append( $scope, $actor, 'privacy.retention_executed', $object, 'success', $correlation, $event, array( 'reason_code' => 'retention' ) );
 			$this->outbox->append( $scope, $event, $object_type, $target['object_id'], 'privacy.retention_executed', $correlation, array( 'reason_code' => 'retention' ) );
 		}
 		return array(
-			'examined' => count( $rows ),
-			'eligible' => $eligible,
-			'held' => $held,
-			'changed' => $changed,
+			'examined'    => count( $rows ),
+			'eligible'    => $eligible,
+			'held'        => $held,
+			'changed'     => $changed,
 			'next_cursor' => $cursor,
-			'done' => count( $rows ) < 25,
-			'sample' => $sample,
+			'done'        => count( $rows ) < 25,
+			'sample'      => $sample,
 		);
 	}
 
