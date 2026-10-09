@@ -926,4 +926,28 @@ final class M4RegistrationTest extends TestCase {
 		self::assertSame('accepted',$accepted[0]['status']);
 		self::assertSame(1,(int)$this->db->rows("SELECT COUNT(*) AS n FROM %i WHERE status = 'confirmed'",[$this->prefix.'capacity_claims'])[0]['n']);
 	}
+
+	/** A linked account may register itself but cannot register an unrelated subject. */
+	public function test_self_registration_is_authorized_only_for_linked_person(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$services,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$self_user=wp_create_user('uop_m4_self_'.bin2hex(random_bytes(4)),wp_generate_password(24),'self_'.bin2hex(random_bytes(4)).'@example.invalid');
+		self::assertIsInt($self_user);
+		self::assertTrue($services['people']->link($this->scope,$person,$self_user,$now));
+		$self=new Actor($self_user);
+		$other=PublicId::generate();
+		$services['people']->create($this->scope,$other,'Unrelated attendee',null,$now);
+		try {
+			$services['submit']->submit($self,$this->scope,$other,$event,null,PublicId::generate(),['name'=>'Not me'],$now,CorrelationId::generate());
+			self::fail('Self account registered an unrelated subject without delegation');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		$key=PublicId::generate();
+		$id=$services['submit']->submit($self,$this->scope,$person,$event,null,$key,['name'=>'Own signup'],$now,CorrelationId::generate());
+		self::assertSame($id->to_string(),$services['submit']->submit($self,$this->scope,$person,$event,null,$key,['name'=>'Own signup'],$now,CorrelationId::generate())->to_string());
+		$record=$this->db->rows('SELECT actor_user_id,source,status FROM %i WHERE organization_id = %d AND public_id = %s',[$this->prefix.'registrations',$this->scope->id,$id->to_binary()])[0];
+		self::assertSame($self_user,(int)$record['actor_user_id']);
+		self::assertSame('portal',$record['source']);
+		$services['transition']->transition($self,$this->scope,$id,'cancelled',PublicId::generate(),$now,CorrelationId::generate());
+		self::assertSame('cancelled',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$id->to_binary()])[0]['status']);
+	}
 }
