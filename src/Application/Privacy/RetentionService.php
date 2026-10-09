@@ -99,6 +99,53 @@ final class RetentionService {
 	}
 
 	/**
+	 * Set or release a narrowly scoped hold with no sensitive reason in the audit.
+	 *
+	 * @param Actor         $actor Current privacy manager.
+	 * @param OrgScope      $scope Trusted organization.
+	 * @param string        $target A person or registration.
+	 * @param PublicId      $uuid Scoped protected resource.
+	 * @param string|null   $until UTC expiration, or null to release.
+	 * @param string|null   $reason Stable private reason code; never free text.
+	 * @param string        $now Trusted UTC current time.
+	 * @param CorrelationId $correlation Request trace.
+	 * @return bool False when the existing hold already matches.
+	 * @throws InvalidArgumentException When the hold is malformed or expired.
+	 */
+	public function set_hold( Actor $actor, OrgScope $scope, string $target, PublicId $uuid, ?string $until, ?string $reason, string $now, CorrelationId $correlation ): bool {
+		self::cutoff( $now, 0 );
+		if ( ! in_array( $target, array( 'person', 'registration' ), true )
+			|| ( null === $until && null !== $reason )
+			|| ( null !== $until && ( null === $reason || ! preg_match( '/^[a-z][a-z0-9_]{0,63}$/D', $reason ) ) ) ) {
+			throw new InvalidArgumentException( 'Invalid privacy hold target or reason.' );
+		}
+		if ( null !== $until ) {
+			self::cutoff( $until, 0 );
+			if ( $until <= $now ) {
+				throw new InvalidArgumentException( 'Retention hold expiry must be in the future.' );
+			}
+		}
+		return $this->tx->run(
+			function () use ( $actor, $scope, $target, $uuid, $until, $reason, $now, $correlation ): bool {
+				$this->authorize( $actor, $scope );
+				$existing = $this->rules->lock_hold( $scope, $target, $uuid );
+				if ( ! $existing ) {
+					throw new RuntimeException( 'Protected retention hold object not found.' );
+				}
+				if ( $existing['retention_hold_until'] === $until && $existing['retention_hold_reason'] === $reason ) {
+					return false;
+				}
+				$this->rules->store_hold( $scope, $target, (int) $existing['id'], $until, $reason, $now );
+				$event  = PublicId::generate();
+				$object = new PolicyObject( $scope->id, $target, (int) $existing['id'] );
+				$this->audit->append( $scope, $actor, 'privacy.retention_hold_changed', $object, 'success', $correlation, $event, array( 'status' => null === $until ? 'released' : 'held' ) );
+				$this->outbox->append( $scope, $event, $target, (int) $existing['id'], 'privacy.retention_hold_changed', $correlation, array( 'status' => null === $until ? 'released' : 'held' ) );
+				return true;
+			}
+		);
+	}
+
+	/**
 	 * Preview a single bounded keyset page; never reveal actual field contents.
 	 *
 	 * @param Actor    $actor Authorized privacy manager.
