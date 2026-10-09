@@ -212,6 +212,9 @@ final class CapacityLifecycleService {
 		if ( 0 !== (int) $bucket['occurrence_id'] || null !== $bucket['eligibility_json'] ) {
 			throw new RuntimeException( 'This bucket requires another eligibility strategy.' );
 		}
+		// A closed event must not issue a new offer, even when verification
+		// was originally optional. Read current state under the bucket lock.
+		$verify_contact = $this->capacity->requires_verification( $scope, (int) $bucket['event_post_id'] );
 		if ( $this->capacity->occupied( $scope, (int) $bucket['id'] ) >= (int) $bucket['capacity'] ) {
 			return null;
 		}
@@ -223,7 +226,7 @@ final class CapacityLifecycleService {
 		if ( ! $row || 'waitlisted' !== $row['status'] || (int) $row['event_post_id'] !== (int) $bucket['event_post_id'] ) {
 			throw new RuntimeException( 'FIFO queue state changed.' );
 		}
-		if ( $this->capacity->requires_verification( $scope, (int) $bucket['event_post_id'] ) && null === $row['email_verified_at'] ) {
+		if ( $verify_contact && null === $row['email_verified_at'] ) {
 			throw new RuntimeException( 'Queue head requires verification.' );
 		}
 		$this->states->assert_transition( 'waitlisted', 'offered' );
@@ -267,12 +270,20 @@ final class CapacityLifecycleService {
 				if ( ! $bucket || ! $offer || 'offered' !== $offer['status'] || $utc_now >= $offer['expires_at'] ) {
 					throw new RuntimeException( 'Offer expired or unavailable.' );
 				}
+				$post = get_post( (int) $bucket['event_post_id'] );
+				if ( 'active' !== $bucket['status'] || ! $post || 'uop_event' !== $post->post_type
+					|| 'publish' !== $post->post_status || 0 !== (int) $bucket['occurrence_id']
+					|| null !== $bucket['eligibility_json'] ) {
+					throw new RuntimeException( 'Offer belongs to an inactive or unsupported event.' );
+				}
+				$verify_contact = $this->capacity->requires_verification( $scope, (int) $bucket['event_post_id'] );
 				if ( ! hash_equals( $offer['token_hash'], hash( 'sha256', $token, true ) ) ) {
 					throw new RuntimeException( 'Invalid offer token.' );
 				}
 				$row = $this->queue->registration( $scope, (int) $offer['registration_id'] );
-				if ( ! $row || 'offered' !== $row['status'] || (int) $row['event_post_id'] !== (int) $bucket['event_post_id'] ) {
-					throw new RuntimeException( 'Registration offer is no longer active.' );
+				if ( ! $row || 'offered' !== $row['status'] || (int) $row['event_post_id'] !== (int) $bucket['event_post_id']
+					|| ( $verify_contact && null === $row['email_verified_at'] ) ) {
+					throw new RuntimeException( 'Registration offer is no longer eligible.' );
 				}
 				if ( ! $this->policy->can( $actor, 'registration.create', $this->resource( $scope, $row ) )->allowed ) {
 					throw new RuntimeException( 'Offer acceptance is not authorized.' );

@@ -88,7 +88,7 @@ final class CapacityRepository {
 	 */
 	public function requires_verification( OrgScope $scope, int $event_post ): bool {
 		$rows = $this->db->rows(
-			"SELECT require_email_verification FROM %i WHERE organization_id = %d AND event_post_id = %d AND status = 'active' LIMIT 1",
+			"SELECT require_email_verification FROM %i WHERE organization_id = %d AND event_post_id = %d AND status = 'active' LIMIT 1 FOR UPDATE",
 			array( $this->prefix . 'event_settings', $scope->id, $event_post )
 		);
 		if ( ! $rows ) {
