@@ -26,8 +26,9 @@ final class FormSchema {
 			|| ! $schema['fields'] || count( $schema['fields'] ) > 100 ) {
 			throw new InvalidArgumentException( 'Invalid V1 form draft envelope.' );
 		}
-		$keys   = array();
-		$engine = new ConditionEngine();
+		$keys     = array();
+		$consents = array();
+		$engine   = new ConditionEngine();
 		foreach ( $schema['fields'] as $field ) {
 			if ( ! is_array( $field ) || array_diff( array_keys( $field ), array( 'key', 'type', 'label', 'required', 'options', 'visible_when', 'consent_definition_public_id' ) )
 				|| ! is_bool( $field['required'] ?? null ) ) {
@@ -50,7 +51,11 @@ final class FormSchema {
 				if ( empty( $field['consent_definition_public_id'] ) || ! is_string( $field['consent_definition_public_id'] ) ) {
 					throw new InvalidArgumentException( 'Consent field requires a stable definition reference.' );
 				}
-				PublicId::from_string( $field['consent_definition_public_id'] );
+				$consent_id = PublicId::from_string( $field['consent_definition_public_id'] )->to_string();
+				if ( isset( $consents[ $consent_id ] ) ) {
+					throw new InvalidArgumentException( 'Consent definition may appear only once per form version.' );
+				}
+				$consents[ $consent_id ] = true;
 			} elseif ( isset( $field['consent_definition_public_id'] ) ) {
 				throw new InvalidArgumentException( 'Only consent fields may reference consent definitions.' );
 			}

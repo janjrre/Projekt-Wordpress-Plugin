@@ -9,6 +9,7 @@ namespace UOP\Application\Registration;
 
 use InvalidArgumentException;
 use RuntimeException;
+use UOP\Application\Consent\ConsentRecordService;
 use UOP\Application\Policy\Actor;
 use UOP\Application\Policy\PolicyObject;
 use UOP\Application\Policy\PolicyService;
@@ -25,19 +26,20 @@ use UOP\Infrastructure\Database\PersonRepository;
 
 /**
  * Shared validation for authenticated, delegated and anonymous guest requests.
- * Consent records and protected mail dispatch remain separate.
+ * Consent records are atomic with snapshots; protected mail delivery is separate.
  */
 final class RegistrationService {
 	/**
 	 * Bind the M2 authorization, historical persistence and audit boundary.
 	 *
-	 * @param RegistrationRepository   $registrations Scoped registration storage.
-	 * @param PolicyService            $policy        Central authorization.
-	 * @param TransactionManager       $tx            Atomic command transaction.
-	 * @param AuditWriter              $audit         Durable minimal audit.
-	 * @param OutboxRepository         $outbox        Transactional domain events.
-	 * @param RegistrationFactsService $facts       Scoped and policy-filtered eligibility facts.
-	 * @param PersonRepository         $people      Scoped guest person persistence.
+	 * @param RegistrationRepository    $registrations Scoped registration storage.
+	 * @param PolicyService             $policy        Central authorization.
+	 * @param TransactionManager        $tx            Atomic command transaction.
+	 * @param AuditWriter               $audit         Durable minimal audit.
+	 * @param OutboxRepository          $outbox        Transactional domain events.
+	 * @param RegistrationFactsService  $facts         Scoped and policy-filtered eligibility facts.
+	 * @param PersonRepository          $people        Scoped guest person persistence.
+	 * @param ConsentRecordService|null $consents      Optional immutable consent evidence writer.
 	 */
 	public function __construct(
 		private RegistrationRepository $registrations,
@@ -46,7 +48,8 @@ final class RegistrationService {
 		private AuditWriter $audit,
 		private OutboxRepository $outbox,
 		private RegistrationFactsService $facts,
-		private PersonRepository $people
+		private PersonRepository $people,
+		private ?ConsentRecordService $consents = null
 	) {}
 
 	/**
@@ -109,7 +112,7 @@ final class RegistrationService {
 						|| (int) $prior['form_version_id'] !== (int) $form['form_version_id'] ) {
 						throw new RuntimeException( 'Guest command belongs to another submission.' );
 					}
-					$original = json_decode( (string) $prior['payload_json'], true, 64, JSON_THROW_ON_ERROR )['fields'];
+					$original = self::replay_fields( json_decode( (string) $prior['payload_json'], true, 64, JSON_THROW_ON_ERROR )['fields'], $input );
 					$incoming = $input;
 					ksort( $original );
 					ksort( $incoming );
@@ -176,7 +179,7 @@ final class RegistrationService {
 				throw new RuntimeException( 'Idempotency key is bound to another submission.' );
 			}
 			$original   = json_decode( (string) $prior['payload_json'], true, 64, JSON_THROW_ON_ERROR );
-			$old_fields = $original['fields'];
+			$old_fields = self::replay_fields( $original['fields'], $input );
 			$new_fields = $input;
 			ksort( $old_fields );
 			ksort( $new_fields );
@@ -206,10 +209,6 @@ final class RegistrationService {
 		$types   = array();
 		$stashed = array();
 		foreach ( $schema['fields'] as $field ) {
-			if ( 'consent' === $field['type'] ) {
-				// Consent records must exist in the same transaction (M5).
-				throw new RuntimeException( 'Consent processing is not yet available.' );
-			}
 			if ( isset( $field['visible_when'] ) ) {
 				$conditions[] = $field['visible_when'];
 			}
@@ -220,9 +219,10 @@ final class RegistrationService {
 		if ( array_diff( array_keys( $input ), array_keys( $types ) ) ) {
 			throw new InvalidArgumentException( 'Unknown form field.' );
 		}
-		$trusted = $this->facts->load( $actor, $scope, (int) $person['id'], $event_post_id, $occurrence_id, $conditions );
-		$engine  = new ConditionEngine();
-		$stored  = array();
+		$trusted          = $this->facts->load( $actor, $scope, (int) $person['id'], $event_post_id, $occurrence_id, $conditions );
+		$engine           = new ConditionEngine();
+		$stored           = array();
+		$pending_consents = array();
 		foreach ( $schema['fields'] as $field ) {
 			$key     = $field['key'];
 			$visible = true;
@@ -245,6 +245,23 @@ final class RegistrationService {
 			$value = $stashed[ $key ];
 			if ( $field['required'] && ( null === $value || '' === $value || array() === $value || false === $value ) ) {
 				throw new InvalidArgumentException( 'Required field is missing.' );
+			}
+			if ( 'consent' === $field['type'] ) {
+				if ( null === $value ) {
+					continue;
+				}
+				if ( ! is_bool( $value ) ) {
+					throw new InvalidArgumentException( 'Consent requires an explicit boolean decision.' );
+				}
+				if ( ! $this->consents ) {
+					throw new RuntimeException( 'Consent evidence service unavailable.' );
+				}
+				$pending_consents[ $key ] = array(
+					'version'  => PublicId::from_string( $field['consent_version_public_id'] ),
+					'decision' => $value,
+					'required' => $field['required'],
+				);
+				continue;
 			}
 			$normalized     = FieldRules::normalize( $field['type'], $value, $field['options'] ?? array() );
 			$stored[ $key ] = $value;
@@ -276,9 +293,46 @@ final class RegistrationService {
 		if ( 1 === (int) $form['require_email_verification'] && null === $contact_email ) {
 			throw new InvalidArgumentException( 'Contact email is required for verification.' );
 		}
-		$uuid       = PublicId::generate();
-		$version_id = PublicId::from_binary( $form['form_version_public_id'] );
-		$id         = $this->registrations->insert( $scope, $uuid, $command_id, (int) $person['id'], $actor->user_id, $event_post_id, $occurrence_id, (int) $form['form_version_id'], $version_id, $stored, $values, $types, $contact_email, $utc_now, $correlation, $guest ? 'guest' : 'portal' );
+		$uuid            = PublicId::generate();
+		$version_id      = PublicId::from_binary( $form['form_version_public_id'] );
+		$evidence_writer = null;
+		if ( $pending_consents ) {
+			$evidence_writer = function ( int $registration_id ) use ( $actor, $scope, $person, $event_post_id, $pending_consents, $stored, $values, $utc_now, $correlation, $guest ): array {
+				$historical_fields = $stored;
+				$reference_values  = $values;
+				foreach ( $pending_consents as $key => $consent ) {
+					if ( ! $this->consents ) {
+						throw new RuntimeException( 'Consent evidence service unavailable.' );
+					}
+					$record                    = $this->consents->record_submission(
+						$actor,
+						$scope,
+						(int) $person['id'],
+						$event_post_id,
+						$registration_id,
+						$consent['version'],
+						$consent['decision'],
+						$consent['required'],
+						$guest,
+						$utc_now,
+						$correlation
+					);
+					$historical_fields[ $key ] = $record['evidence'];
+					$reference_values[ $key ]  = array(
+						array(
+							'slot'    => 'value_reference',
+							'value'   => $record['reference_id'],
+							'ordinal' => 0,
+						),
+					);
+				}
+				return array(
+					'fields' => $historical_fields,
+					'values' => $reference_values,
+				);
+			};
+		}
+		$id         = $this->registrations->insert( $scope, $uuid, $command_id, (int) $person['id'], $actor->user_id, $event_post_id, $occurrence_id, (int) $form['form_version_id'], $version_id, $stored, $values, $types, $contact_email, $utc_now, $correlation, $guest ? 'guest' : 'portal', $evidence_writer );
 		$event      = PublicId::generate();
 		$registered = new PolicyObject( $scope->id, 'registration', $id, (int) $person['id'], $event_post_id );
 		$this->audit->append( $scope, $actor, 'registration.submitted', $registered, 'success', $correlation, $event );
@@ -306,5 +360,27 @@ final class RegistrationService {
 			);
 		}
 		return $uuid;
+	}
+
+	/**
+	 * Restore only consent decisions for safe idempotent comparison against
+	 * original form input, without exposing a parallel stored boolean truth.
+	 *
+	 * @param array<string, mixed> $fields   Historical registration snapshot.
+	 * @param array<string, mixed> $incoming Original user-provided form input.
+	 * @return array<string, mixed>
+	 */
+	private static function replay_fields( array $fields, array $incoming ): array {
+		foreach ( $fields as $key => $value ) {
+			if ( null === $value && ! array_key_exists( $key, $incoming ) ) {
+				unset( $fields[ $key ] );
+				continue;
+			}
+			if ( is_array( $value ) && isset( $value['record_public_id'], $value['definition_key'], $value['version_public_id'], $value['decision'] )
+				&& in_array( $value['decision'], array( 'granted', 'denied' ), true ) ) {
+				$fields[ $key ] = 'granted' === $value['decision'];
+			}
+		}
+		return $fields;
 	}
 }
