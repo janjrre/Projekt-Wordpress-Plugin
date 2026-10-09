@@ -8,11 +8,13 @@
 namespace UOP\Core;
 
 use UOP\Application\Consent\ConsentDefinitionService;
+use UOP\Application\Consent\ConsentRecordService;
 use UOP\Application\Policy\PolicyService;
 use UOP\Extension\ModuleInterface;
 use UOP\Infrastructure\Database\AuditWriter;
 use UOP\Infrastructure\Database\Connection;
 use UOP\Infrastructure\Database\ConsentRepository;
+use UOP\Infrastructure\Database\ConsentRecordRepository;
 use UOP\Infrastructure\Database\OutboxRepository;
 
 /** Register private M5 services; public routes require a later M6 gate. */
@@ -35,6 +37,18 @@ final class M5Module implements ModuleInterface {
 		global $wpdb;
 		$prefix = $wpdb->prefix . 'uop_';
 		$container->set( ConsentRepository::class, static fn ( ServiceContainer $c ) => new ConsentRepository( $c->get( Connection::class ), $prefix ) );
+		$container->set( ConsentRecordRepository::class, static fn ( ServiceContainer $c ) => new ConsentRecordRepository( $c->get( Connection::class ), $prefix ) );
+		$container->set(
+			ConsentRecordService::class,
+			static fn ( ServiceContainer $c ) => new ConsentRecordService(
+				$c->get( ConsentRecordRepository::class ),
+				$c->get( ConsentRepository::class ),
+				$c->get( PolicyService::class ),
+				$c->get( TransactionManager::class ),
+				$c->get( AuditWriter::class ),
+				$c->get( OutboxRepository::class )
+			)
+		);
 		$container->set(
 			ConsentDefinitionService::class,
 			static fn ( ServiceContainer $c ) => new ConsentDefinitionService(

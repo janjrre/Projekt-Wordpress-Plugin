@@ -15,6 +15,7 @@ use UOP\Application\Registration\CapacityAllocationService;
 use UOP\Application\Registration\CapacityLifecycleService;
 use UOP\Application\Registration\EmailVerificationService;
 use UOP\Application\Registration\RegistrationService;
+use UOP\Application\Consent\ConsentRecordService;
 use UOP\Application\Registration\RegistrationTransitionService;
 use UOP\Domain\Registrations\RegistrationStateMachine;
 use UOP\Application\Policy\PolicyService;
@@ -65,7 +66,8 @@ final class M4Module implements ModuleInterface {
 				$c->get( AuditWriter::class ),
 				$c->get( OutboxRepository::class ),
 				$c->get( RegistrationFactsService::class ),
-				$c->get( PersonRepository::class )
+				$c->get( PersonRepository::class ),
+				$c->get( ConsentRecordService::class )
 			)
 		);
 		$container->set(
