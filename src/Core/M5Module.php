@@ -14,11 +14,17 @@ use UOP\Application\Communication\EmailTemplateRules;
 use UOP\Application\Communication\EmailTemplateService;
 use UOP\Application\Communication\EmailMessageService;
 use UOP\Application\Policy\PolicyService;
+use UOP\Application\Export\ExportJobService;
+use UOP\Application\Export\PersonExportGenerator;
 use UOP\Application\Privacy\WordPressPrivacyAdapter;
 use UOP\Application\Privacy\RetentionService;
 use UOP\Extension\ModuleInterface;
 use UOP\Infrastructure\Database\AuditWriter;
 use UOP\Infrastructure\Database\Connection;
+use UOP\Infrastructure\Database\ExportJobRepository;
+use UOP\Infrastructure\Database\PersonRepository;
+use UOP\Infrastructure\Export\ExportStorageInterface;
+use UOP\Infrastructure\Export\LocalExportStorage;
 use UOP\Infrastructure\Database\ConsentRepository;
 use UOP\Infrastructure\Database\ConsentRecordRepository;
 use UOP\Infrastructure\Database\OutboxRepository;
@@ -47,6 +53,21 @@ final class M5Module implements ModuleInterface {
 	public function register( ServiceContainer $container ): void {
 		global $wpdb;
 		$prefix = $wpdb->prefix . 'uop_';
+		$container->set( ExportStorageInterface::class, static fn () => new LocalExportStorage() );
+		$container->set( ExportJobRepository::class, static fn ( ServiceContainer $c ) => new ExportJobRepository( $c->get( Connection::class ), $prefix ) );
+		$container->set( PersonExportGenerator::class, static fn ( ServiceContainer $c ) => new PersonExportGenerator( $c->get( PersonRepository::class ), $c->get( PolicyService::class ) ) );
+		$container->set(
+			ExportJobService::class,
+			static fn ( ServiceContainer $c ) => new ExportJobService(
+				$c->get( ExportJobRepository::class ),
+				$c->get( PersonExportGenerator::class ),
+				$c->get( ExportStorageInterface::class ),
+				$c->get( PolicyService::class ),
+				$c->get( TransactionManager::class ),
+				$c->get( AuditWriter::class ),
+				$c->get( OutboxRepository::class )
+			)
+		);
 		$container->set( EmailTemplateCatalog::class, static fn () => new EmailTemplateCatalog() );
 		$container->set( EmailTemplateRules::class, static fn ( ServiceContainer $c ) => new EmailTemplateRules( $c->get( EmailTemplateCatalog::class ) ) );
 		$container->set( EmailTemplateRepository::class, static fn ( ServiceContainer $c ) => new EmailTemplateRepository( $c->get( Connection::class ), $prefix ) );
