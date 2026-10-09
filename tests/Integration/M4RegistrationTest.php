@@ -978,4 +978,33 @@ final class M4RegistrationTest extends TestCase {
 		$services['lifecycle']->accept_offer($services['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
 		self::assertSame('accepted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0]['status']);
 	}
+
+	/** An audited event time change never mutates the registration's frozen form. */
+	public function test_rescheduling_occurrence_preserves_submitted_snapshots_and_denies_other_scope(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$services,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$post_id=(int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		$original=new OccurrenceWindow('2030-04-15T12:00:00+02:00','2030-04-15T14:00:00+02:00','Europe/Berlin');
+		$occurrence=$services['event']->add_occurrence($services['actor'],$this->scope,$post_id,$original,$now,CorrelationId::generate());
+		$registration=$services['submit']->submit($services['actor'],$this->scope,$person,$event,$occurrence,PublicId::generate(),['name'=>'Unchanged participant'],$now,CorrelationId::generate());
+		$reg_id=(int)$this->db->rows('SELECT id FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['id'];
+		$before=$this->db->rows('SELECT payload_json,payload_hash FROM %i WHERE registration_id = %d',[$this->prefix.'registration_snapshots',$reg_id]);
+		$window=new OccurrenceWindow('2030-04-16T13:00:00+02:00','2030-04-16T15:00:00+02:00','Europe/Berlin');
+		try {
+			$services['event']->reschedule_occurrence(new Actor(999999),$this->scope,$post_id,$occurrence,$window,$now,CorrelationId::generate());
+			self::fail('Unknown actor changed the schedule');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		try {
+			$services['event']->reschedule_occurrence($services['actor'],new OrgScope($this->scope->id+1),$post_id,$occurrence,$window,$now,CorrelationId::generate());
+			self::fail('Other organization changed the schedule');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertTrue($services['event']->reschedule_occurrence($services['actor'],$this->scope,$post_id,$occurrence,$window,$now,CorrelationId::generate()));
+		self::assertFalse($services['event']->reschedule_occurrence($services['actor'],$this->scope,$post_id,$occurrence,$window,$now,CorrelationId::generate()));
+		$after=$this->db->rows('SELECT payload_json,payload_hash FROM %i WHERE registration_id = %d',[$this->prefix.'registration_snapshots',$reg_id]);
+		self::assertSame($before,$after);
+		self::assertSame($window->start_utc(),$this->db->rows('SELECT start_at FROM %i WHERE public_id = %s',[$this->prefix.'event_occurrences',$occurrence->to_binary()])[0]['start_at']);
+		self::assertSame('submitted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
+		self::assertCount(1,$this->db->rows('SELECT id FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','event.occurrence_rescheduled']));
+		self::assertCount(1,$this->db->rows('SELECT id FROM %i WHERE action = %s',[$this->prefix.'audit_log','event.occurrence_rescheduled']));
+	}
 }

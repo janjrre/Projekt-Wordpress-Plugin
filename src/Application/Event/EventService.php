@@ -110,4 +110,61 @@ final class EventService {
 		);
 		return $uuid;
 	}
+	/**
+	 * Move one scheduled occurrence without rewriting any submitted snapshots.
+	 *
+	 * The event and occurrence are locked in that order. Repeating the same
+	 * interval is a no-op with no duplicate notification domain event.
+	 *
+	 * @param Actor            $actor       Authorized event manager.
+	 * @param OrgScope         $scope       Trusted organization.
+	 * @param int              $post_id     Event WordPress CPT identity.
+	 * @param PublicId         $occurrence  Scoped occurrence public UUID.
+	 * @param OccurrenceWindow $window      New validated local interval.
+	 * @param string           $utc_now     Trusted UTC timestamp.
+	 * @param CorrelationId    $correlation Request correlation.
+	 * @return bool True when actual schedule changed.
+	 * @throws RuntimeException If scope, state or actor is not authorized.
+	 */
+	public function reschedule_occurrence( Actor $actor, OrgScope $scope, int $post_id, PublicId $occurrence, OccurrenceWindow $window, string $utc_now, CorrelationId $correlation ): bool {
+		return $this->tx->run(
+			function () use ( $actor, $scope, $post_id, $occurrence, $window, $utc_now, $correlation ): bool {
+				$event    = $this->events->lock_for_update( $scope, $post_id );
+				$post     = get_post( $post_id );
+				$resource = new PolicyObject( $scope->id, 'event', $post_id, null, $post_id );
+				if ( ! $event || 'active' !== $event['status'] || $window->zone !== $event['timezone']
+					|| ! $post || 'uop_event' !== $post->post_type
+					|| ! user_can( $actor->user_id, 'edit_post', $post_id )
+					|| ! $this->policy->can( $actor, 'event.manage', $resource )->allowed ) {
+					throw new RuntimeException( 'Occurrence rescheduling is not authorized.' );
+				}
+				$row = $this->occurrences->lock_for_update( $scope, $occurrence );
+				if ( ! $row || (int) $row['event_post_id'] !== $post_id || 'scheduled' !== $row['status']
+					|| $row['timezone'] !== $window->zone ) {
+					throw new RuntimeException( 'Occurrence rescheduling target unavailable.' );
+				}
+				if ( $row['start_at'] === $window->start_utc() && $row['end_at'] === $window->end_utc() ) {
+					return false;
+				}
+				if ( ! $this->occurrences->reschedule( $scope, $occurrence, $window, $utc_now ) ) {
+					throw new RuntimeException( 'Occurrence schedule was changed concurrently.' );
+				}
+				$event_uuid = PublicId::generate();
+				$this->audit->append( $scope, $actor, 'event.occurrence_rescheduled', $resource, 'success', $correlation, $event_uuid );
+				$this->outbox->append(
+					$scope,
+					$event_uuid,
+					'event',
+					$post_id,
+					'event.occurrence_rescheduled',
+					$correlation,
+					array(
+						'public_id' => $occurrence->to_string(),
+					)
+				);
+				return true;
+			}
+		);
+	}
+
 }

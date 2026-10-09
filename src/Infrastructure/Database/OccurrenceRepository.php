@@ -48,6 +48,37 @@ final class OccurrenceRepository extends ScopedRepository {
 		);
 	}
 	/**
+	 * Lock a scheduled occurrence and its owning event while respecting scope.
+	 *
+	 * @param OrgScope $scope       Organization boundary.
+	 * @param PublicId $occurrence Opaque occurrence identity.
+	 * @return array<string,mixed>|null Serialized occurrence row.
+	 */
+	public function lock_for_update( OrgScope $scope, PublicId $occurrence ): ?array {
+		$rows = $this->db->rows(
+			'SELECT id, event_post_id, start_at, end_at, timezone, status FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1 FOR UPDATE',
+			array( $this->prefix . 'event_occurrences', $scope->id, $occurrence->to_binary() )
+		);
+		return $rows[0] ?? null;
+	}
+
+	/**
+	 * Persist only the mutable schedule of one already locked occurrence.
+	 *
+	 * @param OrgScope         $scope       Organization boundary.
+	 * @param PublicId         $occurrence Scoped occurrence identity.
+	 * @param OccurrenceWindow $window     DST-validated new interval.
+	 * @param string           $utc_now    Trusted UTC timestamp.
+	 * @return bool Whether exactly one scheduled occurrence was updated.
+	 */
+	public function reschedule( OrgScope $scope, PublicId $occurrence, OccurrenceWindow $window, string $utc_now ): bool {
+		return 1 === $this->db->execute(
+			"UPDATE %i SET start_at = %s, end_at = %s, updated_at = %s WHERE organization_id = %d AND public_id = %s AND status = 'scheduled' AND timezone = %s",
+			array( $this->prefix . 'event_occurrences', $window->start_utc(), $window->end_utc(), $utc_now, $scope->id, $occurrence->to_binary(), $window->zone )
+		);
+	}
+
+	/**
 	 * List event occurrences only from their owner organization.
 	 *
 	 * @param OrgScope $scope Trusted organization.
