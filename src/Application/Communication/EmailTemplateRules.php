@@ -84,11 +84,11 @@ final class EmailTemplateRules {
 	/**
 	 * Render a preview or an immutable queued message from verified variables.
 	 *
-	 * @param string               $key       Template key.
-	 * @param string               $locale    Template locale.
-	 * @param string               $subject   Template subject.
-	 * @param string               $text      Plain-text source.
-	 * @param string|null          $html      HTML source.
+	 * @param string              $key       Template key.
+	 * @param string              $locale    Template locale.
+	 * @param string              $subject   Template subject.
+	 * @param string              $text      Plain-text source.
+	 * @param string|null         $html      HTML source.
 	 * @param array<string,mixed> $variables Trusted and bounded render data.
 	 * @return array{subject:string,body_text:string,body_html:string|null}
 	 * @throws InvalidArgumentException When any required value is absent.
