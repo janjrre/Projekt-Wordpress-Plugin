@@ -11,6 +11,8 @@ use UOP\Application\Identity\DelegationService;
 use UOP\Application\Form\FormService;
 use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService, RegistrationTransitionService, CapacityAllocationService, CapacityLifecycleService, EventCancellationService, RegistrationFactsService, EmailVerificationService};
 use UOP\Domain\Registrations\RegistrationStateMachine;
+use UOP\Domain\Events\OccurrenceWindow;
+use UOP\Domain\Profiles\FieldRules;
 use UOP\Core\{CorrelationId, PublicId, TransactionManager};
 use UOP\Domain\Organization\OrgScope;
 use UOP\Infrastructure\Database\{AssignmentRepository, AuditWriter, CapacityRepository, DelegationRepository, EventRepository, FormRepository, Installer, OccurrenceRepository, OutboxRepository, PersonRepository, RegistrationRepository, WaitlistRepository, EventCancellationRepository, RelationshipRepository, RegistrationFactsRepository, ProfileFieldRepository, ProfileValueRepository, SchemaManifest, WpdbConnection};
@@ -562,5 +564,59 @@ final class M4RegistrationTest extends TestCase {
 		$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
 		self::assertSame('cancelled',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
 		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registrations'])[0]['n']);
+	}
+
+	/** Age and profile conditions are evaluated against database facts, never form assertions. */
+	public function test_authoritative_age_and_profile_conditions_use_scheduled_event_start(): void {
+		$condition=['schema_version'=>1,'all'=>[[
+			'source'=>'profile','field'=>'date_of_birth','operator'=>'age_gte_at','value'=>18,'context'=>'event.start',
+		]]];
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'adult_note','type'=>'text','label'=>'Adult note','required'=>false,'visible_when'=>$condition],
+		]];
+		[$s,$adult,$event,$form,$now]=$this->setup_registration($draft);
+		$event_post=(int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		$occurrence=$s['event']->add_occurrence($s['actor'],$this->scope,$event_post,new OccurrenceWindow('2030-04-15T12:00:00+02:00','2030-04-15T14:00:00+02:00','Europe/Berlin'),$now,CorrelationId::generate());
+		$field=PublicId::generate();
+		$fields=new ProfileFieldRepository($this->db,$this->prefix);
+		$values=new ProfileValueRepository($this->db,$this->prefix);
+		$fields->create($this->scope,$field,['key'=>'date_of_birth','type'=>'date','label'=>'Date of birth','subject_view'=>true],$now);
+		$field_id=(int)$fields->find($this->scope,$field)['id'];
+		$adult_id=(int)$s['people']->find($this->scope,$adult)['id'];
+		$values->replace($this->scope,$adult_id,$field_id,FieldRules::normalize('date','2000-01-01'),$now);
+		$adult_registration=$s['submit']->submit($s['actor'],$this->scope,$adult,$event,$occurrence,PublicId::generate(),['name'=>'Adult','adult_note'=>'Allowed'],$now,CorrelationId::generate());
+		self::assertSame('submitted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$adult_registration->to_binary()])[0]['status']);
+		$child=PublicId::generate();
+		$s['people']->create($this->scope,$child,'Minor',null,$now);
+		$child_id=(int)$s['people']->find($this->scope,$child)['id'];
+		$values->replace($this->scope,$child_id,$field_id,FieldRules::normalize('date','2020-01-01'),$now);
+		try {
+			$s['submit']->submit($s['actor'],$this->scope,$child,$event,$occurrence,PublicId::generate(),['name'=>'Child','adult_note'=>'Forge adult status'],$now,CorrelationId::generate());
+			self::fail('Applicant forged profile condition');
+		} catch (InvalidArgumentException) { self::assertTrue(true); }
+		$this->db->execute('UPDATE %i SET eligibility_json = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'event_settings',wp_json_encode($condition),$this->scope->id,$event->to_binary()]);
+		try {
+			$s['submit']->submit($s['actor'],$this->scope,$child,$event,$occurrence,PublicId::generate(),['name'=>'Child'],$now,CorrelationId::generate());
+			self::fail('Underage applicant bypassed event eligibility');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registrations'])[0]['n']);
+	}
+
+	/** An age requirement without a trustworthy scheduled start must not evaluate to today. */
+	public function test_age_condition_fails_closed_without_unique_event_start(): void {
+		$condition=['schema_version'=>1,'all'=>[[
+			'source'=>'profile','field'=>'date_of_birth','operator'=>'age_gte_at','value'=>18,'context'=>'event.start',
+		]]];
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'adult_note','type'=>'text','label'=>'Note','required'=>false,'visible_when'=>$condition],
+		]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		try {
+			$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'No schedule'],$now,CorrelationId::generate());
+			self::fail('Event without start silently evaluated age');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'registrations']));
 	}
 }

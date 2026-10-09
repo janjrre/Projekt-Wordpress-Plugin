@@ -31,7 +31,7 @@ final class RegistrationRepository {
 	 */
 	public function lock_person( OrgScope $scope, PublicId $person ): ?array {
 		$rows = $this->db->rows(
-			"SELECT id, public_id, status FROM %i WHERE organization_id = %d AND public_id = %s AND status = 'active' LIMIT 1 FOR UPDATE",
+			"SELECT id, public_id, status FROM %i WHERE organization_id = %d AND public_id = %s AND status = 'scheduled' LIMIT 1 FOR UPDATE",
 			array( $this->prefix . 'persons', $scope->id, $person->to_binary() )
 		);
 		return $rows[0] ?? null;
