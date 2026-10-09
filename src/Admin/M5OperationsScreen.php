@@ -7,7 +7,6 @@
 
 namespace UOP\Admin;
 
-use RuntimeException;
 use UOP\Application\Communication\EmailMessageService;
 use UOP\Application\Export\ExportJobService;
 use UOP\Application\Policy\Actor;
@@ -25,12 +24,12 @@ final class M5OperationsScreen {
 	/**
 	 * Bind existing application services; no direct SQL or bypass commands in UI.
 	 *
-	 * @param PolicyService           $policy Shared live authorization.
-	 * @param M5OperationsRepository  $operations Safe bounded read model.
-	 * @param EmailMessageService     $mail Authorized retry command.
-	 * @param RetentionService        $retention Authorized preview and processing.
-	 * @param ExportJobService        $exports Private file expiry cleanup.
-	 * @param PrivacyAccountGateway   $privacy Conservative email identity check.
+	 * @param PolicyService          $policy Shared live authorization.
+	 * @param M5OperationsRepository $operations Safe bounded read model.
+	 * @param EmailMessageService    $mail Authorized retry command.
+	 * @param RetentionService       $retention Authorized preview and processing.
+	 * @param ExportJobService       $exports Private file expiry cleanup.
+	 * @param PrivacyAccountGateway  $privacy Conservative email identity check.
 	 */
 	public function __construct(
 		private PolicyService $policy,
@@ -60,10 +59,10 @@ final class M5OperationsScreen {
 		if ( null === $scope ) {
 			wp_die( esc_html__( 'UOP organization is not available.', 'uop-core' ) );
 		}
-		$actor = new Actor( get_current_user_id() );
-		$can_mail = $this->allowed( $actor, $scope, 'communication.send' );
+		$actor       = new Actor( get_current_user_id() );
+		$can_mail    = $this->allowed( $actor, $scope, 'communication.send' );
 		$can_privacy = $this->allowed( $actor, $scope, 'privacy.manage' );
-		$can_export = $this->allowed( $actor, $scope, 'export.create' );
+		$can_export  = $this->allowed( $actor, $scope, 'export.create' );
 		if ( ! current_user_can( 'uop_manage_settings' ) || ! ( $can_mail || $can_privacy || $can_export ) ) { // phpcs:ignore -- Custom organization capability.
 			wp_die( esc_html__( 'You cannot view UOP operations.', 'uop-core' ) );
 		}
@@ -96,7 +95,8 @@ final class M5OperationsScreen {
 	 * @return string Generic action outcome, no personally identifying content.
 	 */
 	private function submit( Actor $actor, OrgScope $scope, bool $can_mail, bool $can_privacy, bool $can_export ): string {
-		if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) || ! isset( $_POST['uop_operation'] ) ) {
+		$method = isset( $_SERVER['REQUEST_METHOD'] ) && is_string( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : '';
+		if ( 'POST' !== $method || ! isset( $_POST['uop_operation'] ) ) {
 			return '';
 		}
 		$nonce = isset( $_POST['_wpnonce'] ) && is_string( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is verified below.
@@ -104,7 +104,7 @@ final class M5OperationsScreen {
 			return __( 'The request was rejected. Reload this page.', 'uop-core' );
 		}
 		$operation = is_string( $_POST['uop_operation'] ) ? sanitize_key( wp_unslash( $_POST['uop_operation'] ) ) : '';
-		$identity = isset( $_POST['uop_identifier'] ) && is_string( $_POST['uop_identifier'] ) ? sanitize_text_field( wp_unslash( $_POST['uop_identifier'] ) ) : '';
+		$identity  = isset( $_POST['uop_identifier'] ) && is_string( $_POST['uop_identifier'] ) ? sanitize_text_field( wp_unslash( $_POST['uop_identifier'] ) ) : '';
 		try {
 			if ( 'mail_retry' === $operation && $can_mail ) {
 				$retried = $this->mail->retry_failed( $actor, $scope, PublicId::from_string( $identity ), CorrelationId::generate() );
@@ -112,6 +112,7 @@ final class M5OperationsScreen {
 			}
 			if ( 'export_cleanup' === $operation && $can_export ) {
 				$count = $this->exports->cleanup( $scope, gmdate( 'Y-m-d H:i:s' ) );
+				/* translators: %d: Number of expired export jobs processed. */
 				return sprintf( __( '%d expired export jobs have been processed.', 'uop-core' ), $count );
 			}
 			if ( 'privacy_lookup' === $operation && $can_privacy ) {
@@ -124,6 +125,7 @@ final class M5OperationsScreen {
 			}
 			if ( 'retention_preview' === $operation && $can_privacy ) {
 				$preview = $this->retention->dry_run( $actor, $scope, $identity, 0, gmdate( 'Y-m-d H:i:s' ) );
+				/* translators: 1: Eligible records, 2: Protected records, 3: Examined records. */
 				return sprintf( __( 'Preview: %1$d eligible, %2$d protected, %3$d examined. No records were changed.', 'uop-core' ), $preview['eligible'], $preview['held'], $preview['examined'] );
 			}
 		} catch ( \Throwable ) {
@@ -201,6 +203,7 @@ final class M5OperationsScreen {
 		echo '</tbody></table>';
 		$failures = $this->operations->retention_failures( $scope );
 		foreach ( $failures as $row ) {
+			/* translators: 1: Retention events requiring recovery, 2: Number of failed attempts. */
 			echo '<p>' . esc_html( sprintf( __( 'Retention outbox events requiring recovery: %1$d at %2$d attempts.', 'uop-core' ), (int) $row['total'], (int) $row['attempts'] ) ) . '</p>';
 		}
 	}
