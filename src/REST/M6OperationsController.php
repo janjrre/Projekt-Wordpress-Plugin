@@ -12,6 +12,7 @@ use RuntimeException;
 use UOP\Application\Consent\ConsentDefinitionService;
 use UOP\Application\Consent\ConsentRecordService;
 use UOP\Application\Query\M6OperationsReadService;
+use UOP\Application\Registration\CapacityAllocationService;
 use UOP\Core\CorrelationId;
 use UOP\Core\PublicId;
 use WP_Error;
@@ -25,12 +26,14 @@ final class M6OperationsController extends BaseController {
 	 *
 	 * @param M6OperationsReadService  $reads       Live, policy-projected views.
 	 * @param ConsentDefinitionService $definitions Approved immutable documents.
-	 * @param ConsentRecordService     $records     Authorized withdrawal service.
+	 * @param ConsentRecordService      $records    Authorized withdrawal service.
+	 * @param CapacityAllocationService $allocation Transaction-safe seat allocation.
 	 */
 	public function __construct(
 		private M6OperationsReadService $reads,
 		private ConsentDefinitionService $definitions,
-		private ConsentRecordService $records
+		private ConsentRecordService $records,
+		private CapacityAllocationService $allocation
 	) {}
 
 	/** Declare explicit REST permissions and public UUID request parameters. */
@@ -39,6 +42,7 @@ final class M6OperationsController extends BaseController {
 		$this->register_endpoint( '/registrations/(?P<uuid>[0-9a-f-]{36})/consents', 'GET', array( $this, 'consents' ), array( $this, 'can_consents' ), $this->uuid_argument() );
 		$this->register_endpoint( '/consents/(?P<uuid>[0-9a-f-]{36})', 'GET', array( $this, 'consent' ), array( $this, 'can_consent' ), $this->uuid_argument() );
 		$this->register_endpoint( '/consents/(?P<uuid>[0-9a-f-]{36})/withdrawals', 'POST', array( $this, 'withdraw' ), array( $this, 'can_withdraw' ), $this->uuid_argument() );
+		$this->register_endpoint( '/registrations/(?P<uuid>[0-9a-f-]{36})/allocation', 'POST', array( $this, 'allocate' ), array( $this, 'can_allocate' ), $this->uuid_argument() );
 		$this->register_endpoint( '/consent-definitions', 'POST', array( $this, 'definition' ), array( $this, 'can_privacy' ) );
 		$this->register_endpoint( '/consent-definitions/(?P<uuid>[0-9a-f-]{36})/versions', 'POST', array( $this, 'publish' ), array( $this, 'can_privacy' ), $this->uuid_argument() );
 		$this->register_endpoint( '/consent-versions/(?P<uuid>[0-9a-f-]{36})', 'GET', array( $this, 'version' ), array( $this, 'can_privacy' ), $this->uuid_argument() );
@@ -91,6 +95,18 @@ final class M6OperationsController extends BaseController {
 		$scope = $this->organization_scope();
 		$id    = $this->request_public_id( $request );
 		return $scope && $id && null !== $this->reads->consent( $this->current_actor(), $scope, $id, 'registration.cancel' ) ? true : $this->denied( true );
+	}
+
+	/**
+	 * Require both registration review and capacity management authorization.
+	 *
+	 * @param WP_REST_Request $request Scoped registration.
+	 * @return bool|WP_Error
+	 */
+	public function can_allocate( WP_REST_Request $request ): bool|WP_Error {
+		$scope = $this->organization_scope();
+		$id    = $this->request_public_id( $request );
+		return $scope && $id && $this->reads->can_allocate( $this->current_actor(), $scope, $id ) ? true : $this->denied( true );
 	}
 
 	/**
@@ -175,6 +191,45 @@ final class M6OperationsController extends BaseController {
 					'decision'  => 'withdrawn',
 				),
 				201
+			);
+		} catch ( InvalidArgumentException ) {
+			return RestError::for_kind( 'invalid_schema' );
+		} catch ( RuntimeException ) {
+			return RestError::for_kind( 'conflict' );
+		}
+	}
+
+	/**
+	 * Make one capacity decision using the M4 bucket-first transaction.
+	 * This endpoint cannot issue another person's secret waitlist offer.
+	 *
+	 * @param WP_REST_Request $request Public bucket and idempotency keys only.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function allocate( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+		try {
+			$body = $this->strict_json_object(
+				$request,
+				array(
+					'bucket_id'  => array( 'type' => 'string' ),
+					'command_id' => array( 'type' => 'string' ),
+				),
+				array( 'bucket_id', 'command_id' )
+			);
+			$bucket  = PublicId::from_string( $body['bucket_id'] );
+			$command = PublicId::from_string( $body['command_id'] );
+			$scope   = $this->organization_scope();
+			$id      = $this->request_public_id( $request );
+			if ( ! $scope || ! $id ) {
+				return RestError::for_kind( 'not_found' );
+			}
+			$status = $this->allocation->decide( $this->current_actor(), $scope, $id, $bucket, $command, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
+			return new WP_REST_Response(
+				array(
+					'public_id' => $id->to_string(),
+					'status'    => $status,
+				),
+				200
 			);
 		} catch ( InvalidArgumentException ) {
 			return RestError::for_kind( 'invalid_schema' );

@@ -13,6 +13,7 @@ use UOP\Application\Identity\PersonService;
 use UOP\Application\Policy\PolicyService;
 use UOP\Application\Query\M6ReadService;
 use UOP\Application\Query\M6OperationsReadService;
+use UOP\Application\Registration\CapacityAllocationService;
 use UOP\Application\Registration\CapacityLifecycleService;
 use UOP\Application\Registration\EmailVerificationService;
 use UOP\Application\Registration\RegistrationService;
@@ -94,7 +95,8 @@ final class M6Module implements ModuleInterface {
 			static fn ( ServiceContainer $c ) => new M6OperationsController(
 				$c->get( M6OperationsReadService::class ),
 				$c->get( ConsentDefinitionService::class ),
-				$c->get( ConsentRecordService::class )
+				$c->get( ConsentRecordService::class ),
+				$c->get( CapacityAllocationService::class )
 			)
 		);
 		add_action( 'rest_api_init', array( $container->get( PeopleController::class ), 'register' ) );

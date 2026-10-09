@@ -114,6 +114,23 @@ final class M6OperationsReadService {
 	}
 
 	/**
+	 * Check allocation privileges without exposing registration or bucket existence.
+	 *
+	 * @param Actor    $actor Current reviewer.
+	 * @param OrgScope $scope Trusted tenant.
+	 * @param PublicId $id    Requested registration.
+	 * @return bool
+	 */
+	public function can_allocate( Actor $actor, OrgScope $scope, PublicId $id ): bool {
+		$row = $this->registrations->find( $scope, $id );
+		if ( ! $row ) {
+			return false;
+		}
+		$object = new PolicyObject( $scope->id, 'registration', (int) $row['id'], (int) $row['person_id'], (int) $row['event_post_id'] );
+		return $this->policy->can( $actor, 'registration.review', $object )->allowed && $this->policy->can( $actor, 'capacity.manage', $object )->allowed;
+	}
+
+	/**
 	 * Return one immutable consent text and fingerprint only to privacy managers.
 	 *
 	 * @param Actor    $actor Current actor.

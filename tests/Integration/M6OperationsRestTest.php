@@ -105,13 +105,14 @@ final class M6OperationsRestTest extends TestCase {
 			$docs,
 			$policy
 		);
-		( new M6OperationsController( $views, $definitions, $records ) )->register();
+		
 		$form       = new FormService( new FormRepository( $this->db, $this->prefix ), $policy, $tx, $audit, $outbox );
 		$event      = new EventService( new EventRepository( $this->db, $this->prefix ), new OccurrenceRepository( $this->db, $this->prefix ), $policy, $tx, $audit, $outbox );
 		$registrations = new RegistrationRepository( $this->db, $this->prefix );
 		$facts         = new RegistrationFactsService( new RegistrationFactsRepository( $this->db, $this->prefix ), $policy );
 		$seats         = new CapacityAllocationService( new CapacityRepository( $this->db, $this->prefix ), $registrations, new RegistrationStateMachine(), $policy, $tx, $audit, $outbox, new RegistrationEligibilityService( $registrations, $facts ) );
 		$submit        = new RegistrationService( $registrations, $policy, $tx, $audit, $outbox, $facts, $people, $records );
+		( new M6OperationsController( $views, $definitions, $records, $seats ) )->register();
 		$config        = new RegistrationConfigurationService( $this->db, $this->prefix, $policy, $tx, $audit, $outbox );
 		return compact( 'admin', 'other', 'actor', 'people', 'docs', 'records', 'definitions', 'views', 'form', 'event', 'seats', 'submit', 'config' );
 	}
@@ -202,6 +203,13 @@ final class M6OperationsRestTest extends TestCase {
 		$person = PublicId::generate();
 		$s['people']->create( $this->scope, $person, 'Participant', null, $now );
 		$registration = $s['submit']->submit( $s['actor'], $this->scope, $person, $event, null, PublicId::generate(), array( 'name' => 'Member', 'portrait' => true ), $now, CorrelationId::generate() );
+		$bucket = $s['seats']->create_general_bucket( $s['actor'], $this->scope, $event, 1, $now, CorrelationId::generate() );
+		$action = '/uop/v1/registrations/' . $registration->to_string() . '/allocation';
+		$allocation = $this->json( 'POST', $action, array( 'bucket_id' => $bucket->to_string(), 'command_id' => PublicId::generate()->to_string() ) );
+		self::assertSame( 200, $allocation->get_status(), wp_json_encode( $allocation->get_data() ) );
+		self::assertSame( 'accepted', $allocation->get_data()['status'] );
+		$invalid_seat = $this->json( 'POST', $action, array( 'bucket_id' => $bucket->to_string(), 'command_id' => PublicId::generate()->to_string(), 'status' => 'accepted' ) );
+		self::assertSame( 400, $invalid_seat->get_status() );
 		$list_url = '/uop/v1/registrations/' . $registration->to_string() . '/consents';
 		$list = rest_do_request( new \WP_REST_Request( 'GET', $list_url ) );
 		self::assertSame( 200, $list->get_status(), wp_json_encode( $list->get_data() ) );
@@ -215,6 +223,7 @@ final class M6OperationsRestTest extends TestCase {
 		self::assertSame( 404, rest_do_request( new \WP_REST_Request( 'GET', $list_url ) )->get_status() );
 		self::assertSame( 404, rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/consents/' . $record ) )->get_status() );
 		self::assertSame( 404, $this->json( 'POST', '/uop/v1/consents/' . $record . '/withdrawals', array( 'command_id' => PublicId::generate()->to_string() ) )->get_status() );
+		self::assertSame( 404, $this->json( 'POST', $action, array( 'bucket_id' => $bucket->to_string(), 'command_id' => PublicId::generate()->to_string() ) )->get_status() );
 
 		wp_set_current_user( $s['admin'] );
 		$command = PublicId::generate()->to_string();
