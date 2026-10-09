@@ -800,4 +800,45 @@ final class M4RegistrationTest extends TestCase {
 		$assignments->grant($this->scope,$manager,'event_manager','event',$event_post,'personal',$now);
 		self::assertSame('accepted',$service->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
 	}
+
+	/**
+	 * Full manager/guest golden path: verify, allocate, waitlist, release,
+	 * privately promote, accept and cancel the event without losing evidence.
+	 */
+	public function test_m4_golden_path_public_guest_through_event_cancellation(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'contact','type'=>'email','label'=>'Email','required'=>true],
+		]];
+		[$s,$member,$event,$form,$now]=$this->setup_registration($draft);
+		$this->db->execute("UPDATE %i SET visibility = 'public', require_email_verification = 1 WHERE organization_id = %d AND public_id = %s",[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]);
+		$guest=$s['submit']->submit_guest($this->scope,$event,null,PublicId::generate(),['name'=>'Guest','contact'=>'guest@example.invalid'],$now,CorrelationId::generate());
+		$waiting=$s['submit']->submit($s['actor'],$this->scope,$member,$event,null,PublicId::generate(),['name'=>'Member','contact'=>'member@example.invalid'],$now,CorrelationId::generate());
+		foreach ([$guest,$waiting] as $id) {
+			$challenge=$s['verification']->issue($s['actor'],$this->scope,$id,$now,CorrelationId::generate());
+			self::assertTrue($s['verification']->verify($this->scope,$id,$challenge['token'],$now,CorrelationId::generate()));
+			self::assertFalse($s['verification']->verify($this->scope,$id,$challenge['token'],$now,CorrelationId::generate()));
+		}
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$guest,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		self::assertSame('waitlisted',$s['capacity']->decide($s['actor'],$this->scope,$waiting,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+		$snapshot_count=(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registration_snapshots'])[0]['n'];
+		self::assertSame(2,$snapshot_count);
+		$s['lifecycle']->cancel($s['actor'],$this->scope,$guest,PublicId::generate(),$now,CorrelationId::generate());
+		$requests=$this->db->rows('SELECT payload_json FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','capacity.promotion_requested']);
+		self::assertCount(1,$requests);
+		$offer=$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		self::assertStringNotContainsString($offer['token'],$requests[0]['payload_json']);
+		$offer_id=PublicId::from_string($offer['public_id']);
+		$s['lifecycle']->accept_offer($s['actor'],$this->scope,$offer_id,$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+		self::assertSame(1,$s['cancel_event']->cancel($s['actor'],$this->scope,$event,PublicId::generate(),$now,CorrelationId::generate()));
+		self::assertSame(['cancelled','cancelled'],array_column($this->db->rows('SELECT status FROM %i ORDER BY id',[$this->prefix.'registrations']),'status'));
+		self::assertSame($snapshot_count,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registration_snapshots'])[0]['n']);
+		self::assertSame([],$this->db->rows("SELECT id FROM %i WHERE status IN ('held','confirmed')",[$this->prefix.'capacity_claims']));
+		try {
+			$s['lifecycle']->accept_offer($s['actor'],$this->scope,$offer_id,$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Accepted and event-cancelled offer remained usable');
+		} catch (RuntimeException) { self::assertTrue(true); }
+	}
 }
