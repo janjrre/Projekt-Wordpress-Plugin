@@ -371,4 +371,50 @@ final class M4RegistrationTest extends TestCase {
 		self::assertSame([],$this->db->rows("SELECT id FROM %i WHERE event_name = 'registration.cancelled'",[$this->prefix.'domain_events']));
 	}
 
+
+	public function test_offered_seat_cannot_be_accepted_when_event_is_closed_or_unpublished(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$waiting_person=PublicId::generate();
+		$s['people']->create($this->scope,$waiting_person,'Waitlisted guest',null,$now);
+		$first=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'First'],$now,CorrelationId::generate());
+		$second=$s['submit']->submit($s['actor'],$this->scope,$waiting_person,$event,null,PublicId::generate(),['name'=>'Second'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$s['capacity']->decide($s['actor'],$this->scope,$second,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		$s['lifecycle']->cancel($s['actor'],$this->scope,$first,PublicId::generate(),$now,CorrelationId::generate());
+		$offer=$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+		self::assertNotNull($offer);
+		$offer_id=PublicId::from_string($offer['public_id']);
+		$this->db->execute("UPDATE %i SET status = 'cancelled' WHERE organization_id = %d AND public_id = %s",[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]);
+		try {
+			$s['lifecycle']->accept_offer($s['actor'],$this->scope,$offer_id,$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Closed event accepted an outstanding waitlist offer');
+		} catch (RuntimeException) {
+			self::assertTrue(true);
+		}
+		$this->db->execute("UPDATE %i SET status = 'active' WHERE organization_id = %d AND public_id = %s",[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]);
+		$event_post=(int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		wp_update_post(['ID'=>$event_post,'post_status'=>'draft']);
+		try {
+			$s['lifecycle']->accept_offer($s['actor'],$this->scope,$offer_id,$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Unpublished event accepted an outstanding waitlist offer');
+		} catch (RuntimeException) {
+			self::assertTrue(true);
+		}
+		wp_update_post(['ID'=>$event_post,'post_status'=>'publish']);
+		$this->db->execute('UPDATE %i SET require_email_verification = 1 WHERE organization_id = %d AND public_id = %s',[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]);
+		try {
+			$s['lifecycle']->accept_offer($s['actor'],$this->scope,$offer_id,$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Newly required email verification was bypassed');
+		} catch (RuntimeException) {
+			self::assertTrue(true);
+		}
+		$this->db->execute('UPDATE %i SET require_email_verification = 0 WHERE organization_id = %d AND public_id = %s',[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]);
+		$still_waiting=$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0];
+		self::assertSame('offered',$still_waiting['status'],'Closed-event rejections must not mutate registration state');
+		self::assertSame('held',$this->db->rows('SELECT status FROM %i WHERE registration_id = (SELECT id FROM %i WHERE public_id = %s)',[$this->prefix.'capacity_claims',$this->prefix.'registrations',$second->to_binary()])[0]['status']);
+		$s['lifecycle']->accept_offer($s['actor'],$this->scope,$offer_id,$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+		self::assertSame('accepted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$second->to_binary()])[0]['status']);
+	}
 }
