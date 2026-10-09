@@ -89,6 +89,13 @@ final class ExportJobService {
 				$object = new PolicyObject( $scope->id, 'organization', $scope->id );
 				$this->audit->append( $scope, $actor, 'export.queued', $object, 'success', $correlation, $event );
 				$this->outbox->append( $scope, $event, 'export', (int) $stored['id'], 'export.queued', $correlation, array( 'public_id' => $id->to_string() ) );
+				$this->tx->after_commit(
+					static function () use ( $scope, $id ): void {
+						if ( function_exists( 'as_enqueue_async_action' ) ) {
+							as_enqueue_async_action( 'uop_generate_export', array( $scope->id, $id->to_string() ), 'uop', true );
+						}
+					}
+				);
 				return $id;
 			}
 		);
