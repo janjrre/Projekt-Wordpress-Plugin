@@ -94,6 +94,22 @@ final class M5EmailTemplatesTest extends TestCase {
 		self::assertCount(2,$this->db->rows("SELECT id FROM %i WHERE action='email_template.saved'",[$this->prefix.'audit_log']));
 	}
 
+	/** Plain-text-only overrides persist true SQL NULL, not empty HTML blobs. */
+	public function test_plain_text_only_overrides_keep_null_html(): void {
+		$s=$this->fixture();
+		$now='2030-01-03 12:00:00';
+		$a=$s['service']->save($s['actor'],$this->scope,'event_cancelled','de_DE',0,'Event: {{event_title}}','Hello {{participant_name}}',null,$now,CorrelationId::generate());
+		self::assertSame(1,$a['revision']);
+		$stored=$s['service']->get($s['actor'],$this->scope,'event_cancelled','de_DE');
+		self::assertNull($stored['body_html']);
+		self::assertSame('override',$stored['source']);
+		$row=$this->db->rows('SELECT body_html FROM %i WHERE organization_id = %d AND template_key = %s',[$this->prefix.'email_templates',$this->scope->id,'event_cancelled'])[0];
+		self::assertNull($row['body_html']);
+		$b=$s['service']->save($s['actor'],$this->scope,'event_cancelled','de_DE',1,'Event: {{event_title}}','Hello {{participant_name}}, update',null,$now,CorrelationId::generate());
+		self::assertSame(2,$b['revision']);
+		self::assertNull($s['service']->get($s['actor'],$this->scope,'event_cancelled','de_DE')['body_html']);
+	}
+
 	public function test_html_variable_header_and_preview_injection_are_blocked(): void {
 		$s=$this->fixture();
 		$rules=$s['rules'];

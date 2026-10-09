@@ -77,8 +77,8 @@ final class EmailTemplateRepository {
 				throw new RuntimeException( 'Stale email template revision.' );
 			}
 			$this->db->execute(
-				'INSERT INTO %i (public_id, organization_id, template_key, locale, revision, subject, body_html, body_text, content_hash, status, created_by_user_id, updated_by_user_id, created_at, updated_at) VALUES (%s,%d,%s,%s,%d,%s,%s,%s,%s,%s,%d,%d,%s,%s)',
-				array( $this->prefix . 'email_templates', $uuid->to_binary(), $scope->id, $key, $locale, 1, $subject, $html, $text, $digest, 'active', $actor_id, $actor_id, $now, $now )
+				'INSERT INTO %i (public_id, organization_id, template_key, locale, revision, subject, body_html, body_text, content_hash, status, created_by_user_id, updated_by_user_id, created_at, updated_at) VALUES (%s,%d,%s,%s,%d,%s,NULLIF(%s,%s),%s,%s,%s,%d,%d,%s,%s)',
+				array( $this->prefix . 'email_templates', $uuid->to_binary(), $scope->id, $key, $locale, 1, $subject, $html ?? '', '', $text, $digest, 'active', $actor_id, $actor_id, $now, $now )
 			);
 			$new = $this->find( $scope, $key, $locale );
 			if ( ! $new || ! hash_equals( $new['public_id'], $uuid->to_binary() ) ) {
@@ -98,8 +98,8 @@ final class EmailTemplateRepository {
 		}
 		$next = $expected + 1;
 		if ( 1 !== $this->db->execute(
-			"UPDATE %i SET revision = %d, subject = %s, body_html = %s, body_text = %s, content_hash = %s, updated_by_user_id = %d, updated_at = %s WHERE organization_id = %d AND id = %d AND revision = %d AND status = 'active'",
-			array( $this->prefix . 'email_templates', $next, $subject, $html, $text, $digest, $actor_id, $now, $scope->id, (int) $old['id'], $expected )
+			"UPDATE %i SET revision = %d, subject = %s, body_html = NULLIF(%s,%s), body_text = %s, content_hash = %s, updated_by_user_id = %d, updated_at = %s WHERE organization_id = %d AND id = %d AND revision = %d AND status = 'active'",
+			array( $this->prefix . 'email_templates', $next, $subject, $html ?? '', '', $text, $digest, $actor_id, $now, $scope->id, (int) $old['id'], $expected )
 		) ) {
 			throw new RuntimeException( 'Concurrent email template update.' );
 		}
