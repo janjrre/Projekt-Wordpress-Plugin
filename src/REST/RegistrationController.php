@@ -22,8 +22,7 @@ use WP_REST_Response;
 
 /** Every command delegates to the existing auditable application services. */
 final class RegistrationController extends BaseController {
-	/**
-	 * Shared API contract or operation.
+	/** Initialize the existing domain command services.
 	 *
 	 * @param M6ReadService                 $reads        Safe projected registration read models.
 	 * @param RegistrationService           $registrations Idempotent submission writer.
@@ -49,13 +48,15 @@ final class RegistrationController extends BaseController {
 		$this->register_endpoint( '/registrations/(?P<uuid>[0-9a-f-]{36})/transitions', 'POST', array( $this, 'transition' ), array( $this, 'can_view' ), $this->uuid_argument() );
 	}
 
-	/** @return bool|WP_Error */
+	/** Check authentication for protected registration queries.
+	 *
+	 * @return bool|WP_Error
+	 */
 	public function authenticated(): bool|WP_Error {
 		return get_current_user_id() > 0 ? true : $this->denied();
 	}
 
-	/**
-	 * Shared API contract or operation.
+	/** Check access to a specific requested registration.
 	 *
 	 * @param WP_REST_Request $request Current request.
 	 * @return bool|WP_Error
@@ -96,8 +97,7 @@ final class RegistrationController extends BaseController {
 		}
 	}
 
-	/**
-	 * Shared API contract or operation.
+	/** Check access to a specific requested registration.
 	 *
 	 * @param WP_REST_Request $request Route request.
 	 * @return array<string, mixed>|WP_Error
@@ -146,9 +146,9 @@ final class RegistrationController extends BaseController {
 		try {
 			$id = $this->registrations->submit( $this->current_actor(), $scope, $person, $event, $when, $command, $body['fields'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 			return new WP_REST_Response( array(
-				'public_id' => $id->to_string(),
-				'status'    => 'submitted',
-			), 201 );
+					'public_id' => $id->to_string(),
+					'status'    => 'submitted',
+				), 201 );
 		} catch ( InvalidArgumentException ) {
 			return RestError::for_kind( 'validation' );
 		} catch ( RuntimeException ) {
@@ -165,9 +165,8 @@ final class RegistrationController extends BaseController {
 	public function cancel( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
 			$body = $this->strict_json_object( $request, array(
-				'command_id' => array( 'type' => 'string' ),
-			),
-			array( 'command_id' ) );
+					'command_id' => array( 'type' => 'string' ),
+				), array( 'command_id' ) );
 			$command = PublicId::from_string( $body['command_id'] );
 		} catch ( InvalidArgumentException ) {
 			return RestError::for_kind( 'invalid_schema' );
@@ -193,9 +192,9 @@ final class RegistrationController extends BaseController {
 				return RestError::for_kind( 'conflict' );
 			}
 			return new WP_REST_Response( array(
-				'public_id' => $id->to_string(),
-				'status'    => 'cancelled',
-			), 200 );
+					'public_id' => $id->to_string(),
+					'status'    => 'cancelled',
+				), 200 );
 		} catch ( InvalidArgumentException | RuntimeException ) {
 			return RestError::for_kind( 'conflict' );
 		}
@@ -213,7 +212,10 @@ final class RegistrationController extends BaseController {
 				$request,
 				array(
 					'command_id' => array( 'type' => 'string' ),
-					'target'     => array( 'type' => 'string', 'enum' => array( 'review', 'rejected' ) ),
+					'target'     => array(
+						'type' => 'string',
+						'enum' => array( 'review', 'rejected' ),
+					),
 				),
 				array( 'command_id', 'target' )
 			);
@@ -229,9 +231,9 @@ final class RegistrationController extends BaseController {
 		try {
 			$this->transitions->transition( $this->current_actor(), $scope, $id, $body['target'], $command, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 			return new WP_REST_Response( array(
-				'public_id' => $id->to_string(),
-				'status'    => $body['target'],
-			), 200 );
+					'public_id' => $id->to_string(),
+					'status'    => $body['target'],
+				), 200 );
 		} catch ( InvalidArgumentException | RuntimeException ) {
 			return RestError::for_kind( 'conflict' );
 		}
@@ -252,36 +254,7 @@ final class RegistrationController extends BaseController {
 					'registration_id' => array( 'type' => 'string' ),
 					'token'           => array(
 						'type'    => 'string',
-						'pattern' => '^[0-9a-f]{64},
-				),
-				array( 'registration_id', 'token' )
-			);
-			$id = PublicId::from_string( $body['registration_id'] );
-		} catch ( InvalidArgumentException ) {
-			return RestError::for_kind( 'invalid_schema' );
-		}
-		$scope = $this->organization_scope();
-		if ( ! $scope ) {
-			return RestError::for_kind( 'unavailable' );
-		}
-		$key   = 'uop_verify_' . hash( 'sha256', $scope->id . ':' . $id->to_string() );
-		$tries = (int) get_transient( $key );
-		if ( $tries >= 10 ) {
-			return RestError::for_kind( 'rate_limited' );
-		}
-		// WordPress transients are a secondary abuse guard; bearer secrets remain 256-bit.
-		set_transient( $key, $tries + 1, 15 * MINUTE_IN_SECONDS );
-		try {
-			$this->verification->verify( $scope, $id, $body['token'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
-		} catch ( InvalidArgumentException | RuntimeException ) {
-			return RestError::for_kind( 'unavailable' );
-		}
-		$response = new WP_REST_Response( array( 'status' => 'received' ), 202 );
-		$response->header( 'Cache-Control', 'private, no-store, max-age=0' );
-		return $response;
-	}
-}
-,
+						'pattern' => '^[0-9a-f]{64}$',
 					),
 				),
 				array( 'registration_id', 'token' )
@@ -304,7 +277,7 @@ final class RegistrationController extends BaseController {
 		try {
 			$this->verification->verify( $scope, $id, $body['token'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 		} catch ( InvalidArgumentException | RuntimeException ) {
-			// A public caller must not distinguish missing from expired subjects.
+			return RestError::for_kind( 'unavailable' );
 		}
 		$response = new WP_REST_Response( array( 'status' => 'received' ), 202 );
 		$response->header( 'Cache-Control', 'private, no-store, max-age=0' );
