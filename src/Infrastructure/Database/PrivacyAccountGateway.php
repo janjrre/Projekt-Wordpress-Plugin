@@ -87,7 +87,7 @@ final class PrivacyAccountGateway {
 			'SELECT id, public_id, organization_id, display_name, primary_email, status, created_at FROM %i WHERE wp_user_id = %d ORDER BY id ASC LIMIT %d OFFSET %d',
 			array( $this->prefix . 'persons', $user_id, $limit, $after )
 		);
-		$done  = $done && count( $rows ) < $limit;
+		$done  = count( $rows ) < $limit;
 		foreach ( $rows as $row ) {
 			$data[] = $this->item(
 				'uop-person',
@@ -247,6 +247,7 @@ final class PrivacyAccountGateway {
 	 * @param string $label Group title.
 	 * @param string $id    Stable item ID.
 	 * @param array  $data  Named text values.
+	 * @phpstan-param list<array{name:string,value:string}> $data
 	 * @return array<string, mixed> WordPress privacy item.
 	 */
 	private function item( string $group, string $label, string $id, array $data ): array {
@@ -289,6 +290,7 @@ final class PrivacyAccountGateway {
 	 * Format the WordPress exporter response.
 	 *
 	 * @param array $data Bounded privacy data.
+	 * @phpstan-param list<array<string,mixed>> $data
 	 * @param bool  $done Whether all pages have been processed.
 	 * @return array{data:list<array<string,mixed>>,done:bool}
 	 */
