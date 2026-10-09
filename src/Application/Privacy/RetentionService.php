@@ -93,7 +93,7 @@ final class RetentionService {
 				$event  = PublicId::generate();
 				$object = new PolicyObject( $scope->id, 'organization', $scope->id );
 				$this->audit->append( $scope, $actor, 'privacy.retention_rule_created', $object, 'success', $correlation, $event );
-				$this->outbox->append( $scope, $event, 'person', (int) $rule['id'], 'privacy.retention_rule_created', $correlation, array( 'reason_code' => 'retention' ) );
+				$this->outbox->append( $scope, $event, 'retention', (int) $rule['id'], 'privacy.retention_rule_created', $correlation, array( 'reason_code' => 'retention' ) );
 			}
 		);
 	}
