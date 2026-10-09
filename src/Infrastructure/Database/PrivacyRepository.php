@@ -57,6 +57,13 @@ final class PrivacyRepository {
 		if ( $other_registration ) {
 			return array( 'status' => 'manual', 'user_id' => 0 );
 		}
+		$other_mail = $this->db->rows(
+			'SELECT m.id FROM %i m LEFT JOIN %i r ON r.id = m.registration_id AND r.organization_id = m.organization_id LEFT JOIN %i p ON p.id = r.person_id AND p.organization_id = r.organization_id WHERE m.recipient = %s AND (p.id IS NULL OR p.wp_user_id IS NULL OR p.wp_user_id <> %d) LIMIT 1',
+			array( $this->prefix . 'email_messages', $this->prefix . 'registrations', $this->prefix . 'persons', $email, $userid )
+		);
+		if ( $other_mail ) {
+			return array( 'status' => 'manual', 'user_id' => 0 );
+		}
 		return array( 'status' => $linked > 0 ? 'resolved' : 'unmatched', 'user_id' => $userid );
 	}
 
@@ -182,17 +189,17 @@ final class PrivacyRepository {
 	 * Redact active profile and person contact values, preserving historical evidence.
 	 *
 	 * @param int $user_id Explicitly resolved WordPress account.
-	 * @return bool True only if any personal fields were cleared.
+	 * @return list<array{id:int,organization_id:int}> Subjects with altered values.
 	 */
-	public function erase_contact_profile( int $user_id ): bool {
+	public function erase_contact_profile( int $user_id ): array {
 		$rows = $this->db->rows(
 			'SELECT id, organization_id FROM %i WHERE wp_user_id = %d ORDER BY id LIMIT 101 FOR UPDATE',
 			array( $this->prefix . 'persons', $user_id )
 		);
 		if ( ! $rows || count( $rows ) > 100 ) {
-			return false;
+			return array();
 		}
-		$removed = false;
+		$removed = array();
 		foreach ( $rows as $person ) {
 			$id  = (int) $person['id'];
 			$org = (int) $person['organization_id'];
@@ -215,7 +222,9 @@ final class PrivacyRepository {
 				'UPDATE %i SET display_name = %s, primary_email = NULL, version = version + 1, updated_at = UTC_TIMESTAMP() WHERE organization_id = %d AND id = %d AND wp_user_id = %d AND (display_name <> %s OR primary_email IS NOT NULL)',
 				array( $this->prefix . 'persons', 'Erased person', $org, $id, $user_id, 'Erased person' )
 			);
-			$removed = $removed || $deleted > 0 || $updated > 0;
+			if ( $deleted > 0 || $updated > 0 ) {
+				$removed[] = array( 'id' => $id, 'organization_id' => $org );
+			}
 		}
 		return $removed;
 	}
