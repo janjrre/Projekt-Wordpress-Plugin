@@ -8,6 +8,7 @@
 namespace UOP\Core;
 
 use UOP\Application\Registration\RegistrationConfigurationService;
+use UOP\Application\Registration\EventCancellationService;
 use UOP\Application\Registration\CapacityAllocationService;
 use UOP\Application\Registration\CapacityLifecycleService;
 use UOP\Application\Registration\EmailVerificationService;
@@ -19,6 +20,7 @@ use UOP\Extension\ModuleInterface;
 use UOP\Infrastructure\Database\AuditWriter;
 use UOP\Infrastructure\Database\CapacityRepository;
 use UOP\Infrastructure\Database\Connection;
+use UOP\Infrastructure\Database\EventCancellationRepository;
 use UOP\Infrastructure\Database\OutboxRepository;
 use UOP\Infrastructure\Database\RegistrationRepository;
 use UOP\Infrastructure\Database\WaitlistRepository;
@@ -44,6 +46,7 @@ final class M4Module implements ModuleInterface {
 		$prefix = $wpdb->prefix . 'uop_';
 		$container->set( CapacityRepository::class, static fn ( ServiceContainer $c ) => new CapacityRepository( $c->get( Connection::class ), $prefix ) );
 		$container->set( WaitlistRepository::class, static fn ( ServiceContainer $c ) => new WaitlistRepository( $c->get( Connection::class ), $prefix ) );
+		$container->set( EventCancellationRepository::class, static fn ( ServiceContainer $c ) => new EventCancellationRepository( $c->get( Connection::class ), $prefix ) );
 		$container->set( RegistrationStateMachine::class, static fn () => new RegistrationStateMachine() );
 		$container->set( RegistrationRepository::class, static fn ( ServiceContainer $c ) => new RegistrationRepository( $c->get( Connection::class ), $prefix ) );
 		$container->set(
@@ -93,6 +96,17 @@ final class M4Module implements ModuleInterface {
 			static fn ( ServiceContainer $c ) => new CapacityLifecycleService(
 				$c->get( WaitlistRepository::class ),
 				$c->get( CapacityRepository::class ),
+				$c->get( RegistrationStateMachine::class ),
+				$c->get( PolicyService::class ),
+				$c->get( TransactionManager::class ),
+				$c->get( AuditWriter::class ),
+				$c->get( OutboxRepository::class )
+			)
+		);
+		$container->set(
+			EventCancellationService::class,
+			static fn ( ServiceContainer $c ) => new EventCancellationService(
+				$c->get( EventCancellationRepository::class ),
 				$c->get( RegistrationStateMachine::class ),
 				$c->get( PolicyService::class ),
 				$c->get( TransactionManager::class ),
