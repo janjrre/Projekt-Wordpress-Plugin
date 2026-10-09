@@ -61,7 +61,7 @@ final class ConsentDefinitionService {
 				if ( ! $root ) {
 					throw new RuntimeException( 'New consent definition was not persisted.' );
 				}
-				$event = PublicId::generate();
+				$event  = PublicId::generate();
 				$object = new PolicyObject( $scope->id, 'organization', $scope->id );
 				$this->audit->append( $scope, $actor, 'consent.definition_created', $object, 'success', $correlation, $event );
 				$this->outbox->append( $scope, $event, 'consent', (int) $root['id'], 'consent.definition_created', $correlation, array( 'public_id' => $uuid->to_string() ) );
@@ -81,8 +81,7 @@ final class ConsentDefinitionService {
 	 * @param CorrelationId $correlation Request trace.
 	 * @return PublicId Newly published immutable version identity.
 	 * @throws InvalidArgumentException When content is invalid.
-	 * @throws RuntimeException When access or root status is denied.
-	 */
+	 	 */
 	public function publish( Actor $actor, OrgScope $scope, PublicId $definition, string $content, string $now, CorrelationId $correlation ): PublicId {
 		if ( strlen( $content ) < 20 || strlen( $content ) > 100000 || trim( $content ) !== $content
 			|| preg_match( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F<>]/', $content ) ) {
