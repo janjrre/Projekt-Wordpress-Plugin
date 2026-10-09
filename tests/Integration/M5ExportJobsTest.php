@@ -178,8 +178,12 @@ final class M5ExportJobsTest extends TestCase {
         self::assertSame(200,$status->get_status());
         self::assertArrayNotHasKey('storage_key',$status->get_data());
         $this->exports->process($this->scope,$job,gmdate('Y-m-d H:i:s'));
+        self::assertSame('ready',$this->jobs->find($this->scope,$job)['status']);
+        self::assertCount(1,$this->storage->files);
+        self::assertStringContainsString('REST member',$this->exports->download($this->actor,$this->scope,$job,gmdate('Y-m-d H:i:s')));
         $dl_request=new \WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string().'/download');
         $download=$controller->download($dl_request);
+        self::assertInstanceOf(\WP_REST_Response::class,$download,$download instanceof \WP_Error ? $download->get_error_code().':'.$download->get_error_message() : 'Unexpected export response');
         self::assertSame(200,$download->get_status());
         self::assertSame('text/csv; charset=utf-8',$download->get_headers()['Content-Type']);
         ob_start();
