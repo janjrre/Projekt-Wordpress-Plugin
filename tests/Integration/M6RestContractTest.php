@@ -61,6 +61,9 @@ final class M6RestContractTest extends TestCase {
 		$request->set_body( '{"name":"Someone","revision":1}' );
 		self::assertSame( array( 'name' => 'Someone', 'revision' => 1 ), $controller->validated( $request ) );
 		foreach ( array( '{"name":"Someone","revision":1,"role":"administrator"}', '{"name":"Someone","revision":"1"}', '{"name":"Someone"}', '[1,2]', '{"name":false,"revision":1}' ) as $invalid ) {
+			// Each WP_REST_Request caches parsed JSON; use a fresh request per payload.
+			$request = new WP_REST_Request( 'POST', '/uop/v1/test-contract' );
+			$request->set_header( 'Content-Type', 'application/json' );
 			$request->set_body( $invalid );
 			try {
 				$controller->validated( $request );
