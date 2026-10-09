@@ -777,4 +777,27 @@ final class M4RegistrationTest extends TestCase {
 		self::assertFalse($s['verification']->verify($this->scope,$registration,$challenge['token'],$now,CorrelationId::generate()));
 		self::assertSame([],$this->db->rows('SELECT id FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','registration.email_verified']));
 	}
+
+	/** Live assignment removal immediately blocks otherwise capable reviewers. */
+	public function test_revoked_event_manager_assignment_blocks_capacity_allocation(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$registration=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'Participant'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$event_post=(int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		$assignments=new AssignmentRepository($this->db,$this->prefix);
+		$grant_id=$assignments->grant($this->scope,$s['actor']->user_id,'event_manager','event',$event_post,'personal',$now);
+		$manager=$s['actor']->user_id;
+		$policy=new PolicyService($s['people'],$s['delegations'],$assignments,static fn(int $user,string $cap): bool => $user===$manager && 'uop_manage_settings'!==$cap);
+		$service=new CapacityAllocationService(new CapacityRepository($this->db,$this->prefix),new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$s['tx'],$s['audit'],$s['outbox']);
+		self::assertTrue($assignments->revoke($this->scope,$grant_id,$now));
+		try {
+			$service->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Revoked manager allocated an event seat');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'capacity_claims']));
+		self::assertSame('submitted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
+		$assignments->grant($this->scope,$manager,'event_manager','event',$event_post,'personal',$now);
+		self::assertSame('accepted',$service->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+	}
 }
