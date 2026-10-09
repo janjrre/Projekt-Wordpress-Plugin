@@ -32,6 +32,8 @@ use UOP\Infrastructure\Database\PrivacyAccountGateway;
 use UOP\Infrastructure\Database\RetentionRepository;
 use UOP\Infrastructure\Database\EmailTemplateRepository;
 use UOP\Infrastructure\Database\EmailMessageRepository;
+use UOP\Infrastructure\Database\M5OperationsRepository;
+use UOP\Admin\M5OperationsScreen;
 use UOP\Infrastructure\Queue\EmailDeliveryWorker;
 use UOP\Infrastructure\Queue\ExportJobWorker;
 use UOP\REST\ExportController;
@@ -97,6 +99,7 @@ final class M5Module implements ModuleInterface {
 				$c->get( OutboxRepository::class )
 			)
 		);
+		$container->set( M5OperationsRepository::class, static fn ( ServiceContainer $c ) => new M5OperationsRepository( $c->get( Connection::class ), $prefix ) );
 		$container->set( EmailMessageRepository::class, static fn ( ServiceContainer $c ) => new EmailMessageRepository( $c->get( Connection::class ), $prefix ) );
 		$container->set(
 			EmailMessageService::class,
@@ -142,6 +145,18 @@ final class M5Module implements ModuleInterface {
 			)
 		);
 		$container->get( WordPressPrivacyAdapter::class )->register_hooks();
+		$container->set(
+			M5OperationsScreen::class,
+			static fn ( ServiceContainer $c ) => new M5OperationsScreen(
+				$c->get( PolicyService::class ),
+				$c->get( M5OperationsRepository::class ),
+				$c->get( EmailMessageService::class ),
+				$c->get( RetentionService::class ),
+				$c->get( ExportJobService::class ),
+				$c->get( PrivacyAccountGateway::class )
+			)
+		);
+		add_action( 'admin_menu', array( $container->get( M5OperationsScreen::class ), 'menu' ) );
 		$container->set( ConsentRepository::class, static fn ( ServiceContainer $c ) => new ConsentRepository( $c->get( Connection::class ), $prefix ) );
 		$container->set( ConsentRecordRepository::class, static fn ( ServiceContainer $c ) => new ConsentRecordRepository( $c->get( Connection::class ), $prefix ) );
 		$container->set(
