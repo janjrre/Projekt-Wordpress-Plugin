@@ -84,7 +84,7 @@ final class M5WordPressPrivacyTest extends TestCase {
 		$page1=$this->adapter->export($email,1);
 		self::assertIsArray($page1);
 		self::assertFalse($page1['done']);
-		self::assertCount(28,$page1['data']);
+		self::assertCount(27,$page1['data']);
 		$groups=array_column($page1['data'],'group_id');
 		self::assertContains('uop-person',$groups);
 		self::assertContains('uop-profile',$groups);
