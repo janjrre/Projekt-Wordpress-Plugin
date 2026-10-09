@@ -112,7 +112,7 @@ final class RegistrationService {
 						|| (int) $prior['form_version_id'] !== (int) $form['form_version_id'] ) {
 						throw new RuntimeException( 'Guest command belongs to another submission.' );
 					}
-					$original = self::replay_fields( json_decode( (string) $prior['payload_json'], true, 64, JSON_THROW_ON_ERROR )['fields'] );
+					$original = self::replay_fields( json_decode( (string) $prior['payload_json'], true, 64, JSON_THROW_ON_ERROR )['fields'], $input );
 					$incoming = $input;
 					ksort( $original );
 					ksort( $incoming );
@@ -179,7 +179,7 @@ final class RegistrationService {
 				throw new RuntimeException( 'Idempotency key is bound to another submission.' );
 			}
 			$original   = json_decode( (string) $prior['payload_json'], true, 64, JSON_THROW_ON_ERROR );
-			$old_fields = self::replay_fields( $original['fields'] );
+			$old_fields = self::replay_fields( $original['fields'], $input );
 			$new_fields = $input;
 			ksort( $old_fields );
 			ksort( $new_fields );
@@ -366,11 +366,16 @@ final class RegistrationService {
 	 * Restore only consent decisions for safe idempotent comparison against
 	 * original form input, without exposing a parallel stored boolean truth.
 	 *
-	 * @param array<string, mixed> $fields Historical registration snapshot.
+	 * @param array<string, mixed> $fields   Historical registration snapshot.
+	 * @param array<string, mixed> $incoming Original user-provided form input.
 	 * @return array<string, mixed>
 	 */
-	private static function replay_fields( array $fields ): array {
+	private static function replay_fields( array $fields, array $incoming ): array {
 		foreach ( $fields as $key => $value ) {
+			if ( null === $value && ! array_key_exists( $key, $incoming ) ) {
+				unset( $fields[ $key ] );
+				continue;
+			}
 			if ( is_array( $value ) && isset( $value['record_public_id'], $value['definition_key'], $value['version_public_id'], $value['decision'] )
 				&& in_array( $value['decision'], array( 'granted', 'denied' ), true ) ) {
 				$fields[ $key ] = 'granted' === $value['decision'];
