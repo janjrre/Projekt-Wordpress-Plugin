@@ -198,6 +198,7 @@ final class M5ExportJobsTest extends TestCase {
         $this->authorized=false;
         self::assertFalse($controller->can_export());
         (new \WP_User($this->actor->user_id))->set_role('subscriber');
+        wp_set_current_user(0);
         wp_set_current_user($this->actor->user_id);
         self::assertSame(403,rest_do_request(new \WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string()))->get_status());
     }
