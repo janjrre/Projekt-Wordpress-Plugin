@@ -227,7 +227,7 @@ final class CapacityLifecycleService {
 		if ( ! $row || 'waitlisted' !== $row['status'] || (int) $row['event_post_id'] !== (int) $bucket['event_post_id'] ) {
 			throw new RuntimeException( 'FIFO queue state changed.' );
 		}
-		if ( $verify_contact && null === $row['email_verified_at'] ) {
+		if ( ( $verify_contact || 'guest' === $row['source'] ) && null === $row['email_verified_at'] ) {
 			throw new RuntimeException( 'Queue head requires verification.' );
 		}
 		$this->states->assert_transition( 'waitlisted', 'offered' );
@@ -283,7 +283,7 @@ final class CapacityLifecycleService {
 				}
 				$row = $this->queue->registration( $scope, (int) $offer['registration_id'] );
 				if ( ! $row || 'offered' !== $row['status'] || (int) $row['event_post_id'] !== (int) $bucket['event_post_id']
-					|| ( $verify_contact && null === $row['email_verified_at'] ) ) {
+					|| ( ( $verify_contact || 'guest' === $row['source'] ) && null === $row['email_verified_at'] ) ) {
 					throw new RuntimeException( 'Registration offer is no longer eligible.' );
 				}
 				if ( ! $this->policy->can( $actor, 'registration.create', $this->resource( $scope, $row ) )->allowed ) {

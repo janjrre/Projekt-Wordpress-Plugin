@@ -135,7 +135,7 @@ final class CapacityAllocationService {
 				if ( null !== $locked['eligibility_json'] && '' !== $locked['eligibility_json'] ) {
 					throw new RuntimeException( 'Bucket eligibility needs a verified snapshot decision.' );
 				}
-				if ( $this->capacity->requires_verification( $scope, (int) $locked['event_post_id'] )
+				if ( ( $this->capacity->requires_verification( $scope, (int) $locked['event_post_id'] ) || 'guest' === $row['source'] )
 					&& null === $row['email_verified_at'] ) {
 					throw new RuntimeException( 'Email verification is required before acceptance.' );
 				}

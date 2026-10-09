@@ -214,7 +214,7 @@ final class RegistrationRepository {
 	 */
 	public function lock_registration( OrgScope $scope, PublicId $uuid ): ?array {
 		$rows = $this->db->rows(
-			'SELECT id, public_id, person_id, event_post_id, occurrence_id, contact_email, email_verification_token_hash, verification_expires_at, email_verified_at, status FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1 FOR UPDATE',
+			'SELECT id, public_id, person_id, event_post_id, occurrence_id, contact_email, email_verification_token_hash, verification_expires_at, email_verified_at, status, source FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1 FOR UPDATE',
 			array( $this->prefix . 'registrations', $scope->id, $uuid->to_binary() )
 		);
 		return $rows[0] ?? null;
@@ -289,7 +289,7 @@ final class RegistrationRepository {
 	 */
 	public function verify( OrgScope $scope, int $id, string $hash, string $utc_now ): bool {
 		return 1 === $this->db->execute(
-			'UPDATE %i SET email_verified_at = %s, email_verification_token_hash = NULL, verification_expires_at = NULL, updated_at = %s WHERE organization_id = %d AND id = %d AND email_verified_at IS NULL AND email_verification_token_hash = %s AND verification_expires_at > %s',
+			'UPDATE %i SET email_verified_at = %s, email_verification_token_hash = NULL, verification_expires_at = NULL, updated_at = %s WHERE organization_id = %d AND id = %d AND email_verified_at IS NULL AND email_verification_token_hash = %s AND verification_expires_at > %s AND status IN ('submitted','review')',
 			array( $this->prefix . 'registrations', $utc_now, $utc_now, $scope->id, $id, $hash, $utc_now )
 		);
 	}

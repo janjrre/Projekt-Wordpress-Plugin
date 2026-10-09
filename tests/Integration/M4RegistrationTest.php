@@ -742,4 +742,39 @@ final class M4RegistrationTest extends TestCase {
 		self::assertSame('offered',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$next->to_binary()])[0]['status']);
 		self::assertStringNotContainsString($offer['token'],$signals[0]['payload_json']);
 	}
+
+	/** Guest verification remains mandatory even if an admin disables the event flag. */
+	public function test_guest_cannot_bypass_verification_when_event_rule_is_relaxed(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'contact','type'=>'email','label'=>'Contact','required'=>true],
+		]];
+		[$s,$existing,$event,$form,$now]=$this->setup_registration($draft);
+		$this->db->execute("UPDATE %i SET visibility = 'public', require_email_verification = 1 WHERE public_id = %s",[$this->prefix.'event_settings',$event->to_binary()]);
+		$guest=$s['submit']->submit_guest($this->scope,$event,null,PublicId::generate(),['name'=>'Guest','contact'=>'guest@example.invalid'],$now,CorrelationId::generate());
+		$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		$this->db->execute('UPDATE %i SET require_email_verification = 0 WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()]);
+		try {
+			$s['capacity']->decide($s['actor'],$this->scope,$guest,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Guest bypassed verification after settings change');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'capacity_claims']));
+		$challenge=$s['verification']->issue($s['actor'],$this->scope,$guest,$now,CorrelationId::generate());
+		self::assertTrue($s['verification']->verify($this->scope,$guest,$challenge['token'],$now,CorrelationId::generate()));
+		self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$guest,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+	}
+
+	/** Cancelled registrations cannot subsequently use a stale email challenge. */
+	public function test_cancelled_registration_rejects_outstanding_contact_token(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'contact','type'=>'email','label'=>'Contact','required'=>true],
+		]];
+		[$s,$person,$event,$form,$now]=$this->setup_registration($draft);
+		$registration=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,PublicId::generate(),['name'=>'Member','contact'=>'member@example.invalid'],$now,CorrelationId::generate());
+		$challenge=$s['verification']->issue($s['actor'],$this->scope,$registration,$now,CorrelationId::generate());
+		$s['transition']->transition($s['actor'],$this->scope,$registration,'cancelled',PublicId::generate(),$now,CorrelationId::generate());
+		self::assertFalse($s['verification']->verify($this->scope,$registration,$challenge['token'],$now,CorrelationId::generate()));
+		self::assertSame([],$this->db->rows('SELECT id FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','registration.email_verified']));
+	}
 }
