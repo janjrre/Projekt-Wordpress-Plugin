@@ -22,10 +22,10 @@ final class WordPressPrivacyAdapter {
 	/**
 	 * Compose callbacks with the normal transaction and audit boundary.
 	 *
-	 * @param PrivacyAccountGateway  $privacy Scoped resolver and datastore.
-	 * @param TransactionManager $tx      Atomic erasure.
-	 * @param AuditWriter        $audit   Minimal audit events.
-	 * @param OutboxRepository   $outbox  Durable domain events.
+	 * @param PrivacyAccountGateway $privacy Scoped resolver and datastore.
+	 * @param TransactionManager    $tx      Atomic erasure.
+	 * @param AuditWriter           $audit   Minimal audit events.
+	 * @param OutboxRepository      $outbox  Durable domain events.
 	 */
 	public function __construct(
 		private PrivacyAccountGateway $privacy,
@@ -63,7 +63,7 @@ final class WordPressPrivacyAdapter {
 	public function register_eraser( array $erasers ): array {
 		$erasers['uop-core'] = array(
 			'eraser_friendly_name' => __( 'UOP Core', 'uop-core' ),
-			'callback'              => array( $this, 'erase' ),
+			'callback'             => array( $this, 'erase' ),
 		);
 		return $erasers;
 	}
@@ -110,7 +110,12 @@ final class WordPressPrivacyAdapter {
 	 * @return array{items_removed:bool,items_retained:bool,messages:list<string>,done:bool}
 	 */
 	public function erase( string $email, int $page = 1 ): array {
-		$base = array( 'items_removed' => false, 'items_retained' => false, 'messages' => array(), 'done' => true );
+		$base = array(
+			'items_removed'  => false,
+			'items_retained' => false,
+			'messages'       => array(),
+			'done'           => true,
+		);
 		if ( ! current_user_can( 'erase_others_personal_data' ) || $page < 1 ) {
 			$base['items_retained'] = true;
 			$base['messages'][]     = __( 'UOP privacy erasure authorization failed.', 'uop-core' );
