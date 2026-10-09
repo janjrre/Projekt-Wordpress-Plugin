@@ -61,9 +61,9 @@ final class PersonExportGenerator {
 						'display_name' => (string) $row['display_name'],
 						'status'       => (string) $row['status'],
 					);
-					$values = array();
+					$values    = array();
 					foreach ( $columns as $column ) {
-						$value = $available[ $column ];
+						$value    = $available[ $column ];
 						$values[] = preg_match( '/^\s*[=+\-@\t\r]/u', $value ) ? "'" . $value : $value;
 					}
 					if ( false === fputcsv( $handle, $values, ',', '"', '' ) ) {
