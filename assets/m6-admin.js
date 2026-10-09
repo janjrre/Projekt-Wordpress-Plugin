@@ -92,7 +92,7 @@
 						const available = seats.buckets || [];
 						setBuckets(available);
 						setBucket(available.length ? available[0].public_id : '');
-					} catch (_) { /* No capacity-management permission; regular detail still works. */ }
+					} catch { /* No capacity-management permission; regular detail still works. */ }
 				}
 			} catch (e) {
 				if (seq !== detailSeq.current) return;
