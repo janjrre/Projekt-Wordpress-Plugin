@@ -91,7 +91,10 @@ final class EventCancellationService {
 						$this->events->cancel_registration( $scope, $id, $previous, PublicId::generate(), $actor->user_id, $utc_now, $correlation );
 						$registration = new PolicyObject( $scope->id, 'registration', $id, (int) $row['person_id'], $post_id );
 						$event_uuid   = PublicId::generate();
-						$this->audit->append( $scope, $actor, 'registration.event_cancelled', $registration, 'success', $correlation, $event_uuid, array( 'previous_status' => $previous, 'new_status' => 'cancelled' ) );
+						$this->audit->append( $scope, $actor, 'registration.event_cancelled', $registration, 'success', $correlation, $event_uuid, array(
+							'previous_status' => $previous,
+							'new_status'      => 'cancelled',
+						) );
 						$this->outbox->append(
 							$scope,
 							$event_uuid,
@@ -109,14 +112,22 @@ final class EventCancellationService {
 						++$count;
 					}
 					$page_size = count( $rows );
-				} while ( $page_size === 100 );
+				} while ( 100 === $page_size );
 				$event_uuid = PublicId::generate();
 				$this->audit->append( $scope, $actor, 'event.cancelled', $resource, 'success', $correlation, $event_uuid, array( 'command_id' => $command->to_string() ) );
-				$this->outbox->append( $scope, $event_uuid, 'event', $post_id, 'event.cancelled', $correlation, array(
-					'public_id'  => $event_id->to_string(),
-					'command_id' => $command->to_string(),
-					'status'     => 'cancelled',
-				) );
+				$this->outbox->append(
+					$scope,
+					$event_uuid,
+					'event',
+					$post_id,
+					'event.cancelled',
+					$correlation,
+					array(
+						'public_id'  => $event_id->to_string(),
+						'command_id' => $command->to_string(),
+						'status'     => 'cancelled',
+					)
+				);
 				return $count;
 			}
 		);
