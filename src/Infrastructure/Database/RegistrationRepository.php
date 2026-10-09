@@ -81,6 +81,7 @@ final class RegistrationRepository {
 	 * @param OrgScope $scope Trusted organization.
 	 * @param PublicId $key   Idempotency key.
 	 * @return array<string, mixed>|null
+	 * @throws RuntimeException When the stored registration snapshot hash is invalid.
 	 */
 	public function by_submission_key( OrgScope $scope, PublicId $key ): ?array {
 		$rows = $this->db->rows(
