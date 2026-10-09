@@ -29,13 +29,13 @@ final class ExportJobService {
 	/**
 	 * Bind policy, database, immutable renderer and protected storage.
 	 *
-	 * @param ExportJobRepository  $jobs Durable job metadata.
-	 * @param PersonExportGenerator $generator Allowlisted CSV rendering.
+	 * @param ExportJobRepository    $jobs Durable job metadata.
+	 * @param PersonExportGenerator  $generator Allowlisted CSV rendering.
 	 * @param ExportStorageInterface $storage Server-only private file driver.
-	 * @param PolicyService        $policy Live authorization.
-	 * @param TransactionManager   $tx Database atomicity.
-	 * @param AuditWriter          $audit Non-sensitive audit evidence.
-	 * @param OutboxRepository     $outbox Token-free durable handoff.
+	 * @param PolicyService          $policy Live authorization.
+	 * @param TransactionManager     $tx Database atomicity.
+	 * @param AuditWriter            $audit Non-sensitive audit evidence.
+	 * @param OutboxRepository       $outbox Token-free durable handoff.
 	 */
 	public function __construct(
 		private ExportJobRepository $jobs,
@@ -50,10 +50,11 @@ final class ExportJobService {
 	/**
 	 * Create a 24-hour export command. An exact replay does not create another job.
 	 *
-	 * @param Actor         $actor Authenticated exporting user.
-	 * @param OrgScope      $scope Organization.
-	 * @param PublicId      $command Client-generated idempotency UUID.
-	 * @param list<string>  $columns Safe columns.
+	 * @param Actor    $actor Authenticated exporting user.
+	 * @param OrgScope $scope Organization.
+	 * @param PublicId $command Client-generated idempotency UUID.
+	 * @param array    $columns Safe columns.
+	 * @phpstan-param list<string> $columns
 	 * @param string        $status Optional status filter.
 	 * @param string        $now UTC timestamp.
 	 * @param CorrelationId $correlation Audit trace.
@@ -69,9 +70,9 @@ final class ExportJobService {
 				$this->authorize( $actor, $scope );
 				$previous = $this->jobs->by_command( $scope, $command );
 				if ( $previous ) {
-					if ( (int) $previous['actor_user_id'] !== $actor->user_id
-						|| (string) $previous['resource_type'] !== 'persons'
-						|| (string) $previous['format'] !== 'csv'
+					if ( (int) $actor->user_id !== (int) $previous['actor_user_id']
+						|| 'persons' !== (string) $previous['resource_type']
+						|| 'csv' !== (string) $previous['format']
 						|| json_decode( (string) $previous['filters_json'], true, 8, JSON_THROW_ON_ERROR ) !== array( 'status' => $status )
 						|| json_decode( (string) $previous['columns_json'], true, 8, JSON_THROW_ON_ERROR ) !== $columns ) {
 						throw new RuntimeException( 'Export command cannot be reused with different parameters.' );
@@ -163,12 +164,12 @@ final class ExportJobService {
 					$this->jobs->complete( $scope, $job, $key, hash( 'sha256', $payload['body'], true ), $payload['count'], $now );
 				}
 			);
-		} catch ( Throwable $error ) {
+		} catch ( Throwable ) {
 			if ( null !== $key ) {
 				$this->storage->delete( $key );
 			}
 			$this->tx->run( fn () => $this->jobs->fail( $scope, $job, 'generation_failed', $now ) );
-			throw new RuntimeException( 'Private export generation failed.', 0, $error );
+			throw new RuntimeException( 'Private export generation failed.' );
 		}
 	}
 
@@ -206,17 +207,18 @@ final class ExportJobService {
 	/**
 	 * Delete expired files before clearing references in bounded batches.
 	 *
-	 * @param string $now Trusted UTC time.
+	 * @param OrgScope $scope Tenant boundary.
+	 * @param string   $now Trusted UTC time.
 	 * @return int Number of expired jobs processed.
 	 * @throws RuntimeException When deletion fails.
 	 */
-	public function cleanup( string $now ): int {
-		$rows = $this->jobs->expired( $now );
+	public function cleanup( OrgScope $scope, string $now ): int {
+		$rows = $this->jobs->expired( $scope, $now );
 		foreach ( $rows as $row ) {
 			if ( null !== $row['storage_key'] ) {
 				$this->storage->delete( (string) $row['storage_key'] );
 			}
-			$this->tx->run( fn () => $this->jobs->expire( (int) $row['id'], $now ) );
+			$this->tx->run( fn () => $this->jobs->expire( $scope, (int) $row['id'], $now ) );
 		}
 		return count( $rows );
 	}
@@ -253,8 +255,9 @@ final class ExportJobService {
 	/**
 	 * Reject all unknown filters, duplicate/hidden columns and broad data projections.
 	 *
-	 * @param list<string> $columns Selected columns.
-	 * @param string       $status Exact status filter or empty.
+	 * @param array $columns Selected columns.
+	 * @phpstan-param list<string> $columns
+	 * @param string $status Exact status filter or empty.
 	 * @throws InvalidArgumentException For non-allowlisted input.
 	 */
 	private function validate( array $columns, string $status ): void {

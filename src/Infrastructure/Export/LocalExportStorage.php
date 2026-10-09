@@ -72,9 +72,9 @@ final class LocalExportStorage implements ExportStorageInterface {
 		if ( strlen( $contents ) > 5242880 ) {
 			throw new RuntimeException( 'Export is too large for the bounded local writer.' );
 		}
-		$key  = bin2hex( random_bytes( 16 ) ) . '.csv';
-		$path = $this->file( $key );
-		$temp = $this->directory() . DIRECTORY_SEPARATOR . bin2hex( random_bytes( 16 ) ) . '.tmp';
+		$key    = bin2hex( random_bytes( 16 ) ) . '.csv';
+		$path   = $this->file( $key );
+		$temp   = $this->directory() . DIRECTORY_SEPARATOR . bin2hex( random_bytes( 16 ) ) . '.tmp';
 		$handle = fopen( $temp, 'x+b' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Strict local private temporary file, not public uploads.
 		if ( false === $handle ) {
 			throw new RuntimeException( 'Cannot create private export file.' );

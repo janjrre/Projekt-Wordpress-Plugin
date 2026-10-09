@@ -16,7 +16,7 @@ final class ExportJobRepository {
 	/**
 	 * Bind connection and trusted table namespace.
 	 *
-	 * @param Connection $db     Transaction-owned connection.
+	 * @param Connection $db Transaction-owned connection.
 	 * @param string     $prefix Trusted site table prefix.
 	 */
 	public function __construct( private Connection $db, private string $prefix ) {}
@@ -39,16 +39,17 @@ final class ExportJobRepository {
 	/**
 	 * Persist an immutable validated job request.
 	 *
-	 * @param OrgScope           $scope Scoped organization.
-	 * @param PublicId           $uuid Job public identity.
-	 * @param PublicId           $command Client command.
-	 * @param int                $actor_id Owner WordPress user.
-	 * @param string             $resource Fixed resource type.
-	 * @param string             $format Fixed file format.
+	 * @param OrgScope            $scope Scoped organization.
+	 * @param PublicId            $uuid Job public identity.
+	 * @param PublicId            $command Client command.
+	 * @param int                 $actor_id Owner WordPress user.
+	 * @param string              $resource Fixed resource type.
+	 * @param string              $format Fixed file format.
 	 * @param array<string,mixed> $filters Strict filters.
-	 * @param list<string>       $columns Allowlisted projection columns.
-	 * @param string             $now UTC creation time.
-	 * @param string             $expires UTC expiry.
+	 * @param array               $columns Allowlisted projection columns.
+	 * @phpstan-param list<string> $columns
+	 * @param string $now UTC creation time.
+	 * @param string $expires UTC expiry.
 	 */
 	public function create( OrgScope $scope, PublicId $uuid, PublicId $command, int $actor_id, string $resource, string $format, array $filters, array $columns, string $now, string $expires ): void {
 		$this->db->execute(
@@ -148,26 +149,28 @@ final class ExportJobRepository {
 	/**
 	 * Bounded expiry sweep with private references for cleanup.
 	 *
-	 * @param string $now Trusted UTC timestamp.
+	 * @param OrgScope $scope Tenant boundary.
+	 * @param string   $now Trusted UTC timestamp.
 	 * @return list<array<string,mixed>> Expired queue and storage items.
 	 */
-	public function expired( string $now ): array {
+	public function expired( OrgScope $scope, string $now ): array {
 		return $this->db->rows(
-			"SELECT id, public_id, organization_id, storage_key FROM %i WHERE expires_at <= %s AND status <> 'expired' ORDER BY id ASC LIMIT 50",
-			array( $this->prefix . 'export_jobs', $now )
+			"SELECT id, public_id, organization_id, storage_key FROM %i WHERE organization_id = %d AND expires_at <= %s AND status <> 'expired' ORDER BY id ASC LIMIT 50",
+			array( $this->prefix . 'export_jobs', $scope->id, $now )
 		);
 	}
 
 	/**
 	 * Commit expiry only after deleting any stored file.
 	 *
-	 * @param int    $id Internal job key already returned by expiry selection.
-	 * @param string $now Trusted UTC timestamp.
+	 * @param OrgScope $scope Tenant boundary.
+	 * @param int      $id Internal job key already returned by expiry selection.
+	 * @param string   $now Trusted UTC timestamp.
 	 */
-	public function expire( int $id, string $now ): void {
+	public function expire( OrgScope $scope, int $id, string $now ): void {
 		$this->db->execute(
-			"UPDATE %i SET status = 'expired', storage_key = NULL, content_sha256 = NULL, updated_at = %s WHERE id = %d AND expires_at <= %s AND status <> 'expired'",
-			array( $this->prefix . 'export_jobs', $now, $id, $now )
+			"UPDATE %i SET status = 'expired', storage_key = NULL, content_sha256 = NULL, updated_at = %s WHERE organization_id = %d AND id = %d AND expires_at <= %s AND status <> 'expired'",
+			array( $this->prefix . 'export_jobs', $now, $scope->id, $id, $now )
 		);
 	}
 }
