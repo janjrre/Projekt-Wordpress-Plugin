@@ -6,6 +6,7 @@ use InvalidArgumentException;
 use RuntimeException;
 use UOP\Application\Export\{ExportJobService,PersonExportGenerator};
 use UOP\Application\Policy\{Actor,PolicyService};
+use UOP\REST\ExportController;
 use UOP\Core\{CorrelationId,PublicId,TransactionManager};
 use UOP\Domain\Organization\OrgScope;
 use UOP\Infrastructure\Database\{AssignmentRepository,AuditWriter,DelegationRepository,ExportJobRepository,Installer,OutboxRepository,PersonRepository,SchemaManifest,WpdbConnection};
@@ -17,6 +18,7 @@ final class M5ExportJobsTest extends TestCase {
     private OrgScope $scope;
     private Actor $actor;
     private PersonRepository $people;
+    private PolicyService $policy;
     private ExportJobRepository $jobs;
     private ExportJobService $exports;
     private ExportStorageInterface $storage;
@@ -42,6 +44,7 @@ final class M5ExportJobsTest extends TestCase {
         $this->people=new PersonRepository($this->db,$this->prefix);
         $this->jobs=new ExportJobRepository($this->db,$this->prefix);
         $policy=new PolicyService($this->people,new DelegationRepository($this->db,$this->prefix),new AssignmentRepository($this->db,$this->prefix),fn(int $id,string $cap): bool => $id===$user && $this->authorized);
+        $this->policy=$policy;
         $tx=new TransactionManager($this->db,static function(int $n): void {},static function(\Throwable $e): void {});
         $this->storage=new class implements ExportStorageInterface {
             public array $files=[];
@@ -153,6 +156,39 @@ final class M5ExportJobsTest extends TestCase {
             $this->exports->download($this->actor,$this->scope,$job,self::NOW);
             self::fail('Tampered export downloaded');
         } catch(RuntimeException) { self::assertTrue(true); }
+    }
+
+    public function test_rest_export_contract_denies_unknown_inputs_and_serves_csv_without_json(): void {
+        $this->make_person('REST member');
+        $controller=new ExportController($this->exports,$this->policy);
+        add_action('rest_api_init',[$controller,'register']);
+        do_action('rest_api_init');
+        $request=new \\WP_REST_Request('POST','/uop/v1/exports');
+        $request->set_header('content-type','application/json');
+        $request->set_body(wp_json_encode([
+            'command_id'=>PublicId::generate()->to_string(),
+            'columns'=>['public_id','display_name'],
+            'status'=>'active',
+        ],JSON_THROW_ON_ERROR));
+        $response=rest_do_request($request);
+        self::assertSame(202,$response->get_status());
+        $job=PublicId::from_string($response->get_data()['public_id']);
+        $status=rest_do_request(new \\WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string()));
+        self::assertSame(200,$status->get_status());
+        self::assertArrayNotHasKey('storage_key',$status->get_data());
+        $this->exports->process($this->scope,$job,self::NOW);
+        $dl_request=new \\WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string().'/download');
+        $download=rest_do_request($dl_request);
+        self::assertSame(200,$download->get_status());
+        self::assertSame('text/csv; charset=utf-8',$download->get_headers()['Content-Type']);
+        ob_start();
+        $served=$controller->serve_download(false,$download,$dl_request,rest_get_server());
+        $file=ob_get_clean();
+        self::assertTrue($served);
+        self::assertStringContainsString('REST member',$file);
+        self::assertFalse(str_contains($file,'uop_private_csv'));
+        $this->authorized=false;
+        self::assertSame(403,rest_do_request(new \\WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string()))->get_status());
     }
 
     public function test_outbox_failure_rolls_back_job_creation(): void {
