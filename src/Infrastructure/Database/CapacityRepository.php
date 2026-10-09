@@ -31,7 +31,7 @@ final class CapacityRepository {
 	 */
 	public function event_post( OrgScope $scope, PublicId $event ): ?int {
 		$rows = $this->db->rows(
-			"SELECT event_post_id FROM %i WHERE organization_id = %d AND public_id = %s AND status = 'active' LIMIT 1",
+			"SELECT event_post_id FROM %i WHERE organization_id = %d AND public_id = %s AND status = 'active' LIMIT 1 FOR UPDATE",
 			array( $this->prefix . 'event_settings', $scope->id, $event->to_binary() )
 		);
 		return $rows ? (int) $rows[0]['event_post_id'] : null;
