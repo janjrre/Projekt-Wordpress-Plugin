@@ -121,7 +121,7 @@ final class RegistrationController extends BaseController {
 			return RestError::for_kind( 'unavailable' );
 		}
 		try {
-			$body = $this->strict_json_object(
+			$body    = $this->strict_json_object(
 				$request,
 				array(
 					'person_id'     => array( 'type' => 'string' ),
@@ -145,10 +145,13 @@ final class RegistrationController extends BaseController {
 		}
 		try {
 			$id = $this->registrations->submit( $this->current_actor(), $scope, $person, $event, $when, $command, $body['fields'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
-			return new WP_REST_Response( array(
+			return new WP_REST_Response(
+				array(
 					'public_id' => $id->to_string(),
 					'status'    => 'submitted',
-				), 201 );
+				),
+				201
+			);
 		} catch ( InvalidArgumentException ) {
 			return RestError::for_kind( 'validation' );
 		} catch ( RuntimeException ) {
@@ -164,9 +167,11 @@ final class RegistrationController extends BaseController {
 	 */
 	public function cancel( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
-			$body = $this->strict_json_object( $request, array(
-					'command_id' => array( 'type' => 'string' ),
-				), array( 'command_id' ) );
+			$body    = $this->strict_json_object(
+				$request,
+				array( 'command_id' => array( 'type' => 'string' ) ),
+				array( 'command_id' )
+			);
 			$command = PublicId::from_string( $body['command_id'] );
 		} catch ( InvalidArgumentException ) {
 			return RestError::for_kind( 'invalid_schema' );
@@ -191,10 +196,13 @@ final class RegistrationController extends BaseController {
 			} elseif ( 'cancelled' !== $status ) {
 				return RestError::for_kind( 'conflict' );
 			}
-			return new WP_REST_Response( array(
+			return new WP_REST_Response(
+				array(
 					'public_id' => $id->to_string(),
 					'status'    => 'cancelled',
-				), 200 );
+				),
+				200
+			);
 		} catch ( InvalidArgumentException | RuntimeException ) {
 			return RestError::for_kind( 'conflict' );
 		}
@@ -208,7 +216,7 @@ final class RegistrationController extends BaseController {
 	 */
 	public function transition( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
-			$body = $this->strict_json_object(
+			$body    = $this->strict_json_object(
 				$request,
 				array(
 					'command_id' => array( 'type' => 'string' ),
@@ -230,10 +238,13 @@ final class RegistrationController extends BaseController {
 		}
 		try {
 			$this->transitions->transition( $this->current_actor(), $scope, $id, $body['target'], $command, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
-			return new WP_REST_Response( array(
+			return new WP_REST_Response(
+				array(
 					'public_id' => $id->to_string(),
 					'status'    => $body['target'],
-				), 200 );
+				),
+				200
+			);
 		} catch ( InvalidArgumentException | RuntimeException ) {
 			return RestError::for_kind( 'conflict' );
 		}
@@ -248,7 +259,7 @@ final class RegistrationController extends BaseController {
 	 */
 	public function verify_email( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
-			$body = $this->strict_json_object(
+			$body   = $this->strict_json_object(
 				$request,
 				array(
 					'registration_id' => array( 'type' => 'string' ),

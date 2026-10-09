@@ -33,7 +33,10 @@ final class PeopleController extends BaseController {
 		$this->register_endpoint( '/people/(?P<uuid>[0-9a-f-]{36})', 'PATCH', array( $this, 'patch' ), array( $this, 'can_view' ), $this->uuid_argument() );
 	}
 
-	/** @return bool|WP_Error */
+	/** Check that the current REST user is authenticated.
+	 *
+	 * @return bool|WP_Error
+	 */
 	public function authenticated(): bool|WP_Error {
 		return get_current_user_id() > 0 ? true : $this->denied();
 	}
@@ -50,7 +53,10 @@ final class PeopleController extends BaseController {
 		return $scope && $id && null !== $this->reads->person( $this->current_actor(), $scope, $id ) ? true : $this->denied( true );
 	}
 
-	/** @return array<string, mixed>|WP_Error */
+	/** Return only self or explicitly delegated people.
+	 *
+	 * @return array<string, mixed>|WP_Error
+	 */
 	public function my_people(): array|WP_Error {
 		$scope = $this->organization_scope();
 		return $scope ? array( 'items' => $this->reads->my_people( $this->current_actor(), $scope ) ) : RestError::for_kind( 'unavailable' );
@@ -76,7 +82,7 @@ final class PeopleController extends BaseController {
 	 */
 	public function patch( WP_REST_Request $request ): array|WP_Error {
 		try {
-			$body = $this->strict_json_object(
+			$body  = $this->strict_json_object(
 				$request,
 				array(
 					'display_name' => array(

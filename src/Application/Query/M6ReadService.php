@@ -65,7 +65,7 @@ final class M6ReadService {
 				continue;
 			}
 			$seen[ $id ] = true;
-			$row        = $this->people->by_internal_id( $scope, $id );
+			$row         = $this->people->by_internal_id( $scope, $id );
 			if ( ! $row || 'active' !== $row['status'] ) {
 				continue;
 			}
@@ -103,7 +103,7 @@ final class M6ReadService {
 		if ( ! $this->policy->can( $actor, 'person.view', $resource )->allowed ) {
 			return null;
 		}
-		$dto      = array(
+		$dto   = array(
 			'public_id'    => PublicId::from_binary( (string) $row['public_id'] )->to_string(),
 			'display_name' => (string) $row['display_name'],
 			'status'       => (string) $row['status'],
@@ -145,7 +145,10 @@ final class M6ReadService {
 	public function registrations( Actor $actor, OrgScope $scope, ?PublicId $person, ?PublicId $after ): ?array {
 		$subject = null === $person ? $this->people->by_user( $scope, $actor->user_id ) : $this->people->find( $scope, $person );
 		if ( ! $subject || 'active' !== $subject['status'] ) {
-			return null === $person ? array( 'items' => array(), 'next' => null ) : null;
+			return null === $person ? array(
+				'items' => array(),
+				'next'  => null,
+			) : null;
 		}
 		$person_id = (int) $subject['id'];
 		$after_id  = 0;

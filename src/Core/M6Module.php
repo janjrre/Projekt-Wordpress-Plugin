@@ -23,7 +23,10 @@ use UOP\REST\RegistrationController;
 
 /** Presentation adapters do not bypass policy, history or capacity locks. */
 final class M6Module implements ModuleInterface {
-	/** @return string */
+	/** Identify the M6 presentation adapter milestone.
+	 *
+	 * @return string
+	 */
 	public function key(): string {
 		return 'admin_portal_rest';
 	}
