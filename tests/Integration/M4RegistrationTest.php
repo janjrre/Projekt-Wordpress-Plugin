@@ -6,12 +6,14 @@ use InvalidArgumentException;
 use RuntimeException;
 use UOP\Application\Policy\{Actor, PolicyService};
 use UOP\Application\Event\EventService;
+use UOP\Application\Event\PostCommitPublisher;
+use UOP\Application\Identity\DelegationService;
 use UOP\Application\Form\FormService;
 use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService, RegistrationTransitionService, CapacityAllocationService, CapacityLifecycleService, EventCancellationService, EmailVerificationService};
 use UOP\Domain\Registrations\RegistrationStateMachine;
 use UOP\Core\{CorrelationId, PublicId, TransactionManager};
 use UOP\Domain\Organization\OrgScope;
-use UOP\Infrastructure\Database\{AssignmentRepository, AuditWriter, CapacityRepository, DelegationRepository, EventRepository, FormRepository, Installer, OccurrenceRepository, OutboxRepository, PersonRepository, RegistrationRepository, WaitlistRepository, EventCancellationRepository, SchemaManifest, WpdbConnection};
+use UOP\Infrastructure\Database\{AssignmentRepository, AuditWriter, CapacityRepository, DelegationRepository, EventRepository, FormRepository, Installer, OccurrenceRepository, OutboxRepository, PersonRepository, RegistrationRepository, WaitlistRepository, EventCancellationRepository, RelationshipRepository, SchemaManifest, WpdbConnection};
 
 final class M4RegistrationTest extends TestCase {
 	private WpdbConnection $db;
@@ -47,6 +49,12 @@ final class M4RegistrationTest extends TestCase {
 		return [
 			'actor'=>$actor,
 			'people'=>$people,
+			'delegations'=>new DelegationRepository($this->db,$this->prefix),
+			'relations'=>new RelationshipRepository($this->db,$this->prefix),
+			'policy'=>$policy,
+			'tx'=>$tx,
+			'audit'=>$audit,
+			'outbox'=>$outbox,
 			'form'=>new FormService(new FormRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
 			'event'=>new EventService(new EventRepository($this->db,$this->prefix),new OccurrenceRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
 			'config'=>new RegistrationConfigurationService($this->db,$this->prefix,$policy,$tx,$audit,$outbox),
@@ -520,5 +528,37 @@ final class M4RegistrationTest extends TestCase {
 		self::assertSame('accepted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
 		self::assertSame('confirmed',$this->db->rows('SELECT status FROM %i WHERE registration_id = (SELECT id FROM %i WHERE public_id = %s)',[$this->prefix.'capacity_claims',$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
 		self::assertSame([], $this->db->rows("SELECT id FROM %i WHERE reason_code = 'event_cancelled'",[$this->prefix.'registration_history']));
+	}
+
+	/** A parent may submit for a child only while the explicit delegation is live. */
+	public function test_guardian_family_registration_uses_current_delegation_not_relationship(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$child,$event,$form,$now]=$this->setup_registration($draft);
+		$parent=PublicId::generate();
+		$s['people']->create($this->scope,$parent,'Responsible Adult',null,$now);
+		$guardian=wp_create_user('uop_m4_parent_'.bin2hex(random_bytes(4)),wp_generate_password(24),'parent_'.bin2hex(random_bytes(4)).'@example.invalid');
+		self::assertIsInt($guardian);
+		self::assertTrue($s['people']->link($this->scope,$parent,$guardian,$now));
+		$parent_row=$s['people']->find($this->scope,$parent);
+		$child_row=$s['people']->find($this->scope,$child);
+		$relationship=PublicId::generate();
+		$s['relations']->create($this->scope,$relationship,(int)$parent_row['id'],(int)$child_row['id'],'guardian_of',$now);
+		$as_parent=new Actor($guardian);
+		$input=['name'=>'Child Guest'];
+		try {
+			$s['submit']->submit($as_parent,$this->scope,$child,$event,null,PublicId::generate(),$input,$now,CorrelationId::generate());
+			self::fail('Family relationship granted implicit registration rights');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		$delegation=new DelegationService($s['people'],$s['relations'],$s['delegations'],$this->db,$s['policy'],$s['tx'],$s['audit'],$s['outbox'],new PostCommitPublisher($s['tx']));
+		$grant=$delegation->grant($s['actor'],$this->scope,$guardian,$child,'registration_manage','organization',0,$relationship,$now,CorrelationId::generate());
+		$registration=$s['submit']->submit($as_parent,$this->scope,$child,$event,null,PublicId::generate(),$input,$now,CorrelationId::generate());
+		self::assertSame('submitted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
+		$delegation->revoke($s['actor'],$this->scope,$grant,$now,CorrelationId::generate());
+		try {
+			$s['submit']->submit($as_parent,$this->scope,$child,$event,null,PublicId::generate(),$input,$now,CorrelationId::generate());
+			self::fail('Revoked guardian still submitted for the child');
+		} catch (RuntimeException) { self::assertTrue(true); }
+		$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+		self::assertSame('submitted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
 	}
 }
