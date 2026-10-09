@@ -33,10 +33,12 @@ final class LocalExportStorage implements ExportStorageInterface {
 		if ( is_link( $path ) ) {
 			throw new RuntimeException( 'Private export storage path is a symlink.' );
 		}
+		// phpcs:ignore -- Private system-temp exports require local-only filesystem APIs, not a public WordPress FTP adapter.
 		if ( ! is_dir( $path ) && ! mkdir( $path, 0700 ) && ! is_dir( $path ) ) {
 			throw new RuntimeException( 'Private export directory cannot be created.' );
 		}
 		$real = realpath( $path );
+		// phpcs:ignore -- Verify OS-level private-directory permissions directly; WP_Filesystem cannot provide this invariant.
 		if ( false === $real || ! is_dir( $real ) || ! is_writable( $real ) || ( fileperms( $real ) & 0077 ) !== 0 ) {
 			throw new RuntimeException( 'Private export directory is not secure.' );
 		}
@@ -80,12 +82,14 @@ final class LocalExportStorage implements ExportStorageInterface {
 			throw new RuntimeException( 'Cannot create private export file.' );
 		}
 		try {
+			// phpcs:ignore -- Enforce OS permissions on a private temporary file; never use public media filesystem APIs.
 			if ( ! chmod( $temp, 0600 ) || strlen( $contents ) !== fwrite( $handle, $contents ) || ! fflush( $handle ) ) {
 				throw new RuntimeException( 'Private export write failed.' );
 			}
 		} finally {
 			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close protected local file.
 		}
+		// phpcs:ignore -- Private atomic rename within one system-temp directory, outside all web roots.
 		if ( ! rename( $temp, $path ) ) {
 			unlink( $temp ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- Remove failed private temp artifact.
 			throw new RuntimeException( 'Private export finalization failed.' );
