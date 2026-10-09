@@ -18,6 +18,7 @@ use UOP\Extension\ModuleInterface;
 use UOP\Infrastructure\Database\Connection;
 use UOP\Infrastructure\Database\DelegationRepository;
 use UOP\Infrastructure\Database\PersonRepository;
+use UOP\Infrastructure\Database\RegistrationReadRepository;
 use UOP\REST\PeopleController;
 use UOP\REST\RegistrationController;
 
@@ -40,12 +41,15 @@ final class M6Module implements ModuleInterface {
 		global $wpdb;
 		$prefix = $wpdb->prefix . 'uop_';
 		$container->set(
+			RegistrationReadRepository::class,
+			static fn ( ServiceContainer $c ) => new RegistrationReadRepository( $c->get( Connection::class ), $prefix )
+		);
+		$container->set(
 			M6ReadService::class,
 			static fn ( ServiceContainer $c ) => new M6ReadService(
 				$c->get( PersonRepository::class ),
 				$c->get( DelegationRepository::class ),
-				$c->get( Connection::class ),
-				$prefix,
+				$c->get( RegistrationReadRepository::class ),
 				$c->get( PolicyService::class )
 			)
 		);

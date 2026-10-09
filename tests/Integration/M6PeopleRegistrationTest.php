@@ -39,6 +39,7 @@ use UOP\Infrastructure\Database\OutboxRepository;
 use UOP\Infrastructure\Database\PersonRepository;
 use UOP\Infrastructure\Database\RegistrationFactsRepository;
 use UOP\Infrastructure\Database\RegistrationRepository;
+use UOP\Infrastructure\Database\RegistrationReadRepository;
 use UOP\Infrastructure\Database\SchemaManifest;
 use UOP\Infrastructure\Database\WaitlistRepository;
 use UOP\Infrastructure\Database\WpdbConnection;
@@ -94,7 +95,7 @@ final class M6PeopleRegistrationTest extends TestCase {
 		$outbox = new OutboxRepository( $this->db, $this->prefix );
 		$publisher = new PostCommitPublisher( $tx );
 		$person_service = new PersonService( $people, $policy, $tx, $audit, $outbox, $publisher );
-		$reads = new M6ReadService( $people, $delegations, $this->db, $this->prefix, $policy );
+		$reads = new M6ReadService( $people, $delegations, new RegistrationReadRepository( $this->db, $this->prefix ), $policy );
 		$registrations = new RegistrationRepository( $this->db, $this->prefix );
 		$facts = new RegistrationFactsService( new RegistrationFactsRepository( $this->db, $this->prefix ), $policy );
 		$eligibility = new RegistrationEligibilityService( $registrations, $facts );

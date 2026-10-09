@@ -13,9 +13,9 @@ use UOP\Application\Policy\PolicyObject;
 use UOP\Application\Policy\PolicyService;
 use UOP\Core\PublicId;
 use UOP\Domain\Organization\OrgScope;
-use UOP\Infrastructure\Database\Connection;
 use UOP\Infrastructure\Database\DelegationRepository;
 use UOP\Infrastructure\Database\PersonRepository;
+use UOP\Infrastructure\Database\RegistrationReadRepository;
 
 /** This service is shared by REST and the upcoming admin and portal screens. */
 final class M6ReadService {
@@ -24,15 +24,13 @@ final class M6ReadService {
 	 *
 	 * @param PersonRepository     $people      Organization-scoped person storage.
 	 * @param DelegationRepository $delegations Live per-person delegation grants.
-	 * @param Connection           $db          Scoped database adapter.
-	 * @param string               $prefix      Fixed site-specific table prefix.
+	 * @param RegistrationReadRepository $registrations Read-only registration persistence.
 	 * @param PolicyService        $policy      Authoritative object and field authorization.
 	 */
 	public function __construct(
 		private PersonRepository $people,
 		private DelegationRepository $delegations,
-		private Connection $db,
-		private string $prefix,
+		private RegistrationReadRepository $registrations,
 		private PolicyService $policy
 	) {}
 
@@ -125,11 +123,8 @@ final class M6ReadService {
 	 * @return array<string, mixed>|null
 	 */
 	public function registration( Actor $actor, OrgScope $scope, PublicId $id ): ?array {
-		$rows = $this->db->rows(
-			$this->registration_select() . ' WHERE r.organization_id = %d AND r.public_id = %s LIMIT 1',
-			array( $this->prefix . 'registrations', $this->prefix . 'persons', $this->prefix . 'event_settings', $scope->id, $id->to_binary() )
-		);
-		return $rows ? $this->project_registration( $actor, $scope, $rows[0] ) : null;
+		$row = $this->registrations->find( $scope, $id );
+		return $row ? $this->project_registration( $actor, $scope, $row ) : null;
 	}
 
 	/**
@@ -153,30 +148,14 @@ final class M6ReadService {
 		$person_id = (int) $subject['id'];
 		$after_id  = 0;
 		if ( null !== $after ) {
-			$cursor = $this->db->rows(
-				'SELECT id FROM %i WHERE organization_id = %d AND person_id = %d AND public_id = %s LIMIT 1',
-				array(
-					$this->prefix . 'registrations',
-					$scope->id,
-					$person_id,
-					$after->to_binary(),
-				)
-			);
-			if ( ! $cursor || null === $this->registration( $actor, $scope, $after ) ) {
+			$cursor = $this->registrations->cursor_for_person( $scope, $person_id, $after );
+			if ( null === $cursor || null === $this->registration( $actor, $scope, $after ) ) {
 				return null;
 			}
-			$after_id = (int) $cursor[0]['id'];
+			$after_id = $cursor;
 		}
-		$sql  = $this->registration_select() . ' WHERE r.organization_id = %d AND r.person_id = %d';
-		$args = array( $this->prefix . 'registrations', $this->prefix . 'persons', $this->prefix . 'event_settings', $scope->id, $person_id );
-		if ( $after_id > 0 ) {
-			$sql   .= ' AND r.id < %d';
-			$args[] = $after_id;
-		}
-		$sql   .= ' ORDER BY r.id DESC LIMIT %d';
-		$args[] = 50;
-		$items  = array();
-		foreach ( $this->db->rows( $sql, $args ) as $row ) {
+		$items = array();
+		foreach ( $this->registrations->for_person( $scope, $person_id, $after_id ) as $row ) {
 			$dto = $this->project_registration( $actor, $scope, $row );
 			if ( null !== $dto ) {
 				$items[] = $dto;
@@ -188,14 +167,6 @@ final class M6ReadService {
 		);
 	}
 
-	/**
-	 * Fixed SQL identifiers; no request-controlled column names or raw filters.
-	 *
-	 * @return string Selected columns and joins.
-	 */
-	private function registration_select(): string {
-		return 'SELECT r.id, r.public_id, r.person_id, r.event_post_id, r.status, r.version, r.created_at, p.public_id AS person_public_id, e.public_id AS event_public_id FROM %i r INNER JOIN %i p ON p.id = r.person_id AND p.organization_id = r.organization_id LEFT JOIN %i e ON e.organization_id = r.organization_id AND e.event_post_id = r.event_post_id';
-	}
 
 	/**
 	 * Permit registration viewing only under the live registration-specific policy.
