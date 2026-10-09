@@ -470,7 +470,10 @@ final class M4RegistrationTest extends TestCase {
 		self::assertSame($old_events+6,$event_count);
 		self::assertSame(0,$s['cancel_event']->cancel($s['actor'],$this->scope,$event,PublicId::generate(),$now,CorrelationId::generate()));
 		self::assertSame($event_count,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'domain_events'])[0]['n']);
-		self::assertNull($s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate()) );
+		try {
+			$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Cancelled bucket still issued an offer');
+		} catch (RuntimeException) { self::assertTrue(true); }
 		try {
 			$s['lifecycle']->accept_offer($s['actor'],$this->scope,PublicId::from_string($offer['public_id']),$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
 			self::fail('Cancelled offer remained usable');
