@@ -87,6 +87,6 @@ final class EmailDeliveryWorker {
 		}
 		// The status transition is deliberately fail-closed: if persistence
 		// fails here, the message stays 'sending', never re-sent automatically.
-		$this->tx->run( fn (): void => $this->messages->complete( $scope, $message, (bool) $accepted ) );
+		$this->tx->run( fn () => $this->messages->complete( $scope, $message, (bool) $accepted ) );
 	}
 }
