@@ -912,6 +912,16 @@ final class M4RegistrationTest extends TestCase {
 		self::assertSame('accepted',$services['capacity']->decide($services['actor'],$this->scope,$vip,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
 		$vip_id=(int)$this->db->rows('SELECT id FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$vip->to_binary()])[0]['id'];
 		$this->db->execute('UPDATE %i SET payload_json = %s WHERE registration_id = %d',[$this->prefix.'registration_snapshots','{"schema_version":1,"fields":{"tier":"standard"}}',$vip_id]);
+		$eligibility=new RegistrationEligibilityService(
+			new RegistrationRepository($this->db,$this->prefix),
+			new RegistrationFactsService(new RegistrationFactsRepository($this->db,$this->prefix),$services['policy'])
+		);
+		$registration_row=(new WaitlistRepository($this->db,$this->prefix))->registration($this->scope,$vip_id);
+		$bucket_row=(new CapacityRepository($this->db,$this->prefix))->lock_bucket($this->scope,$bucket);
+		try {
+			$eligibility->assert_eligible($services['actor'],$this->scope,$registration_row,$bucket_row);
+			self::fail('Tampered frozen submission passed integrity check');
+		} catch (RuntimeException) { self::assertTrue(true); }
 		$accepted=$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$vip->to_binary()]);
 		self::assertSame('accepted',$accepted[0]['status']);
 		self::assertSame(1,(int)$this->db->rows("SELECT COUNT(*) AS n FROM %i WHERE status = 'confirmed'",[$this->prefix.'capacity_claims'])[0]['n']);
