@@ -229,6 +229,7 @@ final class M5OperationsScreen {
 			/* translators: 1: Retention events requiring recovery, 2: Number of failed attempts. */
 			echo '<p>' . esc_html( sprintf( __( 'Retention outbox events requiring recovery: %1$d at %2$d attempts.', 'uop-core' ), (int) $row['total'], (int) $row['attempts'] ) ) . '</p>';
 		}
+		echo '</section>';
 	}
 
 	/**
