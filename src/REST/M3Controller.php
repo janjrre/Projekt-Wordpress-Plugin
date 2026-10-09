@@ -21,7 +21,7 @@ use WP_Error;
 use WP_REST_Request;
 
 /** REST controller holds no repositories and no direct SQL. */
-final class M3Controller {
+final class M3Controller extends BaseController {
 	/**
 	 * Compose authorization, reads, and commands via application services.
 	 *
@@ -31,78 +31,16 @@ final class M3Controller {
 	 */
 	public function __construct( private M3ReadService $reads, private FormService $forms, private PolicyService $policy ) {}
 
-	/** Register M3 resources under the stable uop/v1 namespace. */
+	/** Register only known DTO routes through the uniform permission boundary. */
 	public function register(): void {
-		register_rest_route(
-			'uop/v1',
-			'/forms',
-			array(
-				array(
-					'methods'             => 'GET',
-					'callback'            => array( $this, 'forms' ),
-					'permission_callback' => array( $this, 'can_manage_forms' ),
-				),
-				array(
-					'methods'             => 'POST',
-					'callback'            => array( $this, 'create_form' ),
-					'permission_callback' => array( $this, 'can_manage_forms' ),
-				),
-			)
-		);
-		register_rest_route(
-			'uop/v1',
-			'/forms/(?P<uuid>[0-9a-f-]{36})',
-			array(
-				'methods'             => 'GET',
-				'callback'            => array( $this, 'form' ),
-				'permission_callback' => array( $this, 'can_view_form' ),
-			)
-		);
-		register_rest_route(
-			'uop/v1',
-			'/forms/(?P<uuid>[0-9a-f-]{36})/draft',
-			array(
-				'methods'             => 'PUT',
-				'callback'            => array( $this, 'save_form' ),
-				'permission_callback' => array( $this, 'can_view_form' ),
-			)
-		);
-		register_rest_route(
-			'uop/v1',
-			'/forms/(?P<uuid>[0-9a-f-]{36})/publish',
-			array(
-				'methods'             => 'POST',
-				'callback'            => array( $this, 'publish_form' ),
-				'permission_callback' => array( $this, 'can_view_form' ),
-			)
-		);
-		register_rest_route(
-			'uop/v1',
-			'/events',
-			array(
-				'methods'             => 'GET',
-				'callback'            => array( $this, 'events' ),
-				'permission_callback' => array( $this, 'can_manage_events' ),
-			)
-		);
-		register_rest_route(
-			'uop/v1',
-			'/events/(?P<uuid>[0-9a-f-]{36})',
-			array(
-				'methods'             => 'GET',
-				'callback'            => array( $this, 'event' ),
-				'permission_callback' => array( $this, 'can_view_event' ),
-			)
-		);
-		register_rest_route(
-			'uop/v1',
-			'/people/(?P<uuid>[0-9a-f-]{36})/profile',
-			array(
-				'methods'             => 'GET',
-				'callback'            => array( $this, 'profile' ),
-				'permission_callback' => array( $this, 'can_view_profile' ),
-			)
-		);
+		$this->register_endpoint( '/forms', 'GET', array( $this, 'forms' ), array( $this, 'can_manage_forms' ) );
+		$this->register_endpoint( '/forms', 'POST', array( $this, 'create_form' ), array( $this, 'can_manage_forms' ) );
+		$this->register_endpoint( '/forms/(?P<uuid>[0-9a-f-]{36})', 'GET', array( $this, 'form' ), array( $this, 'can_view_form' ), $this->uuid_argument() );
+		$this->register_endpoint( '/forms/(?P<uuid>[0-9a-f-]{36})/draft', 'PUT', array( $this, 'save_form' ), array( $this, 'can_view_form' ), $this->uuid_argument() );
+		$this->register_endpoint( '/forms/(?P<uuid>[0-9a-f-]{36})/publish', 'POST', array( $this, 'publish_form' ), array( $this, 'can_view_form' ), $this->uuid_argument() );
+		$this->register_endpoint( '/events', 'GET', array( $this, 'events' ), array( $this, 'can_manage_events' ) );
+		$this->register_endpoint( '/events/(?P<uuid>[0-9a-f-]{36})', 'GET', array( $this, 'event' ), array( $this, 'can_view_event' ), $this->uuid_argument() );
+		$this->register_endpoint( '/people/(?P<uuid>[0-9a-f-]{36})/profile', 'GET', array( $this, 'profile' ), array( $this, 'can_view_profile' ), $this->uuid_argument() );
 	}
 
 	/**
@@ -278,11 +216,14 @@ final class M3Controller {
 	 * @throws InvalidArgumentException For invalid transport shape.
 	 */
 	private function body( WP_REST_Request $request, array $keys ): array {
-		$body = (array) $request->get_json_params();
-		if ( count( $body ) !== count( $keys ) || array_diff( array_keys( $body ), $keys ) || array_diff( $keys, array_keys( $body ) ) ) {
-			throw new InvalidArgumentException( 'Unknown or missing input keys.' );
-		}
-		return $body;
+		$definitions = array(
+			'key'      => array( 'type' => 'string' ),
+			'title'    => array( 'type' => 'string' ),
+			'context'  => array( 'type' => 'string' ),
+			'draft'    => array( 'type' => 'object' ),
+			'revision' => array( 'type' => 'integer' ),
+		);
+		return $this->strict_json_object( $request, array_intersect_key( $definitions, array_flip( $keys ) ), $keys );
 	}
 
 	/**
