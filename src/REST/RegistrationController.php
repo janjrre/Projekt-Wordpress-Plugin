@@ -259,7 +259,7 @@ final class RegistrationController extends BaseController {
 	 */
 	public function verify_email( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
-			$body   = $this->strict_json_object(
+			$body = $this->strict_json_object(
 				$request,
 				array(
 					'registration_id' => array( 'type' => 'string' ),
@@ -270,7 +270,7 @@ final class RegistrationController extends BaseController {
 				),
 				array( 'registration_id', 'token' )
 			);
-			$id = PublicId::from_string( $body['registration_id'] );
+			$id   = PublicId::from_string( $body['registration_id'] );
 		} catch ( InvalidArgumentException ) {
 			return RestError::for_kind( 'invalid_schema' );
 		}
