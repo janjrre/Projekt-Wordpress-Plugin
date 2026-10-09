@@ -227,4 +227,20 @@ final class M5ConsentRecordsTest extends TestCase {
 		} catch(InvalidArgumentException) { self::assertTrue(true); }
 		self::assertSame($before,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'persons'])[0]['n']);
 	}
+
+	/** Two fields must never create competing truth for the same consent definition. */
+	public function test_form_rejects_duplicate_consent_definition_bindings(): void {
+		[$s,$event,$person,$now]=$this->prepared();
+		$rows=$this->db->rows('SELECT public_id FROM %i WHERE organization_id = %d AND consent_key = %s',[$this->prefix.'consent_definitions',$this->scope->id,'portrait']);
+		$definition=PublicId::from_binary($rows[0]['public_id'])->to_string();
+		$schema=['schema_version'=>1,'fields'=>[
+			['key'=>'first','type'=>'consent','label'=>'First use','required'=>true,'consent_definition_public_id'=>$definition],
+			['key'=>'second','type'=>'consent','label'=>'Duplicated use','required'=>false,'consent_definition_public_id'=>$definition],
+		]];
+		try {
+			$s['form']->create($s['actor'],$this->scope,'duplicate_consent','Duplicate consent','event',$schema,$now,CorrelationId::generate());
+			self::fail('Duplicate consent definition could be published in one form');
+		} catch(InvalidArgumentException) { self::assertTrue(true); }
+		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'forms'])[0]['n']);
+	}
 }
