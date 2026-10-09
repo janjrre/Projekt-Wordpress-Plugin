@@ -154,4 +154,27 @@ final class M5RetentionTest extends TestCase {
         }
         self::assertCount(1,$this->db->rows('SELECT id FROM %i WHERE person_id=%d',[$this->p.'profile_values',$id]));
     }
+    public function test_privacy_hold_is_explicitly_authorized_idempotent_and_releasable(): void {
+        $id=$this->person();
+        $row=$this->db->rows('SELECT public_id FROM %i WHERE id=%d',[$this->p.'persons',$id])[0];
+        $uuid=PublicId::from_binary($row['public_id']);
+        $this->rule('person_archive','persons','person.created','archive');
+        self::assertTrue($this->service->set_hold($this->actor,$this->scope,'person',$uuid,'2099-01-01 00:00:00','legal_review',self::NOW,CorrelationId::generate()));
+        self::assertFalse($this->service->set_hold($this->actor,$this->scope,'person',$uuid,'2099-01-01 00:00:00','legal_review',self::NOW,CorrelationId::generate()));
+        self::assertSame(0,$this->service->dry_run($this->actor,$this->scope,'person_archive',0,self::NOW)['eligible']);
+        try {
+            $this->service->set_hold(new Actor(999999),$this->scope,'person',$uuid,null,null,self::NOW,CorrelationId::generate());
+            self::fail('Privacy hold could be removed by an unauthorized account');
+        } catch(RuntimeException) { self::assertTrue(true); }
+        try {
+            $this->service->set_hold($this->actor,new OrgScope($this->scope->id+5),'person',$uuid,null,null,self::NOW,CorrelationId::generate());
+            self::fail('Cross-organization privacy hold was altered');
+        } catch(RuntimeException) { self::assertTrue(true); }
+        self::assertTrue($this->service->set_hold($this->actor,$this->scope,'person',$uuid,null,null,self::NOW,CorrelationId::generate()));
+        self::assertSame(1,$this->service->dry_run($this->actor,$this->scope,'person_archive',0,self::NOW)['eligible']);
+        $evidence=$this->db->rows("SELECT action,data_json FROM %i WHERE action='privacy.retention_hold_changed'",[$this->p.'audit_log']);
+        self::assertCount(2,$evidence);
+        self::assertStringNotContainsString('legal_review',$evidence[0]['data_json']);
+    }
+
 }
