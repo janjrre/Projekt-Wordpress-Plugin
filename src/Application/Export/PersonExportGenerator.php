@@ -38,12 +38,12 @@ final class PersonExportGenerator {
 	 * @param string   $status Optional fixed equality filter.
 	 * @phpstan-param list<string> $columns
 	 * @return array{body:string,count:int} Private CSV bytes and count.
-	 * @throws InvalidArgumentException For unsupported CSV columns.
+	 * @throws InvalidArgumentException|RuntimeException For unsupported columns, encoding or denied fields.
 	 */
 	public function generate( Actor $actor, OrgScope $scope, array $columns, string $status ): array {
 		CsvExportSchema::columns( $columns );
-		$csv       = new CsvStreamEncoder( $columns );
-		$projector = new ProjectionService( $this->policy );
+		$csv         = new CsvStreamEncoder( $columns );
+		$projector   = new ProjectionService( $this->policy );
 		$definitions = array(
 			'display_name'  => new FieldDefinition( 'display_name', 'personal', true, false, true, false ),
 			'status'        => new FieldDefinition( 'status', 'internal', false, false, false, false ),
@@ -55,7 +55,7 @@ final class PersonExportGenerator {
 				$rows      = $this->people->page( $scope, new PageRequest( 100, $after ), '' === $status ? array() : array( 'status' => $status ) );
 				$page_size = count( $rows );
 				foreach ( $rows as $row ) {
-					$after = (int) $row['id'];
+					$after     = (int) $row['id'];
 					$object    = new PolicyObject( $scope->id, 'person', $after, null, null, null !== $row['archived_at'] );
 					$id        = PublicId::from_binary( $row['public_id'] );
 					$projected = $projector->project(
