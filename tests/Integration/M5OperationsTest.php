@@ -3,6 +3,14 @@ namespace UOP\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
 use InvalidArgumentException;
+use UOP\Admin\M5OperationsScreen;
+use UOP\Application\Communication\{EmailMessageService,EmailTemplateCatalog,EmailTemplateRules,EmailTemplateService};
+use UOP\Application\Export\{ExportJobService,PersonExportGenerator};
+use UOP\Application\Policy\{Actor,PolicyService};
+use UOP\Application\Privacy\RetentionService;
+use UOP\Core\TransactionManager;
+use UOP\Infrastructure\Database\{AssignmentRepository,AuditWriter,DelegationRepository,EmailMessageRepository,EmailTemplateRepository,ExportJobRepository,OutboxRepository,PersonRepository,PrivacyAccountGateway,RetentionRepository};
+use UOP\Infrastructure\Export\LocalExportStorage;
 use UOP\Core\PublicId;
 use UOP\Domain\Organization\OrgScope;
 use UOP\Infrastructure\Database\{Installer,M5OperationsRepository,SchemaManifest,WpdbConnection};
@@ -52,5 +60,42 @@ final class M5OperationsTest extends TestCase {
 		self::assertSame([],$this->operations->retention_rules(new OrgScope($this->scope->id+1)));
 		$this->expectException(InvalidArgumentException::class);
 		$this->operations->counts($this->scope,'unknown');
+	}
+
+	public function test_admin_screen_renders_safe_sections_without_sensitive_envelopes(): void {
+		$user=wp_create_user('ops_'.bin2hex(random_bytes(5)),wp_generate_password(24),'ops_'.bin2hex(random_bytes(5)).'@example.invalid');
+		self::assertIsInt($user);
+		(new \WP_User($user))->set_role('administrator');
+		$role=get_role('administrator');
+		self::assertNotNull($role);
+		$role->add_cap('uop_manage_settings');
+		wp_set_current_user($user);
+		$people=new PersonRepository($this->db,$this->prefix);
+		$policy=new PolicyService($people,new DelegationRepository($this->db,$this->prefix),new AssignmentRepository($this->db,$this->prefix),static fn(int $id,string $cap): bool => $id===$user);
+		$tx=new TransactionManager($this->db,static function(int $n): void {},static function(\Throwable $error): void {});
+		$audit=new AuditWriter($this->db,$this->prefix);
+		$outbox=new OutboxRepository($this->db,$this->prefix);
+		$catalog=new EmailTemplateCatalog();
+		$rules=new EmailTemplateRules($catalog);
+		$templates=new EmailTemplateService($catalog,$rules,new EmailTemplateRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox);
+		$mail=new EmailMessageService($templates,$rules,new EmailMessageRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox);
+		$exports=new ExportJobService(new ExportJobRepository($this->db,$this->prefix),new PersonExportGenerator($people,$policy),new LocalExportStorage(),$policy,$tx,$audit,$outbox);
+		$retention=new RetentionService(new RetentionRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox);
+		$screen=new M5OperationsScreen($policy,$this->operations,$mail,$retention,$exports,new PrivacyAccountGateway($this->db,$this->prefix));
+		$_SERVER['REQUEST_METHOD']='GET';
+		$_POST=[];
+		ob_start();
+		try {
+			$screen->render();
+			$html=(string)ob_get_clean();
+		} catch(\Throwable $error) {
+			ob_end_clean();
+			throw $error;
+		}
+		self::assertStringContainsString('Email delivery',$html);
+		self::assertStringContainsString('Private export jobs',$html);
+		self::assertStringContainsString('Privacy and retention',$html);
+		self::assertStringNotContainsString('password',$html);
+		self::assertStringContainsString('uop_m5_operations',$html);
 	}
 }
