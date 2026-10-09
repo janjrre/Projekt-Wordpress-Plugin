@@ -37,7 +37,7 @@ final class RegistrationService {
 	 * @param AuditWriter              $audit         Durable minimal audit.
 	 * @param OutboxRepository         $outbox        Transactional domain events.
 	 * @param RegistrationFactsService $facts       Scoped and policy-filtered eligibility facts.
-	 * @param PersonRepository        $people      Scoped guest person persistence.
+	 * @param PersonRepository         $people      Scoped guest person persistence.
 	 */
 	public function __construct(
 		private RegistrationRepository $registrations,
@@ -97,12 +97,12 @@ final class RegistrationService {
 					throw new RuntimeException( 'Public guest registration requires verified contact.' );
 				}
 				$post_id = (int) $form['event_post_id'];
-				$post = get_post( $post_id );
+				$post    = get_post( $post_id );
 				if ( ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status ) {
 					throw new RuntimeException( 'Guest event is unavailable.' );
 				}
 				$occurrence_id = $this->registrations->occurrence_id( $scope, $post_id, $occurrence );
-				$prior = $this->registrations->by_submission_key( $scope, $command_id );
+				$prior         = $this->registrations->by_submission_key( $scope, $command_id );
 				if ( $prior ) {
 					if ( 'guest' !== $prior['source'] || (int) $prior['event_post_id'] !== $post_id
 						|| (int) $prior['occurrence_id'] !== $occurrence_id
@@ -141,6 +141,7 @@ final class RegistrationService {
 	 * @param bool          $guest       Internal anonymous guest flag.
 	 * @return PublicId Stored registration identity.
 	 * @throws RuntimeException When business or policy checks fail.
+	 * @throws InvalidArgumentException When form values are invalid.
 	 */
 	private function submit_inside( Actor $actor, OrgScope $scope, PublicId $person_id, PublicId $event_id, ?PublicId $occurrence, PublicId $command_id, array $input, string $utc_now, CorrelationId $correlation, bool $guest ): PublicId {
 		$person = $this->registrations->lock_person( $scope, $person_id );
