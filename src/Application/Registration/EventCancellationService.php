@@ -23,6 +23,8 @@ use UOP\Infrastructure\Database\OutboxRepository;
 /** A cancellation is committed only when every affected registration is closed. */
 final class EventCancellationService {
 	/**
+	 * Compose the atomic event cancellation boundary.
+	 *
 	 * @param EventCancellationRepository $events Scoped persistence.
 	 * @param RegistrationStateMachine    $states Transition validator.
 	 * @param PolicyService               $policy Live actor permissions.
@@ -106,10 +108,15 @@ final class EventCancellationService {
 						);
 						++$count;
 					}
-				} while ( count( $rows ) === 100 );
+					$page_size = count( $rows );
+				} while ( $page_size === 100 );
 				$event_uuid = PublicId::generate();
 				$this->audit->append( $scope, $actor, 'event.cancelled', $resource, 'success', $correlation, $event_uuid, array( 'command_id' => $command->to_string() ) );
-				$this->outbox->append( $scope, $event_uuid, 'event', $post_id, 'event.cancelled', $correlation, array( 'public_id' => $event_id->to_string(), 'command_id' => $command->to_string(), 'status' => 'cancelled' ) );
+				$this->outbox->append( $scope, $event_uuid, 'event', $post_id, 'event.cancelled', $correlation, array(
+					'public_id'  => $event_id->to_string(),
+					'command_id' => $command->to_string(),
+					'status'     => 'cancelled',
+				) );
 				return $count;
 			}
 		);
