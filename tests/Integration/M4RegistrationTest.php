@@ -553,12 +553,14 @@ final class M4RegistrationTest extends TestCase {
 		$grant=$delegation->grant($s['actor'],$this->scope,$guardian,$child,'registration_manage','organization',0,$relationship,$now,CorrelationId::generate());
 		$registration=$s['submit']->submit($as_parent,$this->scope,$child,$event,null,PublicId::generate(),$input,$now,CorrelationId::generate());
 		self::assertSame('submitted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
+		$s['transition']->transition($s['actor'],$this->scope,$registration,'cancelled',PublicId::generate(),$now,CorrelationId::generate());
 		$delegation->revoke($s['actor'],$this->scope,$grant,$now,CorrelationId::generate());
 		try {
 			$s['submit']->submit($as_parent,$this->scope,$child,$event,null,PublicId::generate(),$input,$now,CorrelationId::generate());
 			self::fail('Revoked guardian still submitted for the child');
 		} catch (RuntimeException) { self::assertTrue(true); }
 		$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
-		self::assertSame('submitted',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
+		self::assertSame('cancelled',$this->db->rows('SELECT status FROM %i WHERE public_id = %s',[$this->prefix.'registrations',$registration->to_binary()])[0]['status']);
+		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registrations'])[0]['n']);
 	}
 }
