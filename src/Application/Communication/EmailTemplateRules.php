@@ -69,7 +69,13 @@ final class EmailTemplateRules {
 			}
 		}
 		$canonical = wp_json_encode(
-			array( 'key' => $key, 'locale' => $locale, 'subject' => $subject, 'body_text' => $text, 'body_html' => $html ),
+			array(
+				'key'       => $key,
+				'locale'    => $locale,
+				'subject'   => $subject,
+				'body_text' => $text,
+				'body_html' => $html,
+			),
 			JSON_THROW_ON_ERROR
 		);
 		return hash( 'sha256', (string) $canonical, true );
@@ -99,15 +105,15 @@ final class EmailTemplateRules {
 				throw new InvalidArgumentException( 'Action URL must use HTTPS.' );
 			}
 		}
-		$render = static function ( string $source, bool $escape ) use ( $variables ): string {
+		$render           = static function ( string $source, bool $escape ) use ( $variables ): string {
 			return (string) preg_replace_callback(
 				'/\{\{([a-z][a-z0-9_]*)\}\}/',
-				static function ( array $match ) use ( $variables, $escape ): string {
-					if ( ! array_key_exists( $match[1], $variables ) ) {
+				static function ( array $found ) use ( $variables, $escape ): string {
+					if ( ! array_key_exists( $found[1], $variables ) ) {
 						throw new InvalidArgumentException( 'Missing email template render variable.' );
 					}
-					$value = $variables[ $match[1] ];
-					return $escape ? ( 'action_url' === $match[1] ? esc_url( $value ) : esc_html( $value ) ) : $value;
+					$value = $variables[ $found[1] ];
+					return $escape ? ( 'action_url' === $found[1] ? esc_url( $value ) : esc_html( $value ) ) : $value;
 				},
 				$source
 			);
@@ -126,8 +132,10 @@ final class EmailTemplateRules {
 	/**
 	 * Reject unknown placeholders, malformed delimiters and unlisted tokens.
 	 *
-	 * @param string       $source Source content.
-	 * @param list<string> $allowed Valid names for this message.
+	 * @param string $source Source content.
+	 * @param array  $allowed Valid names for this message.
+	 * @phpstan-param list<string> $allowed
+	 * @throws InvalidArgumentException On unknown or malformed substitutions.
 	 */
 	private function check_placeholders( string $source, array $allowed ): void {
 		preg_match_all( '/\{\{([a-z][a-z0-9_]*)\}\}/', $source, $matches );

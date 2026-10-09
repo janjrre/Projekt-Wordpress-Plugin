@@ -56,18 +56,18 @@ final class EmailTemplateRepository {
 	/**
 	 * Create or update a template under a live transaction.
 	 *
-	 * @param OrgScope                  $scope    Owning organization.
-	 * @param string                    $key      Allowlisted template key.
-	 * @param string                    $locale   Allowlisted locale.
-	 * @param array<string,mixed>|null  $old      Locked previous version.
-	 * @param int                       $expected Optimistic expected revision (0 to insert).
-	 * @param PublicId                  $uuid     New public ID on insert.
-	 * @param string                    $subject  Validated subject.
-	 * @param string                    $text     Validated text.
-	 * @param string|null               $html     Validated optional HTML.
-	 * @param string                    $digest   Binary content hash.
-	 * @param int                       $actor_id Verified editor.
-	 * @param string                    $now      Trusted UTC timestamp.
+	 * @param OrgScope                 $scope    Owning organization.
+	 * @param string                   $key      Allowlisted template key.
+	 * @param string                   $locale   Allowlisted locale.
+	 * @param array<string,mixed>|null $old      Locked previous version.
+	 * @param int                      $expected Optimistic expected revision (0 to insert).
+	 * @param PublicId                 $uuid     New public ID on insert.
+	 * @param string                   $subject  Validated subject.
+	 * @param string                   $text     Validated text.
+	 * @param string|null              $html     Validated optional HTML.
+	 * @param string                   $digest   Binary content hash.
+	 * @param int                      $actor_id Verified editor.
+	 * @param string                   $now      Trusted UTC timestamp.
 	 * @return array{id:int,public_id:string,revision:int}
 	 * @throws RuntimeException When a concurrent edit or identical content is detected.
 	 */
@@ -84,7 +84,11 @@ final class EmailTemplateRepository {
 			if ( ! $new || ! hash_equals( $new['public_id'], $uuid->to_binary() ) ) {
 				throw new RuntimeException( 'Email override creation conflict.' );
 			}
-			return array( 'id' => (int) $new['id'], 'public_id' => $uuid->to_string(), 'revision' => 1 );
+			return array(
+				'id'        => (int) $new['id'],
+				'public_id' => $uuid->to_string(),
+				'revision'  => 1,
+			);
 		}
 		if ( (int) $old['revision'] !== $expected || 'active' !== $old['status'] ) {
 			throw new RuntimeException( 'Stale email template revision.' );
@@ -99,6 +103,10 @@ final class EmailTemplateRepository {
 		) ) {
 			throw new RuntimeException( 'Concurrent email template update.' );
 		}
-		return array( 'id' => (int) $old['id'], 'public_id' => PublicId::from_binary( (string) $old['public_id'] )->to_string(), 'revision' => $next );
+		return array(
+			'id'        => (int) $old['id'],
+			'public_id' => PublicId::from_binary( (string) $old['public_id'] )->to_string(),
+			'revision'  => $next,
+		);
 	}
 }

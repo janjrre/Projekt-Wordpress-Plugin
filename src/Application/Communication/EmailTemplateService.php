@@ -62,13 +62,14 @@ final class EmailTemplateService {
 	/**
 	 * Strictly render a saved template or an unsaved editor preview.
 	 *
-	 * @param Actor                $actor     Authorized communication editor.
-	 * @param OrgScope             $scope     Trusted owning organization.
-	 * @param string               $key       Registered key.
-	 * @param string               $locale    Supported locale.
-	 * @param array<string,string> $variables Sample values; never persisted.
+	 * @param Actor                    $actor     Authorized communication editor.
+	 * @param OrgScope                 $scope     Trusted owning organization.
+	 * @param string                   $key       Registered key.
+	 * @param string                   $locale    Supported locale.
+	 * @param array<string,string>     $variables Sample values; never persisted.
 	 * @param array<string,mixed>|null $candidate Optional unsaved body fields.
 	 * @return array{subject:string,body_text:string,body_html:string|null}
+	 * @throws RuntimeException When caller is unauthorized.
 	 */
 	public function preview( Actor $actor, OrgScope $scope, string $key, string $locale, array $variables, ?array $candidate = null ): array {
 		$this->authorize( $actor, $scope );
@@ -99,6 +100,7 @@ final class EmailTemplateService {
 	 * @param string        $now         Trusted UTC timestamp.
 	 * @param CorrelationId $correlation Stable command correlation.
 	 * @return array{public_id:string,revision:int}
+	 * @throws RuntimeException When caller is unauthorized or revision has changed.
 	 */
 	public function save( Actor $actor, OrgScope $scope, string $key, string $locale, int $expected, string $subject, string $text, ?string $html, string $now, CorrelationId $correlation ): array {
 		$digest = $this->rules->validate( $key, $locale, $subject, $text, $html );
@@ -108,13 +110,16 @@ final class EmailTemplateService {
 		return $this->tx->run(
 			function () use ( $actor, $scope, $key, $locale, $expected, $subject, $text, $html, $now, $correlation, $digest ): array {
 				$this->authorize( $actor, $scope );
-				$old = $this->repo->lock( $scope, $key, $locale );
+				$old      = $this->repo->lock( $scope, $key, $locale );
 				$override = $this->repo->save( $scope, $key, $locale, $old, $expected, PublicId::generate(), $subject, $text, $html, $digest, $actor->user_id, $now );
-				$event = PublicId::generate();
-				$object = new PolicyObject( $scope->id, 'organization', $scope->id );
+				$event    = PublicId::generate();
+				$object   = new PolicyObject( $scope->id, 'organization', $scope->id );
 				$this->audit->append( $scope, $actor, 'email_template.saved', $object, 'success', $correlation, $event );
 				$this->outbox->append( $scope, $event, 'email_template', $override['id'], 'email_template.saved', $correlation, array( 'public_id' => $override['public_id'] ) );
-				return array( 'public_id' => $override['public_id'], 'revision' => $override['revision'] );
+				return array(
+					'public_id' => $override['public_id'],
+					'revision'  => $override['revision'],
+				);
 			}
 		);
 	}
@@ -148,7 +153,7 @@ final class EmailTemplateService {
 			);
 		}
 		$default = $this->catalog->defaults( $key, $locale );
-		$digest = $this->rules->validate( $key, $locale, $default['subject'], $default['body_text'], $default['body_html'] );
+		$digest  = $this->rules->validate( $key, $locale, $default['subject'], $default['body_text'], $default['body_html'] );
 		return array(
 			'public_id' => null,
 			'revision'  => 0,
@@ -165,6 +170,7 @@ final class EmailTemplateService {
 	 *
 	 * @param Actor    $actor Current authenticated editor.
 	 * @param OrgScope $scope Organization.
+	 * @throws RuntimeException When caller is unauthorized.
 	 */
 	private function authorize( Actor $actor, OrgScope $scope ): void {
 		if ( ! $this->policy->can( $actor, 'communication.send', new PolicyObject( $scope->id, 'organization', $scope->id ) )->allowed ) {
