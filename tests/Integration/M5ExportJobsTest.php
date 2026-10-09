@@ -283,4 +283,32 @@ final class M5ExportJobsTest extends TestCase {
         self::assertStringContainsString('Member 104',$csv['body']);
         self::assertSame(106,substr_count($csv['body'],"\r\n"));
     }
+
+    public function test_storage_write_failure_is_terminal_and_never_exposes_private_path(): void {
+        $this->make_person('Unavailable storage fixture');
+        $job=$this->queue();
+        $unavailable=new class implements ExportStorageInterface {
+            public function write(string $contents): string { throw new RuntimeException('Storage write unavailable'); }
+            public function read(string $key): string { throw new RuntimeException('Storage read unavailable'); }
+            public function delete(string $key): void {}
+        };
+        $tx=new TransactionManager($this->db,static function(int $n): void {},static function(\Throwable $error): void {});
+        $service=new ExportJobService(
+            $this->jobs,new PersonExportGenerator($this->people,$this->policy),$unavailable,
+            $this->policy,$tx,new AuditWriter($this->db,$this->prefix),new OutboxRepository($this->db,$this->prefix)
+        );
+        try {
+            $service->process($this->scope,$job,self::NOW);
+            self::fail('Completed an export despite storage failure');
+        } catch(RuntimeException $error) {
+            self::assertSame('Private export generation failed.',$error->getMessage());
+        }
+        $row=$this->jobs->find($this->scope,$job);
+        self::assertSame('failed',$row['status']);
+        self::assertSame('generation_failed',$row['error_code']);
+        self::assertNull($row['storage_key']);
+        self::assertNull($row['content_sha256']);
+        self::assertFalse(str_contains((string)$row['error_code'],'Storage'));
+        self::assertCount(0,$this->storage->files);
+    }
 }
