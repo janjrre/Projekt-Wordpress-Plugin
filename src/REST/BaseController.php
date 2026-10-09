@@ -63,7 +63,7 @@ abstract class BaseController {
 			throw new InvalidArgumentException( 'Unknown or missing DTO attributes.' );
 		}
 		foreach ( $data as $key => $value ) {
-			$type = $properties[ $key ]['type'] ?? '';
+			$type       = $properties[ $key ]['type'] ?? '';
 			$valid_type = match ( $type ) {
 				'string'  => is_string( $value ),
 				'integer' => is_int( $value ),
