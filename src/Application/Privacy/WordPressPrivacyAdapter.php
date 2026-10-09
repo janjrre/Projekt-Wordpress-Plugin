@@ -15,20 +15,20 @@ use UOP\Core\TransactionManager;
 use UOP\Domain\Organization\OrgScope;
 use UOP\Infrastructure\Database\AuditWriter;
 use UOP\Infrastructure\Database\OutboxRepository;
-use UOP\Infrastructure\Database\PrivacyRepository;
+use UOP\Infrastructure\Database\PrivacyAccountGateway;
 
 /** The WordPress-confirmed email request cannot silently claim a shared family identity. */
 final class WordPressPrivacyAdapter {
 	/**
 	 * Compose callbacks with the normal transaction and audit boundary.
 	 *
-	 * @param PrivacyRepository  $privacy Scoped resolver and datastore.
+	 * @param PrivacyAccountGateway  $privacy Scoped resolver and datastore.
 	 * @param TransactionManager $tx      Atomic erasure.
 	 * @param AuditWriter        $audit   Minimal audit events.
 	 * @param OutboxRepository   $outbox  Durable domain events.
 	 */
 	public function __construct(
-		private PrivacyRepository $privacy,
+		private PrivacyAccountGateway $privacy,
 		private TransactionManager $tx,
 		private AuditWriter $audit,
 		private OutboxRepository $outbox
