@@ -23,9 +23,9 @@ final class LocalExportStorage implements ExportStorageInterface {
 		}
 		$base   = rtrim( $base, DIRECTORY_SEPARATOR );
 		$upload = wp_upload_dir( null, false );
-		$roots  = array( ABSPATH, WP_CONTENT_DIR, $upload['basedir'] ?? '' );
+		$roots  = array( ABSPATH, WP_CONTENT_DIR, $upload['basedir'] );
 		foreach ( $roots as $webroot ) {
-			if ( ! is_string( $webroot ) || '' === $webroot ) {
+			if ( '' === $webroot ) {
 				continue;
 			}
 			$real = realpath( $webroot );
