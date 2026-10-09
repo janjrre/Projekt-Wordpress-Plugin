@@ -307,7 +307,7 @@ final class RegistrationService {
 					if ( ! $this->consents ) {
 						throw new RuntimeException( 'Consent evidence service unavailable.' );
 					}
-					$record = $this->consents->record_submission(
+					$record                    = $this->consents->record_submission(
 						$actor,
 						$scope,
 						(int) $person['id'],
