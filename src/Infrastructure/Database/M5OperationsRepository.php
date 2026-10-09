@@ -24,17 +24,17 @@ final class M5OperationsRepository {
 	 * Return grouped counts for an explicitly allowlisted operational resource.
 	 *
 	 * @param OrgScope $scope Authorized organization.
-	 * @param string   $resource Allowlisted resource identifier.
+	 * @param string   $channel Allowlisted resource identifier.
 	 * @return array<string,int> State labels mapped to aggregate counts.
 	 * @throws InvalidArgumentException For an unknown resource.
 	 */
-	public function counts( OrgScope $scope, string $resource ): array {
-		$table = match ( $resource ) {
+	public function counts( OrgScope $scope, string $channel ): array {
+		$table = match ( $channel ) {
 			'email'  => 'email_messages',
 			'export' => 'export_jobs',
 			default  => throw new InvalidArgumentException( 'Unsupported diagnostic resource.' ),
 		};
-		$rows = $this->db->rows(
+		$rows   = $this->db->rows(
 			'SELECT status, COUNT(*) AS total FROM %i WHERE organization_id = %d GROUP BY status ORDER BY status ASC LIMIT 20',
 			array( $this->prefix . $table, $scope->id )
 		);
