@@ -215,7 +215,9 @@ final class M6PeopleRegistrationTest extends TestCase {
 		self::assertSame( 404, rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/registrations/' . $child_registration->to_string() ) )->get_status() );
 		$s['delegations']->grant( $this->scope, PublicId::generate(), $s['parent'], (int) $child_row['id'], 'registration_manage', 'organization', 0, null, $now );
 		self::assertSame( 200, rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/registrations/' . $child_registration->to_string() ) )->get_status() );
-		$scoped = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/registrations?person_id=' . $child->to_string() ) );
+		$scoped_request = new \WP_REST_Request( 'GET', '/uop/v1/registrations' );
+		$scoped_request->set_query_params( array( 'person_id' => $child->to_string() ) );
+		$scoped = rest_do_request( $scoped_request );
 		self::assertSame( 200, $scoped->get_status() );
 		self::assertCount( 1, $scoped->get_data()['items'] );
 		self::assertSame( $child_registration->to_string(), $scoped->get_data()['items'][0]['public_id'] );
