@@ -29,11 +29,11 @@ final class RegistrationFactsService {
 	/**
 	 * Gather all referenced server fields from validated condition ASTs.
 	 *
-	 * @param Actor                     $actor      Subject, delegate or manager.
-	 * @param OrgScope                  $scope      Trusted organization.
-	 * @param int                       $person_id  Scoped subject ID.
-	 * @param int                       $event_post Trusted event CPT ID.
-	 * @param int                       $occurrence Zero or scoped occurrence.
+	 * @param Actor                      $actor      Subject, delegate or manager.
+	 * @param OrgScope                   $scope      Trusted organization.
+	 * @param int                        $person_id  Scoped subject ID.
+	 * @param int                        $event_post Trusted event CPT ID.
+	 * @param int                        $occurrence Zero or scoped occurrence.
 	 * @param list<array<string, mixed>> $conditions Conditional visibility and admission rules.
 	 * @return array{profile:array<string, mixed>,contexts:array<string,string>}
 	 * @throws RuntimeException When a fact, policy or date context is unreliable.
@@ -69,7 +69,7 @@ final class RegistrationFactsService {
 				(bool) $field['delegate_view'],
 				(bool) $field['delegate_edit']
 			);
-			$object = new PolicyObject( $scope->id, 'person', $person_id );
+			$object     = new PolicyObject( $scope->id, 'person', $person_id );
 			if ( ! $this->policy->can( $actor, 'person.view', $object, $definition )->allowed ) {
 				throw new RuntimeException( 'Profile eligibility field is not authorized for this actor.' );
 			}

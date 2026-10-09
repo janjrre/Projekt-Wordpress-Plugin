@@ -30,11 +30,11 @@ final class RegistrationService {
 	/**
 	 * Bind the M2 authorization, historical persistence and audit boundary.
 	 *
-	 * @param RegistrationRepository $registrations Scoped registration storage.
-	 * @param PolicyService          $policy        Central authorization.
-	 * @param TransactionManager     $tx            Atomic command transaction.
-	 * @param AuditWriter            $audit         Durable minimal audit.
-	 * @param OutboxRepository       $outbox        Transactional domain events.
+	 * @param RegistrationRepository   $registrations Scoped registration storage.
+	 * @param PolicyService            $policy        Central authorization.
+	 * @param TransactionManager       $tx            Atomic command transaction.
+	 * @param AuditWriter              $audit         Durable minimal audit.
+	 * @param OutboxRepository         $outbox        Transactional domain events.
 	 * @param RegistrationFactsService $facts       Scoped and policy-filtered eligibility facts.
 	 */
 	public function __construct(
@@ -111,8 +111,8 @@ final class RegistrationService {
 				if ( ! hash_equals( $form['checksum'], hash( 'sha256', $schema_json, true ) ) ) {
 					throw new RuntimeException( 'Published form integrity check failed.' );
 				}
-				$schema  = json_decode( $schema_json, true, 64, JSON_THROW_ON_ERROR );
-				$conditions = array();
+				$schema            = json_decode( $schema_json, true, 64, JSON_THROW_ON_ERROR );
+				$conditions        = array();
 				$event_eligibility = null;
 				if ( null !== $form['eligibility_json'] && '' !== $form['eligibility_json'] ) {
 					$event_eligibility = json_decode( (string) $form['eligibility_json'], true, 64, JSON_THROW_ON_ERROR );
@@ -140,8 +140,8 @@ final class RegistrationService {
 					throw new InvalidArgumentException( 'Unknown form field.' );
 				}
 				$trusted = $this->facts->load( $actor, $scope, (int) $person['id'], $event_post_id, $occurrence_id, $conditions );
-				$engine = new ConditionEngine();
-				$stored = array();
+				$engine  = new ConditionEngine();
+				$stored  = array();
 				foreach ( $schema['fields'] as $field ) {
 					$key     = $field['key'];
 					$visible = true;
@@ -217,5 +217,4 @@ final class RegistrationService {
 			}
 		);
 	}
-
 }
