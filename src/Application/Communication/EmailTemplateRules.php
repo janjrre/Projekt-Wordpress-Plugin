@@ -37,6 +37,9 @@ final class EmailTemplateRules {
 			|| ! mb_check_encoding( $subject . $text, 'UTF-8' ) ) {
 			throw new InvalidArgumentException( 'Unsafe email subject or text.' );
 		}
+		if ( str_contains( $subject, '{{action_url}}' ) ) {
+			throw new InvalidArgumentException( 'Action tokens cannot appear in mail headers.' );
+		}
 		$this->check_placeholders( $subject, $allowed );
 		$this->check_placeholders( $text, $allowed );
 		if ( null !== $html ) {

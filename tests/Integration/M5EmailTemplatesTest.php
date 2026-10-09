@@ -117,6 +117,7 @@ final class M5EmailTemplatesTest extends TestCase {
 		foreach ([
 			['registration_received','de_DE',"Unsafe\nHeader",'Hello',null],
 			['registration_received','de_DE','Missing {{secret}}','Hello',null],
+			['email_verification','de_DE','Secret {{action_url}}','Follow {{action_url}}',null],
 			['registration_received','de_DE','Safe','Hello','<img src="https://example.org/pixel">'],
 			['registration_received','de_DE','Safe','Hello','<p onclick="alert(1)">Hi</p>'],
 			['registration_received','de_DE','Safe','Hello','<a href="javascript:alert(1)">unsafe</a>'],
