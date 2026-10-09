@@ -163,7 +163,7 @@ final class M5ExportJobsTest extends TestCase {
         $controller=new ExportController($this->exports,$this->policy);
         add_action('rest_api_init',[$controller,'register']);
         do_action('rest_api_init');
-        $request=new \\WP_REST_Request('POST','/uop/v1/exports');
+        $request=new \WP_REST_Request('POST','/uop/v1/exports');
         $request->set_header('content-type','application/json');
         $request->set_body(wp_json_encode([
             'command_id'=>PublicId::generate()->to_string(),
@@ -173,11 +173,11 @@ final class M5ExportJobsTest extends TestCase {
         $response=rest_do_request($request);
         self::assertSame(202,$response->get_status());
         $job=PublicId::from_string($response->get_data()['public_id']);
-        $status=rest_do_request(new \\WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string()));
+        $status=rest_do_request(new \WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string()));
         self::assertSame(200,$status->get_status());
         self::assertArrayNotHasKey('storage_key',$status->get_data());
         $this->exports->process($this->scope,$job,self::NOW);
-        $dl_request=new \\WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string().'/download');
+        $dl_request=new \WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string().'/download');
         $download=rest_do_request($dl_request);
         self::assertSame(200,$download->get_status());
         self::assertSame('text/csv; charset=utf-8',$download->get_headers()['Content-Type']);
@@ -188,7 +188,7 @@ final class M5ExportJobsTest extends TestCase {
         self::assertStringContainsString('REST member',$file);
         self::assertFalse(str_contains($file,'uop_private_csv'));
         $this->authorized=false;
-        self::assertSame(403,rest_do_request(new \\WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string()))->get_status());
+        self::assertSame(403,rest_do_request(new \WP_REST_Request('GET','/uop/v1/exports/'.$job->to_string()))->get_status());
     }
 
     public function test_outbox_failure_rolls_back_job_creation(): void {
