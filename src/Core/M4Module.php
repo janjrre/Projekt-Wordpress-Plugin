@@ -9,6 +9,7 @@ namespace UOP\Core;
 
 use UOP\Application\Registration\RegistrationConfigurationService;
 use UOP\Application\Registration\RegistrationFactsService;
+use UOP\Application\Registration\RegistrationEligibilityService;
 use UOP\Application\Registration\EventCancellationService;
 use UOP\Application\Registration\CapacityAllocationService;
 use UOP\Application\Registration\CapacityLifecycleService;
@@ -54,6 +55,7 @@ final class M4Module implements ModuleInterface {
 		$container->set( RegistrationRepository::class, static fn ( ServiceContainer $c ) => new RegistrationRepository( $c->get( Connection::class ), $prefix ) );
 		$container->set( RegistrationFactsRepository::class, static fn ( ServiceContainer $c ) => new RegistrationFactsRepository( $c->get( Connection::class ), $prefix ) );
 		$container->set( RegistrationFactsService::class, static fn ( ServiceContainer $c ) => new RegistrationFactsService( $c->get( RegistrationFactsRepository::class ), $c->get( PolicyService::class ) ) );
+		$container->set( RegistrationEligibilityService::class, static fn ( ServiceContainer $c ) => new RegistrationEligibilityService( $c->get( RegistrationRepository::class ), $c->get( RegistrationFactsService::class ) ) );
 		$container->set(
 			RegistrationService::class,
 			static fn ( ServiceContainer $c ) => new RegistrationService(
@@ -118,7 +120,8 @@ final class M4Module implements ModuleInterface {
 				$c->get( PolicyService::class ),
 				$c->get( TransactionManager::class ),
 				$c->get( AuditWriter::class ),
-				$c->get( OutboxRepository::class )
+				$c->get( OutboxRepository::class ),
+				$c->get( RegistrationEligibilityService::class )
 			)
 		);
 		$container->set(
@@ -130,7 +133,8 @@ final class M4Module implements ModuleInterface {
 				$c->get( PolicyService::class ),
 				$c->get( TransactionManager::class ),
 				$c->get( AuditWriter::class ),
-				$c->get( OutboxRepository::class )
+				$c->get( OutboxRepository::class ),
+				$c->get( RegistrationEligibilityService::class )
 			)
 		);
 	}

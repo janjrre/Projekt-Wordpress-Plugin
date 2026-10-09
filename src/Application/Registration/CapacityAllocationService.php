@@ -37,6 +37,7 @@ final class CapacityAllocationService {
 	 * @param TransactionManager       $tx            Deadlock-aware transaction boundary.
 	 * @param AuditWriter              $audit         Append-only minimal audit.
 	 * @param OutboxRepository         $outbox        Durable domain events.
+	 * @param RegistrationEligibilityService $eligibility Bucket-specific server-side checks.
 	 */
 	public function __construct(
 		private CapacityRepository $capacity,
@@ -45,7 +46,8 @@ final class CapacityAllocationService {
 		private PolicyService $policy,
 		private TransactionManager $tx,
 		private AuditWriter $audit,
-		private OutboxRepository $outbox
+		private OutboxRepository $outbox,
+		private RegistrationEligibilityService $eligibility
 	) {}
 
 	/**
@@ -132,13 +134,12 @@ final class CapacityAllocationService {
 					|| $this->capacity->has_allocation( $scope, (int) $row['id'] ) ) {
 					throw new RuntimeException( 'Registration requires a dedicated release or offer command.' );
 				}
-				if ( null !== $locked['eligibility_json'] && '' !== $locked['eligibility_json'] ) {
-					throw new RuntimeException( 'Bucket eligibility needs a verified snapshot decision.' );
-				}
+
 				if ( ( $this->capacity->requires_verification( $scope, (int) $locked['event_post_id'] ) || 'guest' === $row['source'] )
 					&& null === $row['email_verified_at'] ) {
 					throw new RuntimeException( 'Email verification is required before acceptance.' );
 				}
+				$this->eligibility->assert_eligible( $actor, $scope, $row, $locked );
 				$occupied = $this->capacity->occupied( $scope, (int) $locked['id'] );
 				$target   = $occupied < (int) $locked['capacity'] && ! $this->capacity->has_waiters( $scope, (int) $locked['id'] ) ? 'accepted' : 'waitlisted';
 				$this->states->assert_transition( (string) $row['status'], $target );

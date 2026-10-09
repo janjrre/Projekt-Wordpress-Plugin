@@ -14,6 +14,8 @@ use UOP\Application\Event\EventService;
 use UOP\Application\Policy\Actor;
 use UOP\Application\Policy\PolicyService;
 use UOP\Application\Registration\CapacityAllocationService;
+use UOP\Application\Registration\RegistrationEligibilityService;
+use UOP\Application\Registration\RegistrationFactsService;
 use UOP\Core\CorrelationId;
 use UOP\Core\PublicId;
 use UOP\Core\TransactionManager;
@@ -29,6 +31,7 @@ use UOP\Infrastructure\Database\OccurrenceRepository;
 use UOP\Infrastructure\Database\OutboxRepository;
 use UOP\Infrastructure\Database\PersonRepository;
 use UOP\Infrastructure\Database\RegistrationRepository;
+use UOP\Infrastructure\Database\RegistrationFactsRepository;
 use UOP\Infrastructure\Database\WpdbConnection;
 
 global $wpdb;
@@ -62,7 +65,7 @@ if ( ! is_int( $post ) ) {
 }
 $event_service = new EventService( new EventRepository( $db, $prefix ), new OccurrenceRepository( $db, $prefix ), $policy, $tx, $audit, $outbox );
 $event         = $event_service->configure( $actor, $scope, $post, 'Europe/Berlin', $now, CorrelationId::generate() );
-$capacity      = new CapacityAllocationService( new CapacityRepository( $db, $prefix ), new RegistrationRepository( $db, $prefix ), new RegistrationStateMachine(), $policy, $tx, $audit, $outbox );
+$capacity      = new CapacityAllocationService( new CapacityRepository( $db, $prefix ), new RegistrationRepository( $db, $prefix ), new RegistrationStateMachine(), $policy, $tx, $audit, $outbox, new RegistrationEligibilityService( new RegistrationRepository( $db, $prefix ), new RegistrationFactsService( new RegistrationFactsRepository( $db, $prefix ), $policy ) ) );
 $bucket        = $capacity->create_general_bucket( $actor, $scope, $event, 1, $now, CorrelationId::generate() );
 
 $registrations = array();

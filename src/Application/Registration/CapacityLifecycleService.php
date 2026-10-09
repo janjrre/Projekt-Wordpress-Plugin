@@ -37,6 +37,7 @@ final class CapacityLifecycleService {
 	 * @param TransactionManager       $tx       Atomic InnoDB transaction.
 	 * @param AuditWriter              $audit    Minimal append-only evidence.
 	 * @param OutboxRepository         $outbox   Durable domain events.
+	 * @param RegistrationEligibilityService $eligibility Server-verified admission.
 	 */
 	public function __construct(
 		private WaitlistRepository $queue,
@@ -45,7 +46,8 @@ final class CapacityLifecycleService {
 		private PolicyService $policy,
 		private TransactionManager $tx,
 		private AuditWriter $audit,
-		private OutboxRepository $outbox
+		private OutboxRepository $outbox,
+		private RegistrationEligibilityService $eligibility
 	) {}
 
 	/**
@@ -210,7 +212,7 @@ final class CapacityLifecycleService {
 		if ( 'active' !== ( $bucket['status'] ?? 'active' ) || ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status ) {
 			return null;
 		}
-		if ( 0 !== (int) $bucket['occurrence_id'] || null !== $bucket['eligibility_json'] ) {
+		if ( 0 !== (int) $bucket['occurrence_id'] ) {
 			throw new RuntimeException( 'This bucket requires another eligibility strategy.' );
 		}
 		// A closed event must not issue a new offer, even when verification
@@ -230,6 +232,7 @@ final class CapacityLifecycleService {
 		if ( ( $verify_contact || 'guest' === $row['source'] ) && null === $row['email_verified_at'] ) {
 			throw new RuntimeException( 'Queue head requires verification.' );
 		}
+		$this->eligibility->assert_eligible( $actor, $scope, $row, $bucket );
 		$this->states->assert_transition( 'waitlisted', 'offered' );
 		$token   = bin2hex( random_bytes( 32 ) );
 		$offer   = PublicId::generate();
@@ -273,8 +276,7 @@ final class CapacityLifecycleService {
 				}
 				$post = get_post( (int) $bucket['event_post_id'] );
 				if ( 'active' !== $bucket['status'] || ! $post || 'uop_event' !== $post->post_type
-					|| 'publish' !== $post->post_status || 0 !== (int) $bucket['occurrence_id']
-					|| null !== $bucket['eligibility_json'] ) {
+					|| 'publish' !== $post->post_status || 0 !== (int) $bucket['occurrence_id'] ) {
 					throw new RuntimeException( 'Offer belongs to an inactive or unsupported event.' );
 				}
 				$verify_contact = $this->capacity->requires_verification( $scope, (int) $bucket['event_post_id'] );
@@ -289,6 +291,7 @@ final class CapacityLifecycleService {
 				if ( ! $this->policy->can( $actor, 'registration.create', $this->resource( $scope, $row ) )->allowed ) {
 					throw new RuntimeException( 'Offer acceptance is not authorized.' );
 				}
+				$this->eligibility->assert_eligible( $actor, $scope, $row, $bucket );
 				$this->states->assert_transition( 'offered', 'accepted' );
 				$this->queue->accept( $scope, $offer, $utc_now );
 				$this->queue->transition( $scope, (int) $row['id'], 'offered', 'accepted', $command, $actor->user_id, $utc_now, $correlation );

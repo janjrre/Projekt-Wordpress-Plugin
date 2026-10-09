@@ -261,6 +261,34 @@ final class RegistrationRepository {
 			array( $this->prefix . 'registration_history', $id, $command->to_binary(), $from, $to, $actor_id, $correlation->to_binary(), $utc_now )
 		);
 	}
+
+	/**
+	 * Load canonical immutable form inputs for live capacity eligibility.
+	 *
+	 * @param OrgScope $scope       Trusted organization.
+	 * @param int      $registration Scoped locked registration identity.
+	 * @return array<string, mixed> Historical published input values.
+	 * @throws RuntimeException When the snapshot hash or envelope is invalid.
+	 */
+	public function snapshot_fields( OrgScope $scope, int $registration ): array {
+		$rows = $this->db->rows(
+			'SELECT s.payload_json, s.payload_hash FROM %i r INNER JOIN %i s ON s.id = r.current_snapshot_id AND s.registration_id = r.id WHERE r.organization_id = %d AND r.id = %d LIMIT 1',
+			array( $this->prefix . 'registrations', $this->prefix . 'registration_snapshots', $scope->id, $registration )
+		);
+		if ( ! $rows ) {
+			throw new RuntimeException( 'Immutable registration snapshot unavailable.' );
+		}
+		$json = (string) $rows[0]['payload_json'];
+		if ( ! hash_equals( (string) $rows[0]['payload_hash'], hash( 'sha256', $json, true ) ) ) {
+			throw new RuntimeException( 'Registration snapshot integrity check failed.' );
+		}
+		$envelope = json_decode( $json, true, 64, JSON_THROW_ON_ERROR );
+		if ( ! is_array( $envelope ) || 1 !== ( $envelope['schema_version'] ?? null ) || ! is_array( $envelope['fields'] ?? null ) ) {
+			throw new RuntimeException( 'Registration snapshot envelope is invalid.' );
+		}
+		return $envelope['fields'];
+	}
+
 	/**
 	 * Set a fresh one-time email verification challenge for a submitted registration.
 	 *

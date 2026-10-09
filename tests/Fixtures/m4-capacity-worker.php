@@ -13,6 +13,8 @@ require getenv( 'WP_ROOT' ) . '/wp-load.php';
 use UOP\Application\Policy\Actor;
 use UOP\Application\Policy\PolicyService;
 use UOP\Application\Registration\CapacityAllocationService;
+use UOP\Application\Registration\RegistrationEligibilityService;
+use UOP\Application\Registration\RegistrationFactsService;
 use UOP\Core\CorrelationId;
 use UOP\Core\PublicId;
 use UOP\Core\TransactionManager;
@@ -25,6 +27,7 @@ use UOP\Infrastructure\Database\DelegationRepository;
 use UOP\Infrastructure\Database\OutboxRepository;
 use UOP\Infrastructure\Database\PersonRepository;
 use UOP\Infrastructure\Database\RegistrationRepository;
+use UOP\Infrastructure\Database\RegistrationFactsRepository;
 use UOP\Infrastructure\Database\WpdbConnection;
 
 $directory = $argv[1] ?? '';
@@ -64,7 +67,8 @@ $service = new CapacityAllocationService(
 	$policy,
 	$tx,
 	new AuditWriter( $db, $prefix ),
-	new OutboxRepository( $db, $prefix )
+	new OutboxRepository( $db, $prefix ),
+	new RegistrationEligibilityService( new RegistrationRepository( $db, $prefix ), new RegistrationFactsService( new RegistrationFactsRepository( $db, $prefix ), $policy ) )
 );
 try {
 	$status = $service->decide(

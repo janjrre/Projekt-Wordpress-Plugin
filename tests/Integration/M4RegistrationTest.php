@@ -9,7 +9,7 @@ use UOP\Application\Event\EventService;
 use UOP\Application\Event\PostCommitPublisher;
 use UOP\Application\Identity\DelegationService;
 use UOP\Application\Form\FormService;
-use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService, RegistrationTransitionService, CapacityAllocationService, CapacityLifecycleService, EventCancellationService, RegistrationFactsService, EmailVerificationService};
+use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService, RegistrationTransitionService, CapacityAllocationService, CapacityLifecycleService, EventCancellationService, RegistrationFactsService, RegistrationEligibilityService, EmailVerificationService};
 use UOP\Domain\Registrations\RegistrationStateMachine;
 use UOP\Domain\Events\OccurrenceWindow;
 use UOP\Domain\Profiles\FieldRules;
@@ -62,9 +62,9 @@ final class M4RegistrationTest extends TestCase {
 			'config'=>new RegistrationConfigurationService($this->db,$this->prefix,$policy,$tx,$audit,$outbox),
 			'submit'=>new RegistrationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox,new RegistrationFactsService(new RegistrationFactsRepository($this->db,$this->prefix),$policy),$people),
 			'verification'=>new EmailVerificationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
-			'lifecycle'=>new CapacityLifecycleService(new WaitlistRepository($this->db,$this->prefix),new CapacityRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
+			'lifecycle'=>new CapacityLifecycleService(new WaitlistRepository($this->db,$this->prefix),new CapacityRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox,new RegistrationEligibilityService(new RegistrationRepository($this->db,$this->prefix),new RegistrationFactsService(new RegistrationFactsRepository($this->db,$this->prefix),$policy))),
 			'cancel_event'=>new EventCancellationService(new EventCancellationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
-			'capacity'=>new CapacityAllocationService(new CapacityRepository($this->db,$this->prefix),new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
+			'capacity'=>new CapacityAllocationService(new CapacityRepository($this->db,$this->prefix),new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox,new RegistrationEligibilityService(new RegistrationRepository($this->db,$this->prefix),new RegistrationFactsService(new RegistrationFactsRepository($this->db,$this->prefix),$policy))),
 			'transition'=>new RegistrationTransitionService(new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
 		];
 	}
@@ -789,7 +789,7 @@ final class M4RegistrationTest extends TestCase {
 		$grant_id=$assignments->grant($this->scope,$s['actor']->user_id,'event_manager','event',$event_post,'personal',$now);
 		$manager=$s['actor']->user_id;
 		$policy=new PolicyService($s['people'],$s['delegations'],$assignments,static fn(int $user,string $cap): bool => $user===$manager && 'uop_manage_settings'!==$cap);
-		$service=new CapacityAllocationService(new CapacityRepository($this->db,$this->prefix),new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$s['tx'],$s['audit'],$s['outbox']);
+		$service=new CapacityAllocationService(new CapacityRepository($this->db,$this->prefix),new RegistrationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$s['tx'],$s['audit'],$s['outbox'],new RegistrationEligibilityService(new RegistrationRepository($this->db,$this->prefix),new RegistrationFactsService(new RegistrationFactsRepository($this->db,$this->prefix),$policy)));
 		self::assertTrue($assignments->revoke($this->scope,$grant_id,$now));
 		try {
 			$service->decide($s['actor'],$this->scope,$registration,$bucket,PublicId::generate(),$now,CorrelationId::generate());
