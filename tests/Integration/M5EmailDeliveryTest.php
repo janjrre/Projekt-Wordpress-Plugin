@@ -165,4 +165,31 @@ final class M5EmailDeliveryTest extends TestCase {
 		}
 		self::assertSame([],$this->db->rows('SELECT id FROM %i',[$this->prefix.'email_messages']));
 	}
+
+	public function test_queued_message_remains_durable_during_scheduler_outage_and_recovers_once(): void {
+		$service=$this->fixture();
+		$message=$service['queue']->queue(
+			$service['actor'],$this->scope,PublicId::generate(),
+			'recipient@example.invalid','registration_received','de_DE',
+			['participant_name'=>'Taylor','event_title'=>'Recovery workshop'],
+			null,'2030-01-02 08:00:00',CorrelationId::generate()
+		);
+		self::assertSame('queued',$this->snapshot($message)['status']);
+		$service['worker']->sweep();
+		self::assertSame('queued',$this->snapshot($message)['status']);
+		$sent=0;
+		$accept=static function($previous,array $mail) use (&$sent) {
+			++$sent;
+			return true;
+		};
+		add_filter('pre_wp_mail',$accept,10,2);
+		try {
+			$service['worker']->deliver($this->scope->id,$message->to_string());
+			$service['worker']->deliver($this->scope->id,$message->to_string());
+		} finally {
+			remove_filter('pre_wp_mail',$accept,10);
+		}
+		self::assertSame(1,$sent);
+		self::assertSame('accepted',$this->snapshot($message)['status']);
+	}
 }
