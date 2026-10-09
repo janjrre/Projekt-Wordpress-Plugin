@@ -69,6 +69,8 @@ jobs:
           extensions: mysqli, mbstring, zip
           tools: composer:v2, wp-cli
           coverage: none
+      - name: Ensure verified WP-CLI binary
+        run: bash bin/ensure-wp-cli.sh
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -160,6 +162,7 @@ jobs:
           --health-cmd="mysqladmin ping -h localhost -puop_disposable_test"
           --health-interval=10s --health-timeout=5s --health-retries=12
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: uop-core
@@ -169,6 +172,8 @@ jobs:
           extensions: mysqli, mbstring, zip
           tools: wp-cli
           coverage: none
+      - name: Ensure verified WP-CLI binary
+        run: bash bin/ensure-wp-cli.sh
       - run: |
           wp core download --version=6.9 --path=/tmp/wordpress
           wp config create --path=/tmp/wordpress --dbname=uop_artifact --dbuser=root --dbpass=uop_disposable_test --dbhost=127.0.0.1 --dbcharset=utf8mb4
