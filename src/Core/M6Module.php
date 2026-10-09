@@ -8,6 +8,7 @@
 namespace UOP\Core;
 
 use UOP\Admin\M6PeopleRegistrationScreen;
+use UOP\Admin\M6ControlCenterScreen;
 use UOP\Application\Consent\ConsentDefinitionService;
 use UOP\Application\Consent\ConsentRecordService;
 use UOP\Application\Identity\PersonService;
@@ -25,6 +26,7 @@ use UOP\Infrastructure\Database\Connection;
 use UOP\Infrastructure\Database\ConsentRepository;
 use UOP\Infrastructure\Database\EventRepository;
 use UOP\Infrastructure\Database\M6OperationsRepository;
+use UOP\Infrastructure\Database\M5OperationsRepository;
 use UOP\Infrastructure\Database\M6AdminListRepository;
 use UOP\Infrastructure\Database\DelegationRepository;
 use UOP\Infrastructure\Database\PersonRepository;
@@ -125,6 +127,15 @@ final class M6Module implements ModuleInterface {
 			M6PeopleRegistrationScreen::class,
 			static fn ( ServiceContainer $c ) => new M6PeopleRegistrationScreen( $c->get( M6AdminReadService::class ) )
 		);
+		$container->set(
+			M6ControlCenterScreen::class,
+			static fn ( ServiceContainer $c ) => new M6ControlCenterScreen(
+				$c->get( M6OperationsReadService::class ),
+				$c->get( M5OperationsRepository::class )
+			)
+		);
+		add_action( 'admin_menu', array( $container->get( M6ControlCenterScreen::class ), 'menu' ) );
+		add_action( 'admin_enqueue_scripts', array( $container->get( M6ControlCenterScreen::class ), 'assets' ) );
 		add_action( 'rest_api_init', array( $container->get( M6AdminController::class ), 'register' ) );
 		add_action( 'admin_menu', array( $container->get( M6PeopleRegistrationScreen::class ), 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $container->get( M6PeopleRegistrationScreen::class ), 'assets' ) );
