@@ -209,8 +209,8 @@ final class PrivacyAccountGateway {
 		}
 		$removed = array();
 		foreach ( $rows as $person ) {
-			$id  = (int) $person['id'];
-			$org = (int) $person['organization_id'];
+			$id                = (int) $person['id'];
+			$org               = (int) $person['organization_id'];
 			$hold              = $this->db->rows(
 				'SELECT id FROM %i WHERE id = %d AND organization_id = %d AND retention_hold_until > UTC_TIMESTAMP() LIMIT 1',
 				array( $this->prefix . 'persons', $id, $org )
@@ -298,5 +298,4 @@ final class PrivacyAccountGateway {
 			'done' => $done,
 		);
 	}
-
 }
