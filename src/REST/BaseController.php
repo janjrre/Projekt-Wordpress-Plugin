@@ -8,6 +8,7 @@
 namespace UOP\REST;
 
 use InvalidArgumentException;
+use JsonException;
 use UOP\Application\Policy\Actor;
 use UOP\Core\PublicId;
 use UOP\Domain\Organization\OrgScope;
@@ -49,19 +50,31 @@ abstract class BaseController {
 	 * @throws InvalidArgumentException On malformed JSON, unexpected keys, or type errors.
 	 */
 	protected function strict_json_object( WP_REST_Request $request, array $properties, array $required ): array {
-		$data = $request->get_json_params();
-		if ( ! is_array( $data ) || ( array_is_list( $data ) && array() !== $data ) ) {
+		$raw = $request->get_body();
+		if ( ! str_starts_with( ltrim( $raw ), '{' ) ) {
 			throw new InvalidArgumentException( 'Expected a JSON object.' );
 		}
-		$schema = array(
-			'type'                 => 'object',
-			'properties'           => $properties,
-			'required'             => $required,
-			'additionalProperties' => false,
-		);
-		$valid  = rest_validate_value_from_schema( $data, $schema, 'body' );
-		if ( is_wp_error( $valid ) ) {
-			throw new InvalidArgumentException( 'JSON body did not match the request schema.' );
+		try {
+			$data = json_decode( $raw, true, 64, JSON_THROW_ON_ERROR );
+		} catch ( JsonException ) {
+			throw new InvalidArgumentException( 'Malformed JSON body.' );
+		}
+		if ( ! is_array( $data ) || array_diff( array_keys( $data ), array_keys( $properties ) ) || array_diff( $required, array_keys( $data ) ) ) {
+			throw new InvalidArgumentException( 'Unknown or missing DTO attributes.' );
+		}
+		foreach ( $data as $key => $value ) {
+			$type = $properties[ $key ]['type'] ?? '';
+			$valid_type = match ( $type ) {
+				'string'  => is_string( $value ),
+				'integer' => is_int( $value ),
+				'boolean' => is_bool( $value ),
+				'array'   => is_array( $value ) && array_is_list( $value ),
+				'object'  => is_array( $value ) && ( array() === $value || ! array_is_list( $value ) ),
+				default   => false,
+			};
+			if ( ! $valid_type || is_wp_error( rest_validate_value_from_schema( $value, $properties[ $key ], $key ) ) ) {
+				throw new InvalidArgumentException( 'JSON body did not match the request schema.' );
+			}
 		}
 		return $data;
 	}
