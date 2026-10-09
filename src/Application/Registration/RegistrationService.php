@@ -35,13 +35,15 @@ final class RegistrationService {
 	 * @param TransactionManager     $tx            Atomic command transaction.
 	 * @param AuditWriter            $audit         Durable minimal audit.
 	 * @param OutboxRepository       $outbox        Transactional domain events.
+	 * @param RegistrationFactsService $facts       Scoped and policy-filtered eligibility facts.
 	 */
 	public function __construct(
 		private RegistrationRepository $registrations,
 		private PolicyService $policy,
 		private TransactionManager $tx,
 		private AuditWriter $audit,
-		private OutboxRepository $outbox
+		private OutboxRepository $outbox,
+		private RegistrationFactsService $facts
 	) {}
 
 	/**
@@ -110,6 +112,15 @@ final class RegistrationService {
 					throw new RuntimeException( 'Published form integrity check failed.' );
 				}
 				$schema  = json_decode( $schema_json, true, 64, JSON_THROW_ON_ERROR );
+				$conditions = array();
+				$event_eligibility = null;
+				if ( null !== $form['eligibility_json'] && '' !== $form['eligibility_json'] ) {
+					$event_eligibility = json_decode( (string) $form['eligibility_json'], true, 64, JSON_THROW_ON_ERROR );
+					if ( ! is_array( $event_eligibility ) ) {
+						throw new RuntimeException( 'Event eligibility is malformed.' );
+					}
+					$conditions[] = $event_eligibility;
+				}
 				$values  = array();
 				$types   = array();
 				$stashed = array();
@@ -118,8 +129,8 @@ final class RegistrationService {
 						// Consent records must exist in the same transaction (M5).
 						throw new RuntimeException( 'Consent processing is not yet available.' );
 					}
-					if ( isset( $field['visible_when'] ) && $this->uses_profile_condition( $field['visible_when'] ) ) {
-						throw new RuntimeException( 'Server-side profile conditions require authoritative facts.' );
+					if ( isset( $field['visible_when'] ) ) {
+						$conditions[] = $field['visible_when'];
 					}
 					$key             = $field['key'];
 					$types[ $key ]   = $field['type'];
@@ -128,6 +139,7 @@ final class RegistrationService {
 				if ( array_diff( array_keys( $input ), array_keys( $types ) ) ) {
 					throw new InvalidArgumentException( 'Unknown form field.' );
 				}
+				$trusted = $this->facts->load( $actor, $scope, (int) $person['id'], $event_post_id, $occurrence_id, $conditions );
 				$engine = new ConditionEngine();
 				$stored = array();
 				foreach ( $schema['fields'] as $field ) {
@@ -137,9 +149,10 @@ final class RegistrationService {
 						$visible = $engine->evaluate(
 							$field['visible_when'],
 							array(
-								'profile'      => array(),
+								'profile'      => $trusted['profile'],
 								'registration' => $stashed,
-							)
+							),
+							$trusted['contexts']
 						);
 					}
 					if ( ! $visible ) {
@@ -157,6 +170,16 @@ final class RegistrationService {
 					$values[ $key ] = $normalized;
 				}
 
+				if ( null !== $event_eligibility && ! $engine->evaluate(
+					$event_eligibility,
+					array(
+						'profile'      => $trusted['profile'],
+						'registration' => $stored,
+					),
+					$trusted['contexts']
+				) ) {
+					throw new RuntimeException( 'Event eligibility requirements were not met.' );
+				}
 				$contact_email = null;
 				foreach ( $schema['fields'] as $field ) {
 					if ( 'email' === $field['type'] && isset( $stored[ $field['key'] ] ) ) {
@@ -195,26 +218,4 @@ final class RegistrationService {
 		);
 	}
 
-	/**
-	 * Prevent profile-based rules from evaluating against untrusted/missing data.
-	 *
-	 * @param array<string, mixed> $node Condition AST node.
-	 * @return bool True when authoritative profile facts are required.
-	 */
-	private function uses_profile_condition( array $node ): bool {
-		foreach ( array( 'all', 'any' ) as $group ) {
-			if ( isset( $node[ $group ] ) ) {
-				foreach ( $node[ $group ] as $child ) {
-					if ( $this->uses_profile_condition( $child ) ) {
-						return true;
-					}
-				}
-				return false;
-			}
-		}
-		if ( isset( $node['not'] ) ) {
-			return $this->uses_profile_condition( $node['not'] );
-		}
-		return 'profile' === ( $node['source'] ?? '' );
-	}
 }

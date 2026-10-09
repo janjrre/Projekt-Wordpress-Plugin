@@ -9,11 +9,11 @@ use UOP\Application\Event\EventService;
 use UOP\Application\Event\PostCommitPublisher;
 use UOP\Application\Identity\DelegationService;
 use UOP\Application\Form\FormService;
-use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService, RegistrationTransitionService, CapacityAllocationService, CapacityLifecycleService, EventCancellationService, EmailVerificationService};
+use UOP\Application\Registration\{RegistrationService, RegistrationConfigurationService, RegistrationTransitionService, CapacityAllocationService, CapacityLifecycleService, EventCancellationService, RegistrationFactsService, EmailVerificationService};
 use UOP\Domain\Registrations\RegistrationStateMachine;
 use UOP\Core\{CorrelationId, PublicId, TransactionManager};
 use UOP\Domain\Organization\OrgScope;
-use UOP\Infrastructure\Database\{AssignmentRepository, AuditWriter, CapacityRepository, DelegationRepository, EventRepository, FormRepository, Installer, OccurrenceRepository, OutboxRepository, PersonRepository, RegistrationRepository, WaitlistRepository, EventCancellationRepository, RelationshipRepository, SchemaManifest, WpdbConnection};
+use UOP\Infrastructure\Database\{AssignmentRepository, AuditWriter, CapacityRepository, DelegationRepository, EventRepository, FormRepository, Installer, OccurrenceRepository, OutboxRepository, PersonRepository, RegistrationRepository, WaitlistRepository, EventCancellationRepository, RelationshipRepository, RegistrationFactsRepository, ProfileFieldRepository, ProfileValueRepository, SchemaManifest, WpdbConnection};
 
 final class M4RegistrationTest extends TestCase {
 	private WpdbConnection $db;
@@ -58,7 +58,7 @@ final class M4RegistrationTest extends TestCase {
 			'form'=>new FormService(new FormRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
 			'event'=>new EventService(new EventRepository($this->db,$this->prefix),new OccurrenceRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
 			'config'=>new RegistrationConfigurationService($this->db,$this->prefix,$policy,$tx,$audit,$outbox),
-			'submit'=>new RegistrationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
+			'submit'=>new RegistrationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox,new RegistrationFactsService(new RegistrationFactsRepository($this->db,$this->prefix),$policy)),
 			'verification'=>new EmailVerificationService(new RegistrationRepository($this->db,$this->prefix),$policy,$tx,$audit,$outbox),
 			'lifecycle'=>new CapacityLifecycleService(new WaitlistRepository($this->db,$this->prefix),new CapacityRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),
 			'cancel_event'=>new EventCancellationService(new EventCancellationRepository($this->db,$this->prefix),new RegistrationStateMachine(),$policy,$tx,$audit,$outbox),

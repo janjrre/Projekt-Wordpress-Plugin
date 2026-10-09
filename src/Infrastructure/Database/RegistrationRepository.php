@@ -46,7 +46,7 @@ final class RegistrationRepository {
 	 */
 	public function active_event_form( OrgScope $scope, PublicId $event ): ?array {
 		$rows = $this->db->rows(
-			"SELECT e.event_post_id, e.registration_open_at, e.registration_close_at, e.require_email_verification, e.status, f.id AS form_id, v.id AS form_version_id, v.public_id AS form_version_public_id, v.schema_json, v.checksum FROM %i e INNER JOIN %i f ON f.id = e.default_form_id AND f.organization_id = e.organization_id INNER JOIN %i v ON v.id = f.current_version_id WHERE e.organization_id = %d AND e.public_id = %s AND e.status = 'active' AND f.status = 'published' AND f.context = 'event' LIMIT 1 FOR UPDATE",
+			"SELECT e.event_post_id, e.registration_open_at, e.registration_close_at, e.require_email_verification, e.eligibility_json, e.status, f.id AS form_id, v.id AS form_version_id, v.public_id AS form_version_public_id, v.schema_json, v.checksum FROM %i e INNER JOIN %i f ON f.id = e.default_form_id AND f.organization_id = e.organization_id INNER JOIN %i v ON v.id = f.current_version_id WHERE e.organization_id = %d AND e.public_id = %s AND e.status = 'active' AND f.status = 'published' AND f.context = 'event' LIMIT 1 FOR UPDATE",
 			array( $this->prefix . 'event_settings', $this->prefix . 'forms', $this->prefix . 'form_versions', $scope->id, $event->to_binary() )
 		);
 		return $rows[0] ?? null;
