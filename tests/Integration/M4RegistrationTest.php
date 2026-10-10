@@ -2,6 +2,13 @@
 namespace UOP\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
+use UOP\Application\Registration\WaitlistOfferDeliveryService;
+use UOP\Application\Communication\EmailTemplateCatalog;
+use UOP\Application\Communication\EmailTemplateRules;
+use UOP\Application\Query\M6ReadService;
+use UOP\Infrastructure\Database\EmailMessageRepository;
+use UOP\Infrastructure\Database\RegistrationReadRepository;
+use UOP\REST\RegistrationController;
 use InvalidArgumentException;
 use RuntimeException;
 use UOP\Application\Policy\{Actor, PolicyService};
@@ -1014,4 +1021,118 @@ final class M4RegistrationTest extends TestCase {
 		self::assertCount(1,$this->db->rows('SELECT id FROM %i WHERE event_name = %s',[$this->prefix.'domain_events','event.occurrence_rescheduled']));
 		self::assertCount(1,$this->db->rows('SELECT id FROM %i WHERE action = %s',[$this->prefix.'audit_log','event.occurrence_rescheduled']));
 	}
+
+	/** Verified guest receives one private FIFO offer and cannot reuse a bearer. */
+	public function test_m603_private_waitlist_guest_offer_email_and_one_time_acceptance(): void {
+		$draft=['schema_version'=>1,'fields'=>[
+			['key'=>'name','type'=>'text','label'=>'Name','required'=>true],
+			['key'=>'contact','type'=>'email','label'=>'Email','required'=>true],
+		]];
+		[$s,$member,$event,$form,$now]=$this->setup_registration($draft);
+		$enabled=static fn(): bool=>true;
+		$secure_url=static fn(string $url): string=>str_replace('http://','https://',$url);
+		$original_https=$_SERVER['HTTPS']??null;
+		$_SERVER['HTTPS']='on';
+		add_filter('uop_waitlist_offer_enabled',$enabled);
+		add_filter('home_url',$secure_url);
+		try {
+			$delivery=new WaitlistOfferDeliveryService(
+				new EmailMessageRepository($this->db,$this->prefix),
+				new EmailTemplateCatalog(),
+				new EmailTemplateRules(new EmailTemplateCatalog()),
+				$s['tx']
+			);
+			self::assertTrue($delivery->ready());
+			$s['lifecycle']->set_offer_delivery($delivery);
+			$this->db->execute("UPDATE %i SET visibility='public', require_email_verification=1 WHERE organization_id=%d AND public_id=%s",[$this->prefix.'event_settings',$this->scope->id,$event->to_binary()]);
+			$first=$s['submit']->submit($s['actor'],$this->scope,$member,$event,null,PublicId::generate(),['name'=>'Member','contact'=>'member@example.invalid'],$now,CorrelationId::generate());
+			$guest=$s['submit']->submit_guest($this->scope,$event,null,PublicId::generate(),['name'=>'Guest','contact'=>'guest@example.invalid'],$now,CorrelationId::generate());
+			foreach([$first,$guest] as $id){
+				$link=$s['verification']->issue($s['actor'],$this->scope,$id,$now,CorrelationId::generate());
+				self::assertTrue($s['verification']->verify($this->scope,$id,$link['token'],$now,CorrelationId::generate()));
+			}
+			$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+			self::assertSame('accepted',$s['capacity']->decide($s['actor'],$this->scope,$first,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+			self::assertSame('waitlisted',$s['capacity']->decide($s['actor'],$this->scope,$guest,$bucket,PublicId::generate(),$now,CorrelationId::generate()));
+			$s['lifecycle']->cancel($s['actor'],$this->scope,$first,PublicId::generate(),$now,CorrelationId::generate());
+			$offer=$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			self::assertNotNull($offer);
+			$mails=$this->db->rows("SELECT public_id, recipient, body_text, subject FROM %i WHERE template_key='waitlist_offer'",[$this->prefix.'email_messages']);
+			self::assertCount(1,$mails);
+			self::assertSame('guest@example.invalid',$mails[0]['recipient']);
+			self::assertStringContainsString('#offer_id='.$offer['public_id'].'&token='.$offer['token'],$mails[0]['body_text']);
+			self::assertStringNotContainsString($offer['token'],$mails[0]['subject']);
+			$events=$this->db->rows("SELECT payload_json FROM %i WHERE event_name='registration.offered'",[$this->prefix.'domain_events']);
+			self::assertCount(1,$events);
+			self::assertStringNotContainsString($offer['token'],$events[0]['payload_json']);
+			$offer_id=PublicId::from_string($offer['public_id']);
+			try{
+				$s['lifecycle']->accept_guest_offer($this->scope,$offer_id,str_repeat('a',64),PublicId::generate(),$now,CorrelationId::generate());
+				self::fail('Wrong bearer accepted');
+			}catch(RuntimeException){self::assertTrue(true);}
+			try{
+				$s['lifecycle']->accept_guest_offer(new OrgScope($this->scope->id+1),$offer_id,$offer['token'],PublicId::generate(),$now,CorrelationId::generate());
+				self::fail('Cross-organization replay accepted');
+			}catch(RuntimeException){self::assertTrue(true);}
+			$read=new M6ReadService(new PersonRepository($this->db,$this->prefix),new DelegationRepository($this->db,$this->prefix),new RegistrationReadRepository($this->db,$this->prefix),$s['policy']);
+			(new RegistrationController($read,$s['submit'],$s['transition'],$s['lifecycle'],$s['verification'],null,$delivery))->register();
+			wp_set_current_user(0);
+			$cmd=['offer_id'=>$offer['public_id'],'token'=>$offer['token'],'command_id'=>PublicId::generate()->to_string()];
+			$request=new \WP_REST_Request('POST','/uop/v1/waitlist-offers/guest-accept');
+			$request->set_header('Content-Type','application/json');
+			$request->set_body((string)wp_json_encode($cmd));
+			self::assertSame(202,rest_do_request($request)->get_status());
+			self::assertSame(202,rest_do_request($request)->get_status());
+			self::assertSame('accepted',$this->db->rows('SELECT status FROM %i WHERE public_id=%s',[$this->prefix.'registrations',$guest->to_binary()])[0]['status']);
+			self::assertSame(1,(int)$this->db->rows("SELECT COUNT(*) AS n FROM %i WHERE status='confirmed'",[$this->prefix.'capacity_claims'])[0]['n']);
+			$offers=$this->db->rows('SELECT token_hash,status FROM %i WHERE public_id=%s',[$this->prefix.'waitlist_offers',$offer_id->to_binary()]);
+			self::assertSame('accepted',$offers[0]['status']);
+			self::assertSame(hash('sha256',$offer['token'],true),$offers[0]['token_hash']);
+			$insecure=$_SERVER['HTTPS'];
+			$_SERVER['HTTPS']='off';
+			self::assertSame(503,rest_do_request($request)->get_status());
+			$_SERVER['HTTPS']=$insecure;
+		} finally {
+			remove_filter('uop_waitlist_offer_enabled',$enabled);
+			remove_filter('home_url',$secure_url);
+			if(null===$original_https){unset($_SERVER['HTTPS']);}else{$_SERVER['HTTPS']=$original_https;}
+		}
+	}
+
+	/** A held offer cannot exist without a verifiable mail recipient when enabled. */
+	public function test_m603_offer_rolls_back_when_recipient_has_no_verified_email(): void {
+		$draft=['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$s,$member,$event,$form,$now]=$this->setup_registration($draft);
+		$enabled=static fn(): bool=>true;
+		$secure_url=static fn(string $url): string=>str_replace('http://','https://',$url);
+		add_filter('uop_waitlist_offer_enabled',$enabled);
+		add_filter('home_url',$secure_url);
+		try {
+			$s['lifecycle']->set_offer_delivery(new WaitlistOfferDeliveryService(
+				new EmailMessageRepository($this->db,$this->prefix),
+				new EmailTemplateCatalog(),
+				new EmailTemplateRules(new EmailTemplateCatalog()),
+				$s['tx']
+			));
+			$other=PublicId::generate();
+			$s['people']->create($this->scope,$other,'No email',null,$now);
+			$a=$s['submit']->submit($s['actor'],$this->scope,$member,$event,null,PublicId::generate(),['name'=>'First'],$now,CorrelationId::generate());
+			$b=$s['submit']->submit($s['actor'],$this->scope,$other,$event,null,PublicId::generate(),['name'=>'Second'],$now,CorrelationId::generate());
+			$bucket=$s['capacity']->create_general_bucket($s['actor'],$this->scope,$event,1,$now,CorrelationId::generate());
+			$s['capacity']->decide($s['actor'],$this->scope,$a,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			$s['capacity']->decide($s['actor'],$this->scope,$b,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+			$s['lifecycle']->cancel($s['actor'],$this->scope,$a,PublicId::generate(),$now,CorrelationId::generate());
+			try {
+				$s['lifecycle']->offer_next($s['actor'],$this->scope,$bucket,PublicId::generate(),$now,CorrelationId::generate());
+				self::fail('Undeliverable private offer was reserved.');
+			}catch(RuntimeException){self::assertTrue(true);}
+			self::assertSame('waitlisted',$this->db->rows('SELECT status FROM %i WHERE public_id=%s',[$this->prefix.'registrations',$b->to_binary()])[0]['status']);
+			self::assertCount(0,$this->db->rows('SELECT id FROM %i',[$this->prefix.'waitlist_offers']));
+			self::assertCount(0,$this->db->rows("SELECT id FROM %i WHERE template_key='waitlist_offer'",[$this->prefix.'email_messages']));
+		} finally {
+			remove_filter('uop_waitlist_offer_enabled',$enabled);
+			remove_filter('home_url',$secure_url);
+		}
+	}
+
 }
