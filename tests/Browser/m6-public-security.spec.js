@@ -36,12 +36,15 @@ test('guest verification and waitlist offer deny insecure browser and REST actio
     '/wp-json/uop/v1/registration-verifications',
     '/wp-json/uop/v1/waitlist-offers/guest-accept',
   ]) {
-    const response = await page.request.post(path, {
+    // CI runs with plain WordPress permalinks, so honor the canonical
+    // ?rest_route= transport instead of assuming pretty /wp-json/ rewrites.
+    const route = '/?rest_route=' + encodeURIComponent(path.replace('/wp-json', ''));
+    const response = await page.request.post(route, {
       data: {},
       failOnStatusCode: false,
       headers: { 'Content-Type': 'application/json' },
     });
-    expect(response.status()).toBe(503);
+    expect(response.status(), path).toBe(503);
     const envelope = await response.json();
     expect(envelope.code).toBe('uop_unavailable');
     expect(JSON.stringify(envelope)).not.toContain('token');
