@@ -21,10 +21,10 @@ final class M6PortalReadService {
 	/**
 	 * Reuse existing private DTO projections and authorization.
 	 *
-	 * @param M6ReadService             $reads         Existing person and registration projection.
-	 * @param PersonRepository          $people        Scoped subject identity.
+	 * @param M6ReadService              $reads         Existing person and registration projection.
+	 * @param PersonRepository           $people        Scoped subject identity.
 	 * @param RegistrationReadRepository $registrations Scoped stored registration owner.
-	 * @param PolicyService             $policy        Live object and field rights.
+	 * @param PolicyService              $policy        Live object and field rights.
 	 */
 	public function __construct(
 		private M6ReadService $reads,
@@ -94,10 +94,10 @@ final class M6PortalReadService {
 			if ( ! $row || (int) $row['person_id'] !== (int) $subject['id'] ) {
 				continue;
 			}
-			$object = new PolicyObject( $scope->id, 'registration', (int) $row['id'], (int) $row['person_id'], (int) $row['event_post_id'] );
+			$object             = new PolicyObject( $scope->id, 'registration', (int) $row['id'], (int) $row['person_id'], (int) $row['event_post_id'] );
 			$dto['can_cancel'] = in_array( $dto['status'], array( 'submitted', 'review', 'accepted', 'waitlisted', 'offered' ), true )
 				&& $this->policy->can( $actor, 'registration.cancel', $object )->allowed;
-			$items[] = $dto;
+			$items[]           = $dto;
 		}
 		return array(
 			'items' => $items,

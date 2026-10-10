@@ -165,6 +165,7 @@
 			if (!person || !person.can_view_entries) {
 				this.entries.replaceChildren();
 				this.message('');
+				this.setBusy(false);
 				return;
 			}
 			this.setBusy(true);
