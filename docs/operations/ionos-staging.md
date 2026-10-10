@@ -6,8 +6,8 @@ Stand: 10. Oktober 2026. Geplante URL: **https://uop-test.dreamloud.de**.
 
 ## IONOS-Einrichtung (noch ausstehend)
 
-1. Im IONOS-Konto prüfen, ob der bestehende Vertrag eine **zweite eigenständige WordPress-Installation**, eine separate MySQL/MariaDB-Datenbank, eine SSL-geschützte Subdomain und isolierbaren SFTP-Zugang zulässt.
-2. Subdomain **uop-test.dreamloud.de** anlegen und auf einen **eigenen** WordPress-Webspace-Ordner namens **uop-test-dreamloud-de** richten. Niemals auf das bestehende Dreamloud-DocumentRoot zeigen lassen.
+1. Im IONOS-Konto prüfen, ob ein **separater Hosting-Webspace/Vertrag** für UOP-Staging verfügbar ist (mit eigener PHP-Laufzeit/Dateiberechtigung, WordPress, Datenbank und SFTP). Eine zweite WordPress-Installation im **gleichen** IONOS-Webspace ist keine harte Codeisolation: Laut IONOS begrenzt ein SFTP-Verzeichnis die SFTP-Berechtigung, aber **nicht den PHP-Dateizugriff**. Daher das noch nicht freigegebene UOP-Plugin **nicht** auf dem bestehenden Dreamloud-Webspace aktivieren. Eine separate Hostingressource kann zusätzliche Kosten verursachen; sie darf erst nach Nutzerfreigabe bestellt werden.
+2. Subdomain **uop-test.dreamloud.de** im vorhandenen Dreamloud-Domainkonto anlegen und per DNS ausschließlich auf die **separate Staging-Hostingressource** richten; dort einen WordPress-Ordner namens **uop-test-dreamloud-de** anlegen. Niemals auf das bestehende Dreamloud-DocumentRoot zeigen lassen. Diese DNS-Einrichtung ist noch nicht durchgeführt.
 3. Neue, leere Datenbank und neue WordPress-Installation anlegen. Keine echten Benutzer, Daten, Plugins oder Zugangsdaten der Produktionssite kopieren.
 4. Vor Freigabe der Testsubdomain **Webserver-Zugriffsschutz** (HTTP Basic Auth oder gleichwertig) einrichten. Noindex/robots.txt allein schützt nicht vor fremden Zugriffen.
 5. Ausschließlich in der *neuen* Staging-wp-config.php eintragen:
@@ -28,6 +28,7 @@ Stand: 10. Oktober 2026. Geplante URL: **https://uop-test.dreamloud.de**.
 | `UOP_STAGING_SFTP_USER` | Separater eingeschränkter SFTP-Benutzer |
 | `UOP_STAGING_SFTP_PASSWORD` | Nur Staging-SFTP-Passwort |
 | `UOP_STAGING_SFTP_ROOT` | Exakter WordPress-Staging-Ordner, endet auf `/uop-test-dreamloud-de` |
+| `UOP_STAGING_ISOLATED_HOSTING` | Nur nach Kontrolle echter separater Hosting-/PHP-Isolation: exakter Wert `true`; ohne diesen Wert sperrt der Deploy-Workflow |
 | `UOP_STAGING_SSH_KNOWN_HOSTS` | Unabhängig verifizierte SSH-Hostkey-Zeilen |
 
 9. Zuerst **nur prüfen**, danach im kontrollierten Staging-Ziel UOP installieren und **nur dort manuell** aktivieren.
@@ -43,4 +44,4 @@ Stand: 10. Oktober 2026. Geplante URL: **https://uop-test.dreamloud.de**.
 
 ## Sperren
 
-Kein Deployment auf `dreamloud.de` oder `www.dreamloud.de`; kein Import realer Daten, kein geteilter Datenbankbenutzer, kein Übernehmen von Dreamloud-Secrets; kein ungeprüftes produktives SMTP. Wenn das Hosting keine eigene Instanz und Datenbank zulässt, stattdessen einen gesonderten Staging-Vertrag oder flüchtige GitHub-Tests verwenden. Eine überprüfte Mail-Queue ersetzt noch nicht den tatsächlichen externen E-Mail-Empfang.
+Kein Deployment auf `dreamloud.de` oder `www.dreamloud.de`; kein Import realer Daten, kein geteilter Datenbankbenutzer, kein Übernehmen von Dreamloud-Secrets; kein ungeprüftes produktives SMTP. Für eine risikominimierende Prüfung des noch nicht freigegebenen UOP-Codes einen **eigenen Webspace/Vertrag** verwenden; bloße neue Ordner und SFTP-Konten im vorhandenen Dreamloud-Webspace sind kein gleichwertiger Ersatz. Die Domain darf weiterhin über das vorhandene Dreamloud-DNS auf das separate Hosting zeigen. Erst nachdem der Betreiber die Isolation geprüft hat, darf `UOP_STAGING_ISOLATED_HOSTING=true` gesetzt werden. Eine überprüfte Mail-Queue ersetzt noch nicht den tatsächlichen externen E-Mail-Empfang.
