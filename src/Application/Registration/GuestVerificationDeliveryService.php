@@ -136,7 +136,9 @@ final class GuestVerificationDeliveryService {
 				$this->outbox->append( $scope, $event, 'registration', (int) $row['id'], 'registration.verification_issued', $trace, array( 'public_id' => $registration->to_string() ) );
 				$this->tx->after_commit(
 					static function () use ( $scope, $message ): void {
-						call_user_func( 'as_enqueue_async_action', 'uop_mail_deliver', array( $scope->id, $message->to_string() ), 'uop', true );
+						if ( function_exists( 'as_enqueue_async_action' ) ) {
+							as_enqueue_async_action( 'uop_mail_deliver', array( $scope->id, $message->to_string() ), 'uop', true );
+						}
 					}
 				);
 				return $message;
