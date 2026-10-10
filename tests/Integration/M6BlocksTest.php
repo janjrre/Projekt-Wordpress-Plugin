@@ -13,6 +13,7 @@ use UOP\Application\Form\FormService;
 use UOP\Application\Policy\Actor;
 use UOP\Application\Policy\PolicyService;
 use UOP\Application\Query\M6ReadService;
+use UOP\Application\Query\M6PortalReadService;
 use UOP\Application\Registration\RegistrationConfigurationService;
 use UOP\Application\Registration\RegistrationFactsService;
 use UOP\Application\Registration\RegistrationService;
@@ -35,6 +36,7 @@ use UOP\Infrastructure\Database\RegistrationReadRepository;
 use UOP\Infrastructure\Database\RegistrationRepository;
 use UOP\Infrastructure\Database\SchemaManifest;
 use UOP\Infrastructure\Database\WpdbConnection;
+use UOP\REST\M6PortalController;
 
 /** Prove public content and private account content never share authorization. */
 final class M6BlocksTest extends TestCase {
@@ -99,7 +101,7 @@ final class M6BlocksTest extends TestCase {
 		$config      = new RegistrationConfigurationService( $this->db, $this->prefix, $policy, $tx, $audit, $outbox );
 		$submit      = new RegistrationService( new RegistrationRepository( $this->db, $this->prefix ), $policy, $tx, $audit, $outbox, new RegistrationFactsService( new RegistrationFactsRepository( $this->db, $this->prefix ), $policy ), $people );
 		wp_set_current_user( $admin );
-		return compact( 'admin', 'self', 'other', 'actor', 'people', 'events', 'forms', 'blocks', 'event', 'form', 'config', 'submit' );
+		return compact( 'admin', 'self', 'other', 'actor', 'people', 'delegations', 'events', 'forms', 'blocks', 'event', 'form', 'config', 'submit', 'reads', 'policy' );
 	}
 
 	/**
@@ -222,4 +224,111 @@ final class M6BlocksTest extends TestCase {
 		self::assertStringContainsString( 'submitted', $self );
 		self::assertTrue( defined( 'DONOTCACHEPAGE' ) && DONOTCACHEPAGE );
 	}
+
+	/** One account's unrelated shared email never creates a person assignment. */
+	public function test_portal_subjects_respect_live_delegation_and_revocation(): void {
+		$s         = $this->fixture();
+		$child     = PublicId::generate();
+		$stranger  = PublicId::generate();
+		$self      = PublicId::generate();
+		$now       = gmdate( 'Y-m-d H:i:s' );
+		$s['people']->create( $this->scope, $child, 'Delegated Child', 'family@example.invalid', $now );
+		$s['people']->create( $this->scope, $stranger, 'Unrelated Person', 'family@example.invalid', $now );
+		$s['people']->create( $this->scope, $self, 'Current Account', 'family@example.invalid', $now );
+		self::assertTrue( $s['people']->link( $this->scope, $self, $s['self'], $now ) );
+		self::assertTrue( $s['people']->link( $this->scope, $stranger, $s['other'], $now ) );
+		$grant = PublicId::generate();
+		$s['delegations']->grant( $this->scope, $grant, $s['self'], (int) $s['people']->find( $this->scope, $child )['id'], 'registration_manage', 'organization', 0, null, $now );
+		$service = new M6PortalReadService(
+			$s['reads'], $s['people'],
+			new RegistrationReadRepository( $this->db, $this->prefix ), $s['policy']
+		);
+		( new M6PortalController( $service ) )->register();
+		wp_set_current_user( $s['self'] );
+		$get     = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal' ) );
+		$names   = array_column( $get->get_data()['items'], 'display_name' );
+		self::assertSame( 200, $get->get_status() );
+		self::assertContains( 'Current Account', $names );
+		self::assertContains( 'Delegated Child', $names );
+		self::assertNotContains( 'Unrelated Person', $names );
+		$children = array_values( array_filter( $get->get_data()['items'], static fn ( array $person ): bool => 'Delegated Child' === $person['display_name'] ) );
+		self::assertTrue( $children[0]['can_view_entries'] );
+		self::assertFalse( $children[0]['can_edit_name'] );
+
+		$event = $this->make_event( $s, 'Delegated Signup 607', 'publish', 'public' );
+		$form  = $s['form']->create(
+			$s['actor'],
+			$this->scope,
+			'm607_signup',
+			'Signup',
+			'event',
+			array(
+				'schema_version' => 1,
+				'fields'         => array( array( 'key' => 'name', 'type' => 'text', 'label' => 'Name', 'required' => true ) ),
+			),
+			$now,
+			CorrelationId::generate()
+		);
+		wp_set_current_user( $s['admin'] );
+		$s['form']->publish( $s['actor'], $this->scope, $form, 1, $now, CorrelationId::generate() );
+		$s['config']->bind( $s['actor'], $this->scope, $event, $form, $now, CorrelationId::generate() );
+		$registration = $s['submit']->submit( $s['actor'], $this->scope, $child, $event, null, PublicId::generate(), array( 'name' => 'Child' ), $now, CorrelationId::generate() );
+		wp_set_current_user( $s['self'] );
+		$page = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal/registrations?person_id=' . $child->to_string() ) );
+		self::assertSame( 200, $page->get_status() );
+		self::assertSame( $registration->to_string(), $page->get_data()['items'][0]['public_id'] );
+		self::assertTrue( $page->get_data()['items'][0]['can_cancel'] );
+		self::assertArrayNotHasKey( 'contact_email', $page->get_data()['items'][0] );
+		self::assertArrayNotHasKey( 'payload_json', $page->get_data()['items'][0] );
+
+		self::assertTrue( $s['delegations']->revoke( $this->scope, $grant, $now ) );
+		$revoked = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal' ) );
+		self::assertNotContains( 'Delegated Child', array_column( $revoked->get_data()['items'], 'display_name' ) );
+		$denied = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal/registrations?person_id=' . $child->to_string() ) );
+		self::assertSame( 404, $denied->get_status() );
+		$stranger_page = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal/registrations?person_id=' . $stranger->to_string() ) );
+		self::assertSame( 404, $stranger_page->get_status() );
+	}
+
+	/** Read-only delegation is selectable as a profile but cannot list registrations. */
+	public function test_portal_profile_only_grant_does_not_expose_registration_data(): void {
+		$s     = $this->fixture();
+		$child = PublicId::generate();
+		$now   = gmdate( 'Y-m-d H:i:s' );
+		$s['people']->create( $this->scope, $child, 'Profile Only Child', null, $now );
+		$s['delegations']->grant( $this->scope, PublicId::generate(), $s['self'], (int) $s['people']->find( $this->scope, $child )['id'], 'profile_view', 'organization', 0, null, $now );
+		$service = new M6PortalReadService(
+			$s['reads'], $s['people'],
+			new RegistrationReadRepository( $this->db, $this->prefix ), $s['policy']
+		);
+		( new M6PortalController( $service ) )->register();
+		wp_set_current_user( $s['self'] );
+		$subjects = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal' ) );
+		self::assertSame( 200, $subjects->get_status() );
+		self::assertSame( 'Profile Only Child', $subjects->get_data()['items'][0]['display_name'] );
+		self::assertFalse( $subjects->get_data()['items'][0]['can_view_entries'] );
+		$entries = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal/registrations?person_id=' . $child->to_string() ) );
+		self::assertSame( 404, $entries->get_status() );
+		wp_set_current_user( 0 );
+		self::assertSame( 403, rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal' ) )->get_status() );
+	}
+
+	/** Login-only assets and client roots never reveal nonce to anonymous users. */
+	public function test_portal_block_enqueues_private_assets_and_safe_markup(): void {
+		$s = $this->fixture();
+		wp_set_current_user( 0 );
+		$anon = $s['blocks']->render( 'portal' );
+		self::assertStringContainsString( 'Sign in', $anon );
+		self::assertStringNotContainsString( 'data-uop-portal-root', $anon );
+		wp_set_current_user( $s['self'] );
+		$portal = $s['blocks']->render( 'portal' );
+		$mine   = $s['blocks']->render( 'my-registrations' );
+		self::assertStringContainsString( 'data-uop-portal-root="portal"', $portal );
+		self::assertStringContainsString( 'data-uop-portal-root="registrations"', $mine );
+		self::assertTrue( wp_script_is( 'uop-m6-portal', 'enqueued' ) );
+		self::assertTrue( wp_style_is( 'uop-m6-portal', 'enqueued' ) );
+		self::assertStringNotContainsString( 'wp_rest', $portal );
+		self::assertTrue( defined( 'DONOTCACHEPAGE' ) && DONOTCACHEPAGE );
+	}
+
 }
