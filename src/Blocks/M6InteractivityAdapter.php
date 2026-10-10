@@ -70,7 +70,9 @@ final class M6InteractivityAdapter {
 		$this->enqueue();
 		$values = array();
 		foreach ( $schema['fields'] as $field ) {
-			$values[ $field['key'] ] = null;
+			if ( ! isset( $field['visible_when'] ) || ! $this->has_private_condition( $field['visible_when'] ) ) {
+				$values[ $field['key'] ] = null;
+			}
 		}
 		$html = '<div class="uop-m6-preview" data-wp-interactive="uop/m6" '
 			. wp_interactivity_data_wp_context( array( 'values' => $values ) ) . '>';
