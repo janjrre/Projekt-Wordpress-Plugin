@@ -95,26 +95,39 @@ final class M6InteractivityAdapter {
 					'profile'      => array(),
 				)
 			);
-			$id        = wp_unique_id( 'uop-preview-field-' );
-			$ctx       = array(
+			$id            = wp_unique_id( 'uop-preview-field-' );
+			$note_id       = wp_unique_id( 'uop-preview-note-' );
+			$ctx           = array(
 				'condition' => $condition,
 			);
-			$type      = (string) $field['type'];
-			$key       = (string) $field['key'];
-			$label     = (string) $field['label'];
-			$required  = ! empty( $field['required'] );
+			$type          = (string) $field['type'];
+			$key           = (string) $field['key'];
+			$label         = (string) $field['label'];
+			$required      = ! empty( $field['required'] );
+			$described_by  = ' aria-describedby="' . esc_attr( $note_id ) . '"';
 
 			$html .= '<div class="uop-m6-preview__field" '
 				. wp_interactivity_data_wp_context( $ctx )
 				. ' data-wp-bind--hidden="state.fieldHidden"' . ( $visible ? '' : ' hidden' ) . '>';
-			$html .= '<label for="' . esc_attr( $id ) . '">' . esc_html( $label ) . '</label>';
-			$html .= '<span class="uop-m6-blocks__subtle"> (' . esc_html( $required ? __( 'required', 'uop-core' ) : __( 'optional', 'uop-core' ) ) . ')</span>';
+			if ( 'radio' === $type ) {
+				$html .= '<fieldset><legend>' . esc_html( $label ) . '</legend>';
+			} else {
+				$html .= '<label for="' . esc_attr( $id ) . '">' . esc_html( $label ) . '</label>';
+			}
+			$html .= '<span id="' . esc_attr( $note_id ) . '" class="uop-m6-blocks__subtle"> (' . esc_html( $required ? __( 'required', 'uop-core' ) : __( 'optional', 'uop-core' ) ) . ')</span>';
 			if ( 'consent' === $type ) {
 				$html .= '<p>' . esc_html__( 'Consent text and acknowledgement will appear in the verified registration flow.', 'uop-core' ) . '</p>';
 			} elseif ( 'textarea' === $type ) {
-				$html .= '<textarea id="' . esc_attr( $id ) . '" data-uop-field="' . esc_attr( $key ) . '" data-wp-on--input="actions.changeField" rows="3" maxlength="10000"></textarea>';
-			} elseif ( in_array( $type, array( 'select', 'radio', 'multiselect' ), true ) ) {
-				$html .= '<select id="' . esc_attr( $id ) . '" data-uop-field="' . esc_attr( $key ) . '" data-wp-on--change="actions.changeField"' . ( 'multiselect' === $type ? ' multiple' : '' ) . '>';
+				$html .= '<textarea id="' . esc_attr( $id ) . '"' . $described_by . ' data-uop-field="' . esc_attr( $key ) . '" data-wp-on--input="actions.changeField" rows="3" maxlength="10000"></textarea>';
+			} elseif ( 'radio' === $type ) {
+				$html .= '<div class="uop-m6-preview__choices">';
+				foreach ( $field['options'] as $index => $option ) {
+					$choice_id = $id . '-' . $index;
+					$html     .= '<label for="' . esc_attr( $choice_id ) . '"><input id="' . esc_attr( $choice_id ) . '" type="radio" value="' . esc_attr( $option ) . '"' . $described_by . ' data-uop-field="' . esc_attr( $key ) . '" data-wp-on--change="actions.changeField" />' . esc_html( $option ) . '</label>';
+				}
+				$html .= '</div></fieldset>';
+			} elseif ( in_array( $type, array( 'select', 'multiselect' ), true ) ) {
+				$html .= '<select id="' . esc_attr( $id ) . '"' . $described_by . ' data-uop-field="' . esc_attr( $key ) . '" data-wp-on--change="actions.changeField"' . ( 'multiselect' === $type ? ' multiple' : '' ) . '>';
 				if ( 'multiselect' !== $type ) {
 					$html .= '<option value="">' . esc_html__( 'Select an option', 'uop-core' ) . '</option>';
 				}
@@ -131,11 +144,11 @@ final class M6InteractivityAdapter {
 					'date' => 'date',
 					default => 'text',
 				};
-				$html .= '<input id="' . esc_attr( $id ) . '" type="' . esc_attr( $input_type ) . '" data-uop-field="' . esc_attr( $key ) . '" data-wp-on--input="actions.changeField"' . ( 'checkbox' === $type ? ' data-wp-on--change="actions.changeField"' : '' ) . ' />';
+				$html .= '<input id="' . esc_attr( $id ) . '" type="' . esc_attr( $input_type ) . '"' . $described_by . ' data-uop-field="' . esc_attr( $key ) . '" data-wp-on--input="actions.changeField"' . ( 'checkbox' === $type ? ' data-wp-on--change="actions.changeField"' : '' ) . ' />';
 			}
 			$html .= '</div>';
 		}
-		$html .= '</fieldset><p class="uop-m6-preview__notice">' . esc_html__( 'Changing these fields only affects this preview. Final eligibility, required fields, privacy consent and capacity are checked by the server.', 'uop-core' ) . '</p></div>';
+		$html .= '</fieldset><noscript><p class="uop-m6-preview__notice">' . esc_html__( 'Conditional fields require JavaScript in this preview. No registration is submitted.', 'uop-core' ) . '</p></noscript><p class="uop-m6-preview__notice">' . esc_html__( 'Changing these fields only affects this preview. Final eligibility, required fields, privacy consent and capacity are checked by the server.', 'uop-core' ) . '</p></div>';
 		return $html;
 	}
 
