@@ -184,7 +184,7 @@ final class M6BlocksTest extends TestCase {
 		wp_set_current_user( 0 );
 		$html = $s['blocks']->render( 'registration-form', array( 'eventId' => $event->to_string() ) );
 		self::assertStringContainsString( 'Public name requirement', $html );
-		self::assertStringContainsString( 'Submission through this block will be enabled', $html );
+		self::assertStringContainsString( 'Preview only: values are not saved or sent.', $html );
 		self::assertStringNotContainsString( '<form', $html );
 		self::assertStringNotContainsString( 'draft_schema_json', $html );
 		self::assertStringNotContainsString( '<script', $html );
@@ -354,6 +354,92 @@ final class M6BlocksTest extends TestCase {
 		self::assertTrue( wp_style_is( 'uop-m6-portal', 'enqueued' ) );
 		self::assertStringNotContainsString( 'wp_rest', $portal );
 		self::assertTrue( defined( 'DONOTCACHEPAGE' ) && DONOTCACHEPAGE );
+	}
+
+
+	/**
+	 * Public filters and disclosures use the core Interactivity API, preserving
+	 * public-only server fallbacks and keyboard-focusable semantics.
+	 */
+	public function test_interactive_public_event_filter_and_dates_disclosure(): void {
+		$s = $this->fixture();
+		$s['blocks']->register();
+		$this->make_event( $s, 'Interactive Public Show', 'publish', 'public' );
+		$this->make_event( $s, 'Private Unlisted Show', 'publish', 'private' );
+		wp_set_current_user( 0 );
+		$list = $s['blocks']->render( 'event-list', array( 'limit' => 10 ) );
+		self::assertStringContainsString( 'Interactive Public Show', $list );
+		self::assertStringNotContainsString( 'Private Unlisted Show', $list );
+		self::assertStringContainsString( 'data-wp-interactive="uop/m6"', $list );
+		self::assertStringContainsString( 'data-wp-on--input="actions.filterEvents"', $list );
+		self::assertStringContainsString( 'data-wp-bind--hidden="state.eventHidden"', $list );
+		self::assertStringContainsString( 'No matching events', $list );
+		$event = $this->make_event( $s, 'Public Event Details', 'publish', 'public' );
+		$html  = $s['blocks']->render( 'event-details', array( 'eventId' => $event->to_string() ) );
+		self::assertStringContainsString( 'Public Event Details', $html );
+		self::assertStringContainsString( 'data-wp-on--click="actions.toggleDisclosure"', $html );
+		self::assertStringContainsString( 'data-wp-bind--aria-expanded="context.open"', $html );
+		self::assertStringContainsString( 'data-wp-bind--hidden="state.disclosureClosed"', $html );
+	}
+
+	/**
+	 * The form preview never submits, conditionally hides dependent fields,
+	 * and does not serialize private profile predicates to guest HTML.
+	 */
+	public function test_interactive_form_preview_conditions_and_private_predicates(): void {
+		$s = $this->fixture();
+		$s['blocks']->register();
+		$event = $this->make_event( $s, 'Safe Preview Event', 'publish', 'public' );
+		$form  = $s['form']->create(
+			$s['actor'],
+			$this->scope,
+			'm608_conditional',
+			'Preview',
+			'event',
+			array(
+				'schema_version' => 1,
+				'fields' => array(
+					array( 'key' => 'attendance', 'type' => 'checkbox', 'label' => 'Attending', 'required' => false ),
+					array(
+						'key' => 'reason',
+						'type' => 'text',
+						'label' => 'Attendance reason',
+						'required' => false,
+						'visible_when' => array(
+							'schema_version' => 1,
+							'all' => array( array( 'source' => 'registration', 'field' => 'attendance', 'operator' => 'eq', 'value' => true ) ),
+						),
+					),
+					array(
+						'key' => 'sensitive',
+						'type' => 'textarea',
+						'label' => 'Private profile fact',
+						'required' => false,
+						'visible_when' => array(
+							'schema_version' => 1,
+							'all' => array( array( 'source' => 'profile', 'field' => 'sensitive_field', 'operator' => 'exists' ) ),
+						),
+					),
+				),
+			),
+			gmdate( 'Y-m-d H:i:s' ),
+			CorrelationId::generate()
+		);
+		$s['form']->publish( $s['actor'], $this->scope, $form, 1, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
+		$s['config']->bind( $s['actor'], $this->scope, $event, $form, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
+		wp_set_current_user( 0 );
+		$html = $s['blocks']->render( 'registration-form', array( 'eventId' => $event->to_string() ) );
+		self::assertStringContainsString( 'data-wp-interactive="uop/m6"', $html );
+		self::assertStringContainsString( 'data-wp-on--input="actions.changeField"', $html );
+		self::assertStringContainsString( 'data-wp-bind--hidden="state.fieldHidden"', $html );
+		self::assertStringContainsString( 'Attendance reason', $html );
+		self::assertStringContainsString( ' data-uop-field="attendance"', $html );
+		self::assertStringNotContainsString( 'Private profile fact', $html );
+		self::assertStringNotContainsString( 'sensitive_field', $html );
+		self::assertStringNotContainsString( '<form', $html );
+		self::assertStringNotContainsString( 'action=', $html );
+		self::assertStringNotContainsString( 'name="attendance"', $html );
+		self::assertStringContainsString( 'not saved or sent', $html );
 	}
 
 }
