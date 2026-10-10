@@ -101,7 +101,7 @@ final class RegistrationService {
 				}
 				$post_id = (int) $form['event_post_id'];
 				$post    = get_post( $post_id );
-				if ( ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status ) {
+				if ( ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status || ! empty( $post->post_password ) ) {
 					throw new RuntimeException( 'Guest event is unavailable.' );
 				}
 				$occurrence_id = $this->registrations->occurrence_id( $scope, $post_id, $occurrence );
@@ -157,7 +157,7 @@ final class RegistrationService {
 		}
 		$event_post_id = (int) $form['event_post_id'];
 		$post          = get_post( $event_post_id );
-		if ( ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status ) {
+		if ( ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status || ( $guest && ! empty( $post->post_password ) ) ) {
 			throw new RuntimeException( 'Event is not published.' );
 		}
 		if ( $guest && ( 'public' !== $form['visibility'] || 1 !== (int) $form['require_email_verification'] ) ) {

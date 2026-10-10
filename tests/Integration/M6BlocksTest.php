@@ -547,6 +547,17 @@ final class M6BlocksTest extends TestCase {
 			);
 			( new RegistrationController( $s['reads'], $s['submit'], $transition, $capacity, $verification, $delivery ) )->register();
 			wp_set_current_user( 0 );
+			// Password-protected posts are not public guest destinations, even if event settings say public.
+			$event_row = $s['events']->by_public( $this->scope, $event );
+			self::assertNotNull( $event_row );
+			wp_update_post( array( 'ID' => (int) $event_row['event_post_id'], 'post_password' => 'protected' ) );
+			try {
+				$s['submit']->submit_guest( $this->scope, $event, null, PublicId::generate(), array( 'name' => 'Guest', 'contact' => 'testguest@example.invalid' ), $now, CorrelationId::generate() );
+				self::fail( 'Password-protected event admitted an anonymous guest.' );
+			} catch ( \RuntimeException ) {
+				self::assertTrue( true );
+			}
+			wp_update_post( array( 'ID' => (int) $event_row['event_post_id'], 'post_password' => '' ) );
 			$body = array(
 				'event_id' => $event->to_string(),
 				'command_id' => PublicId::generate()->to_string(),
