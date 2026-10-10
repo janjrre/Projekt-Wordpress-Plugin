@@ -51,7 +51,7 @@
 			for (const group of groups) {
 				let condition = null;
 				if (group.dataset.uopCondition) {
-					try { condition = JSON.parse(group.dataset.uopCondition); } catch (_) { condition = {source: 'invalid'}; }
+					try { condition = JSON.parse(group.dataset.uopCondition); } catch { condition = {source: 'invalid'}; }
 				}
 				const hidden = !evaluate(condition, values);
 				if (hidden !== group.hidden) changed = true;
@@ -85,7 +85,7 @@
 		const result = form.querySelector('[data-uop-result]');
 		const guest = form.dataset.uopGuest === '1';
 		const rest = form.dataset.uopRest;
-		const nonce = guest ? '' : (window.uopM6Registration?.nonce || '');
+		const nonce = guest ? '' : (globalThis.window.uopM6Registration?.nonce || '');
 		const subject = form.querySelector('[data-uop-subject]');
 		let command = uuid();
 		let finished = false;
@@ -94,11 +94,11 @@
 			try {
 				const data = await request(rest + 'me/portal', {}, nonce);
 				const items = (data.items || []).filter(item => item.can_view_entries);
-				subject.replaceChildren(new Option('Choose a person', ''));
-				for (const item of items) subject.add(new Option(item.display_name, item.public_id));
+				subject.replaceChildren(new globalThis.Option('Choose a person', ''));
+				for (const item of items) subject.add(new globalThis.Option(item.display_name, item.public_id));
 				subject.disabled = items.length === 0;
 				if (!items.length) result.textContent = 'No authorized person is available for registration.';
-			} catch (_) {
+			} catch {
 				result.textContent = 'The authorized persons could not be loaded. Please sign in again.';
 				return;
 			}
@@ -130,19 +130,19 @@
 					? 'If the registration was accepted, an email confirmation link will be sent. Please check your mailbox.'
 					: 'Your registration was received. You can check its status in your participant portal.';
 				form.querySelectorAll('input, textarea, select').forEach(el => { el.disabled = true; });
-			} catch (_) {
+			} catch {
 				result.textContent = 'Registration could not be completed. Check your entries or try again later.';
 				button.disabled = false;
 			}
 		});
 	}
 	function start() {
-		document.querySelectorAll('[data-uop-registration-form]').forEach(form => {
+		globalThis.document.querySelectorAll('[data-uop-registration-form]').forEach(form => {
 			init(form).catch(() => {
 				form.querySelector('[data-uop-result]').textContent = 'Secure registration is unavailable in this browser.';
 			});
 		});
 	}
-	if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, {once:true});
+	if (globalThis.document.readyState === 'loading') globalThis.document.addEventListener('DOMContentLoaded', start, {once:true});
 	else start();
 })();
