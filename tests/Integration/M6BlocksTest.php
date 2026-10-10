@@ -17,11 +17,13 @@ use UOP\Application\Query\M6PortalReadService;
 use UOP\Application\Registration\RegistrationConfigurationService;
 use UOP\Application\Registration\RegistrationFactsService;
 use UOP\Application\Registration\RegistrationService;
+use UOP\Application\Registration\RegistrationTransitionService;
 use UOP\Blocks\M6Blocks;
 use UOP\Core\CorrelationId;
 use UOP\Core\PublicId;
 use UOP\Core\TransactionManager;
 use UOP\Domain\Organization\OrgScope;
+use UOP\Domain\Registrations\RegistrationStateMachine;
 use UOP\Infrastructure\Database\AssignmentRepository;
 use UOP\Infrastructure\Database\AuditWriter;
 use UOP\Infrastructure\Database\DelegationRepository;
@@ -288,6 +290,29 @@ final class M6BlocksTest extends TestCase {
 		self::assertSame( 404, $denied->get_status() );
 		$stranger_page = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal/registrations?person_id=' . $stranger->to_string() ) );
 		self::assertSame( 404, $stranger_page->get_status() );
+		// A UI from before revocation must also fail when it issues a command.
+		$transition = new RegistrationTransitionService(
+			new RegistrationRepository( $this->db, $this->prefix ),
+			new RegistrationStateMachine(),
+			$s['policy'],
+			new TransactionManager( $this->db, static function ( int $delay ): void {}, static function ( \Throwable $error ): void {} ),
+			new AuditWriter( $this->db, $this->prefix ),
+			new OutboxRepository( $this->db, $this->prefix )
+		);
+		try {
+			$transition->transition(
+				new Actor( $s['self'] ),
+				$this->scope,
+				$registration,
+				'cancelled',
+				PublicId::generate(),
+				$now,
+				CorrelationId::generate()
+			);
+			self::fail( 'A revoked delegation was able to cancel a registration.' );
+		} catch ( \RuntimeException ) {
+			self::assertTrue( true );
+		}
 	}
 
 	/** Read-only delegation is selectable as a profile but cannot list registrations. */
