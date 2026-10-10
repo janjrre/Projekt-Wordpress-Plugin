@@ -30,6 +30,7 @@ final class RegistrationController extends BaseController {
 	 * @param RegistrationTransitionService $transitions  Non-capacity state transitions.
 	 * @param CapacityLifecycleService      $capacity     Seat-safe cancellation.
 	 * @param EmailVerificationService      $verification Hashed, one-time email token verifier.
+	 * @param GuestVerificationDeliveryService|null $guest_delivery Explicit readiness gate for guest intake.
 	 */
 	public function __construct(
 		private M6ReadService $reads,
@@ -199,7 +200,7 @@ final class RegistrationController extends BaseController {
 			return RestError::for_kind( 'unavailable' );
 		}
 		// Use only the server observed peer; ignore forgeable proxy IP headers.
-		$peer = isset( $_SERVER['REMOTE_ADDR'] ) && is_string( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : 'unknown';
+		$peer = isset( $_SERVER['REMOTE_ADDR'] ) && is_string( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
 		if ( false === filter_var( $peer, FILTER_VALIDATE_IP ) ) {
 			$peer = 'unknown';
 		}

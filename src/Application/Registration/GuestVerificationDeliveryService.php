@@ -28,13 +28,15 @@ use UOP\Infrastructure\Database\RegistrationRepository;
  */
 final class GuestVerificationDeliveryService {
 	/**
+	 * Construct the trusted post-commit guest verification dispatcher.
+	 *
 	 * @param RegistrationRepository $registrations Scoped registration rows.
-	 * @param EmailMessageRepository $messages Durable mail snapshot storage.
-	 * @param EmailTemplateCatalog $catalog Internal allowlisted template.
-	 * @param EmailTemplateRules $rules Strict interpolation and URL encoding.
-	 * @param TransactionManager $tx Atomic challenge and mail enqueue.
-	 * @param AuditWriter $audit Minimal proof of issuance.
-	 * @param OutboxRepository $outbox Token-free events.
+	 * @param EmailMessageRepository $messages      Durable mail snapshot storage.
+	 * @param EmailTemplateCatalog   $catalog       Internal allowlisted template.
+	 * @param EmailTemplateRules     $rules         Strict interpolation and URL encoding.
+	 * @param TransactionManager     $tx            Atomic challenge and mail enqueue.
+	 * @param AuditWriter            $audit         Minimal proof of issuance.
+	 * @param OutboxRepository       $outbox        Token-free events.
 	 */
 	public function __construct(
 		private RegistrationRepository $registrations,
@@ -76,9 +78,9 @@ final class GuestVerificationDeliveryService {
 	/**
 	 * At-least-once consumer: idempotent per registration, despite retries.
 	 *
-	 * @param OrgScope $scope Trusted site organization.
+	 * @param OrgScope $scope               Trusted site organization.
 	 * @param PublicId $registration Committed registration UUID.
-	 * @param string $now Trusted UTC timestamp.
+	 * @param string $now                 Trusted UTC timestamp.
 	 * @return PublicId|null Queue message UUID, if pending; no secret returned.
 	 */
 	public function queue( OrgScope $scope, PublicId $registration, string $now ): ?PublicId {
@@ -99,17 +101,17 @@ final class GuestVerificationDeliveryService {
 					return PublicId::from_binary( (string) $previous['public_id'] );
 				}
 
-				$token    = bin2hex( random_bytes( 32 ) );
-				$expires  = gmdate( 'Y-m-d H:i:s', strtotime( $now . ' UTC +24 hours' ) );
-				$changed  = $this->registrations->challenge( $scope, (int) $row['id'], hash( 'sha256', $token, true ), $expires, $now );
+				$token   = bin2hex( random_bytes( 32 ) );
+				$expires = gmdate( 'Y-m-d H:i:s', strtotime( $now . ' UTC +24 hours' ) );
+				$changed = $this->registrations->challenge( $scope, (int) $row['id'], hash( 'sha256', $token, true ), $expires, $now );
 				if ( ! $changed ) {
 					throw new \RuntimeException( 'Unable to issue guest challenge.' );
 				}
-				$base = home_url( '/?uop-verify=1' );
-				$link = $base . '#registration_id=' . rawurlencode( $registration->to_string() ) . '&token=' . $token;
-				$post = get_post( (int) $row['event_post_id'] );
-				$name = $post ? (string) get_the_title( $post ) : __( 'Event', 'uop-core' );
-				$locale = 'de_DE';
+				$base     = home_url( '/?uop-verify=1' );
+				$link     = $base . '#registration_id=' . rawurlencode( $registration->to_string() ) . '&token=' . $token;
+				$post     = get_post( (int) $row['event_post_id'] );
+				$name     = $post ? (string) get_the_title( $post ) : __( 'Event', 'uop-core' );
+				$locale   = 'de_DE';
 				$defaults = $this->catalog->defaults( 'email_verification', $locale );
 				$rendered = $this->rules->render(
 					'email_verification',
@@ -124,8 +126,8 @@ final class GuestVerificationDeliveryService {
 						'expires_at'       => $expires . ' UTC',
 					)
 				);
-				$digest = $this->rules->validate( 'email_verification', $locale, $defaults['subject'], $defaults['body_text'], $defaults['body_html'] );
-				$message = PublicId::generate();
+				$digest   = $this->rules->validate( 'email_verification', $locale, $defaults['subject'], $defaults['body_text'], $defaults['body_html'] );
+				$message  = PublicId::generate();
 				$this->messages->enqueue( $scope, $message, $key, (int) $row['id'], (string) $row['contact_email'], 'email_verification', $locale, 1, $digest, $rendered, $now );
 				$object = new PolicyObject( $scope->id, 'registration', (int) $row['id'], (int) $row['person_id'], (int) $row['event_post_id'] );
 				$event  = PublicId::generate();

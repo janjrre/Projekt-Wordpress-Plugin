@@ -19,6 +19,8 @@ final class GuestVerificationLanding {
 		header( 'Referrer-Policy: no-referrer' );
 		header( 'Cache-Control: private, no-store, max-age=0' );
 		$url = plugin_dir_url( dirname( __DIR__, 2 ) . '/uop-core.php' );
+		$version = defined( 'UOP_CORE_VERSION' ) ? (string) constant( 'UOP_CORE_VERSION' ) : '0.1.0-alpha.2';
+		wp_enqueue_script( 'uop-guest-verification', $url . 'assets/m6-guest-verification.js', array(), $version, true );
 		?>
 <!doctype html>
 <html <?php language_attributes(); ?>>
@@ -40,7 +42,7 @@ final class GuestVerificationLanding {
 <button type="button"><?php esc_html_e( 'Confirm email', 'uop-core' ); ?></button>
 <p role="status" aria-live="polite"></p>
 </main>
-<script src="<?php echo esc_url( $url . 'assets/m6-guest-verification.js' ); ?>"></script>
+<?php wp_print_scripts( 'uop-guest-verification' ); ?>
 </body>
 </html>
 		<?php
