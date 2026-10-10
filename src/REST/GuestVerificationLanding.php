@@ -14,6 +14,12 @@ final class GuestVerificationLanding {
 		if ( ! isset( $_GET['uop-verify'] ) || '1' !== $_GET['uop-verify'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public read-only landing.
 			return;
 		}
+		if ( ! is_ssl() ) {
+			// No token-bearing JavaScript may execute on an insecure origin.
+			nocache_headers();
+			status_header( 403 );
+			wp_die( esc_html__( 'HTTPS is required for email verification.', 'uop-core' ) );
+		}
 		nocache_headers();
 		header( 'X-Robots-Tag: noindex, nofollow, noarchive' );
 		header( 'Referrer-Policy: no-referrer' );
@@ -33,7 +39,7 @@ final class GuestVerificationLanding {
 </head>
 <body>
 <main id="uop-guest-verification"
-	data-endpoint="<?php echo esc_url( rest_url( 'uop/v1/registration-verifications' ) ); ?>"
+	data-endpoint="<?php echo esc_url( set_url_scheme( rest_url( 'uop/v1/registration-verifications' ), 'https' ) ); ?>"
 	data-invalid="<?php echo esc_attr__( 'This verification link is incomplete. Request a new link from the organizer.', 'uop-core' ); ?>"
 	data-processing="<?php echo esc_attr__( 'Checking your confirmation…', 'uop-core' ); ?>"
 	data-received="<?php echo esc_attr__( 'Your confirmation request has been received. If the link was valid and unused, your address is now confirmed.', 'uop-core' ); ?>">
