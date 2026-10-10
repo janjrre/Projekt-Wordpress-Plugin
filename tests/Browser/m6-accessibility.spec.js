@@ -30,14 +30,14 @@ test('M6 administration reflows at 320px and supports keyboard focus', async ({ 
     await expect(refresh).toBeFocused();
 
     const layout = await shell.evaluate(element => {
-      const style = getComputedStyle(element);
+      const style = element.ownerDocument.defaultView.getComputedStyle(element);
       const wrapper = element.closest('.uop-m6-admin');
       const panels = [...element.querySelectorAll('.uop-m6-panel')];
       return {
         columns: style.gridTemplateColumns.split(' ').length,
         overflow: wrapper.scrollWidth - wrapper.clientWidth,
         panels: panels.map(panel => panel.scrollWidth - panel.clientWidth),
-        buttonHeight: parseFloat(getComputedStyle(element.querySelector('.uop-m6-toolbar .button')).minHeight),
+        buttonHeight: parseFloat(element.ownerDocument.defaultView.getComputedStyle(element.querySelector('.uop-m6-toolbar .button')).minHeight),
       };
     });
     expect(layout.columns).toBe(1);
