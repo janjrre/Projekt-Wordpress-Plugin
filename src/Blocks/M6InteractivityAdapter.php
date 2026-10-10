@@ -87,24 +87,24 @@ final class M6InteractivityAdapter {
 			if ( isset( $field['visible_when'] ) && $this->has_private_condition( $field['visible_when'] ) ) {
 				continue;
 			}
-			$condition = $field['visible_when'] ?? null;
-			$visible   = null === $condition || $engine->evaluate(
+			$condition    = $field['visible_when'] ?? null;
+			$visible      = null === $condition || $engine->evaluate(
 				$condition,
 				array(
 					'registration' => $values,
 					'profile'      => array(),
 				)
 			);
-			$id            = wp_unique_id( 'uop-preview-field-' );
-			$note_id       = wp_unique_id( 'uop-preview-note-' );
-			$ctx           = array(
+			$id           = wp_unique_id( 'uop-preview-field-' );
+			$note_id      = wp_unique_id( 'uop-preview-note-' );
+			$ctx          = array(
 				'condition' => $condition,
 			);
-			$type          = (string) $field['type'];
-			$key           = (string) $field['key'];
-			$label         = (string) $field['label'];
-			$required      = ! empty( $field['required'] );
-			$described_by  = ' aria-describedby="' . esc_attr( $note_id ) . '"';
+			$type         = (string) $field['type'];
+			$key          = (string) $field['key'];
+			$label        = (string) $field['label'];
+			$required     = ! empty( $field['required'] );
+			$described_by = ' aria-describedby="' . esc_attr( $note_id ) . '"';
 
 			$html .= '<div class="uop-m6-preview__field" '
 				. wp_interactivity_data_wp_context( $ctx )
