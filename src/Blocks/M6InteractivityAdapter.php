@@ -35,9 +35,9 @@ final class M6InteractivityAdapter {
 			'titles' => array_map( static fn ( array $event ): string => mb_strtolower( $event['title'] ), $events ),
 		);
 		$html    = '<div data-wp-interactive="uop/m6" ' . wp_interactivity_data_wp_context( $context ) . '>';
-		$html .= '<label for="' . esc_attr( $id ) . '">' . esc_html__( 'Filter events', 'uop-core' ) . '</label> ';
-		$html .= '<input id="' . esc_attr( $id ) . '" type="search" data-wp-on--input="actions.filterEvents" autocomplete="off" />';
-		$html .= '<ul class="uop-m6-blocks__events">';
+		$html   .= '<label for="' . esc_attr( $id ) . '">' . esc_html__( 'Filter events', 'uop-core' ) . '</label> ';
+		$html   .= '<input id="' . esc_attr( $id ) . '" type="search" data-wp-on--input="actions.filterEvents" autocomplete="off" />';
+		$html   .= '<ul class="uop-m6-blocks__events">';
 		foreach ( $events as $event ) {
 			$html .= '<li ' . wp_interactivity_data_wp_context( array( 'title' => mb_strtolower( $event['title'] ) ) ) . ' data-wp-bind--hidden="state.eventHidden"><a href="' . esc_url( $event['url'] ) . '">' . esc_html( $event['title'] ) . '</a></li>';
 		}
@@ -88,7 +88,13 @@ final class M6InteractivityAdapter {
 				continue;
 			}
 			$condition = $field['visible_when'] ?? null;
-			$visible   = null === $condition || $engine->evaluate( $condition, array( 'registration' => $values, 'profile' => array() ) );
+			$visible   = null === $condition || $engine->evaluate(
+				$condition,
+				array(
+					'registration' => $values,
+					'profile'      => array(),
+				)
+			);
 			$id        = wp_unique_id( 'uop-preview-field-' );
 			$ctx       = array(
 				'condition' => $condition,
@@ -101,7 +107,7 @@ final class M6InteractivityAdapter {
 			$html .= '<div class="uop-m6-preview__field" '
 				. wp_interactivity_data_wp_context( $ctx )
 				. ' data-wp-bind--hidden="state.fieldHidden"' . ( $visible ? '' : ' hidden' ) . '>';
-			$html .= '<label for="' . esc_attr( $id ) . '">' . esc_html( $label ) . '</label>';
+			$html   .= '<label for="' . esc_attr( $id ) . '">' . esc_html( $label ) . '</label>';
 			$html .= '<span class="uop-m6-blocks__subtle"> (' . esc_html( $required ? __( 'required', 'uop-core' ) : __( 'optional', 'uop-core' ) ) . ')</span>';
 			if ( 'consent' === $type ) {
 				$html .= '<p>' . esc_html__( 'Consent text and acknowledgement will appear in the verified registration flow.', 'uop-core' ) . '</p>';
@@ -125,7 +131,7 @@ final class M6InteractivityAdapter {
 					'date' => 'date',
 					default => 'text',
 				};
-				$html .= '<input id="' . esc_attr( $id ) . '" type="' . esc_attr( $input_type ) . '" data-uop-field="' . esc_attr( $key ) . '" data-wp-on--input="actions.changeField"' . ( 'checkbox' === $type ? ' data-wp-on--change="actions.changeField"' : '' ) . ' />';
+				$html   .= '<input id="' . esc_attr( $id ) . '" type="' . esc_attr( $input_type ) . '" data-uop-field="' . esc_attr( $key ) . '" data-wp-on--input="actions.changeField"' . ( 'checkbox' === $type ? ' data-wp-on--change="actions.changeField"' : '' ) . ' />';
 			}
 			$html .= '</div>';
 		}
