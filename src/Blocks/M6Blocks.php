@@ -20,7 +20,7 @@ use UOP\Infrastructure\Database\OccurrenceRepository;
 
 /**
  * Render only public event information or policy-projected private summaries.
- * Form submission UX is kept disabled until M6-07 and protected guest mail are ready.
+ * M6-10 only activates secure submission when the underlying services are ready.
  */
 final class M6Blocks {
 	/**
@@ -29,7 +29,9 @@ final class M6Blocks {
 	 * @param EventRepository      $events       Configured events.
 	 * @param OccurrenceRepository $occurrences  Tenant-scoped schedules.
 	 * @param FormRepository       $forms        Published-version form snapshot.
-	 * @param M6ReadService        $reads        Existing self/delegation policy projection.
+	 * @param M6ReadService                  $reads             Existing self/delegation policy projection.
+ * @param ConsentRepository|null         $consent_documents Current immutable evidence reader.
+ * @param GuestVerificationDeliveryService|null $guest_delivery Protected private email readiness.
 	 */
 	public function __construct(
 		private EventRepository $events,

@@ -16,17 +16,23 @@ use UOP\Infrastructure\Database\ConsentRepository;
  * the unchanged M4 policy, form-version, consent and capacity services.
  */
 final class M6SubmissionForm {
-	/** @param ConsentRepository $documents Trusted immutable consent versions. */
+	/**
+	 * Bind the immutable consent version repository.
+	 *
+	 * @param ConsentRepository $documents Scoped immutable consent storage.
+	 */
 	public function __construct( private ConsentRepository $documents ) {}
 
 	/**
 	 * Render a JS-enhanced form, with no useful network action until initialized.
 	 *
-	 * @param OrgScope            $scope Organization from WordPress settings.
-	 * @param string              $event Public event identity from scoped lookup.
-	 * @param array<string,mixed> $schema Current published, checksum-verified snapshot.
-	 * @param bool                $guest Whether this is a protected guest intake.
-	 * @param list<array<string,mixed>> $occurrences Published scheduled occurrences.
+	 * @param OrgScope $scope       Organization from WordPress settings.
+	 * @param string   $event       Public event identity from scoped lookup.
+	 * @param array    $schema      Current published, checksum-verified snapshot.
+	 * @param bool     $guest       Whether this is a protected guest intake.
+	 * @param array    $occurrences Published scheduled occurrences.
+	 * @phpstan-param array<string,mixed> $schema
+	 * @phpstan-param list<array<string,mixed>> $occurrences
 	 * @return string Escaped registration controls, or a fail-closed message.
 	 */
 	public function render( OrgScope $scope, string $event, array $schema, bool $guest, array $occurrences ): string {
@@ -41,7 +47,7 @@ final class M6SubmissionForm {
 				continue;
 			}
 			try {
-				$id = PublicId::from_string( (string) ( $field['consent_version_public_id'] ?? '' ) );
+				$id  = PublicId::from_string( (string) ( $field['consent_version_public_id'] ?? '' ) );
 				$doc = $this->documents->version( $scope, $id );
 			} catch ( \InvalidArgumentException | \RuntimeException ) {
 				$doc = null;
@@ -64,15 +70,16 @@ final class M6SubmissionForm {
 			);
 		}
 
-		$html = '<form class="uop-m6-registration" method="post" data-uop-registration-form data-uop-event="' . esc_attr( $event ) . '" data-uop-guest="' . ( $guest ? '1' : '0' ) . '" data-uop-rest="' . esc_url( rest_url( 'uop/v1/' ) ) . '">';
+		$html  = '<form class="uop-m6-registration" method="post" data-uop-registration-form data-uop-event="' . esc_attr( $event ) . '" data-uop-guest="' . ( $guest ? '1' : '0' ) . '" data-uop-rest="' . esc_url( rest_url( 'uop/v1/' ) ) . '">';
 		$html .= '<p>' . esc_html__( 'Complete the published form. Your information is submitted securely and checked again by the server.', 'uop-core' ) . '</p>';
 		if ( ! $guest ) {
-			$html .= '<div class="uop-m6-registration__subject"><label for="' . esc_attr( wp_unique_id( 'uop-subject-' ) ) . '">' . esc_html__( 'Person to register', 'uop-core' ) . '</label>';
-			$html .= '<select data-uop-subject required disabled><option value="">' . esc_html__( 'Loading authorized persons…', 'uop-core' ) . '</option></select></div>';
+			$subject_id = wp_unique_id( 'uop-subject-' );
+			$html      .= '<div class="uop-m6-registration__subject"><label for="' . esc_attr( $subject_id ) . '">' . esc_html__( 'Person to register', 'uop-core' ) . '</label>';
+			$html      .= '<select id="' . esc_attr( $subject_id ) . '" data-uop-subject required disabled><option value="">' . esc_html__( 'Loading authorized persons…', 'uop-core' ) . '</option></select></div>';
 		}
 		$times = array_values( array_filter( $occurrences, static fn ( array $item ): bool => 'scheduled' === $item['status'] ) );
 		if ( $times ) {
-			$id = wp_unique_id( 'uop-occurrence-' );
+			$id   = wp_unique_id( 'uop-occurrence-' );
 			$html .= '<div><label for="' . esc_attr( $id ) . '">' . esc_html__( 'Event date', 'uop-core' ) . '</label><select id="' . esc_attr( $id ) . '" data-uop-occurrence required>';
 			$html .= '<option value="">' . esc_html__( 'Choose a date', 'uop-core' ) . '</option>';
 			foreach ( $times as $time ) {
@@ -134,7 +141,12 @@ final class M6SubmissionForm {
 		return $html;
 	}
 
-	/** @param array<string,mixed> $node Published condition AST. */
+	/**
+	 * Prevent exposing private or age eligibility predicates to the browser.
+	 *
+	 * @param array<string,mixed> $node Published condition AST.
+	 * @return bool True if browser-side evaluation is unsafe.
+	 */
 	private function has_private_condition( array $node ): bool {
 		if ( 'profile' === ( $node['source'] ?? null ) || in_array( $node['operator'] ?? '', array( 'age_lt_at', 'age_gte_at' ), true ) ) {
 			return true;

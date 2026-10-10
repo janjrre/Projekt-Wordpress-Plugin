@@ -205,6 +205,141 @@ final class M6BlocksTest extends TestCase {
 		self::assertStringNotContainsString( 'Public name requirement', $s['blocks']->render( 'registration-form', array( 'eventId' => PublicId::generate()->to_string() ) ) );
 	}
 
+	/**
+	 * The block must remain non-submitting until the operational guest opt-in
+	 * and HTTPS readiness gates are active. Authorized members use WP nonce.
+	 */
+	public function test_m610_registration_form_html_obeys_guest_and_member_gates(): void {
+		$s     = $this->fixture();
+		$event = $this->make_event( $s, 'M610 Public Signup', 'publish', 'public' );
+		$form  = $s['form']->create(
+			$s['actor'],
+			$this->scope,
+			'm610_public_signup',
+			'Signup',
+			'event',
+			array(
+				'schema_version' => 1,
+				'fields' => array(
+					array( 'key' => 'participant', 'type' => 'text', 'label' => 'Participant name', 'required' => true ),
+					array( 'key' => 'contact', 'type' => 'email', 'label' => 'Contact email', 'required' => true ),
+					array(
+						'key' => 'reason',
+						'type' => 'text',
+						'label' => 'Optional reason',
+						'required' => false,
+						'visible_when' => array(
+							'schema_version' => 1,
+							'all' => array( array( 'source' => 'registration', 'field' => 'participant', 'operator' => 'exists' ) ),
+						),
+					),
+				),
+			),
+			gmdate( 'Y-m-d H:i:s' ),
+			CorrelationId::generate()
+		);
+		$s['form']->publish( $s['actor'], $this->scope, $form, 1, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
+		$s['config']->bind( $s['actor'], $this->scope, $event, $form, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
+		$this->db->execute(
+			'UPDATE %i SET require_email_verification = 1 WHERE organization_id = %d AND public_id = %s',
+			array( $this->prefix . 'event_settings', $this->scope->id, $event->to_binary() )
+		);
+		$repo = new RegistrationRepository( $this->db, $this->prefix );
+		$tx   = new TransactionManager( $this->db, static function ( int $delay ): void {}, static function ( \Throwable $error ): void {} );
+		$aud  = new AuditWriter( $this->db, $this->prefix );
+		$out  = new OutboxRepository( $this->db, $this->prefix );
+		$mail = new EmailTemplateCatalog();
+		$delivery = new GuestVerificationDeliveryService(
+			$repo,
+			new EmailMessageRepository( $this->db, $this->prefix ),
+			$mail,
+			new EmailTemplateRules( $mail ),
+			$tx,
+			$aud,
+			$out
+		);
+		$blocks = new M6Blocks(
+			$s['events'],
+			new OccurrenceRepository( $this->db, $this->prefix ),
+			$s['forms'],
+			$s['reads'],
+			new \UOP\Infrastructure\Database\ConsentRepository( $this->db, $this->prefix ),
+			$delivery
+		);
+		$old_https = $_SERVER['HTTPS'] ?? null;
+		$secure_url = static fn ( string $url ): string => str_replace( 'http://', 'https://', $url );
+		$opt_in = static fn (): bool => true;
+		try {
+			$_SERVER['HTTPS'] = 'on';
+			add_filter( 'home_url', $secure_url );
+			wp_set_current_user( 0 );
+			$disabled = $blocks->render( 'registration-form', array( 'eventId' => $event->to_string() ) );
+			self::assertStringNotContainsString( '<form', $disabled );
+			self::assertStringContainsString( 'Preview only:', $disabled );
+
+			add_filter( 'uop_guest_verification_enabled', $opt_in );
+			$guest = $blocks->render( 'registration-form', array( 'eventId' => $event->to_string() ) );
+			self::assertStringContainsString( '<form class="uop-m6-registration"', $guest );
+			self::assertStringContainsString( 'data-uop-guest="1"', $guest );
+			self::assertStringContainsString( 'data-uop-field="contact"', $guest );
+			self::assertStringContainsString( 'data-uop-condition="', $guest );
+			self::assertStringContainsString( 'data-uop-submit disabled', $guest );
+			self::assertStringNotContainsString( 'wp_rest', $guest );
+			self::assertStringNotContainsString( 'primary_email', $guest );
+
+			wp_set_current_user( $s['self'] );
+			$member = $blocks->render( 'registration-form', array( 'eventId' => $event->to_string() ) );
+			self::assertStringContainsString( 'data-uop-guest="0"', $member );
+			self::assertSame( 1, preg_match( '/<label for="(uop-subject-[^"]+)">.*?<select id="\1"/s', $member ) );
+			self::assertStringContainsString( 'data-uop-subject required disabled', $member );
+			self::assertTrue( defined( 'DONOTCACHEPAGE' ) );
+		} finally {
+			remove_filter( 'uop_guest_verification_enabled', $opt_in );
+			remove_filter( 'home_url', $secure_url );
+			if ( null === $old_https ) {
+				unset( $_SERVER['HTTPS'] );
+			} else {
+				$_SERVER['HTTPS'] = $old_https;
+			}
+			wp_set_current_user( 0 );
+		}
+	}
+
+	/**
+	 * Never convert a private profile predicate into a public form directive.
+	 * The published schema is still read from the real WordPress database.
+	 */
+	public function test_m610_secure_form_blocks_private_conditions_and_unpinned_consents(): void {
+		$s = $this->fixture();
+		$renderer = new \UOP\Blocks\M6SubmissionForm(
+			new \UOP\Infrastructure\Database\ConsentRepository( $this->db, $this->prefix )
+		);
+		$condition = array(
+			'schema_version' => 1,
+			'all' => array( array( 'source' => 'profile', 'field' => 'birthdate', 'operator' => 'exists' ) ),
+		);
+		$blocked = $renderer->render(
+			$this->scope,
+			PublicId::generate()->to_string(),
+			array( 'fields' => array( array( 'key' => 'private', 'label' => 'Private', 'type' => 'text', 'required' => true, 'visible_when' => $condition ) ) ),
+			true,
+			array()
+		);
+		self::assertStringContainsString( 'private eligibility check', $blocked );
+		self::assertStringNotContainsString( '<form', $blocked );
+		self::assertStringNotContainsString( 'birthdate', $blocked );
+
+		$no_consent = $renderer->render(
+			$this->scope,
+			PublicId::generate()->to_string(),
+			array( 'fields' => array( array( 'key' => 'permission', 'label' => 'Permission', 'type' => 'consent', 'required' => true, 'consent_version_public_id' => PublicId::generate()->to_string() ) ) ),
+			true,
+			array()
+		);
+		self::assertStringContainsString( 'consent documents are unavailable', $no_consent );
+		self::assertStringNotContainsString( '<form', $no_consent );
+	}
+
 	/** Member/delegate summaries are isolated across accounts and disabled for caching. */
 	public function test_my_registrations_refuses_anonymous_and_unrelated_accounts(): void {
 		$s   = $this->fixture();
