@@ -159,7 +159,7 @@
 			) : null;
 			const children = items.map(item => h('li', { key: item.public_id },
 				h('button', {
-					type: 'button', onClick: () => loadDetail(item.public_id), 'aria-current': selected === item.public_id ? 'true' : undefined,
+					type: 'button', onClick: () => loadDetail(item.public_id), 'aria-pressed': selected === item.public_id,
 					disabled: busy
 				},
 					h('strong', null, name(item)),
@@ -167,7 +167,7 @@
 					h('div', { className: 'uop-m6-id' }, item.public_id)
 				)
 			));
-			return h('section', { className: 'uop-m6-panel', 'aria-label': t('Record list', 'uop-core') },
+			return h('section', { className: 'uop-m6-panel', 'aria-label': t('Record list', 'uop-core'), 'aria-busy': listState === 'loading' ? 'true' : 'false' },
 				h('h2', null, resource === 'people' ? t('People', 'uop-core') : t('Registrations', 'uop-core')),
 				h('div', { className: 'uop-m6-toolbar' }, toolbar,
 					h('button', { className: 'button', type: 'button', onClick: () => loadList(after, status), disabled: busy || listState === 'loading' }, t('Refresh list', 'uop-core'))
@@ -232,7 +232,7 @@
 			);
 		}
 		function detailView() {
-			return h('section', { className: 'uop-m6-panel', 'aria-label': t('Record details', 'uop-core') },
+			return h('section', { className: 'uop-m6-panel', 'aria-label': t('Record details', 'uop-core'), 'aria-busy': detailState === 'loading' ? 'true' : 'false' },
 				h('h2', null, t('Details', 'uop-core')),
 				!selected ? h('p', { className: 'uop-m6-note' }, t('Select an item to view its details.', 'uop-core')) : null,
 				detailState === 'loading' ? h('p', { role: 'status' }, t('Loading details…', 'uop-core')) : null,

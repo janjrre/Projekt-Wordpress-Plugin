@@ -32,6 +32,7 @@
 	class Portal {
 		constructor(root) {
 			this.root = root;
+			this.loading = root.querySelector('[data-uop-portal-loading]');
 			this.people = [];
 			this.selected = '';
 			this.rows = [];
@@ -44,6 +45,7 @@
 			this.banner = el('div', 'uop-portal__banner');
 			this.banner.setAttribute('aria-live', 'polite');
 			this.banner.setAttribute('role', 'status');
+			this.banner.tabIndex = -1;
 			this.layout = el('div', 'uop-portal');
 			this.layout.hidden = true;
 			this.heading = el('h3', '', t('Choose person', 'uop-core'));
@@ -66,12 +68,14 @@
 			this.busy = yes;
 			this.selector.disabled = yes;
 			this.refresh.disabled = yes;
+			this.root.setAttribute('aria-busy', yes ? 'true' : 'false');
 			this.root.querySelectorAll('.uop-portal__button').forEach(n => { n.disabled = yes; });
 		}
 		message(text, danger) {
 			this.banner.textContent = text;
 			this.banner.setAttribute('role', danger ? 'alert' : 'status');
 			this.banner.classList.toggle('uop-portal__banner--error', Boolean(danger));
+			if (danger && text) this.banner.focus();
 		}
 		async loadSubjects(keepSelection) {
 			const seq = ++this.seq;
@@ -95,6 +99,7 @@
 				this.rows = [];
 				this.next = null;
 				this.layout.hidden = false;
+				if (this.loading) this.loading.remove();
 				const fallback = this.root.querySelector('[data-uop-portal-fallback]');
 				if (fallback) fallback.hidden = true;
 				if (!this.selected) {
@@ -110,6 +115,7 @@
 				this.people = [];
 				this.selected = '';
 				this.rows = [];
+				if (this.loading) this.loading.remove();
 				this.profile.replaceChildren();
 				this.entries.replaceChildren();
 				this.message(errorMessage(e), true);
@@ -127,12 +133,14 @@
 			this.rows = [];
 			this.drawProfile();
 			await this.loadEntries();
+			if (this.selected === id) this.profile.querySelector('h4')?.focus();
 		}
 		drawProfile() {
 			this.profile.replaceChildren();
 			const person = this.people.find(p => p.public_id === this.selected);
 			if (!person) return;
 			const title = el('h4', '', person.display_name);
+			title.tabIndex = -1;
 			this.profile.append(title);
 			if (this.kind === 'portal' && person.can_edit_name) {
 				const form = el('form', 'uop-portal__rename');
@@ -195,12 +203,14 @@
 				this.entries.append(el('p', '', t('No registrations for this person.', 'uop-core')));
 			} else {
 				const list = el('ul', 'uop-portal__list');
-				this.rows.forEach(reg => {
+				this.rows.forEach((reg, index) => {
 					const li = el('li', 'uop-portal__entry');
 					const text = el('span', '', t('Status', 'uop-core') + ': ' + reg.status + ' · ' + reg.created_at);
 					li.append(text);
 					if (reg.can_cancel) {
-						li.append(button(t('Cancel registration', 'uop-core'), () => this.cancel(reg), 'destructive'));
+						const cancel = button(t('Cancel registration', 'uop-core'), () => this.cancel(reg), 'destructive');
+						cancel.setAttribute('aria-label', t('Cancel registration', 'uop-core') + ' ' + (index + 1) + ' · ' + reg.created_at);
+						li.append(cancel);
 					}
 					list.append(li);
 				});
@@ -223,6 +233,7 @@
 			next.disabled = !this.next;
 			pagination.append(previous, el('span', '', t('Page', 'uop-core') + ' ' + (this.history.length + 1)), next);
 			this.entries.append(pagination);
+			this.setBusy(this.busy);
 		}
 		async rename(person, name) {
 			if (!name || name.length > 191 || !person.can_edit_name || this.busy) {

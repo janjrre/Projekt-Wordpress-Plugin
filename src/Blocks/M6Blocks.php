@@ -240,7 +240,7 @@ final class M6Blocks {
 		if ( ! is_user_logged_in() ) {
 			return '<p>' . esc_html__( 'Sign in to access your participant portal.', 'uop-core' ) . ' <a href="' . esc_url( wp_login_url( get_permalink() ) ) . '">' . esc_html__( 'Sign in', 'uop-core' ) . '</a></p>';
 		}
-		return '<h2>' . esc_html__( 'Participant portal', 'uop-core' ) . '</h2><div data-uop-portal-root="portal"><p role="status">' . esc_html__( 'Loading your authorized persons and registrations…', 'uop-core' ) . '</p></div><noscript><p>' . esc_html__( 'JavaScript is required to change profiles and manage registrations. You can still use the My Registrations block to read your own entries.', 'uop-core' ) . '</p></noscript>';
+		return '<h2>' . esc_html__( 'Participant portal', 'uop-core' ) . '</h2><div data-uop-portal-root="portal"><p data-uop-portal-loading role="status">' . esc_html__( 'Loading your authorized persons and registrations…', 'uop-core' ) . '</p></div><noscript><p>' . esc_html__( 'JavaScript is required to change profiles and manage registrations. You can still use the My Registrations block to read your own entries.', 'uop-core' ) . '</p></noscript>';
 	}
 
 	/**
