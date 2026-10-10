@@ -26,12 +26,12 @@ final class M6Blocks {
 	/**
 	 * Reuse existing scoped storage and authorization projections.
 	 *
-	 * @param EventRepository      $events       Configured events.
-	 * @param OccurrenceRepository $occurrences  Tenant-scoped schedules.
-	 * @param FormRepository       $forms        Published-version form snapshot.
-	 * @param M6ReadService                  $reads             Existing self/delegation policy projection.
- * @param ConsentRepository|null         $consent_documents Current immutable evidence reader.
- * @param GuestVerificationDeliveryService|null $guest_delivery Protected private email readiness.
+	 * @param EventRepository                   $events            Configured events.
+	 * @param OccurrenceRepository              $occurrences       Tenant-scoped schedules.
+	 * @param FormRepository                    $forms             Published-version form snapshot.
+	 * @param M6ReadService                     $reads             Existing self/delegation policy projection.
+	 * @param ?ConsentRepository                $consent_documents Current immutable evidence reader.
+	 * @param ?GuestVerificationDeliveryService $guest_delivery    Protected guest mail readiness gate.
 	 */
 	public function __construct(
 		private EventRepository $events,

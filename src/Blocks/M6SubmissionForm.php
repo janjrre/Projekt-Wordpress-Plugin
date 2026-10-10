@@ -79,7 +79,7 @@ final class M6SubmissionForm {
 		}
 		$times = array_values( array_filter( $occurrences, static fn ( array $item ): bool => 'scheduled' === $item['status'] ) );
 		if ( $times ) {
-			$id   = wp_unique_id( 'uop-occurrence-' );
+			$id    = wp_unique_id( 'uop-occurrence-' );
 			$html .= '<div><label for="' . esc_attr( $id ) . '">' . esc_html__( 'Event date', 'uop-core' ) . '</label><select id="' . esc_attr( $id ) . '" data-uop-occurrence required>';
 			$html .= '<option value="">' . esc_html__( 'Choose a date', 'uop-core' ) . '</option>';
 			foreach ( $times as $time ) {
@@ -109,7 +109,7 @@ final class M6SubmissionForm {
 				$html .= '<textarea id="' . esc_attr( $id ) . '"' . $attrs . ' rows="3" maxlength="10000"></textarea>';
 			} elseif ( 'radio' === $type ) {
 				foreach ( $field['options'] as $i => $option ) {
-					$choice = $id . '-' . $i;
+					$choice  = $id . '-' . $i;
 					$html .= '<label for="' . esc_attr( $choice ) . '"><input id="' . esc_attr( $choice ) . '" type="radio" name="' . esc_attr( 'uop-choice-' . $id ) . '" value="' . esc_attr( $option ) . '"' . $attrs . ' />' . esc_html( $option ) . '</label>';
 				}
 				$html .= '</fieldset>';
