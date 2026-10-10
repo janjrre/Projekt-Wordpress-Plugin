@@ -1,0 +1,164 @@
+name: UOP staging – guarded HTTPS checks and isolated plugin delivery
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/uop-staging.yml'
+      - 'scripts/staging-probe.mjs'
+      - 'staging/mu-plugins/uop-staging-guard.php'
+      - 'docs/operations/ionos-staging.md'
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'check is read-only; deploy updates isolated staging only'
+        type: choice
+        required: true
+        default: check
+        options:
+          - check
+          - deploy
+      confirm:
+        description: 'For deployment, type DEPLOY_UOP_STAGING'
+        type: string
+        required: false
+      expected_sha:
+        description: 'For deployment, provide approved full 40-character commit SHA'
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uop-staging-${{ github.event_name }}
+  cancel-in-progress: false
+
+jobs:
+  static-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - run: node --check scripts/staging-probe.mjs
+      - run: php -l staging/mu-plugins/uop-staging-guard.php
+      - name: Keep staging MU guard out of production plugin package
+        run: |
+          test -f staging/mu-plugins/uop-staging-guard.php
+          test -f scripts/staging-probe.mjs
+          ! grep -Eq "'staging'|\"staging\"" bin/package.php
+
+  staging:
+    if: >-
+      ${{
+        github.event_name == 'workflow_dispatch' &&
+        github.actor == 'janjrre' &&
+        (inputs.operation == 'check' ||
+         (inputs.operation == 'deploy' && inputs.confirm == 'DEPLOY_UOP_STAGING'))
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: uop-staging
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Enforce approved UOP commit for staging deployment
+        if: inputs.operation == 'deploy'
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          STAGING_SEPARATE_HOSTING: ${{ secrets.UOP_STAGING_ISOLATED_HOSTING }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "feat/m6-admin-portal-rest"
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Full approved commit SHA required."; exit 1; }
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$STAGING_SEPARATE_HOSTING" = "true" || {
+            echo "Staging hosting isolation not approved; SFTP folder limits are not PHP isolation."
+            exit 1
+          }
+      - name: Verify protected HTTPS WordPress staging identity (read-only)
+        env:
+          UOP_STAGING_URL: https://uop-test.dreamloud.de/
+          UOP_STAGING_BASIC_USER: ${{ secrets.UOP_STAGING_BASIC_USER }}
+          UOP_STAGING_BASIC_PASSWORD: ${{ secrets.UOP_STAGING_BASIC_PASSWORD }}
+        run: node scripts/staging-probe.mjs
+
+      - uses: shivammathur/setup-php@v2
+        if: inputs.operation == 'deploy'
+        with:
+          php-version: '8.3'
+          extensions: mysqli, mbstring, zip
+          tools: composer:v2
+          coverage: none
+      - name: Build and verify UOP Core release ZIP
+        if: inputs.operation == 'deploy'
+        env:
+          COMPOSER_ROOT_VERSION: 0.1.0-alpha.2
+        run: |
+          set -euo pipefail
+          composer install --no-interaction --prefer-dist
+          composer validate --strict
+          composer lint
+          composer analyse
+          composer test
+          npm ci
+          npm run lint
+          npm run build
+          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+          php bin/package.php
+          php tests/packaging.php
+          unzip -t dist/uop-core.zip
+          mkdir -p "$RUNNER_TEMP/uop-stage-package"
+          unzip -q dist/uop-core.zip -d "$RUNNER_TEMP/uop-stage-package"
+          test -f "$RUNNER_TEMP/uop-stage-package/uop-core/uop-core.php"
+
+      - name: SFTP upload to an explicitly dedicated UOP staging path only
+        if: inputs.operation == 'deploy'
+        shell: bash
+        env:
+          STAGING_HOST: ${{ secrets.UOP_STAGING_SFTP_HOST }}
+          STAGING_PORT: ${{ secrets.UOP_STAGING_SFTP_PORT }}
+          STAGING_USER: ${{ secrets.UOP_STAGING_SFTP_USER }}
+          STAGING_PASSWORD: ${{ secrets.UOP_STAGING_SFTP_PASSWORD }}
+          STAGING_ROOT: ${{ secrets.UOP_STAGING_SFTP_ROOT }}
+          STAGING_KNOWN_HOSTS: ${{ secrets.UOP_STAGING_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "$STAGING_HOST"
+          test -n "$STAGING_USER"
+          test -n "$STAGING_PASSWORD"
+          test -n "$STAGING_KNOWN_HOSTS"
+          [[ "$STAGING_HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
+          [[ "$STAGING_PORT" =~ ^[0-9]{2,5}$ ]]
+          [[ "$STAGING_ROOT" =~ ^(/[a-zA-Z0-9_-]+)*/uop-test-dreamloud-de$ ]] || {
+            echo "Refusing an SFTP target that is not the dedicated UOP staging root."
+            exit 1
+          }
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp openssh-client
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$STAGING_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+          # Host keys are pinned; never accept an unexpected SFTP host key.
+          lftp -u "$STAGING_USER","$STAGING_PASSWORD" "sftp://$STAGING_HOST:$STAGING_PORT" -e "
+            set cmd:fail-exit yes;
+            set net:max-retries 2;
+            set sftp:connect-program \"ssh -a -x -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts\";
+            mirror --reverse --delete --verbose \"$RUNNER_TEMP/uop-stage-package/uop-core\" \"$STAGING_ROOT/wp-content/plugins/uop-core\";
+            bye
+          "
+          echo "Only isolated UOP staging plugin directory updated. Activate on staging manually."
