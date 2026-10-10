@@ -19,6 +19,7 @@ use UOP\Infrastructure\Database\EmailMessageRepository;
 use UOP\Infrastructure\Database\CapacityRepository;
 use UOP\Infrastructure\Database\WaitlistRepository;
 use UOP\Infrastructure\Queue\EmailDeliveryWorker;
+use UOP\Infrastructure\Queue\OutboxDispatcher;
 use UOP\REST\RegistrationController;
 use UOP\Application\Event\EventService;
 use UOP\Application\Form\FormService;
@@ -574,7 +575,29 @@ final class M6BlocksTest extends TestCase {
 			self::assertNull( $registrations[0]['email_verified_at'] );
 			$registration = PublicId::from_binary( (string) $registrations[0]['public_id'] );
 			$event_message = new DomainEventDto( PublicId::generate()->to_string(), 'registration.email_verification_required', $registration->to_string() );
-			$delivery->on_scoped_event( $this->scope, $event_message );
+			// A cross-organization replay cannot locate or mail this registration.
+			$delivery->on_scoped_event( new OrgScope( $this->scope->id + 500 ), $event_message );
+			$before = $this->db->rows(
+				"SELECT id FROM %i WHERE organization_id = %d AND template_key = 'email_verification'",
+				array( $this->prefix . 'email_messages', $this->scope->id )
+			);
+			self::assertCount( 0, $before );
+			// Run the actual committed outbox dispatch path with trusted scope.
+			$signals = $this->db->rows(
+				"SELECT event_uuid FROM %i WHERE organization_id = %d AND event_name = 'registration.email_verification_required' LIMIT 1",
+				array( $this->prefix . 'domain_events', $this->scope->id )
+			);
+			self::assertCount( 1, $signals );
+			$scoped_handler = array( $delivery, 'on_scoped_event' );
+			add_action( 'uop_scoped_domain_event', $scoped_handler, 10, 2 );
+			try {
+				( new OutboxDispatcher( $this->db, $out, $this->prefix ) )->consume(
+					$this->scope->id,
+					PublicId::from_binary( (string) $signals[0]['event_uuid'] )->to_string()
+				);
+			} finally {
+				remove_action( 'uop_scoped_domain_event', $scoped_handler, 10 );
+			}
 			$delivery->on_scoped_event( $this->scope, $event_message );
 
 			$mail = $this->db->rows(
