@@ -77,6 +77,7 @@ final class OutboxDispatcher {
 		try {
 			$payload = json_decode( (string) $event['payload_json'], true, 64, JSON_THROW_ON_ERROR );
 			$dto     = new DomainEventDto( $event_uuid, (string) $event['event_name'], (string) ( $payload['public_id'] ?? '' ) );
+			do_action( 'uop_scoped_domain_event', $scope, $dto );
 			do_action( 'uop_domain_event', $dto );
 			$this->outbox->mark_published( $scope, $uuid );
 		} catch ( Throwable $error ) {

@@ -574,8 +574,8 @@ final class M6BlocksTest extends TestCase {
 			self::assertNull( $registrations[0]['email_verified_at'] );
 			$registration = PublicId::from_binary( (string) $registrations[0]['public_id'] );
 			$event_message = new DomainEventDto( PublicId::generate()->to_string(), 'registration.email_verification_required', $registration->to_string() );
-			$delivery->on_event( $event_message );
-			$delivery->on_event( $event_message );
+			$delivery->on_scoped_event( $this->scope, $event_message );
+			$delivery->on_scoped_event( $this->scope, $event_message );
 
 			$mail = $this->db->rows(
 				"SELECT public_id, recipient, body_text, subject FROM %i WHERE organization_id = %d AND template_key = 'email_verification'",

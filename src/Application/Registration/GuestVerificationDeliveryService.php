@@ -58,9 +58,10 @@ final class GuestVerificationDeliveryService {
 	/**
 	 * Route committed guest events by non-sensitive UUID, never raw input.
 	 *
+	 * @param OrgScope       $scope Trusted event organization.
 	 * @param DomainEventDto $event Post-commit outbox DTO.
 	 */
-	public function on_event( DomainEventDto $event ): void {
+	public function on_scoped_event( OrgScope $scope, DomainEventDto $event ): void {
 		if ( 'registration.email_verification_required' !== $event->event_name || ! $this->ready() ) {
 			return;
 		}
@@ -69,10 +70,7 @@ final class GuestVerificationDeliveryService {
 		} catch ( InvalidArgumentException ) {
 			return;
 		}
-		$org_id = (int) get_option( 'uop_default_organization_id', 0 );
-		if ( $org_id > 0 ) {
-			$this->queue( new OrgScope( $org_id ), $public_id, gmdate( 'Y-m-d H:i:s' ) );
-		}
+		$this->queue( $scope, $public_id, gmdate( 'Y-m-d H:i:s' ) );
 	}
 
 	/**

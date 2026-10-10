@@ -98,7 +98,7 @@ final class M6Module implements ModuleInterface {
 				$c->get( OutboxRepository::class )
 			)
 		);
-		add_action( 'uop_domain_event', array( $container->get( GuestVerificationDeliveryService::class ), 'on_event' ), 10, 1 );
+		add_action( 'uop_scoped_domain_event', array( $container->get( GuestVerificationDeliveryService::class ), 'on_scoped_event' ), 10, 2 );
 		$container->set( GuestVerificationLanding::class, static fn () => new GuestVerificationLanding() );
 		add_action( 'template_redirect', array( $container->get( GuestVerificationLanding::class ), 'maybe_render' ), 0 );
 		$container->set(
