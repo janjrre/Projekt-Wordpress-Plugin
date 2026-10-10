@@ -17,6 +17,7 @@ use UOP\Application\Identity\PersonService;
 use UOP\Application\Policy\PolicyService;
 use UOP\Application\Query\M6ReadService;
 use UOP\Application\Query\M6AdminReadService;
+use UOP\Application\Query\M6PortalReadService;
 use UOP\Application\Query\M6OperationsReadService;
 use UOP\Application\Registration\CapacityAllocationService;
 use UOP\Application\Registration\CapacityLifecycleService;
@@ -38,6 +39,7 @@ use UOP\Infrastructure\Database\RegistrationReadRepository;
 use UOP\REST\PeopleController;
 use UOP\REST\M6OperationsController;
 use UOP\REST\M6AdminController;
+use UOP\REST\M6PortalController;
 use UOP\REST\RegistrationController;
 
 /** Presentation adapters do not bypass policy, history or capacity locks. */
@@ -161,6 +163,20 @@ final class M6Module implements ModuleInterface {
 		);
 		add_action( 'init', array( $container->get( M6Blocks::class ), 'register' ) );
 		add_action( 'template_redirect', array( $container->get( M6Blocks::class ), 'private_cache_guard' ), 0 );
+		$container->set(
+			M6PortalReadService::class,
+			static fn ( ServiceContainer $c ) => new M6PortalReadService(
+				$c->get( M6ReadService::class ),
+				$c->get( PersonRepository::class ),
+				$c->get( RegistrationReadRepository::class ),
+				$c->get( PolicyService::class )
+			)
+		);
+		$container->set(
+			M6PortalController::class,
+			static fn ( ServiceContainer $c ) => new M6PortalController( $c->get( M6PortalReadService::class ) )
+		);
+		add_action( 'rest_api_init', array( $container->get( M6PortalController::class ), 'register' ) );
 		add_action( 'rest_api_init', array( $container->get( M6AdminController::class ), 'register' ) );
 		add_action( 'admin_menu', array( $container->get( M6PeopleRegistrationScreen::class ), 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $container->get( M6PeopleRegistrationScreen::class ), 'assets' ) );
