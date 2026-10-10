@@ -109,8 +109,8 @@ final class M6SubmissionForm {
 				$html .= '<textarea id="' . esc_attr( $id ) . '"' . $attrs . ' rows="3" maxlength="10000"></textarea>';
 			} elseif ( 'radio' === $type ) {
 				foreach ( $field['options'] as $i => $option ) {
-					$choice  = $id . '-' . $i;
-					$html .= '<label for="' . esc_attr( $choice ) . '"><input id="' . esc_attr( $choice ) . '" type="radio" name="' . esc_attr( 'uop-choice-' . $id ) . '" value="' . esc_attr( $option ) . '"' . $attrs . ' />' . esc_html( $option ) . '</label>';
+					$choice = $id . '-' . $i;
+					$html  .= '<label for="' . esc_attr( $choice ) . '"><input id="' . esc_attr( $choice ) . '" type="radio" name="' . esc_attr( 'uop-choice-' . $id ) . '" value="' . esc_attr( $option ) . '"' . $attrs . ' />' . esc_html( $option ) . '</label>';
 				}
 				$html .= '</fieldset>';
 			} elseif ( in_array( $type, array( 'select', 'multiselect' ), true ) ) {
