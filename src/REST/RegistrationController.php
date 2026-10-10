@@ -375,7 +375,6 @@ final class RegistrationController extends BaseController {
 	}
 	/**
 	 * Accept a previously emailed 48-hour offer without creating a WP account.
-	 * Possession of the verified address's secret is the only guest capability.
 	 *
 	 * @param WP_REST_Request $request Protected offer POST body.
 	 * @return WP_REST_Response|WP_Error No identity or allocation details.
@@ -388,13 +387,14 @@ final class RegistrationController extends BaseController {
 			return RestError::for_kind( 'invalid_schema' );
 		}
 		try {
-			$body    = $this->strict_json_object(
+			$body = $this->strict_json_object(
 				$request,
 				array(
 					'offer_id'   => array( 'type' => 'string' ),
 					'token'      => array(
 						'type'    => 'string',
-						'pattern' => '^[a-f0-9]{64}
+						'pattern' => '^[a-f0-9]{64}$',
+					),
 					'command_id' => array( 'type' => 'string' ),
 				),
 				array( 'offer_id', 'token', 'command_id' )
@@ -420,43 +420,8 @@ final class RegistrationController extends BaseController {
 		set_transient( $key, $tries + 1, 15 * MINUTE_IN_SECONDS );
 		try {
 			$this->capacity->accept_guest_offer( $scope, $offer, $body['token'], $command, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
-		} catch ( InvalidArgumentException | RuntimeException ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Preserve a generic receipt for invalid bearers.
-			// Same receipt for expired, already-used, foreign or unknown bearer.
-		}
-		$response = new WP_REST_Response( array( 'status' => 'received' ), 202 );
-		$response->header( 'Cache-Control', 'private, no-store, max-age=0' );
-		return $response;
-	}
-}
-,
-					),
-					'command_id' => array( 'type' => 'string' ),
-				),
-				array( 'offer_id', 'token', 'command_id' )
-			);
-			$offer   = PublicId::from_string( $body['offer_id'] );
-			$command = PublicId::from_string( $body['command_id'] );
-		} catch ( InvalidArgumentException ) {
-			return RestError::for_kind( 'invalid_schema' );
-		}
-		$scope = $this->organization_scope();
-		if ( ! $scope ) {
-			return RestError::for_kind( 'unavailable' );
-		}
-		$peer = isset( $_SERVER['REMOTE_ADDR'] ) && is_string( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
-		if ( false === filter_var( $peer, FILTER_VALIDATE_IP ) ) {
-			$peer = 'unknown';
-		}
-		$key = 'uop_offer_' . hash( 'sha256', $scope->id . ':' . $offer->to_string() . ':' . $peer );
-		$tries = (int) get_transient( $key );
-		if ( $tries >= 10 ) {
-			return RestError::for_kind( 'rate_limited' );
-		}
-		set_transient( $key, $tries + 1, 15 * MINUTE_IN_SECONDS );
-		try {
-			$this->capacity->accept_guest_offer( $scope, $offer, $body['token'], $command, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
-		} catch ( InvalidArgumentException | RuntimeException ) {
-			// Same receipt for expired, already-used, foreign or unknown bearer.
+		} catch ( InvalidArgumentException | RuntimeException ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Generic receipt prevents status enumeration.
+			// No user or offer state is disclosed for invalid, foreign or expired bearer tokens.
 		}
 		$response = new WP_REST_Response( array( 'status' => 'received' ), 202 );
 		$response->header( 'Cache-Control', 'private, no-store, max-age=0' );
