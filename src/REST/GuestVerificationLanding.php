@@ -20,7 +20,7 @@ final class GuestVerificationLanding {
 		header( 'Cache-Control: private, no-store, max-age=0' );
 		$url     = plugin_dir_url( dirname( __DIR__, 2 ) . '/uop-core.php' );
 		$version = defined( 'UOP_CORE_VERSION' ) ? (string) constant( 'UOP_CORE_VERSION' ) : '0.1.0-alpha.2';
-		wp_enqueue_script( 'uop-guest-verification', $url . 'assets/m6-guest-verification.js', array(), $version, true );
+		wp_enqueue_script( 'uop-guest-verification', $url . 'assets/m6-guest-verification.js', array(), $version, false );
 		?>
 <!doctype html>
 <html <?php language_attributes(); ?>>

@@ -625,6 +625,9 @@ final class M6BlocksTest extends TestCase {
 			remove_filter( 'uop_guest_verification_enabled', $enabled );
 			remove_filter( 'home_url', $site );
 		}
+		// Restoring the default closed gate must deny new public intake.
+		$blocked = rest_do_request( $request );
+		self::assertSame( 503, $blocked->get_status() );
 	}
 
 }
