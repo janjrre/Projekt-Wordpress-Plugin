@@ -48,6 +48,7 @@ final class M6Blocks {
 			true
 		);
 		wp_register_style( 'uop-m6-blocks', $url . 'assets/m6-blocks.css', array(), $version );
+		wp_register_script_module( 'uop-m6-interactivity', $url . 'assets/m6-interactivity.js', array( '@wordpress/interactivity' ), $version );
 		foreach ( array( 'event-list', 'event-details', 'registration-form', 'portal', 'my-registrations' ) as $slug ) {
 			register_block_type(
 				dirname( __DIR__, 2 ) . '/blocks/' . $slug,
@@ -166,9 +167,10 @@ final class M6Blocks {
 				continue;
 			}
 			$post_id = (int) $row['event_post_id'];
-			$title   = get_the_title( $post_id );
-			$url     = get_permalink( $post_id );
-			$items[] = '<li><a href="' . esc_url( (string) $url ) . '">' . esc_html( $title ) . '</a></li>';
+			$items[] = array(
+				'title' => (string) get_the_title( $post_id ),
+				'url'   => (string) get_permalink( $post_id ),
+			);
 			if ( count( $items ) >= $limit ) {
 				break;
 			}
@@ -176,7 +178,7 @@ final class M6Blocks {
 		if ( ! $items ) {
 			return '<p role="status">' . esc_html__( 'No public events are available.', 'uop-core' ) . '</p>';
 		}
-		return '<ul class="uop-m6-blocks__events">' . implode( '', $items ) . '</ul>';
+		return ( new M6InteractivityAdapter() )->events( $items );
 	}
 
 	/**
@@ -206,8 +208,8 @@ final class M6Blocks {
 			}
 			$items[] = '<li><time datetime="' . esc_attr( gmdate( 'c', $start ) ) . '">' . esc_html( wp_date( 'd.m.Y H:i', $start, new \DateTimeZone( $zone ) ) ) . '</time>–<time datetime="' . esc_attr( gmdate( 'c', $end ) ) . '">' . esc_html( wp_date( 'd.m.Y H:i', $end, new \DateTimeZone( $zone ) ) ) . '</time> ' . esc_html( $zone ) . '</li>';
 		}
-		$html .= $items ? '<ul class="uop-m6-blocks__dates">' . implode( '', $items ) . '</ul>' : '<p>' . esc_html__( 'No upcoming event times have been published.', 'uop-core' ) . '</p>';
-		return $html;
+		$dates = $items ? '<ul class="uop-m6-blocks__dates">' . implode( '', $items ) . '</ul>' : '<p>' . esc_html__( 'No upcoming event times have been published.', 'uop-core' ) . '</p>';
+		return $html . ( new M6InteractivityAdapter() )->disclosure( $dates );
 	}
 
 	/**
@@ -226,13 +228,7 @@ final class M6Blocks {
 		if ( ! $schema ) {
 			return '<p role="status">' . esc_html__( 'No published registration form is available.', 'uop-core' ) . '</p>';
 		}
-		$items = array();
-		foreach ( $schema['fields'] as $field ) {
-			$label   = (string) $field['label'];
-			$note    = ! empty( $field['required'] ) ? __( 'required', 'uop-core' ) : __( 'optional', 'uop-core' );
-			$items[] = '<li>' . esc_html( $label ) . ' <span class="uop-m6-blocks__subtle">(' . esc_html( $note ) . ')</span></li>';
-		}
-		return '<h2>' . esc_html__( 'Registration form', 'uop-core' ) . '</h2><p role="status">' . esc_html__( 'The registration fields are listed below. Submission through this block will be enabled with the secure participant portal.', 'uop-core' ) . '</p><ul>' . implode( '', $items ) . '</ul>';
+		return '<h2>' . esc_html__( 'Registration form', 'uop-core' ) . '</h2>' . ( new M6InteractivityAdapter() )->fields( $schema );
 	}
 
 	/**

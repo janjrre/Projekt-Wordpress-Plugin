@@ -2,7 +2,7 @@ import { store, getContext, getElement } from '@wordpress/interactivity';
 
 // Cosmetic, memory-only progressive enhancement. The server remains authoritative
 // for published fields, identity, validation, consent evidence and capacity.
-const { state } = store('uop/m6', {
+store('uop/m6', {
 	state: {
 		get eventHidden() {
 			const context = getContext();
@@ -12,8 +12,8 @@ const { state } = store('uop/m6', {
 		get eventsPresent() {
 			const context = getContext();
 			// The full public list remains visible to clients without JavaScript.
-			return !context.filter || Array.from(getElement().ref?.parentElement?.querySelectorAll('li') || [])
-				.some(node => !node.hidden);
+			const filter = String(context.filter || '').trim().toLocaleLowerCase();
+			return !filter || (context.titles || []).some(title => title.includes(filter));
 		},
 		get disclosureClosed() {
 			return !getContext().open;
@@ -80,4 +80,3 @@ function evaluate(ast, values, depth = 0) {
 }
 
 // State is local to its corresponding uop/m6 block context. No server writes.
-void state;

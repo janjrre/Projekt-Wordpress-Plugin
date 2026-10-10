@@ -28,7 +28,8 @@
     "spacing": {
       "margin": true,
       "padding": true
-    }
+    },
+    "interactivity": true
   },
   "editorScript": "uop-m6-block-editor",
   "style": "uop-m6-blocks"

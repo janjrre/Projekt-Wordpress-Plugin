@@ -30,7 +30,7 @@ final class M6InteractivityAdapter {
 	public function events( array $events ): string {
 		$this->enqueue();
 		$id   = wp_unique_id( 'uop-event-filter-' );
-		$html = '<div data-wp-interactive="uop/m6" ' . wp_interactivity_data_wp_context( array( 'filter' => '' ) ) . '>';
+		$html = '<div data-wp-interactive="uop/m6" ' . wp_interactivity_data_wp_context( array( 'filter' => '', 'titles' => array_map( static fn ( array $event ): string => mb_strtolower( $event['title'] ), $events ) ) ) . '>';
 		$html .= '<label for="' . esc_attr( $id ) . '">' . esc_html__( 'Filter events', 'uop-core' ) . '</label> ';
 		$html .= '<input id="' . esc_attr( $id ) . '" type="search" data-wp-on--input="actions.filterEvents" autocomplete="off" />';
 		$html .= '<ul class="uop-m6-blocks__events">';
