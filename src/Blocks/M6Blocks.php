@@ -87,6 +87,9 @@ final class M6Blocks {
 		}
 		if ( 'portal' === $slug || 'my-registrations' === $slug ) {
 			$this->no_cache();
+			if ( is_user_logged_in() ) {
+				$this->portal_assets();
+			}
 		}
 		$event_id = isset( $attributes['eventId'] ) && is_string( $attributes['eventId'] ) ? $attributes['eventId'] : '';
 		$html     = match ( $slug ) {
@@ -237,7 +240,7 @@ final class M6Blocks {
 		if ( ! is_user_logged_in() ) {
 			return '<p>' . esc_html__( 'Sign in to access your participant portal.', 'uop-core' ) . ' <a href="' . esc_url( wp_login_url( get_permalink() ) ) . '">' . esc_html__( 'Sign in', 'uop-core' ) . '</a></p>';
 		}
-		return '<p role="status">' . esc_html__( 'Your participant portal is being prepared. Your registration overview is available in the My Registrations block.', 'uop-core' ) . '</p>';
+		return '<h2>' . esc_html__( 'Participant portal', 'uop-core' ) . '</h2><div data-uop-portal-root="portal"><p role="status">' . esc_html__( 'Loading your authorized persons and registrations…', 'uop-core' ) . '</p></div><noscript><p>' . esc_html__( 'JavaScript is required to change profiles and manage registrations. You can still use the My Registrations block to read your own entries.', 'uop-core' ) . '</p></noscript>';
 	}
 
 	/**
@@ -262,7 +265,35 @@ final class M6Blocks {
 				$rows[] = '<li>' . esc_html( (string) $registration['created_at'] ) . ': ' . esc_html( (string) $registration['status'] ) . ' <span class="uop-m6-blocks__subtle">(' . esc_html( (string) $person['display_name'] ) . ')</span></li>';
 			}
 		}
-		return $rows ? '<h2>' . esc_html__( 'My registrations', 'uop-core' ) . '</h2><ul>' . implode( '', $rows ) . '</ul>' : '<p role="status">' . esc_html__( 'No registrations available to your account.', 'uop-core' ) . '</p>';
+		$fallback = $rows ? '<ul>' . implode( '', $rows ) . '</ul>' : '<p role="status">' . esc_html__( 'No registrations available to your account.', 'uop-core' ) . '</p>';
+		return '<h2>' . esc_html__( 'My registrations', 'uop-core' ) . '</h2><div data-uop-portal-root="registrations"><div data-uop-portal-fallback>' . $fallback . '</div></div>';
+	}
+
+	/**
+	 * Load participant-only controller and its REST nonce after public block checks.
+	 */
+	private function portal_assets(): void {
+		$url     = plugin_dir_url( dirname( __DIR__, 2 ) . '/uop-core.php' );
+		$version = defined( 'UOP_CORE_VERSION' ) ? (string) constant( 'UOP_CORE_VERSION' ) : '0.1.0-alpha.2';
+		wp_enqueue_style( 'uop-m6-portal', $url . 'assets/m6-portal.css', array( 'uop-m6-blocks' ), $version );
+		if ( wp_script_is( 'uop-m6-portal', 'enqueued' ) ) {
+			return;
+		}
+		wp_enqueue_script(
+			'uop-m6-portal',
+			$url . 'assets/m6-portal.js',
+			array( 'wp-api-fetch', 'wp-i18n' ),
+			$version,
+			true
+		);
+		wp_add_inline_script(
+			'uop-m6-portal',
+			'window.uopM6Portal = ' . wp_json_encode(
+				array( 'nonce' => wp_create_nonce( 'wp_rest' ) ),
+				JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+			) . ';',
+			'before'
+		);
 	}
 
 	/** Disable shared caching for personalized server-rendered blocks. */
