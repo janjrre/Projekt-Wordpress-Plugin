@@ -35,8 +35,8 @@ final class M6InteractivityAdapter {
 			'titles' => array_map( static fn ( array $event ): string => mb_strtolower( $event['title'] ), $events ),
 		);
 		$html    = '<div data-wp-interactive="uop/m6" ' . wp_interactivity_data_wp_context( $context ) . '>';
-		$html   .= '<label for="' . esc_attr( $id ) . '">' . esc_html__( 'Filter events', 'uop-core' ) . '</label> ';
-		$html   .= '<input id="' . esc_attr( $id ) . '" type="search" data-wp-on--input="actions.filterEvents" autocomplete="off" />';
+		$html .= '<label for="' . esc_attr( $id ) . '">' . esc_html__( 'Filter events', 'uop-core' ) . '</label> ';
+		$html .= '<input id="' . esc_attr( $id ) . '" type="search" data-wp-on--input="actions.filterEvents" autocomplete="off" />';
 		$html   .= '<ul class="uop-m6-blocks__events">';
 		foreach ( $events as $event ) {
 			$html .= '<li ' . wp_interactivity_data_wp_context( array( 'title' => mb_strtolower( $event['title'] ) ) ) . ' data-wp-bind--hidden="state.eventHidden"><a href="' . esc_url( $event['url'] ) . '">' . esc_html( $event['title'] ) . '</a></li>';
