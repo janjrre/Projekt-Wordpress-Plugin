@@ -23,14 +23,15 @@ use WP_REST_Response;
 
 /** Every command delegates to the existing auditable application services. */
 final class RegistrationController extends BaseController {
-	/** Initialize the existing domain command services.
+	/**
+	 * Initialize the registration command and guest verification services.
 	 *
-	 * @param M6ReadService                 $reads        Safe projected registration read models.
-	 * @param RegistrationService           $registrations Idempotent submission writer.
-	 * @param RegistrationTransitionService $transitions  Non-capacity state transitions.
-	 * @param CapacityLifecycleService      $capacity     Seat-safe cancellation.
-	 * @param EmailVerificationService      $verification Hashed, one-time email token verifier.
-	 * @param GuestVerificationDeliveryService|null $guest_delivery Explicit readiness gate for guest intake.
+	 * @param M6ReadService                         $reads          Safe registration read models.
+	 * @param RegistrationService                   $registrations  Idempotent submission writer.
+	 * @param RegistrationTransitionService         $transitions    Non-capacity transitions.
+	 * @param CapacityLifecycleService              $capacity       Seat-safe cancellation.
+	 * @param EmailVerificationService              $verification   Hashed one-time verifier.
+	 * @param GuestVerificationDeliveryService|null $guest_delivery Guest readiness gate.
 	 */
 	public function __construct(
 		private M6ReadService $reads,
@@ -179,7 +180,7 @@ final class RegistrationController extends BaseController {
 			return RestError::for_kind( 'invalid_schema' );
 		}
 		try {
-			$body = $this->strict_json_object(
+			$body    = $this->strict_json_object(
 				$request,
 				array(
 					'event_id'      => array( 'type' => 'string' ),

@@ -80,7 +80,7 @@ final class GuestVerificationDeliveryService {
 	 *
 	 * @param OrgScope $scope               Trusted site organization.
 	 * @param PublicId $registration Committed registration UUID.
-	 * @param string $now                 Trusted UTC timestamp.
+	 * @param string   $now          Trusted UTC timestamp.
 	 * @return PublicId|null Queue message UUID, if pending; no secret returned.
 	 */
 	public function queue( OrgScope $scope, PublicId $registration, string $now ): ?PublicId {
