@@ -630,10 +630,22 @@ final class M6BlocksTest extends TestCase {
 			self::assertNotSame( $token, $saved['email_verification_token_hash'] );
 			self::assertSame( hash( 'sha256', $token, true ), $saved['email_verification_token_hash'] );
 
+			// An expired bearer must leave the record unverified while returning the same generic receipt.
+			$this->db->execute(
+				'UPDATE %i SET verification_expires_at = %s WHERE organization_id = %d AND public_id = %s',
+				array( $this->prefix . 'registrations', gmdate( 'Y-m-d H:i:s', time() - 60 ), $this->scope->id, $registration->to_binary() )
+			);
 			$verify = new \WP_REST_Request( 'POST', '/uop/v1/registration-verifications' );
 			$verify->set_header( 'Content-Type', 'application/json' );
 			$verify->set_body( (string) wp_json_encode( array( 'registration_id' => $registration->to_string(), 'token' => $token ) ) );
-			$first = rest_do_request( $verify );
+			$expired = rest_do_request( $verify );
+			self::assertSame( 202, $expired->get_status() );
+			self::assertNull( $repo->lock_registration( $this->scope, $registration )['email_verified_at'] );
+			$this->db->execute(
+				'UPDATE %i SET verification_expires_at = %s WHERE organization_id = %d AND public_id = %s',
+				array( $this->prefix . 'registrations', gmdate( 'Y-m-d H:i:s', time() + 3600 ), $this->scope->id, $registration->to_binary() )
+			);
+			$first  = rest_do_request( $verify );
 			$second = rest_do_request( $verify );
 			self::assertSame( 202, $first->get_status() );
 			self::assertSame( $first->get_data(), $second->get_data() );
