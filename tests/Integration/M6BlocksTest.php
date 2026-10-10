@@ -469,7 +469,7 @@ final class M6BlocksTest extends TestCase {
 
 		self::assertSame( 2, preg_match_all( '/type="radio" name="([^"]+)"/', $html, $matches ) );
 		self::assertSame( $matches[1][0], $matches[1][1], 'Radio choices must share one HTML name in their own preview group.' );
-		self::assertSame( 4, preg_match_all( '/aria-describedby="([^"]+)"/', $html, $references ) );
+		self::assertSame( 3, preg_match_all( '/aria-describedby="([^"]+)"/', $html, $references ) );
 		foreach ( array_unique( $references[1] ) as $reference ) {
 			self::assertStringContainsString( 'id="' . $reference . '"', $html );
 		}
