@@ -22,6 +22,15 @@ use UOP\Application\Query\M6OperationsReadService;
 use UOP\Application\Registration\CapacityAllocationService;
 use UOP\Application\Registration\CapacityLifecycleService;
 use UOP\Application\Registration\EmailVerificationService;
+use UOP\Application\Registration\GuestVerificationDeliveryService;
+use UOP\Application\Communication\EmailTemplateCatalog;
+use UOP\Application\Communication\EmailTemplateRules;
+use UOP\Core\TransactionManager;
+use UOP\Infrastructure\Database\EmailMessageRepository;
+use UOP\Infrastructure\Database\RegistrationRepository;
+use UOP\Infrastructure\Database\AuditWriter;
+use UOP\Infrastructure\Database\OutboxRepository;
+use UOP\REST\GuestVerificationLanding;
 use UOP\Application\Registration\RegistrationService;
 use UOP\Application\Registration\RegistrationTransitionService;
 use UOP\Extension\ModuleInterface;
@@ -78,13 +87,29 @@ final class M6Module implements ModuleInterface {
 			static fn ( ServiceContainer $c ) => new PeopleController( $c->get( M6ReadService::class ), $c->get( PersonService::class ) )
 		);
 		$container->set(
+			GuestVerificationDeliveryService::class,
+			static fn ( ServiceContainer $c ) => new GuestVerificationDeliveryService(
+				$c->get( RegistrationRepository::class ),
+				$c->get( EmailMessageRepository::class ),
+				$c->get( EmailTemplateCatalog::class ),
+				$c->get( EmailTemplateRules::class ),
+				$c->get( TransactionManager::class ),
+				$c->get( AuditWriter::class ),
+				$c->get( OutboxRepository::class )
+			)
+		);
+		add_action( 'uop_domain_event', array( $container->get( GuestVerificationDeliveryService::class ), 'on_event' ), 10, 1 );
+		$container->set( GuestVerificationLanding::class, static fn () => new GuestVerificationLanding() );
+		add_action( 'template_redirect', array( $container->get( GuestVerificationLanding::class ), 'maybe_render' ), 0 );
+		$container->set(
 			RegistrationController::class,
 			static fn ( ServiceContainer $c ) => new RegistrationController(
 				$c->get( M6ReadService::class ),
 				$c->get( RegistrationService::class ),
 				$c->get( RegistrationTransitionService::class ),
 				$c->get( CapacityLifecycleService::class ),
-				$c->get( EmailVerificationService::class )
+				$c->get( EmailVerificationService::class ),
+				$c->get( GuestVerificationDeliveryService::class )
 			)
 		);
 

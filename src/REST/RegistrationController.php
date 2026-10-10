@@ -12,6 +12,7 @@ use RuntimeException;
 use UOP\Application\Query\M6ReadService;
 use UOP\Application\Registration\CapacityLifecycleService;
 use UOP\Application\Registration\EmailVerificationService;
+use UOP\Application\Registration\GuestVerificationDeliveryService;
 use UOP\Application\Registration\RegistrationService;
 use UOP\Application\Registration\RegistrationTransitionService;
 use UOP\Core\CorrelationId;
@@ -35,13 +36,15 @@ final class RegistrationController extends BaseController {
 		private RegistrationService $registrations,
 		private RegistrationTransitionService $transitions,
 		private CapacityLifecycleService $capacity,
-		private EmailVerificationService $verification
+		private EmailVerificationService $verification,
+		private ?GuestVerificationDeliveryService $guest_delivery = null
 	) {}
 
 	/** Register M6-02 public and authenticated routes with explicit permissions. */
 	public function register(): void {
 		$this->register_endpoint( '/registrations', 'GET', array( $this, 'index' ), array( $this, 'authenticated' ) );
 		$this->register_endpoint( '/registrations', 'POST', array( $this, 'create' ), '__return_true' );
+		$this->register_endpoint( '/registrations/guest', 'POST', array( $this, 'create_guest' ), '__return_true' );
 		$this->register_endpoint( '/registration-verifications', 'POST', array( $this, 'verify_email' ), '__return_true' );
 		$this->register_endpoint( '/registrations/(?P<uuid>[0-9a-f-]{36})', 'GET', array( $this, 'show' ), array( $this, 'can_view' ), $this->uuid_argument() );
 		$this->register_endpoint( '/registrations/(?P<uuid>[0-9a-f-]{36})/cancel', 'POST', array( $this, 'cancel' ), array( $this, 'can_view' ), $this->uuid_argument() );
@@ -157,6 +160,73 @@ final class RegistrationController extends BaseController {
 		} catch ( RuntimeException ) {
 			return RestError::for_kind( 'conflict' );
 		}
+	}
+
+	/**
+	 * Public guest intake is disabled unless explicitly opted in, on HTTPS, with
+	 * working Action Scheduler. The async outbox consumer alone issues a secret.
+	 * REST never emits contact information or a registration identifier.
+	 *
+	 * @param WP_REST_Request $request Submitted published form values.
+	 * @return WP_REST_Response|WP_Error Generic receipt or stable error.
+	 */
+	public function create_guest( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+		if ( ! $this->guest_delivery || ! $this->guest_delivery->ready() ) {
+			return RestError::for_kind( 'unavailable' );
+		}
+		if ( strlen( $request->get_body() ) > 32768 ) {
+			return RestError::for_kind( 'invalid_schema' );
+		}
+		try {
+			$body = $this->strict_json_object(
+				$request,
+				array(
+					'event_id'      => array( 'type' => 'string' ),
+					'occurrence_id' => array( 'type' => 'string' ),
+					'command_id'    => array( 'type' => 'string' ),
+					'fields'        => array( 'type' => 'object' ),
+				),
+				array( 'event_id', 'command_id', 'fields' )
+			);
+			$event   = PublicId::from_string( $body['event_id'] );
+			$command = PublicId::from_string( $body['command_id'] );
+			$when    = isset( $body['occurrence_id'] ) ? PublicId::from_string( $body['occurrence_id'] ) : null;
+		} catch ( InvalidArgumentException ) {
+			return RestError::for_kind( 'invalid_schema' );
+		}
+		$scope = $this->organization_scope();
+		if ( ! $scope ) {
+			return RestError::for_kind( 'unavailable' );
+		}
+		// Use only the server observed peer; ignore forgeable proxy IP headers.
+		$peer = isset( $_SERVER['REMOTE_ADDR'] ) && is_string( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : 'unknown';
+		if ( false === filter_var( $peer, FILTER_VALIDATE_IP ) ) {
+			$peer = 'unknown';
+		}
+		$limit_key = 'uop_guest_' . hash( 'sha256', $scope->id . ':' . $event->to_string() . ':' . $peer );
+		$attempts  = (int) get_transient( $limit_key );
+		if ( $attempts >= 6 ) {
+			return RestError::for_kind( 'rate_limited' );
+		}
+		set_transient( $limit_key, $attempts + 1, 15 * MINUTE_IN_SECONDS );
+		try {
+			$this->registrations->submit_guest(
+				$scope,
+				$event,
+				$when,
+				$command,
+				$body['fields'],
+				gmdate( 'Y-m-d H:i:s' ),
+				CorrelationId::generate()
+			);
+		} catch ( InvalidArgumentException ) {
+			return RestError::for_kind( 'validation' );
+		} catch ( RuntimeException ) {
+			return RestError::for_kind( 'conflict' );
+		}
+		$response = new WP_REST_Response( array( 'status' => 'received' ), 202 );
+		$response->header( 'Cache-Control', 'private, no-store, max-age=0' );
+		return $response;
 	}
 
 	/**
