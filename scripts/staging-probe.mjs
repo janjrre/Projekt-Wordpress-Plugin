@@ -41,6 +41,15 @@ const request = async (path) => {
   }
   return response;
 };
+// A valid password does not prove access protection. Verify that outsiders
+// really receive an authentication challenge before reading the staging site.
+const anonymous = await fetch(base, {
+  redirect: 'manual',
+  signal: AbortSignal.timeout(15000),
+});
+if (anonymous.status !== 401 && anonymous.status !== 403) {
+  throw new Error('Staging is not protected from anonymous visitors (expected HTTP 401/403).');
+}
 const front = await request('/');
 if (front.headers.get('x-uop-staging') !== REQUIRED_HOST) {
   throw new Error('Staging identity marker missing or mismatched.');
