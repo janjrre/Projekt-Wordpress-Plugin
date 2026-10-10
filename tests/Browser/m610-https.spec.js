@@ -15,7 +15,7 @@ test('HTTPS registration confirmation landing uses a private fragment and not HT
   expect(res.status()).toBe(200);
   await expect(page.getByRole('heading', { name: 'Confirm email address' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Confirm email' })).toBeEnabled();
-  await expect.poll(() => page.evaluate(() => window.location.hash)).toBe('');
+  await expect.poll(() => page.evaluate(() => globalThis.location.hash)).toBe('');
   expect(new URL(page.url()).searchParams.has('token')).toBe(false);
   await expect(page.locator('#uop-guest-verification')).toHaveAttribute(
     'data-endpoint',
@@ -31,7 +31,7 @@ test('HTTPS waitlist offer confirmation landing is available and never leaks its
   expect(res.status()).toBe(200);
   await expect(page.getByRole('heading', { name: 'Accept your place' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Accept place' })).toBeEnabled();
-  await expect.poll(() => page.evaluate(() => window.location.hash)).toBe('');
+  await expect.poll(() => page.evaluate(() => globalThis.location.hash)).toBe('');
   expect(new URL(page.url()).searchParams.has('token')).toBe(false);
 });
 
