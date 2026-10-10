@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "uop/my-registrations",
+  "version": "0.1.0-alpha.2",
+  "title": "My Registrations",
+  "description": "Show your authorized registrations",
+  "category": "widgets",
+  "icon": "list-view",
+  "textdomain": "uop-core",
+  "attributes": {},
+  "supports": {
+    "html": false,
+    "anchor": true,
+    "align": [
+      "wide",
+      "full"
+    ],
+    "color": {
+      "background": true,
+      "text": true
+    },
+    "spacing": {
+      "margin": true,
+      "padding": true
+    }
+  },
+  "editorScript": "uop-m6-block-editor",
+  "style": "uop-m6-blocks"
+}
