@@ -29,8 +29,12 @@ final class M6InteractivityAdapter {
 	 */
 	public function events( array $events ): string {
 		$this->enqueue();
-		$id   = wp_unique_id( 'uop-event-filter-' );
-		$html = '<div data-wp-interactive="uop/m6" ' . wp_interactivity_data_wp_context( array( 'filter' => '', 'titles' => array_map( static fn ( array $event ): string => mb_strtolower( $event['title'] ), $events ) ) ) . '>';
+		$id      = wp_unique_id( 'uop-event-filter-' );
+		$context = array(
+			'filter' => '',
+			'titles' => array_map( static fn ( array $event ): string => mb_strtolower( $event['title'] ), $events ),
+		);
+		$html    = '<div data-wp-interactive="uop/m6" ' . wp_interactivity_data_wp_context( $context ) . '>';
 		$html .= '<label for="' . esc_attr( $id ) . '">' . esc_html__( 'Filter events', 'uop-core' ) . '</label> ';
 		$html .= '<input id="' . esc_attr( $id ) . '" type="search" data-wp-on--input="actions.filterEvents" autocomplete="off" />';
 		$html .= '<ul class="uop-m6-blocks__events">';
@@ -74,10 +78,10 @@ final class M6InteractivityAdapter {
 				$values[ $field['key'] ] = null;
 			}
 		}
-		$html = '<div class="uop-m6-preview" data-wp-interactive="uop/m6" '
+		$html   = '<div class="uop-m6-preview" data-wp-interactive="uop/m6" '
 			. wp_interactivity_data_wp_context( array( 'values' => $values ) ) . '>';
-		$html .= '<p class="uop-m6-preview__notice" role="status">' . esc_html__( 'Preview only: values are not saved or sent. Registration is not yet available.', 'uop-core' ) . '</p>';
-		$html .= '<fieldset class="uop-m6-preview__fieldset"><legend>' . esc_html__( 'Published registration fields', 'uop-core' ) . '</legend>';
+		$html  .= '<p class="uop-m6-preview__notice" role="status">' . esc_html__( 'Preview only: values are not saved or sent. Registration is not yet available.', 'uop-core' ) . '</p>';
+		$html  .= '<fieldset class="uop-m6-preview__fieldset"><legend>' . esc_html__( 'Published registration fields', 'uop-core' ) . '</legend>';
 		$engine = new ConditionEngine();
 		foreach ( $schema['fields'] as $field ) {
 			if ( isset( $field['visible_when'] ) && $this->has_private_condition( $field['visible_when'] ) ) {
@@ -86,12 +90,15 @@ final class M6InteractivityAdapter {
 			$condition = $field['visible_when'] ?? null;
 			$visible   = null === $condition || $engine->evaluate( $condition, array( 'registration' => $values, 'profile' => array() ) );
 			$id        = wp_unique_id( 'uop-preview-field-' );
-			$ctx       = array( 'condition' => $condition );
+			$ctx       = array(
+				'condition' => $condition,
+			);
 			$type      = (string) $field['type'];
 			$key       = (string) $field['key'];
 			$label     = (string) $field['label'];
 			$required  = ! empty( $field['required'] );
-			$html     .= '<div class="uop-m6-preview__field" '
+
+			$html .= '<div class="uop-m6-preview__field" '
 				. wp_interactivity_data_wp_context( $ctx )
 				. ' data-wp-bind--hidden="state.fieldHidden"' . ( $visible ? '' : ' hidden' ) . '>';
 			$html .= '<label for="' . esc_attr( $id ) . '">' . esc_html( $label ) . '</label>';
