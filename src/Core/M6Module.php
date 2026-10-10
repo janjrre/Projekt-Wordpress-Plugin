@@ -198,7 +198,9 @@ final class M6Module implements ModuleInterface {
 				$c->get( EventRepository::class ),
 				$c->get( OccurrenceRepository::class ),
 				$c->get( FormRepository::class ),
-				$c->get( M6ReadService::class )
+				$c->get( M6ReadService::class ),
+				$c->get( ConsentRepository::class ),
+				$c->get( GuestVerificationDeliveryService::class )
 			)
 		);
 		add_action( 'init', array( $container->get( M6Blocks::class ), 'register' ) );

@@ -9,6 +9,8 @@ namespace UOP\Blocks;
 
 use InvalidArgumentException;
 use UOP\Application\Policy\Actor;
+use UOP\Application\Registration\GuestVerificationDeliveryService;
+use UOP\Infrastructure\Database\ConsentRepository;
 use UOP\Application\Query\M6ReadService;
 use UOP\Core\PublicId;
 use UOP\Domain\Organization\OrgScope;
@@ -33,7 +35,9 @@ final class M6Blocks {
 		private EventRepository $events,
 		private OccurrenceRepository $occurrences,
 		private FormRepository $forms,
-		private M6ReadService $reads
+		private M6ReadService $reads,
+		private ?ConsentRepository $consent_documents = null,
+		private ?GuestVerificationDeliveryService $guest_delivery = null
 	) {}
 
 	/** Register blocks with metadata, shared assets and block supports. */
@@ -66,7 +70,7 @@ final class M6Blocks {
 	 */
 	public function private_cache_guard(): void {
 		$post = get_post();
-		if ( $post && ( has_block( 'uop/portal', $post ) || has_block( 'uop/my-registrations', $post ) ) ) {
+		if ( $post && ( has_block( 'uop/portal', $post ) || has_block( 'uop/my-registrations', $post ) || ( is_user_logged_in() && has_block( 'uop/registration-form', $post ) ) ) ) {
 			$this->no_cache();
 			if ( is_user_logged_in() ) {
 				// Load stylesheet before wp_head even when content renders late.
@@ -228,7 +232,22 @@ final class M6Blocks {
 		if ( ! $schema ) {
 			return '<p role="status">' . esc_html__( 'No published registration form is available.', 'uop-core' ) . '</p>';
 		}
-		return '<h2>' . esc_html__( 'Registration form', 'uop-core' ) . '</h2>' . ( new M6InteractivityAdapter() )->fields( $schema );
+		$heading = '<h2>' . esc_html__( 'Registration form', 'uop-core' ) . '</h2>';
+		$guest   = ! is_user_logged_in();
+		$ready   = is_ssl() && $this->consent_documents && ( ! $guest || ( 1 === (int) ( $event['require_email_verification'] ?? 0 ) && $this->guest_delivery && $this->guest_delivery->ready() ) );
+		if ( ! $ready ) {
+			return $heading . ( new M6InteractivityAdapter() )->fields( $schema );
+		}
+		if ( ! $guest ) {
+			$this->no_cache();
+		}
+		return $heading . ( new M6SubmissionForm( $this->consent_documents ) )->render(
+			$scope,
+			$uuid,
+			$schema,
+			$guest,
+			$this->occurrences->for_event( $scope, (int) $event['event_post_id'] )
+		);
 	}
 
 	/**

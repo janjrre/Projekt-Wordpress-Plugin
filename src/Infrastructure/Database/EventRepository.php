@@ -74,7 +74,7 @@ final class EventRepository {
 	 */
 	public function by_public( OrgScope $scope, PublicId $uuid ): ?array {
 		$rows = $this->db->rows(
-			'SELECT event_post_id, public_id, organization_id, status, visibility, timezone, registration_open_at, registration_close_at, version FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1',
+			'SELECT event_post_id, public_id, organization_id, status, visibility, timezone, registration_open_at, registration_close_at, require_email_verification, version FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1',
 			array( $this->prefix . 'event_settings', $scope->id, $uuid->to_binary() )
 		);
 		return $rows[0] ?? null;
