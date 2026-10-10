@@ -26,6 +26,8 @@ test('M6 administration reflows at 320px and supports keyboard focus', async ({ 
     await expect(shell).toBeVisible({ timeout: 15000 });
     const refresh = page.getByRole('button', { name: 'Refresh list', exact: true });
     await expect(refresh).toBeVisible();
+    // List loading temporarily disables the refresh action; wait for the real enabled state.
+    await expect(refresh).toBeEnabled({ timeout: 15000 });
     await refresh.focus();
     await expect(refresh).toBeFocused();
 
