@@ -67,6 +67,10 @@ final class M6Blocks {
 		$post = get_post();
 		if ( $post && ( has_block( 'uop/portal', $post ) || has_block( 'uop/my-registrations', $post ) ) ) {
 			$this->no_cache();
+			if ( is_user_logged_in() ) {
+				// Load stylesheet before wp_head even when content renders late.
+				$this->portal_assets();
+			}
 		}
 	}
 
