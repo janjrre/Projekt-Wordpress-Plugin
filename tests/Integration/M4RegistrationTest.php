@@ -1066,6 +1066,15 @@ final class M4RegistrationTest extends TestCase {
 			self::assertCount(1,$events);
 			self::assertStringNotContainsString($offer['token'],$events[0]['payload_json']);
 			$offer_id=PublicId::from_string($offer['public_id']);
+			// Expired token must not consume a held claim. A clock moved back to
+			// the original test instant models an otherwise still-live offer.
+			try {
+				$s['lifecycle']->accept_guest_offer($this->scope,$offer_id,$offer['token'],PublicId::generate(),'2030-01-05 11:00:00',CorrelationId::generate());
+				self::fail('Expired offer was accepted.');
+			} catch (RuntimeException) {
+				self::assertTrue(true);
+			}
+			self::assertSame('offered',$this->db->rows('SELECT status FROM %i WHERE public_id=%s',[$this->prefix.'waitlist_offers',$offer_id->to_binary()])[0]['status']);
 			try{
 				$s['lifecycle']->accept_guest_offer($this->scope,$offer_id,str_repeat('a',64),PublicId::generate(),$now,CorrelationId::generate());
 				self::fail('Wrong bearer accepted');
