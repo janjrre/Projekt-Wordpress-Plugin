@@ -158,4 +158,32 @@ final class FormRepository extends ScopedRepository {
 		);
 		return $rows[0] ?? null;
 	}
+
+	/**
+	 * Read only the active event's current immutable published form snapshot.
+	 *
+	 * @param OrgScope $scope   Organization.
+	 * @param int      $post_id Public, tenant-owned event post identity.
+	 * @return array<string,mixed>|null Valid published schema or null.
+	 * @throws RuntimeException On stored checksum mismatch or malformed JSON.
+	 */
+	public function published_for_event( OrgScope $scope, int $post_id ): ?array {
+		$rows = $this->db->rows(
+			"SELECT v.schema_json, v.checksum FROM %i e INNER JOIN %i f ON f.id = e.default_form_id AND f.organization_id = e.organization_id INNER JOIN %i v ON v.id = f.current_version_id AND v.form_id = f.id WHERE e.organization_id = %d AND e.event_post_id = %d AND e.status = 'active' AND e.visibility = 'public' AND f.status = 'published' AND f.archived_at IS NULL LIMIT 1",
+			array( $this->prefix . 'event_settings', $this->prefix . 'forms', $this->prefix . 'form_versions', $scope->id, $post_id )
+		);
+		if ( ! $rows ) {
+			return null;
+		}
+		$json = (string) $rows[0]['schema_json'];
+		if ( ! hash_equals( (string) $rows[0]['checksum'], hash( 'sha256', $json, true ) ) ) {
+			throw new RuntimeException( 'Published form checksum mismatch.' );
+		}
+		$schema = json_decode( $json, true, 64, JSON_THROW_ON_ERROR );
+		if ( ! is_array( $schema ) || ! is_array( $schema['fields'] ?? null ) || count( $schema['fields'] ) > 100 ) {
+			throw new RuntimeException( 'Published form schema unavailable.' );
+		}
+		return $schema;
+	}
+
 }

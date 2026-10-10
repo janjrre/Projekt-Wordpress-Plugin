@@ -10,6 +10,7 @@ namespace UOP\Core;
 use UOP\Admin\M6PeopleRegistrationScreen;
 use UOP\Admin\M6ControlCenterScreen;
 use UOP\Admin\M6ConsentDocumentsScreen;
+use UOP\Blocks\M6Blocks;
 use UOP\Application\Consent\ConsentDefinitionService;
 use UOP\Application\Consent\ConsentRecordService;
 use UOP\Application\Identity\PersonService;
@@ -26,6 +27,8 @@ use UOP\Extension\ModuleInterface;
 use UOP\Infrastructure\Database\Connection;
 use UOP\Infrastructure\Database\ConsentRepository;
 use UOP\Infrastructure\Database\EventRepository;
+use UOP\Infrastructure\Database\FormRepository;
+use UOP\Infrastructure\Database\OccurrenceRepository;
 use UOP\Infrastructure\Database\M6OperationsRepository;
 use UOP\Infrastructure\Database\M5OperationsRepository;
 use UOP\Infrastructure\Database\M6AdminListRepository;
@@ -147,6 +150,17 @@ final class M6Module implements ModuleInterface {
 		);
 		add_action( 'admin_menu', array( $container->get( M6ConsentDocumentsScreen::class ), 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $container->get( M6ConsentDocumentsScreen::class ), 'assets' ) );
+		$container->set(
+			M6Blocks::class,
+			static fn ( ServiceContainer $c ) => new M6Blocks(
+				$c->get( EventRepository::class ),
+				$c->get( OccurrenceRepository::class ),
+				$c->get( FormRepository::class ),
+				$c->get( M6ReadService::class )
+			)
+		);
+		add_action( 'init', array( $container->get( M6Blocks::class ), 'register' ) );
+		add_action( 'template_redirect', array( $container->get( M6Blocks::class ), 'private_cache_guard' ), 0 );
 		add_action( 'rest_api_init', array( $container->get( M6AdminController::class ), 'register' ) );
 		add_action( 'admin_menu', array( $container->get( M6PeopleRegistrationScreen::class ), 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $container->get( M6PeopleRegistrationScreen::class ), 'assets' ) );
