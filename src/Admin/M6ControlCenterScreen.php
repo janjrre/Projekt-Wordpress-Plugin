@@ -149,7 +149,7 @@ final class M6ControlCenterScreen {
 		if ( empty( $feed['items'] ) ) {
 			echo '<p role="status">' . esc_html__( 'There are no audit events in this organization yet.', 'uop-core' ) . '</p>';
 		} else {
-			echo '<div class="uop-m6-console__table"><table class="widefat striped"><thead><tr>';
+			echo '<div class="uop-m6-console__table" role="region" tabindex="0" aria-label="' . esc_attr__( 'Audit events, horizontally scrollable', 'uop-core' ) . '"><table class="widefat striped"><thead><tr>';
 			foreach ( array( __( 'Time (UTC)', 'uop-core' ), __( 'Action', 'uop-core' ), __( 'Resource', 'uop-core' ), __( 'Result', 'uop-core' ), __( 'Correlation', 'uop-core' ) ) as $header ) {
 				echo '<th scope="col">' . esc_html( $header ) . '</th>';
 			}

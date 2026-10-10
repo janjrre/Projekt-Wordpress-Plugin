@@ -111,7 +111,7 @@ final class M6ConsentDocumentsScreen {
 		if ( ! $rows ) {
 			echo '<p role="status">' . esc_html__( 'No consent definitions yet.', 'uop-core' ) . '</p>';
 		} else {
-			echo '<div class="uop-m6-console__table"><table class="widefat striped"><thead><tr>';
+			echo '<div class="uop-m6-console__table" role="region" tabindex="0" aria-label="' . esc_attr__( 'Consent definitions, horizontally scrollable', 'uop-core' ) . '"><table class="widefat striped"><thead><tr>';
 			foreach ( array( __( 'Key', 'uop-core' ), __( 'Title', 'uop-core' ), __( 'State', 'uop-core' ), __( 'Version', 'uop-core' ), __( 'Document ID', 'uop-core' ) ) as $header ) {
 				echo '<th scope="col">' . esc_html( $header ) . '</th>';
 			}
