@@ -13,6 +13,7 @@ use UOP\Application\Query\M6ReadService;
 use UOP\Application\Registration\CapacityLifecycleService;
 use UOP\Application\Registration\EmailVerificationService;
 use UOP\Application\Registration\GuestVerificationDeliveryService;
+use UOP\Application\Registration\WaitlistOfferDeliveryService;
 use UOP\Application\Registration\RegistrationService;
 use UOP\Application\Registration\RegistrationTransitionService;
 use UOP\Core\CorrelationId;
@@ -32,6 +33,7 @@ final class RegistrationController extends BaseController {
 	 * @param CapacityLifecycleService              $capacity       Seat-safe cancellation.
 	 * @param EmailVerificationService              $verification   Hashed one-time verifier.
 	 * @param GuestVerificationDeliveryService|null $guest_delivery Guest readiness gate.
+	 * @param WaitlistOfferDeliveryService|null     $offer_delivery Offer readiness gate.
 	 */
 	public function __construct(
 		private M6ReadService $reads,
@@ -39,7 +41,8 @@ final class RegistrationController extends BaseController {
 		private RegistrationTransitionService $transitions,
 		private CapacityLifecycleService $capacity,
 		private EmailVerificationService $verification,
-		private ?GuestVerificationDeliveryService $guest_delivery = null
+		private ?GuestVerificationDeliveryService $guest_delivery = null,
+		private ?WaitlistOfferDeliveryService $offer_delivery = null
 	) {}
 
 	/** Register M6-02 public and authenticated routes with explicit permissions. */
@@ -48,6 +51,7 @@ final class RegistrationController extends BaseController {
 		$this->register_endpoint( '/registrations', 'POST', array( $this, 'create' ), '__return_true' );
 		$this->register_endpoint( '/registrations/guest', 'POST', array( $this, 'create_guest' ), '__return_true' );
 		$this->register_endpoint( '/registration-verifications', 'POST', array( $this, 'verify_email' ), '__return_true' );
+		$this->register_endpoint( '/waitlist-offers/guest-accept', 'POST', array( $this, 'accept_guest_offer' ), '__return_true' );
 		$this->register_endpoint( '/registrations/(?P<uuid>[0-9a-f-]{36})', 'GET', array( $this, 'show' ), array( $this, 'can_view' ), $this->uuid_argument() );
 		$this->register_endpoint( '/registrations/(?P<uuid>[0-9a-f-]{36})/cancel', 'POST', array( $this, 'cancel' ), array( $this, 'can_view' ), $this->uuid_argument() );
 		$this->register_endpoint( '/registrations/(?P<uuid>[0-9a-f-]{36})/transitions', 'POST', array( $this, 'transition' ), array( $this, 'can_view' ), $this->uuid_argument() );
@@ -369,4 +373,57 @@ final class RegistrationController extends BaseController {
 		$response->header( 'Cache-Control', 'private, no-store, max-age=0' );
 		return $response;
 	}
+	/**
+	 * Accept a previously emailed 48-hour offer without creating a WP account.
+	 * Possession of the verified address's secret is the only guest capability.
+	 *
+	 * @param WP_REST_Request $request Protected offer POST body.
+	 * @return WP_REST_Response|WP_Error No identity or allocation details.
+	 */
+	public function accept_guest_offer( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+		if ( ! is_ssl() || ! $this->offer_delivery || ! $this->offer_delivery->ready() ) {
+			return RestError::for_kind( 'unavailable' );
+		}
+		if ( strlen( $request->get_body() ) > 2048 ) {
+			return RestError::for_kind( 'invalid_schema' );
+		}
+		try {
+			$body    = $this->strict_json_object(
+				$request,
+				array(
+					'offer_id'   => array( 'type' => 'string' ),
+					'token'      => array( 'type' => 'string', 'pattern' => '^[a-f0-9]{64}$' ),
+					'command_id' => array( 'type' => 'string' ),
+				),
+				array( 'offer_id', 'token', 'command_id' )
+			);
+			$offer   = PublicId::from_string( $body['offer_id'] );
+			$command = PublicId::from_string( $body['command_id'] );
+		} catch ( InvalidArgumentException ) {
+			return RestError::for_kind( 'invalid_schema' );
+		}
+		$scope = $this->organization_scope();
+		if ( ! $scope ) {
+			return RestError::for_kind( 'unavailable' );
+		}
+		$peer = isset( $_SERVER['REMOTE_ADDR'] ) && is_string( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
+		if ( false === filter_var( $peer, FILTER_VALIDATE_IP ) ) {
+			$peer = 'unknown';
+		}
+		$key = 'uop_offer_' . hash( 'sha256', $scope->id . ':' . $offer->to_string() . ':' . $peer );
+		$tries = (int) get_transient( $key );
+		if ( $tries >= 10 ) {
+			return RestError::for_kind( 'rate_limited' );
+		}
+		set_transient( $key, $tries + 1, 15 * MINUTE_IN_SECONDS );
+		try {
+			$this->capacity->accept_guest_offer( $scope, $offer, $body['token'], $command, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
+		} catch ( InvalidArgumentException | RuntimeException ) {
+			// Same receipt for expired, already-used, foreign or unknown bearer.
+		}
+		$response = new WP_REST_Response( array( 'status' => 'received' ), 202 );
+		$response->header( 'Cache-Control', 'private, no-store, max-age=0' );
+		return $response;
+	}
+
 }

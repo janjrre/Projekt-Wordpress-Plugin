@@ -23,6 +23,7 @@ use UOP\Application\Registration\CapacityAllocationService;
 use UOP\Application\Registration\CapacityLifecycleService;
 use UOP\Application\Registration\EmailVerificationService;
 use UOP\Application\Registration\GuestVerificationDeliveryService;
+use UOP\Application\Registration\WaitlistOfferDeliveryService;
 use UOP\Application\Communication\EmailTemplateCatalog;
 use UOP\Application\Communication\EmailTemplateRules;
 use UOP\Core\TransactionManager;
@@ -31,6 +32,7 @@ use UOP\Infrastructure\Database\RegistrationRepository;
 use UOP\Infrastructure\Database\AuditWriter;
 use UOP\Infrastructure\Database\OutboxRepository;
 use UOP\REST\GuestVerificationLanding;
+use UOP\REST\GuestWaitlistOfferLanding;
 use UOP\Application\Registration\RegistrationService;
 use UOP\Application\Registration\RegistrationTransitionService;
 use UOP\Extension\ModuleInterface;
@@ -99,6 +101,18 @@ final class M6Module implements ModuleInterface {
 			)
 		);
 		add_action( 'uop_scoped_domain_event', array( $container->get( GuestVerificationDeliveryService::class ), 'on_scoped_event' ), 10, 2 );
+		$container->set(
+			WaitlistOfferDeliveryService::class,
+			static fn ( ServiceContainer $c ) => new WaitlistOfferDeliveryService(
+				$c->get( EmailMessageRepository::class ),
+				$c->get( EmailTemplateCatalog::class ),
+				$c->get( EmailTemplateRules::class ),
+				$c->get( TransactionManager::class )
+			)
+		);
+		$container->get( CapacityLifecycleService::class )->set_offer_delivery( $container->get( WaitlistOfferDeliveryService::class ) );
+		$container->set( GuestWaitlistOfferLanding::class, static fn () => new GuestWaitlistOfferLanding() );
+		add_action( 'template_redirect', array( $container->get( GuestWaitlistOfferLanding::class ), 'maybe_render' ), 0 );
 		$container->set( GuestVerificationLanding::class, static fn () => new GuestVerificationLanding() );
 		add_action( 'template_redirect', array( $container->get( GuestVerificationLanding::class ), 'maybe_render' ), 0 );
 		$container->set(
@@ -109,7 +123,8 @@ final class M6Module implements ModuleInterface {
 				$c->get( RegistrationTransitionService::class ),
 				$c->get( CapacityLifecycleService::class ),
 				$c->get( EmailVerificationService::class ),
-				$c->get( GuestVerificationDeliveryService::class )
+				$c->get( GuestVerificationDeliveryService::class ),
+				$c->get( WaitlistOfferDeliveryService::class )
 			)
 		);
 
