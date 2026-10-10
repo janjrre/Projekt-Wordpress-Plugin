@@ -63,6 +63,7 @@ final class M3ReadTest extends TestCase {
         wp_set_current_user(0);
         $denied=rest_do_request(new \WP_REST_Request('GET','/uop/v1/forms'));
         self::assertSame(401,$denied->get_status());
+        self::assertSame('uop_unauthenticated',$denied->get_data()['code']);
         wp_set_current_user($manager);
         $created=$form->create(new Actor($manager),$this->scope,'rest_form','REST form','event',['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]],$now,CorrelationId::generate());
         $list=rest_do_request(new \WP_REST_Request('GET','/uop/v1/forms'));

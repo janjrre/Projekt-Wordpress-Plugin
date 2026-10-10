@@ -28,6 +28,12 @@ use UOP\Infrastructure\Database\WaitlistRepository;
  */
 final class CapacityLifecycleService {
 	/**
+	 * Optional private, atomically queued offer mail.
+	 *
+	 * @var WaitlistOfferDeliveryService|null
+	 */
+	private ?WaitlistOfferDeliveryService $offer_delivery = null;
+	/**
 	 * Compose the capacity-aware command boundary.
 	 *
 	 * @param WaitlistRepository             $queue       Scoped waitlist/claim persistence.
@@ -49,6 +55,15 @@ final class CapacityLifecycleService {
 		private OutboxRepository $outbox,
 		private RegistrationEligibilityService $eligibility
 	) {}
+
+	/**
+	 * Enable separately gated, token-safe offer mail after M6 composition.
+	 *
+	 * @param WaitlistOfferDeliveryService $delivery Private queue.
+	 */
+	public function set_offer_delivery( WaitlistOfferDeliveryService $delivery ): void {
+		$this->offer_delivery = $delivery;
+	}
 
 	/**
 	 * Cancel an accepted, offered or waiting registration and release its seat.
@@ -240,6 +255,9 @@ final class CapacityLifecycleService {
 		$this->queue->hold( $scope, (int) $bucket['id'], (int) $waiting['id'], (int) $row['id'], $offer, hash( 'sha256', $token, true ), $utc_now, $expires );
 		$this->queue->transition( $scope, (int) $row['id'], 'waitlisted', 'offered', $command, $actor->user_id, $utc_now, $correlation );
 		$this->record( $scope, $actor, $this->resource( $scope, $row ), 'registration.offered', PublicId::from_binary( $row['public_id'] ), 'offered', $correlation );
+		if ( $this->offer_delivery ) {
+			$this->offer_delivery->queue_inside( $scope, $row, $offer, $token, $expires, $utc_now );
+		}
 		return array(
 			'public_id' => $offer->to_string(),
 			'token'     => $token,
@@ -260,6 +278,43 @@ final class CapacityLifecycleService {
 	 * @throws RuntimeException When scope, token or status is no longer valid.
 	 */
 	public function accept_offer( Actor $actor, OrgScope $scope, PublicId $offer_id, string $token, PublicId $command, string $utc_now, CorrelationId $correlation ): void {
+		$this->accept_offer_inside( $actor, $scope, $offer_id, $token, $command, $utc_now, $correlation, false );
+	}
+
+	/**
+	 * Accept an offered seat only with the verified guest's single-use bearer.
+	 * This grants no account rights; all capacity/eligibility checks still run.
+	 *
+	 * @param OrgScope      $scope Trusted organization.
+	 * @param PublicId      $offer_id Offer identity.
+	 * @param string        $token One-time 256-bit secret.
+	 * @param PublicId      $command Unique command.
+	 * @param string        $utc_now UTC time.
+	 * @param CorrelationId $correlation Audit correlation.
+	 * @throws RuntimeException For unavailable or invalid guest offers.
+	 */
+	public function accept_guest_offer( OrgScope $scope, PublicId $offer_id, string $token, PublicId $command, string $utc_now, CorrelationId $correlation ): void {
+		if ( ! $this->offer_delivery || ! $this->offer_delivery->ready() ) {
+			throw new RuntimeException( 'Guest offer acceptance unavailable.' );
+		}
+		$this->accept_offer_inside( new Actor( 0 ), $scope, $offer_id, $token, $command, $utc_now, $correlation, true );
+	}
+
+	/**
+	 * Shared bucket-locked offer acceptance with explicit guest restriction.
+	 *
+	 * @param Actor         $actor Current actor.
+	 * @param OrgScope      $scope Trusted organization.
+	 * @param PublicId      $offer_id Offer identity.
+	 * @param string        $token One-time token.
+	 * @param PublicId      $command Command identity.
+	 * @param string        $utc_now UTC time.
+	 * @param CorrelationId $correlation Audit correlation.
+	 * @param bool          $guest Whether authorization is held by verified email + bearer.
+	 * @throws InvalidArgumentException For malformed bearer.
+	 * @throws RuntimeException For unauthorized, expired or invalid offers.
+	 */
+	private function accept_offer_inside( Actor $actor, OrgScope $scope, PublicId $offer_id, string $token, PublicId $command, string $utc_now, CorrelationId $correlation, bool $guest ): void {
 		if ( ! preg_match( '/^[a-f0-9]{64}$/D', $token ) ) {
 			throw new InvalidArgumentException( 'Invalid offer token.' );
 		}
@@ -268,7 +323,7 @@ final class CapacityLifecycleService {
 			throw new RuntimeException( 'Offer unavailable.' );
 		}
 		$this->tx->run(
-			function () use ( $actor, $scope, $offer_id, $token, $command, $utc_now, $correlation, $bucket_id ): void {
+			function () use ( $actor, $scope, $offer_id, $token, $command, $utc_now, $correlation, $bucket_id, $guest ): void {
 				$bucket = $this->queue->lock_bucket( $scope, $bucket_id );
 				$offer  = $this->queue->offer( $scope, $offer_id );
 				if ( ! $bucket || ! $offer || 'offered' !== $offer['status'] || $utc_now >= $offer['expires_at'] ) {
@@ -276,7 +331,8 @@ final class CapacityLifecycleService {
 				}
 				$post = get_post( (int) $bucket['event_post_id'] );
 				if ( 'active' !== $bucket['status'] || ! $post || 'uop_event' !== $post->post_type
-					|| 'publish' !== $post->post_status || 0 !== (int) $bucket['occurrence_id'] ) {
+					|| 'publish' !== $post->post_status || 0 !== (int) $bucket['occurrence_id']
+					|| ( $guest && ! empty( $post->post_password ) ) ) {
 					throw new RuntimeException( 'Offer belongs to an inactive or unsupported event.' );
 				}
 				$verify_contact = $this->capacity->requires_verification( $scope, (int) $bucket['event_post_id'] );
@@ -288,7 +344,10 @@ final class CapacityLifecycleService {
 					|| ( ( $verify_contact || 'guest' === $row['source'] ) && null === $row['email_verified_at'] ) ) {
 					throw new RuntimeException( 'Registration offer is no longer eligible.' );
 				}
-				if ( ! $this->policy->can( $actor, 'registration.create', $this->resource( $scope, $row ) )->allowed ) {
+				if ( $guest && ( 'guest' !== $row['source'] || null === $row['email_verified_at'] ) ) {
+					throw new RuntimeException( 'Offer recipient is not a verified guest.' );
+				}
+				if ( ! $guest && ! $this->policy->can( $actor, 'registration.create', $this->resource( $scope, $row ) )->allowed ) {
 					throw new RuntimeException( 'Offer acceptance is not authorized.' );
 				}
 				$this->eligibility->assert_eligible( $actor, $scope, $row, $bucket );

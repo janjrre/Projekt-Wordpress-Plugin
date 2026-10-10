@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "uop/event-details",
+  "version": "0.1.0-alpha.2",
+  "title": "Event Details",
+  "description": "Display one public event and its published dates",
+  "category": "widgets",
+  "icon": "calendar",
+  "textdomain": "uop-core",
+  "attributes": {
+    "eventId": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "supports": {
+    "html": false,
+    "anchor": true,
+    "align": [
+      "wide",
+      "full"
+    ],
+    "color": {
+      "background": true,
+      "text": true
+    },
+    "spacing": {
+      "margin": true,
+      "padding": true
+    },
+    "interactivity": true
+  },
+  "editorScript": "uop-m6-block-editor",
+  "style": "uop-m6-blocks"
+}
