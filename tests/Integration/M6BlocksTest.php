@@ -8,6 +8,18 @@
 namespace UOP\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
+use UOP\Application\Communication\EmailTemplateCatalog;
+use UOP\Application\Communication\EmailTemplateRules;
+use UOP\Application\Event\DomainEventDto;
+use UOP\Application\Registration\GuestVerificationDeliveryService;
+use UOP\Application\Registration\EmailVerificationService;
+use UOP\Application\Registration\CapacityLifecycleService;
+use UOP\Application\Registration\RegistrationEligibilityService;
+use UOP\Infrastructure\Database\EmailMessageRepository;
+use UOP\Infrastructure\Database\CapacityRepository;
+use UOP\Infrastructure\Database\WaitlistRepository;
+use UOP\Infrastructure\Queue\EmailDeliveryWorker;
+use UOP\REST\RegistrationController;
 use UOP\Application\Event\EventService;
 use UOP\Application\Form\FormService;
 use UOP\Application\Policy\Actor;
@@ -474,6 +486,134 @@ final class M6BlocksTest extends TestCase {
 			self::assertStringContainsString( 'id="' . $reference . '"', $html );
 		}
 		self::assertSame( 0, preg_match( '/<label[^>]+for="([^"]+)"[^>]*>Consent requirement/', $html ) );
+	}
+
+
+	/**
+	 * End-to-end guest challenge is queued after a committed anonymous
+	 * registration, never echoed to REST or token-free event history.
+	 */
+	public function test_guest_verification_queue_link_single_use_and_safe_rest_receipt(): void {
+		$s = $this->fixture();
+		$site = static fn ( string $url ): string => str_replace( 'http://', 'https://', $url );
+		$enabled = static fn (): bool => true;
+		add_filter( 'uop_guest_verification_enabled', $enabled );
+		add_filter( 'home_url', $site );
+		try {
+			$now   = gmdate( 'Y-m-d H:i:s' );
+			$event = $this->make_event( $s, 'Guest Verified Event', 'publish', 'public' );
+			$form  = $s['form']->create(
+				$s['actor'],
+				$this->scope,
+				'm603_guest_form',
+				'Guest form',
+				'event',
+				array(
+					'schema_version' => 1,
+					'fields' => array(
+						array( 'key' => 'name', 'label' => 'Name', 'type' => 'text', 'required' => true ),
+						array( 'key' => 'contact', 'label' => 'Email', 'type' => 'email', 'required' => true ),
+					),
+				),
+				$now,
+				CorrelationId::generate()
+			);
+			$s['form']->publish( $s['actor'], $this->scope, $form, 1, $now, CorrelationId::generate() );
+			$s['config']->bind( $s['actor'], $this->scope, $event, $form, $now, CorrelationId::generate() );
+			$this->db->execute(
+				'UPDATE %i SET require_email_verification = 1 WHERE organization_id = %d AND public_id = %s',
+				array( $this->prefix . 'event_settings', $this->scope->id, $event->to_binary() )
+			);
+			$repo = new RegistrationRepository( $this->db, $this->prefix );
+			$tx   = new TransactionManager( $this->db, static function ( int $delay ): void {}, static function ( \Throwable $error ): void {} );
+			$aud  = new AuditWriter( $this->db, $this->prefix );
+			$out  = new OutboxRepository( $this->db, $this->prefix );
+			$msg  = new EmailMessageRepository( $this->db, $this->prefix );
+			$delivery = new GuestVerificationDeliveryService( $repo, $msg, new EmailTemplateCatalog(), new EmailTemplateRules( new EmailTemplateCatalog() ), $tx, $aud, $out );
+			self::assertTrue( $delivery->ready() );
+
+			$verification = new EmailVerificationService( $repo, $s['policy'], $tx, $aud, $out );
+			$transition   = new RegistrationTransitionService( $repo, new RegistrationStateMachine(), $s['policy'], $tx, $aud, $out );
+			$eligibility  = new RegistrationEligibilityService( $repo, new RegistrationFactsService( new RegistrationFactsRepository( $this->db, $this->prefix ), $s['policy'] ) );
+			$capacity     = new CapacityLifecycleService(
+				new WaitlistRepository( $this->db, $this->prefix ),
+				new CapacityRepository( $this->db, $this->prefix ),
+				new RegistrationStateMachine(),
+				$s['policy'],
+				$tx,
+				$aud,
+				$out,
+				$eligibility
+			);
+			( new RegistrationController( $s['reads'], $s['submit'], $transition, $capacity, $verification, $delivery ) )->register();
+			wp_set_current_user( 0 );
+			$body = array(
+				'event_id' => $event->to_string(),
+				'command_id' => PublicId::generate()->to_string(),
+				'fields' => array( 'name' => 'Guest', 'contact' => 'testguest@example.invalid' ),
+			);
+			$request = new \WP_REST_Request( 'POST', '/uop/v1/registrations/guest' );
+			$request->set_header( 'Content-Type', 'application/json' );
+			$request->set_body( (string) wp_json_encode( $body ) );
+			$response = rest_do_request( $request );
+			self::assertSame( 202, $response->get_status() );
+			self::assertSame( array( 'status' => 'received' ), $response->get_data() );
+			$registrations = $this->db->rows( "SELECT public_id, source, email_verified_at FROM %i WHERE organization_id = %d AND source = 'guest'", array( $this->prefix . 'registrations', $this->scope->id ) );
+			self::assertCount( 1, $registrations );
+			self::assertNull( $registrations[0]['email_verified_at'] );
+			$registration = PublicId::from_binary( (string) $registrations[0]['public_id'] );
+			$event_message = new DomainEventDto( PublicId::generate()->to_string(), 'registration.email_verification_required', $registration->to_string() );
+			$delivery->on_event( $event_message );
+			$delivery->on_event( $event_message );
+
+			$mail = $this->db->rows(
+				"SELECT public_id, recipient, body_text, subject FROM %i WHERE organization_id = %d AND template_key = 'email_verification'",
+				array( $this->prefix . 'email_messages', $this->scope->id )
+			);
+			self::assertCount( 1, $mail );
+			self::assertSame( 'testguest@example.invalid', $mail[0]['recipient'] );
+			self::assertSame( 1, preg_match( '/#registration_id=[a-f0-9-]{36}&token=([a-f0-9]{64})/', $mail[0]['body_text'], $found ) );
+			$token = $found[1];
+			self::assertStringNotContainsString( 'token=', $mail[0]['subject'] );
+			$events = $this->db->rows( "SELECT payload_json FROM %i WHERE event_name IN ('registration.email_verification_required','registration.verification_issued')", array( $this->prefix . 'domain_events' ) );
+			self::assertGreaterThanOrEqual( 2, count( $events ) );
+			foreach ( $events as $entry ) {
+				self::assertStringNotContainsString( $token, (string) $entry['payload_json'] );
+			}
+			$saved = $repo->lock_registration( $this->scope, $registration );
+			self::assertNotSame( $token, $saved['email_verification_token_hash'] );
+			self::assertSame( hash( 'sha256', $token, true ), $saved['email_verification_token_hash'] );
+
+			$verify = new \WP_REST_Request( 'POST', '/uop/v1/registration-verifications' );
+			$verify->set_header( 'Content-Type', 'application/json' );
+			$verify->set_body( (string) wp_json_encode( array( 'registration_id' => $registration->to_string(), 'token' => $token ) ) );
+			$first = rest_do_request( $verify );
+			$second = rest_do_request( $verify );
+			self::assertSame( 202, $first->get_status() );
+			self::assertSame( $first->get_data(), $second->get_data() );
+			self::assertNotNull( $repo->lock_registration( $this->scope, $registration )['email_verified_at'] );
+			self::assertNull( $repo->lock_registration( $this->scope, $registration )['email_verification_token_hash'] );
+			self::assertNull( $delivery->queue( $this->scope, $registration, $now ) );
+
+			$worker = new EmailDeliveryWorker( $this->db, $this->prefix, $msg, $tx );
+			$captured = array();
+			$filter = static function ( $previous, array $details ) use ( &$captured ) {
+				$captured[] = $details;
+				return true;
+			};
+			add_filter( 'pre_wp_mail', $filter, 10, 2 );
+			try {
+				$worker->deliver( $this->scope->id, PublicId::from_binary( $mail[0]['public_id'] )->to_string() );
+				$worker->deliver( $this->scope->id, PublicId::from_binary( $mail[0]['public_id'] )->to_string() );
+			} finally {
+				remove_filter( 'pre_wp_mail', $filter, 10 );
+			}
+			self::assertCount( 1, $captured );
+			self::assertStringContainsString( $token, $captured[0]['message'] );
+		} finally {
+			remove_filter( 'uop_guest_verification_enabled', $enabled );
+			remove_filter( 'home_url', $site );
+		}
 	}
 
 }
