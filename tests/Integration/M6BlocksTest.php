@@ -498,6 +498,8 @@ final class M6BlocksTest extends TestCase {
 		$s = $this->fixture();
 		$site = static fn ( string $url ): string => str_replace( 'http://', 'https://', $url );
 		$enabled = static fn (): bool => true;
+		$original_https = $_SERVER['HTTPS'] ?? null;
+		unset( $_SERVER['HTTPS'] );
 		add_filter( 'uop_guest_verification_enabled', $enabled );
 		add_filter( 'home_url', $site );
 		try {
@@ -548,6 +550,16 @@ final class M6BlocksTest extends TestCase {
 			);
 			( new RegistrationController( $s['reads'], $s['submit'], $transition, $capacity, $verification, $delivery ) )->register();
 			wp_set_current_user( 0 );
+			// The configured HTTPS URL alone must not admit an HTTP REST request.
+			$http_probe = new \WP_REST_Request( 'POST', '/uop/v1/registrations/guest' );
+			$http_probe->set_header( 'Content-Type', 'application/json' );
+			$http_probe->set_body( '{}' );
+			self::assertSame( 503, rest_do_request( $http_probe )->get_status() );
+			$http_verify = new \WP_REST_Request( 'POST', '/uop/v1/registration-verifications' );
+			$http_verify->set_header( 'Content-Type', 'application/json' );
+			$http_verify->set_body( '{}' );
+			self::assertSame( 503, rest_do_request( $http_verify )->get_status() );
+			$_SERVER['HTTPS'] = 'on';
 			// Password-protected posts are not public guest destinations, even if event settings say public.
 			$event_row = $s['events']->by_public( $this->scope, $event );
 			self::assertNotNull( $event_row );
@@ -647,6 +659,11 @@ final class M6BlocksTest extends TestCase {
 		} finally {
 			remove_filter( 'uop_guest_verification_enabled', $enabled );
 			remove_filter( 'home_url', $site );
+			if ( null === $original_https ) {
+				unset( $_SERVER['HTTPS'] );
+			} else {
+				$_SERVER['HTTPS'] = $original_https;
+			}
 		}
 		// Restoring the default closed gate must deny new public intake.
 		$blocked = rest_do_request( $request );

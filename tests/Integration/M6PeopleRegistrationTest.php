@@ -241,6 +241,8 @@ final class M6PeopleRegistrationTest extends TestCase {
 
 	/** Token errors have no subject disclosure and guest writes remain closed. */
 	public function test_guest_gate_and_generic_verification_response(): void {
+		$original_https = $_SERVER['HTTPS'] ?? null;
+		unset( $_SERVER['HTTPS'] );
 		$this->fixture();
 		wp_set_current_user( 0 );
 		$guest = $this->json( 'POST', '/uop/v1/registrations', array( 'event_id' => PublicId::generate()->to_string() ) );
@@ -248,6 +250,8 @@ final class M6PeopleRegistrationTest extends TestCase {
 		$unknown = PublicId::generate();
 		$secret = str_repeat( 'a', 64 );
 		$body = array( 'registration_id' => $unknown->to_string(), 'token' => $secret );
+		self::assertSame( 503, $this->json( 'POST', '/uop/v1/registration-verifications', $body )->get_status() );
+		$_SERVER['HTTPS'] = 'on';
 		$check = $this->json( 'POST', '/uop/v1/registration-verifications', $body );
 		self::assertSame( 202, $check->get_status() );
 		self::assertSame( array( 'status' => 'received' ), $check->get_data() );
@@ -257,5 +261,10 @@ final class M6PeopleRegistrationTest extends TestCase {
 		}
 		self::assertSame( 429, $this->json( 'POST', '/uop/v1/registration-verifications', $body )->get_status() );
 		delete_transient( 'uop_verify_' . hash( 'sha256', $this->scope->id . ':' . $unknown->to_string() ) );
+		if ( null === $original_https ) {
+			unset( $_SERVER['HTTPS'] );
+		} else {
+			$_SERVER['HTTPS'] = $original_https;
+		}
 	}
 }

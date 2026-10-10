@@ -173,7 +173,7 @@ final class RegistrationController extends BaseController {
 	 * @return WP_REST_Response|WP_Error Generic receipt or stable error.
 	 */
 	public function create_guest( WP_REST_Request $request ): WP_REST_Response|WP_Error {
-		if ( ! $this->guest_delivery || ! $this->guest_delivery->ready() ) {
+		if ( ! is_ssl() || ! $this->guest_delivery || ! $this->guest_delivery->ready() ) {
 			return RestError::for_kind( 'unavailable' );
 		}
 		if ( strlen( $request->get_body() ) > 32768 ) {
@@ -330,6 +330,9 @@ final class RegistrationController extends BaseController {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function verify_email( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+		if ( ! is_ssl() ) {
+			return RestError::for_kind( 'unavailable' );
+		}
 		try {
 			$body = $this->strict_json_object(
 				$request,

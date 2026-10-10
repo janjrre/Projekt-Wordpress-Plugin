@@ -5,7 +5,7 @@ Status: Implementiert im M6-Draft-PR, **nicht aktiviert, gemergt oder deployed**
 ## Ablauf
 
 1. Die Organisation hat ein aktives, öffentliches, nicht passwortgeschütztes Event mit veröffentlichtem Anmeldeformular und verpflichtender E-Mail-Verifizierung.
-2. Der Betreiber stellt HTTPS und Action Scheduler mit funktionierendem `wp_mail`-Transport sicher. Die öffentliche Gastannahme muss ausdrücklich freigeschaltet werden.
+2. Der Betreiber stellt HTTPS (auch für tatsächliche eingehende REST-Anfragen über korrekt konfigurierten Reverse Proxy) und Action Scheduler mit funktionierendem `wp_mail`-Transport sicher. Die öffentliche Gastannahme muss ausdrücklich freigeschaltet werden.
 3. Anonyme Clients senden strikt validiertes JSON an `POST /wp-json/uop/v1/registrations/guest`: `event_id` (UUID), `command_id` (UUID), `fields` (veröffentlichte Feldwerte), optional `occurrence_id`. Die Antwort ist ausschließlich `202 {"status":"received"}`; weder Registrierungs-ID noch Bearer-Token werden übertragen.
 4. Der M4-Domänendienst schreibt eine neue, nicht verknüpfte Person und die Anmeldung atomar mit einem geheimnisfreien `registration.email_verification_required`-Outbox-Ereignis. Ein wiederholter `command_id`-Aufruf erzeugt keine zweite Anmeldung.
 5. Der bestehende Outbox-Consumer löst nach dem Commit über `uop_scoped_domain_event` mit dem vertrauenswürdigen `OrgScope` (zusätzlich zum rückwärtskompatiblen allgemeinen Hook) den privaten M6-Versand aus: Token `random_bytes(32)`, SHA-256-Hash in `registrations`, Gültigkeit 24 Stunden. Der gerenderte Nachrichtentext wird als organisationsgebundene, idempotente M5-Mail-Nachricht in `email_messages` gespeichert und erst nach Commit über Action Scheduler/`wp_mail` versendet. Ein erneuter Empfang desselben Events erzeugt keine zweite E-Mail. Eine verpasste Versandplanung wird vom M5-Mail-Sweeper erneut für **queued**-Nachrichten aufgegriffen.
@@ -14,7 +14,7 @@ Status: Implementiert im M6-Draft-PR, **nicht aktiviert, gemergt oder deployed**
 
 ## Freigabe
 
-Standardmäßig liefert die öffentliche Gast-POST-Route **503**. Erst nach Transport- und HTTPS-Abnahme einen kontrollierten MU-Plugin-Filter hinzufügen:
+Standardmäßig liefert die öffentliche Gast-POST-Route **503**. Beide öffentlichen POST-Routen verweigern unverschlüsselte HTTP-Anfragen mit **503**, auch wenn die konfigurierte WordPress-Website-URL HTTPS verwendet. Erst nach Transport- und HTTPS-Abnahme einen kontrollierten MU-Plugin-Filter hinzufügen:
 
 ```php
 add_filter( 'uop_guest_verification_enabled', '__return_true' );
