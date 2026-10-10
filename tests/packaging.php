@@ -19,6 +19,7 @@ foreach (['event-list', 'event-details', 'registration-form', 'portal', 'my-regi
 }
 if (!is_string($zip->getFromName('uop-core/assets/m6-blocks-editor.js'))) throw new RuntimeException('Gutenberg editor bundle missing');
 if (!is_string($zip->getFromName('uop-core/assets/m6-blocks.css'))) throw new RuntimeException('Frontend block stylesheet missing');
+if (!is_string($zip->getFromName('uop-core/assets/m6-registration.js'))) throw new RuntimeException('M6-10 secure registration controller asset missing');
 $zip->close();
 $directory=sys_get_temp_dir().'/uop-http-'.bin2hex(random_bytes(8));
 mkdir($directory);

@@ -15,3 +15,21 @@
 .uop-m6-blocks input[type=search]{box-sizing:border-box;max-width:100%;min-height:40px}
 @media(max-width:480px){.uop-m6-preview__fieldset{padding:.65rem}.uop-m6-preview__notice{padding:.65rem}}
 @media(prefers-reduced-motion:reduce){.uop-m6-blocks *{transition:none!important;scroll-behavior:auto!important}}
+
+
+/* M6-10: safe registration controls; mobile reflow and visible focus. */
+.uop-m6-registration{display:grid;gap:1rem;min-width:0;max-width:100%;box-sizing:border-box}
+.uop-m6-registration fieldset{display:grid;gap:.9rem;margin:0;min-width:0;max-width:100%;padding:clamp(.65rem,2vw,1rem);border:1px solid currentColor;border-radius:5px}
+.uop-m6-registration__field{display:grid;gap:.35rem;min-width:0;max-width:100%}
+.uop-m6-registration__field[hidden]{display:none}
+.uop-m6-registration__field>label,.uop-m6-registration__subject>label{font-weight:600}
+.uop-m6-registration input:not([type=checkbox]):not([type=radio]),.uop-m6-registration textarea,.uop-m6-registration select{display:block;box-sizing:border-box;width:100%;min-width:0;max-width:100%;min-height:44px;padding:.5rem;font:inherit}
+.uop-m6-registration input[type=checkbox],.uop-m6-registration input[type=radio]{inline-size:19px;block-size:19px;vertical-align:middle}
+.uop-m6-registration__field fieldset{border:0;padding:0}
+.uop-m6-registration__field fieldset>label{display:flex;align-items:center;gap:.5rem;min-height:38px}
+.uop-m6-registration__document{margin:0;max-width:100%;max-height:18rem;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;padding:.75rem;border:1px solid currentColor;border-radius:4px;font:inherit}
+.uop-m6-registration [data-uop-result]{min-height:1.5em}
+.uop-m6-registration button[type=submit]{justify-self:start;padding:.55rem 1.2rem;min-height:44px}
+.uop-m6-registration button:disabled{cursor:not-allowed;opacity:.7}
+.uop-m6-registration :is(input,select,textarea,button):focus-visible{outline:3px solid currentColor;outline-offset:3px}
+@media(max-width:480px){.uop-m6-registration button[type=submit]{width:100%;justify-self:stretch}}
