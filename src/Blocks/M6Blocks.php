@@ -146,7 +146,7 @@ final class M6Blocks {
 	/**
 	 * Bounded event listing excluding private, draft and passworded posts.
 	 *
-	 * @param OrgScope             $scope      Current organization.
+	 * @param OrgScope            $scope      Current organization.
 	 * @param array<string,mixed> $attributes Block settings.
 	 * @return string
 	 */
@@ -228,7 +228,7 @@ final class M6Blocks {
 		return '<h2>' . esc_html__( 'Registration form', 'uop-core' ) . '</h2><p role="status">' . esc_html__( 'The registration fields are listed below. Submission through this block will be enabled with the secure participant portal.', 'uop-core' ) . '</p><ul>' . implode( '', $items ) . '</ul>';
 	}
 
-	/** 
+	/**
 	 * Auth-aware but non-identifying portal gateway.
 	 *
 	 * @return string

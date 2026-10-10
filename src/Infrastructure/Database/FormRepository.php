@@ -185,5 +185,4 @@ final class FormRepository extends ScopedRepository {
 		}
 		return $schema;
 	}
-
 }
