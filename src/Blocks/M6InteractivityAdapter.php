@@ -111,6 +111,8 @@ final class M6InteractivityAdapter {
 				. ' data-wp-bind--hidden="state.fieldHidden"' . ( $visible ? '' : ' hidden' ) . '>';
 			if ( 'radio' === $type ) {
 				$html .= '<fieldset><legend>' . esc_html( $label ) . '</legend>';
+			} elseif ( 'consent' === $type ) {
+				$html .= '<p class="uop-m6-preview__consent-title">' . esc_html( $label ) . '</p>';
 			} else {
 				$html .= '<label for="' . esc_attr( $id ) . '">' . esc_html( $label ) . '</label>';
 			}
@@ -123,7 +125,7 @@ final class M6InteractivityAdapter {
 				$html .= '<div class="uop-m6-preview__choices">';
 				foreach ( $field['options'] as $index => $option ) {
 					$choice_id = $id . '-' . $index;
-					$html     .= '<label for="' . esc_attr( $choice_id ) . '"><input id="' . esc_attr( $choice_id ) . '" type="radio" value="' . esc_attr( $option ) . '"' . $described_by . ' data-uop-field="' . esc_attr( $key ) . '" data-wp-on--change="actions.changeField" />' . esc_html( $option ) . '</label>';
+					$html     .= '<label for="' . esc_attr( $choice_id ) . '"><input id="' . esc_attr( $choice_id ) . '" type="radio" name="' . esc_attr( 'uop-preview-' . $id ) . '" value="' . esc_attr( $option ) . '"' . $described_by . ' data-uop-field="' . esc_attr( $key ) . '" data-wp-on--change="actions.changeField" />' . esc_html( $option ) . '</label>';
 				}
 				$html .= '</div></fieldset>';
 			} elseif ( in_array( $type, array( 'select', 'multiselect' ), true ) ) {
