@@ -387,7 +387,7 @@ final class RegistrationController extends BaseController {
 			return RestError::for_kind( 'invalid_schema' );
 		}
 		try {
-			$body = $this->strict_json_object(
+			$body    = $this->strict_json_object(
 				$request,
 				array(
 					'offer_id'   => array( 'type' => 'string' ),
@@ -427,5 +427,4 @@ final class RegistrationController extends BaseController {
 		$response->header( 'Cache-Control', 'private, no-store, max-age=0' );
 		return $response;
 	}
-
 }
