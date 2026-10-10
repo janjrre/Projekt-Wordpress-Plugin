@@ -17,7 +17,7 @@ final class GuestWaitlistOfferLanding {
 		if ( ! is_ssl() ) {
 			nocache_headers();
 			status_header( 403 );
-			wp_die( esc_html__( 'HTTPS is required to accept a waitlist offer.', 'uop-core' ) );
+			wp_die( esc_html__( 'HTTPS is required to accept a waitlist offer.', 'uop-core' ), '', array( 'response' => 403 ) );
 		}
 		nocache_headers();
 		header( 'Referrer-Policy: no-referrer' );

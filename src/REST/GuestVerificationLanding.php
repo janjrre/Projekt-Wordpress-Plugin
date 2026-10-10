@@ -18,7 +18,7 @@ final class GuestVerificationLanding {
 			// No token-bearing JavaScript may execute on an insecure origin.
 			nocache_headers();
 			status_header( 403 );
-			wp_die( esc_html__( 'HTTPS is required for email verification.', 'uop-core' ) );
+			wp_die( esc_html__( 'HTTPS is required for email verification.', 'uop-core' ), '', array( 'response' => 403 ) );
 		}
 		nocache_headers();
 		header( 'X-Robots-Tag: noindex, nofollow, noarchive' );
