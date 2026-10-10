@@ -19,6 +19,7 @@ use UOP\Application\Registration\RegistrationFactsService;
 use UOP\Application\Registration\RegistrationService;
 use UOP\Application\Registration\RegistrationTransitionService;
 use UOP\Blocks\M6Blocks;
+use UOP\Blocks\M6InteractivityAdapter;
 use UOP\Core\CorrelationId;
 use UOP\Core\PublicId;
 use UOP\Core\TransactionManager;
@@ -440,6 +441,39 @@ final class M6BlocksTest extends TestCase {
 		self::assertStringNotContainsString( 'action=', $html );
 		self::assertStringNotContainsString( 'name="attendance"', $html );
 		self::assertStringContainsString( 'not saved or sent', $html );
+	}
+
+
+	/**
+	 * Require actual HTML semantics, associated notes and preview-only controls.
+	 * No simulated consent checkbox or executable registration form is allowed.
+	 */
+	public function test_m609_preview_has_accessible_labels_radio_group_and_no_submit(): void {
+		$html = ( new M6InteractivityAdapter() )->fields(
+			array(
+				'fields' => array(
+					array( 'key' => 'display', 'label' => 'Person display name', 'required' => true, 'type' => 'text' ),
+					array( 'key' => 'availability', 'label' => 'Available days', 'required' => true, 'type' => 'radio', 'options' => array( 'Monday', 'Tuesday' ) ),
+					array( 'key' => 'privacy', 'label' => 'Consent requirement', 'required' => false, 'type' => 'consent' ),
+				),
+			)
+		);
+		self::assertStringContainsString( '<fieldset><legend>Available days</legend>', $html );
+		self::assertStringContainsString( 'type="radio"', $html );
+		self::assertStringContainsString( 'aria-describedby="uop-preview-note-', $html );
+		self::assertStringContainsString( 'Conditional fields require JavaScript', $html );
+		self::assertStringContainsString( 'Consent requirement', $html );
+		self::assertStringNotContainsString( 'type="submit"', $html );
+		self::assertStringNotContainsString( '<form', $html );
+		self::assertStringNotContainsString( 'type="checkbox"', $html );
+
+		self::assertSame( 2, preg_match_all( '/type="radio" name="([^"]+)"/', $html, $matches ) );
+		self::assertSame( $matches[1][0], $matches[1][1], 'Radio choices must share one HTML name in their own preview group.' );
+		self::assertSame( 4, preg_match_all( '/aria-describedby="([^"]+)"/', $html, $references ) );
+		foreach ( array_unique( $references[1] ) as $reference ) {
+			self::assertStringContainsString( 'id="' . $reference . '"', $html );
+		}
+		self::assertSame( 0, preg_match( '/<label[^>]+for="([^"]+)"[^>]*>Consent requirement/', $html ) );
 	}
 
 }
