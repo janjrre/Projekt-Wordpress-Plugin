@@ -19,7 +19,7 @@ test('HTTPS registration confirmation landing uses a private fragment and not HT
   expect(new URL(page.url()).searchParams.has('token')).toBe(false);
   await expect(page.locator('#uop-guest-verification')).toHaveAttribute(
     'data-endpoint',
-    /https:\/\/127\.0\.0\.1:8443\/\?rest_route=|https:\/\/127\.0\.0\.1:8443\/wp-json\//,
+    /https:\/\/127\.0\.0\.1:8443\/(?:index\.php)?\?rest_route=|https:\/\/127\.0\.0\.1:8443\/wp-json\//,
   );
 });
 
