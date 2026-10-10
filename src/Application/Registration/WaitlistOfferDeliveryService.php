@@ -21,6 +21,8 @@ use UOP\Infrastructure\Database\EmailMessageRepository;
  */
 final class WaitlistOfferDeliveryService {
 	/**
+	 * Compose a transaction-bound private offer mail renderer.
+	 *
 	 * @param EmailMessageRepository $messages Stored private mail envelopes.
 	 * @param EmailTemplateCatalog   $catalog  Frozen templates.
 	 * @param EmailTemplateRules     $rules    Restricted render variables.
@@ -85,8 +87,8 @@ final class WaitlistOfferDeliveryService {
 				'expires_at'       => $expires . ' UTC',
 			)
 		);
-		$digest  = $this->rules->validate( 'waitlist_offer', $locale, $defaults['subject'], $defaults['body_text'], $defaults['body_html'] );
-		$message = PublicId::generate();
+		$digest   = $this->rules->validate( 'waitlist_offer', $locale, $defaults['subject'], $defaults['body_text'], $defaults['body_html'] );
+		$message  = PublicId::generate();
 		$this->messages->enqueue( $scope, $message, $key, (int) $row['id'], (string) $row['contact_email'], 'waitlist_offer', $locale, 1, $digest, $rendered, $now );
 		$this->tx->after_commit(
 			static function () use ( $scope, $message ): void {

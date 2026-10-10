@@ -27,7 +27,11 @@ use UOP\Infrastructure\Database\WaitlistRepository;
  * Cleartext offer tokens never reach audit or the transactional outbox.
  */
 final class CapacityLifecycleService {
-	/** Optional private, atomically queued offer mail. */
+	/**
+	 * Optional private, atomically queued offer mail.
+	 *
+	 * @var WaitlistOfferDeliveryService|null
+	 */
 	private ?WaitlistOfferDeliveryService $offer_delivery = null;
 	/**
 	 * Compose the capacity-aware command boundary.
@@ -52,7 +56,11 @@ final class CapacityLifecycleService {
 		private RegistrationEligibilityService $eligibility
 	) {}
 
-	/** Enable separately gated, token-safe offer mail after M6 composition. */
+	/**
+	 * Enable separately gated, token-safe offer mail after M6 composition.
+	 *
+	 * @param WaitlistOfferDeliveryService $delivery Private queue.
+	 */
 	public function set_offer_delivery( WaitlistOfferDeliveryService $delivery ): void {
 		$this->offer_delivery = $delivery;
 	}
@@ -283,6 +291,7 @@ final class CapacityLifecycleService {
 	 * @param PublicId      $command Unique command.
 	 * @param string        $utc_now UTC time.
 	 * @param CorrelationId $correlation Audit correlation.
+	 * @throws RuntimeException For unavailable or invalid guest offers.
 	 */
 	public function accept_guest_offer( OrgScope $scope, PublicId $offer_id, string $token, PublicId $command, string $utc_now, CorrelationId $correlation ): void {
 		if ( ! $this->offer_delivery || ! $this->offer_delivery->ready() ) {
@@ -302,6 +311,8 @@ final class CapacityLifecycleService {
 	 * @param string        $utc_now UTC time.
 	 * @param CorrelationId $correlation Audit correlation.
 	 * @param bool          $guest Whether authorization is held by verified email + bearer.
+	 * @throws InvalidArgumentException For malformed bearer.
+	 * @throws RuntimeException For unauthorized, expired or invalid offers.
 	 */
 	private function accept_offer_inside( Actor $actor, OrgScope $scope, PublicId $offer_id, string $token, PublicId $command, string $utc_now, CorrelationId $correlation, bool $guest ): void {
 		if ( ! preg_match( '/^[a-f0-9]{64}$/D', $token ) ) {
