@@ -56,3 +56,17 @@ Die bisherige Infrastrukturprüfung wurde durch einen **echten Ende-zu-Ende-Nutz
 **Nachweis:** https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38127084254 – **4/4 Chromium-HTTPS-Tests erfolgreich**, einschließlich realer WordPress-/Mailpit-/Gast-/Wartelisten-Nutzerreise.
 
 Die bisherigen technischen Grenzen bleiben: Diese CI-Testumgebung ist nicht dauerhaft erreichbar; ein externer SMTP-Maildienst ist damit nicht unabhängig abgenommen, und produktives Dreamloud wurde **nicht** verändert. M6-10 verbleibt bis zum Abschluss aller relevanten Qualitäts- und Integrationsprüfungen sowie der übrigen manuellen Nutzeroberflächen als offener Meilenstein im Draft-PR. Kein Merge oder Deployment.
+
+
+## 11. Oktober 2026 – echte Browser-Journeys für Erwachsene, Sorgepersonen und Administratoren
+
+Der HTTPS-Workflow `.github/workflows/uop-https-e2e.yml` wurde mit synthetischen, einmaligen Personen- und WordPress-Accounts erweitert:
+
+- `tests/Fixtures/m610-members-seed.php`: frische Accounts für Erwachsensein, Sorgeperson und fremde Person, jeweils einer eigenen UOP-Person zugeordnet. Eine weitere, **nicht mit einem WordPress-Account verknüpfte abhängige Testperson** heißt im Szenario „Caregiver Minor“. Eigenständige zweite Veranstaltung, unveränderliche veröffentlichte Formularversion, eigene Gutenberg-Anmeldeseite, Portal-/Meine-Anmeldungen-Seite und Kapazitätsbucket. Ausschließlich im temporären CI-WordPress, ohne Dreamloud-Daten.
+- `tests/Fixtures/m610-members-helper.php`: vertrauenswürdiges WP-CLI erteilt **explizit** `registration_manage` für die abhängige Testperson, widerruft diese live und verifiziert abschließend gespeicherte Entscheidungen. Keine öffentliche Test-REST-Route, kein Direktzugriff auf produktive Sites.
+- `tests/Browser/m610-members-admin.spec.js`: echter WordPress-Login, echte Gutenberg-Formularabgabe und Portalanzeige eines Erwachsenen; verweigerter Zugriff auf UOP-Admin. Login der Sorgeperson, anfänglich **keine** Zugriffsberechtigung auf den abhängigen oder fremden Datensatz; nach expliziter Freigabe Teilnahmeformular und eigene Portalansicht; nach Widerruf verschwindet der Datensatz und ein alter Browseraufruf der geschützten REST-Route erhält HTTP 404. Danach Login als Administrator, echte React-Verwaltung, Prüfstatusänderung, Annahme in vorhandenen Platzbucket, Ablehnung einer zweiten Anmeldung und Audit-Ansicht. Persistenz nachgewiesen.
+- Nur die isolierte CI-Installation verwendet `UOP_M610_CI=1` sowie synthetische Anmeldedaten. Passwörter werden pro Job erzeugt und maskiert; keine festen Testpasswörter oder Produktionszugangsdaten.
+
+**Erfolgreicher Nachweis:** https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38128203461 – **7/7 Chromium-Browsertests bestanden**, einschließlich der drei neuen Journeys und des zuvor grünen Gast-/Mail-/Wartelistenzyklus.
+
+**Abnahmegrenzen:** Der Name „Caregiver Minor“ allein beweist kein erfasstes oder validiertes Geburtsdatum, keine rechtliche Sorgeberechtigung und keine familienrechtliche Vertretungsbefugnis. Abgenommen wurde hier die UOP-eigene explizite und widerrufbare Delegation für eine abhängige Person. Altersprüfung, rechtliche Vertretungsnachweise, Mobile-UX, Bedienbarkeit mit unterstützenden Technologien und Zustellung durch einen externen E-Mail-Dienst sind eigene Abnahmepunkte. Der PR bleibt Draft; keine Änderungen an `dreamloud.de`.
