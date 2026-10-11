@@ -10,3 +10,17 @@ if (!$root || !is_file($root . '/wp-load.php')) {
 require dirname(__DIR__) . '/vendor/autoload.php';
 require $root . '/wp-load.php';
 require_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+
+// WordPress wp_die() ordinarily exits with HTTP/CLI status 0, which once
+// made a failed PHPUnit integration suite look green despite prior E/F output.
+// Throw inside PHPUnit instead; the runner must finish the entire suite.
+add_filter(
+    'wp_die_handler',
+    static function (): callable {
+        return static function ( $message = '', $title = '', $args = array() ): void {
+            throw new RuntimeException( 'WordPress wp_die() intercepted inside an integration test.' );
+        };
+    },
+    PHP_INT_MAX
+);
