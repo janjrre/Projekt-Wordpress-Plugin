@@ -111,7 +111,17 @@ jobs:
               exit(1);
             }
             $tests = (int) $xml["tests"];
-            if ($tests < 140 || (int) $xml["failures"] > 0 || (int) $xml["errors"] > 0) {
+            $failures = (int) $xml["failures"];
+            $errors = (int) $xml["errors"];
+            // PHPUnit 11 commonly puts aggregate counts on its child suite.
+            if (!$tests) {
+              foreach ($xml->testsuite as $suite) {
+                $tests += (int) $suite["tests"];
+                $failures += (int) $suite["failures"];
+                $errors += (int) $suite["errors"];
+              }
+            }
+            if ($tests < 140 || $failures > 0 || $errors > 0) {
               fwrite(STDERR, "Integration suite incomplete or failing: {$tests} tests.\n");
               exit(1);
             }
