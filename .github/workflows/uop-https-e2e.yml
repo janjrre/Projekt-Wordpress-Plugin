@@ -78,6 +78,7 @@ jobs:
           password="$(openssl rand -hex 20)"
           echo "::add-mask::$password"
           echo "WP_ADMIN_PASSWORD=$password" >> "$GITHUB_ENV"
+          export WP_ADMIN_PASSWORD="$password"
           wp core download --version=6.9 --path="$WP_ROOT"
           wp config create --path="$WP_ROOT" --dbname=uop_ephemeral --dbuser=root --dbpass=uop_ephemeral --dbhost=127.0.0.1 --dbcharset=utf8mb4 --dbprefix=uop_https_
           wp config set WP_DEBUG true --raw --path="$WP_ROOT"
