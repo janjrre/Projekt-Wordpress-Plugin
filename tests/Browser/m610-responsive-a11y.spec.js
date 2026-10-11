@@ -13,7 +13,8 @@ async function visit(page, target, options = {}) {
     try {
       return await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 30000, ...options });
     } catch (error) {
-      if (!/net::ERR_(?:TOO_MANY_RETRIES|CONNECTION_RESET|EMPTY_RESPONSE)/.test(String(error)) || attempt === 2) {
+      if (!(/net::ERR_(?:TOO_MANY_RETRIES|CONNECTION_RESET|EMPTY_RESPONSE)/.test(String(error)) ||
+        String(error).includes('chrome-error://chromewebdata/')) || attempt === 2) {
         throw error;
       }
     }
