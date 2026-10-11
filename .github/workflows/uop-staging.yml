@@ -29,9 +29,11 @@ on:
 permissions:
   contents: read
 
+# Static PR probes can supersede stale revisions. Manual staging operations
+# share a non-cancellable lock so an authorized deployment cannot be interrupted.
 concurrency:
-  group: uop-staging-${{ github.event_name }}
-  cancel-in-progress: false
+  group: uop-staging-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'manual' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   static-check:
