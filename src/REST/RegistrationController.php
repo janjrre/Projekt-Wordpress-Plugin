@@ -135,11 +135,11 @@ final class RegistrationController extends BaseController {
 			$body    = $this->strict_json_object(
 				$request,
 				array(
-					'person_id'     => array( 'type' => 'string' ),
-					'event_id'      => array( 'type' => 'string' ),
-					'occurrence_id' => array( 'type' => 'string' ),
-					'command_id'    => array( 'type' => 'string' ),
-					'fields'        => array( 'type' => 'object' ),
+					'person_id'                   => array( 'type' => 'string' ),
+					'event_id'                    => array( 'type' => 'string' ),
+					'occurrence_id'               => array( 'type' => 'string' ),
+					'command_id'                  => array( 'type' => 'string' ),
+					'fields'                      => array( 'type' => 'object' ),
 					'representative_confirmation' => array( 'type' => 'boolean' ),
 				),
 				array( 'person_id', 'event_id', 'command_id', 'fields' )
