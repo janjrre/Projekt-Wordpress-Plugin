@@ -130,3 +130,60 @@ test('admin overview and audit table provide responsive navigation and keyboard-
   await audit.focus();
   await expect(audit).toBeFocused();
 });
+
+test('people editor and form builder reflow without clipped controls at 320–1280px', async ({ page }) => {
+  requireCi();
+  await login(page, 'uop_test_admin');
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 850 });
+    await page.goto('/wp-admin/admin.php?page=uop-people', { waitUntil: 'domcontentloaded' });
+    const people = page.locator('.uop-m6-admin');
+    const list = people.getByRole('region', { name: 'Record list' });
+    const first = list.locator('.uop-m6-items button').first();
+    await expect(first).toBeVisible();
+    await noOffscreenUopControls(page, people, 'people editor at ' + width + 'px');
+    await first.focus();
+    await page.keyboard.press('Enter');
+    await expect(people.getByRole('region', { name: 'Record details' }).locator('h2')).toBeFocused({ timeout: 12000 });
+
+    await page.goto('/wp-admin/admin.php?page=uop-forms', { waitUntil: 'domcontentloaded' });
+    const builder = page.locator('.uop-m3');
+    const key = page.getByLabel('Form key');
+    await expect(key).toBeVisible();
+    await noOffscreenUopControls(page, builder, 'form builder at ' + width + 'px');
+    await key.focus();
+    await expect(key).toBeFocused();
+    const add = builder.getByRole('button', { name: 'Create draft' });
+    expect((await add.boundingBox()).height).toBeGreaterThanOrEqual(44);
+  }
+});
+
+test('operations and consent editor keep wide tables in keyboard-scrollable regions on narrow screens', async ({ page }) => {
+  requireCi();
+  await login(page, 'uop_test_admin');
+  for (const width of [320, 390, 768]) {
+    await page.setViewportSize({ width, height: 850 });
+    await page.goto('/wp-admin/admin.php?page=uop-operations', { waitUntil: 'domcontentloaded' });
+    const operations = page.locator('.uop-m6-console');
+    await expect(operations.getByRole('navigation', { name: 'Operations sections' })).toBeVisible();
+    const regions = operations.locator('.uop-m6-console__table');
+    await expect(regions).toHaveCount(3);
+    for (const region of await regions.all()) {
+      await expect(region).toHaveAttribute('tabindex', '0');
+      await expect(region.locator('th[scope="col"]').first()).toBeVisible();
+      await expect(region).toHaveCSS('overflow-x', 'auto');
+      const rectangle = await region.boundingBox();
+      expect(rectangle.x).toBeGreaterThanOrEqual(-1);
+      expect(rectangle.x + rectangle.width).toBeLessThanOrEqual(width + 1);
+    }
+    const privacy = operations.getByRole('textbox', { name: 'Verified request email' });
+    await expect(privacy).toBeVisible();
+    await noOffscreenUopControls(page, operations, 'operations at ' + width + 'px');
+
+    await page.goto('/wp-admin/admin.php?page=uop-consents', { waitUntil: 'domcontentloaded' });
+    const consent = page.locator('.uop-m6-console');
+    await expect(consent.getByRole('heading', { name: 'Consent documents' })).toBeVisible();
+    await noOffscreenUopControls(page, consent, 'consent editor at ' + width + 'px');
+    await expect(consent.getByRole('textbox', { name: /Title/i })).toBeVisible();
+  }
+});

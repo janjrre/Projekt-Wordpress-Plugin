@@ -154,7 +154,7 @@ final class M5OperationsScreen {
 		echo '<section class="uop-m6-ops-section" id="uop-mail"><h2>' . esc_html__( 'Email delivery', 'uop-core' ) . '</h2>';
 		$this->counts( $this->operations->counts( $scope, 'email' ) );
 		echo '<p>' . esc_html__( 'Sending means an ambiguous attempt. Never automatically resend it. Failed messages may be explicitly retried (up to five attempts).', 'uop-core' ) . '</p>';
-		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Message', 'uop-core' ) . '</th><th>' . esc_html__( 'State', 'uop-core' ) . '</th><th>' . esc_html__( 'Attempts', 'uop-core' ) . '</th><th>' . esc_html__( 'Failure code', 'uop-core' ) . '</th><th>' . esc_html__( 'Action', 'uop-core' ) . '</th></tr></thead><tbody>';
+		echo '<div class="uop-m6-console__table" role="region" tabindex="0" aria-label="' . esc_attr__( 'Email delivery attempts, horizontally scrollable', 'uop-core' ) . '"><table class="widefat striped"><thead><tr><th scope="col">' . esc_html__( 'Message', 'uop-core' ) . '</th><th scope="col">' . esc_html__( 'State', 'uop-core' ) . '</th><th scope="col">' . esc_html__( 'Attempts', 'uop-core' ) . '</th><th scope="col">' . esc_html__( 'Failure code', 'uop-core' ) . '</th><th scope="col">' . esc_html__( 'Action', 'uop-core' ) . '</th></tr></thead><tbody>';
 		$messages = $this->operations->problem_messages( $scope );
 		if ( ! $messages ) {
 			echo '<tr><td colspan="5" class="uop-m6-empty">' . esc_html__( 'No failed or ambiguous deliveries.', 'uop-core' ) . '</td></tr>';
@@ -169,7 +169,7 @@ final class M5OperationsScreen {
 			}
 			echo '</td></tr>';
 		}
-		echo '</tbody></table></section>';
+		echo '</tbody></table></div></section>';
 	}
 
 	/**
@@ -182,7 +182,7 @@ final class M5OperationsScreen {
 		$this->counts( $this->operations->counts( $scope, 'export' ) );
 		echo '<p>' . esc_html__( 'Expired private files are deleted by a background job. Cleanup can also be invoked explicitly.', 'uop-core' ) . '</p>';
 		$this->form( 'export_cleanup', '', __( 'Clean up expired exports', 'uop-core' ) );
-		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Job', 'uop-core' ) . '</th><th>' . esc_html__( 'State', 'uop-core' ) . '</th><th>' . esc_html__( 'Failure code', 'uop-core' ) . '</th><th>' . esc_html__( 'Expires (UTC)', 'uop-core' ) . '</th></tr></thead><tbody>';
+		echo '<div class="uop-m6-console__table" role="region" tabindex="0" aria-label="' . esc_attr__( 'Private export jobs, horizontally scrollable', 'uop-core' ) . '"><table class="widefat striped"><thead><tr><th scope="col">' . esc_html__( 'Job', 'uop-core' ) . '</th><th scope="col">' . esc_html__( 'State', 'uop-core' ) . '</th><th scope="col">' . esc_html__( 'Failure code', 'uop-core' ) . '</th><th scope="col">' . esc_html__( 'Expires (UTC)', 'uop-core' ) . '</th></tr></thead><tbody>';
 		$exports = $this->operations->problem_exports( $scope, gmdate( 'Y-m-d H:i:s' ) );
 		if ( ! $exports ) {
 			echo '<tr><td colspan="4" class="uop-m6-empty">' . esc_html__( 'No failed or expired exports.', 'uop-core' ) . '</td></tr>';
@@ -190,7 +190,7 @@ final class M5OperationsScreen {
 		foreach ( $exports as $row ) {
 			echo '<tr><td><code>' . esc_html( PublicId::from_binary( (string) $row['public_id'] )->to_string() ) . '</code></td><td>' . esc_html( (string) $row['status'] ) . '</td><td>' . esc_html( (string) ( $row['error_code'] ?? '-' ) ) . '</td><td>' . esc_html( (string) $row['expires_at'] ) . '</td></tr>';
 		}
-		echo '</tbody></table></section>';
+		echo '</tbody></table></div></section>';
 	}
 
 	/**
@@ -209,7 +209,7 @@ final class M5OperationsScreen {
 		submit_button( __( 'Check identity resolution', 'uop-core' ), 'secondary', 'submit', false );
 		echo '</form>';
 		echo '<p>' . esc_html__( 'Retention executions require explicit administrator configuration. Previews do not change any data.', 'uop-core' ) . '</p>';
-		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Rule', 'uop-core' ) . '</th><th>' . esc_html__( 'Class', 'uop-core' ) . '</th><th>' . esc_html__( 'Action', 'uop-core' ) . '</th><th>' . esc_html__( 'Delay (days)', 'uop-core' ) . '</th><th>' . esc_html__( 'State', 'uop-core' ) . '</th><th>' . esc_html__( 'Preview', 'uop-core' ) . '</th></tr></thead><tbody>';
+		echo '<div class="uop-m6-console__table" role="region" tabindex="0" aria-label="' . esc_attr__( 'Retention rules, horizontally scrollable', 'uop-core' ) . '"><table class="widefat striped"><thead><tr><th scope="col">' . esc_html__( 'Rule', 'uop-core' ) . '</th><th scope="col">' . esc_html__( 'Class', 'uop-core' ) . '</th><th scope="col">' . esc_html__( 'Action', 'uop-core' ) . '</th><th scope="col">' . esc_html__( 'Delay (days)', 'uop-core' ) . '</th><th scope="col">' . esc_html__( 'State', 'uop-core' ) . '</th><th scope="col">' . esc_html__( 'Preview', 'uop-core' ) . '</th></tr></thead><tbody>';
 		$rules = $this->operations->retention_rules( $scope );
 		if ( ! $rules ) {
 			echo '<tr><td colspan="6" class="uop-m6-empty">' . esc_html__( 'No retention rules configured.', 'uop-core' ) . '</td></tr>';
@@ -223,7 +223,7 @@ final class M5OperationsScreen {
 			}
 			echo '</td></tr>';
 		}
-		echo '</tbody></table>';
+		echo '</tbody></table></div>';
 		$failures = $this->operations->retention_failures( $scope );
 		foreach ( $failures as $row ) {
 			/* translators: 1: Retention events requiring recovery, 2: Number of failed attempts. */
