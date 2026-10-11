@@ -92,7 +92,31 @@ jobs:
           wp config set DISABLE_WP_CRON true --raw --path=/tmp/uop-wordpress
           wp core install --path=/tmp/uop-wordpress --url=http://127.0.0.1:8080 --title=UOP-Test --admin_user=uop_test_admin --admin_password="$password" --admin_email=uop@example.invalid --skip-email
           ln -s "$GITHUB_WORKSPACE" /tmp/uop-wordpress/wp-content/plugins/uop-core
-      - run: composer test:integration
+      - name: Fully completed PHPUnit integration suite (no hidden wp_die exits)
+        run: |
+          report="$RUNNER_TEMP/uop-integration-junit.xml"
+          rm -f "$report"
+          vendor/bin/phpunit -c phpunit.integration.xml --log-junit "$report"
+          # WP core wp_die() could previously exit 0 before PHPUnit wrote its
+          # final result. Verify a complete JUnit report and the full suite.
+          UOP_JUNIT_REPORT="$report" php -r '
+            $path = getenv("UOP_JUNIT_REPORT");
+            if (!is_file($path) || filesize($path) < 100) {
+              fwrite(STDERR, "Integration suite exited without complete JUnit output.\n");
+              exit(1);
+            }
+            $xml = simplexml_load_file($path);
+            if (!$xml || $xml->getName() !== "testsuites") {
+              fwrite(STDERR, "Integration suite did not produce a valid report.\n");
+              exit(1);
+            }
+            $tests = (int) $xml["tests"];
+            if ($tests < 140 || (int) $xml["failures"] > 0 || (int) $xml["errors"] > 0) {
+              fwrite(STDERR, "Integration suite incomplete or failing: {$tests} tests.\n");
+              exit(1);
+            }
+            echo "Verified full integration suite: {$tests} tests.\n";
+          '
       - name: M4 fifty-worker capacity concurrency regression
         if: ${{ matrix.php == '8.3' && matrix.db == 'mysql:8.0' || matrix.php == '8.5' && matrix.db == 'mariadb:10.11' }}
         timeout-minutes: 5
