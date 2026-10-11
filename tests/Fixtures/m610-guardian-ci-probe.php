@@ -30,6 +30,7 @@ $user   = get_user_by( 'login', 'uop_ci_review_parent' );
 $linked = $user ? $people->by_user( $scope, (int) $user->ID ) : null;
 $raw    = (string) get_option( 'uop_m610_ci_review_child', '' );
 $child  = $raw ? $people->find( $scope, PublicId::from_string( $raw ) ) : null;
+$rate  = $user ? (int) get_transient( 'uop_guardian_claim_' . hash( 'sha256', $scope->id . ':' . $user->ID ) ) : -1;
 $count  = $db->rows(
 	"SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d AND type_key = 'guardian_of' AND status = 'pending'",
 	array( $wpdb->prefix . 'uop_relationships', $scope->id )
@@ -67,6 +68,7 @@ echo wp_json_encode(
 		'child_found'    => (bool) $child,
 		'child_active'   => 'active' === ( $child['status'] ?? '' ),
 		'pending_count'  => (int) ( $count[0]['n'] ?? 0 ),
+		'claim_attempts' => $rate,
 		'direct_result'  => $result,
 		'direct_class'   => $error,
 		'direct_code'    => $code,
