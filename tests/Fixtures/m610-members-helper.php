@@ -10,6 +10,7 @@ use UOP\Core\PublicId;
 use UOP\Domain\Organization\OrgScope;
 use UOP\Infrastructure\Database\DelegationRepository;
 use UOP\Infrastructure\Database\PersonRepository;
+use UOP\Infrastructure\Database\RelationshipRepository;
 use UOP\Infrastructure\Database\WpdbConnection;
 global $wpdb;
 $db = new WpdbConnection( $wpdb );
@@ -31,10 +32,31 @@ if ( 'grant-child' === $action ) {
 	if ( ! $row ) {
 		throw new RuntimeException( 'Synthetic minor missing.' );
 	}
+	$parent_person = $people->by_user( $scope, (int) $parent->ID );
+	if ( ! $parent_person ) {
+		throw new RuntimeException( 'Synthetic caregiver person missing.' );
+	}
+	$relationships = new RelationshipRepository( $db, $prefix );
+	$relationship  = PublicId::generate();
+	$relationships->create( $scope, $relationship, (int) $parent_person['id'], (int) $row['id'], 'guardian_of', $now );
 	$grant = PublicId::generate();
-	$delegations->grant( $scope, $grant, (int) $parent->ID, (int) $row['id'], 'registration_manage', 'organization', 0, null, $now );
+	$delegations->grant( $scope, $grant, (int) $parent->ID, (int) $row['id'], 'registration_manage', 'organization', 0, (int) $relationships->find( $scope, $relationship )['id'], $now );
 	update_option( 'uop_m610_ci_child_grant', $grant->to_string(), false );
-	echo "Only the synthetic minor registration delegation was granted.\n";
+	update_option( 'uop_m610_ci_child_relationship', $relationship->to_string(), false );
+	echo "Only the synthetic minor registration delegation with guardian evidence was granted.\n";
+	return;
+}
+if ( 'revoke-relationship' === $action || 'reactivate-relationship' === $action ) {
+	$relationship = PublicId::from_string( (string) get_option( 'uop_m610_ci_child_relationship' ) );
+	$state = 'revoke-relationship' === $action ? 'revoked' : 'active';
+	$updated = $db->execute(
+		'UPDATE %i SET status = %s, updated_at = %s WHERE organization_id = %d AND public_id = %s',
+		array( $prefix . 'relationships', $state, $now, $scope->id, $relationship->to_binary() )
+	);
+	if ( 1 !== $updated ) {
+		throw new RuntimeException( 'Cannot change synthetic guardian evidence.' );
+	}
+	echo "Synthetic guardian evidence changed; separate delegation remains unchanged.\n";
 	return;
 }
 if ( 'revoke-child' === $action ) {
