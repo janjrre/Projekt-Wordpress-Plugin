@@ -205,6 +205,7 @@ final class M6PeopleRegistrationTest extends TestCase {
 		$initial_subjects = rest_do_request( $subject_request );
 		self::assertSame( 200, $initial_subjects->get_status() );
 		self::assertSame( array( $adult->to_string() ), array_column( $initial_subjects->get_data()['items'], 'public_id' ) );
+		self::assertSame( 'self', $initial_subjects->get_data()['items'][0]['decision_context'] );
 		self::assertArrayNotHasKey( 'primary_email', $initial_subjects->get_data()['items'][0] );
 		$submitted = $this->json( 'POST', '/uop/v1/registrations', array( 'person_id' => $adult->to_string(), 'event_id' => $event->to_string(), 'command_id' => PublicId::generate()->to_string(), 'fields' => array( 'name' => 'Parent' ) ) );
 		self::assertSame( 201, $submitted->get_status(), wp_json_encode( $submitted->get_data() ) );
@@ -231,6 +232,9 @@ final class M6PeopleRegistrationTest extends TestCase {
 			array( $adult->to_string(), $child->to_string() ),
 			array_column( $allowed_subjects->get_data()['items'], 'public_id' )
 		);
+		$contexts = array_column( $allowed_subjects->get_data()['items'], 'decision_context', 'public_id' );
+		self::assertSame( 'self', $contexts[ $adult->to_string() ] );
+		self::assertSame( 'delegate', $contexts[ $child->to_string() ] );
 		self::assertSame( 200, rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/registrations/' . $child_registration->to_string() ) )->get_status() );
 		$scoped_request = new \WP_REST_Request( 'GET', '/uop/v1/registrations' );
 		$scoped_request->set_query_params( array( 'person_id' => $child->to_string() ) );
