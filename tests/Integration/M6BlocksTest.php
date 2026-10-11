@@ -60,6 +60,13 @@ final class M6BlocksTest extends TestCase {
 	private OrgScope $scope;
 	private string $prefix;
 
+	/** Route query arguments through the actual WP_REST_Request query bag. */
+	private function registration_page( PublicId $person ): \WP_REST_Response {
+		$request = new \WP_REST_Request( 'GET', '/uop/v1/me/portal/registrations' );
+		$request->set_query_params( array( 'person_id' => $person->to_string() ) );
+		return rest_do_request( $request );
+	}
+
 	/** Install actual tenant-scoped persistence and reset user context. */
 	protected function setUp(): void {
 		global $wpdb;
@@ -453,7 +460,7 @@ final class M6BlocksTest extends TestCase {
 		$s['config']->bind( $s['actor'], $this->scope, $event, $form, $now, CorrelationId::generate() );
 		$registration = $s['submit']->submit( $s['actor'], $this->scope, $child, $event, null, PublicId::generate(), array( 'name' => 'Child' ), $now, CorrelationId::generate() );
 		wp_set_current_user( $s['self'] );
-		$page = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal/registrations?person_id=' . $child->to_string() ) );
+		$page = $this->registration_page( $child );
 		self::assertSame( 200, $page->get_status() );
 		self::assertSame( $registration->to_string(), $page->get_data()['items'][0]['public_id'] );
 		self::assertTrue( $page->get_data()['items'][0]['can_cancel'] );
@@ -463,9 +470,9 @@ final class M6BlocksTest extends TestCase {
 		self::assertTrue( $s['delegations']->revoke( $this->scope, $grant, $now ) );
 		$revoked = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal' ) );
 		self::assertNotContains( 'Delegated Child', array_column( $revoked->get_data()['items'], 'display_name' ) );
-		$denied = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal/registrations?person_id=' . $child->to_string() ) );
+		$denied = $this->registration_page( $child );
 		self::assertSame( 404, $denied->get_status() );
-		$stranger_page = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal/registrations?person_id=' . $stranger->to_string() ) );
+		$stranger_page = $this->registration_page( $stranger );
 		self::assertSame( 404, $stranger_page->get_status() );
 		// A UI from before revocation must also fail when it issues a command.
 		$transition = new RegistrationTransitionService(
@@ -509,10 +516,10 @@ final class M6BlocksTest extends TestCase {
 		self::assertSame( 200, $subjects->get_status() );
 		self::assertSame( 'Profile Only Child', $subjects->get_data()['items'][0]['display_name'] );
 		self::assertFalse( $subjects->get_data()['items'][0]['can_view_entries'] );
-		$entries = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal/registrations?person_id=' . $child->to_string() ) );
+		$entries = $this->registration_page( $child );
 		self::assertSame( 404, $entries->get_status() );
 		wp_set_current_user( 0 );
-		self::assertSame( 403, rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal' ) )->get_status() );
+		self::assertSame( 401, rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal' ) )->get_status() );
 	}
 
 	/** Login-only assets and client roots never reveal nonce to anonymous users. */
