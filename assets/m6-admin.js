@@ -168,7 +168,10 @@
 			const children = items.map(item => h('li', { key: item.public_id },
 				h('button', {
 					type: 'button', onClick: () => { pendingDetailFocus.current = item.public_id; loadDetail(item.public_id); }, 'aria-pressed': selected === item.public_id,
-					disabled: busy
+					disabled: busy,
+					// Keep list targets operable even when a disposable runner
+					// momentarily delays the external admin stylesheet.
+					style: { minHeight: 44, minWidth: 44 }
 				},
 					h('strong', null, name(item)),
 					h('span', { className: 'uop-m6-note' }, ' · ' + (item.status || '')),
