@@ -595,7 +595,7 @@ final class M4RegistrationTest extends TestCase {
 		$field=PublicId::generate();
 		$fields=new ProfileFieldRepository($this->db,$this->prefix);
 		$values=new ProfileValueRepository($this->db,$this->prefix);
-		$fields->create($this->scope,$field,['key'=>'date_of_birth','type'=>'date','label'=>'Date of birth','subject_view'=>true],$now);
+		$fields->create($this->scope,$field,['key'=>'date_of_birth','type'=>'date','label'=>'Date of birth','subject_view'=>true,'subject_edit'=>false,'delegate_edit'=>false],$now);
 		$field_id=(int)$fields->find($this->scope,$field)['id'];
 		$adult_id=(int)$s['people']->find($this->scope,$adult)['id'];
 		$values->replace($this->scope,$adult_id,$field_id,FieldRules::normalize('date','2000-01-01'),$now);
@@ -615,6 +615,47 @@ final class M4RegistrationTest extends TestCase {
 			self::fail('Underage applicant bypassed event eligibility');
 		} catch (RuntimeException) { self::assertTrue(true); }
 		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i',[$this->prefix.'registrations'])[0]['n']);
+	}
+
+	/** Age predicates must reject untrusted inputs, including under NOT and ANY. */
+	public function test_age_eligibility_rejects_untrusted_birth_facts_even_when_negated(): void {
+		$draft = ['schema_version'=>1,'fields'=>[['key'=>'name','type'=>'text','label'=>'Name','required'=>true]]];
+		[$services,$person,$event,$form,$now] = $this->setup_registration($draft);
+		$post_id = (int)$this->db->rows('SELECT event_post_id FROM %i WHERE public_id = %s',[$this->prefix.'event_settings',$event->to_binary()])[0]['event_post_id'];
+		$services['event']->add_occurrence($services['actor'],$this->scope,$post_id,new OccurrenceWindow('2030-04-15T12:00:00+02:00','2030-04-15T14:00:00+02:00','Europe/Berlin'),$now,CorrelationId::generate());
+		$id = (int)$services['people']->find($this->scope,$person)['id'];
+		$facts = new RegistrationFactsService(new RegistrationFactsRepository($this->db,$this->prefix),$services['policy']);
+		$under = ['source'=>'profile','field'=>'date_of_birth','operator'=>'age_lt_at','value'=>18,'context'=>'event.start'];
+		$negated = ['schema_version'=>1,'not'=>$under];
+		$any = ['schema_version'=>1,'any'=>[$under,['source'=>'registration','field'=>'name','operator'=>'eq','value'=>'Anything']]];
+		$expect_denied = function(array $condition, string $reason) use ($facts,$services,$id,$post_id): void {
+			try {
+				$facts->load($services['actor'],$this->scope,$id,$post_id,0,[$condition]);
+				self::fail('Untrusted age fact was authorized: '.$reason);
+			} catch (RuntimeException $error) {
+				self::assertNotSame('', $error->getMessage());
+			}
+		};
+		$expect_denied($negated,'no date of birth');
+		$expect_denied($any,'untrusted alternative branch');
+		$fields = new ProfileFieldRepository($this->db,$this->prefix);
+		$values = new ProfileValueRepository($this->db,$this->prefix);
+		$uuid = PublicId::generate();
+		$fields->create($this->scope,$uuid,['key'=>'date_of_birth','type'=>'date','label'=>'Date of birth','subject_view'=>true,'subject_edit'=>true,'delegate_edit'=>false],$now);
+		$field_id=(int)$fields->find($this->scope,$uuid)['id'];
+		$values->replace($this->scope,$id,$field_id,FieldRules::normalize('date','2000-01-01'),$now);
+		$expect_denied($negated,'self-editable date');
+		$this->db->execute('UPDATE %i SET subject_edit = 0, delegate_edit = 1 WHERE organization_id = %d AND id = %d',[$this->prefix.'profile_fields',$this->scope->id,$field_id]);
+		$expect_denied($negated,'delegated editable date');
+		$this->db->execute('UPDATE %i SET delegate_edit = 0 WHERE organization_id = %d AND id = %d',[$this->prefix.'profile_fields',$this->scope->id,$field_id]);
+		$values->replace($this->scope,$id,$field_id,FieldRules::normalize('date','2035-01-01'),$now);
+		$expect_denied($negated,'future birth date');
+		$values->replace($this->scope,$id,$field_id,FieldRules::normalize('date','2000-01-01'),$now);
+		$trusted = $facts->load($services['actor'],$this->scope,$id,$post_id,0,[$negated]);
+		self::assertSame('2000-01-01',$trusted['profile']['date_of_birth']);
+		self::assertArrayHasKey('event.start',$trusted['contexts']);
+		$wrong_field = ['schema_version'=>1,'not'=>['source'=>'profile','field'=>'some_other_date','operator'=>'age_lt_at','value'=>18,'context'=>'event.start']];
+		$expect_denied($wrong_field,'arbitrary date field');
 	}
 
 	/** An age requirement without a trustworthy scheduled start must not evaluate to today. */
@@ -867,7 +908,7 @@ final class M4RegistrationTest extends TestCase {
 		$fields=new ProfileFieldRepository($this->db,$this->prefix);
 		$values=new ProfileValueRepository($this->db,$this->prefix);
 		$field=PublicId::generate();
-		$fields->create($this->scope,$field,['key'=>'date_of_birth','type'=>'date','label'=>'Birth date','subject_view'=>true],$now);
+		$fields->create($this->scope,$field,['key'=>'date_of_birth','type'=>'date','label'=>'Birth date','subject_view'=>true,'subject_edit'=>false,'delegate_edit'=>false],$now);
 		$field_id=(int)$fields->find($this->scope,$field)['id'];
 		$one_id=(int)$services['people']->find($this->scope,$adult)['id'];
 		$two_id=(int)$services['people']->find($this->scope,$other)['id'];
