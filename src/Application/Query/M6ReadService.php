@@ -27,7 +27,7 @@ final class M6ReadService {
 	 * @param DelegationRepository       $delegations Live per-person delegation grants.
 	 * @param RegistrationReadRepository $registrations Read-only registration persistence.
 	 * @param PolicyService              $policy      Authoritative object and field authorization.
-	 * @param EventRepository|null      $events      Scoped public event lookup for registration selection.
+	 * @param EventRepository|null       $events      Scoped public event lookup for registration selection.
 	 */
 	public function __construct(
 		private PersonRepository $people,
@@ -117,7 +117,7 @@ final class M6ReadService {
 		}
 		$items = array();
 		foreach ( $possible as $person ) {
-			$id = (int) $person['id'];
+			$id     = (int) $person['id'];
 			$object = new PolicyObject( $scope->id, 'registration', $id, $id, $post_id );
 			if ( ! $this->policy->can( $actor, 'registration.create', $object )->allowed ) {
 				continue;
