@@ -10,3 +10,6 @@
 .uop-m6-alert:focus-visible{outline:3px solid #b32d2e;outline-offset:3px}
 @media(max-width:480px){.uop-m6-shell{grid-template-columns:minmax(0,1fr);gap:12px}.uop-m6-panel{padding:12px}.uop-m6-toolbar{display:grid;grid-template-columns:minmax(0,1fr)}.uop-m6-toolbar label,.uop-m6-toolbar select,.uop-m6-toolbar button{width:100%;max-width:100%}.uop-m6-actions{display:grid;grid-template-columns:1fr}.uop-m6-page{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.uop-m6-page span{grid-column:1/-1;grid-row:1;text-align:center}.uop-m6-detail dl{grid-template-columns:1fr;gap:3px}.uop-m6-detail dd{margin-bottom:10px}}
 @media(prefers-reduced-motion:reduce){.uop-m6-panel *{transition:none!important;scroll-behavior:auto!important}}
+
+/* P2 regression: keep WordPress-classed actions as reachable as list buttons. */
+.uop-m6-panel .button,.uop-m6-toolbar button,.uop-m6-items button{min-height:44px;min-width:44px;height:auto}

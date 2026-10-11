@@ -26,3 +26,7 @@
 .uop-m3__control input:not([type=checkbox]),.uop-m3__control select{box-sizing:border-box;min-height:44px}
 .uop-m3 button{min-width:44px;min-height:44px;white-space:normal}
 @media(max-width:480px){.uop-m3__actions button{flex:1 1 100%}.uop-m3__field-tools button{flex:1 1 auto}}
+
+/* P2 regression: WordPress .wp-core-ui .button has stronger specificity than
+   the generic UOP button rule and otherwise forces 40px controls. */
+.uop-m3 button.button,.uop-m3 button.components-button{min-height:44px;min-width:44px;height:auto;line-height:1.35}
