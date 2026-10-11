@@ -18,7 +18,13 @@ use UOP\Infrastructure\Database\Connection;
 
 /** Does not make a mere guardian claim into an automatic family permission. */
 final class M6GuardianReviewScreen {
-	/** Bind live policy service and tenant-scoped event selection. */
+	/**
+	 * Bind live policy service and tenant-scoped event selection.
+	 *
+	 * @param GuardianReviewService $reviews Reviewed claims and grants.
+	 * @param Connection            $db      Event scope lookup adapter.
+	 * @param string                $prefix  Trusted tenant table prefix.
+	 */
 	public function __construct(
 		private GuardianReviewService $reviews,
 		private Connection $db,
@@ -30,7 +36,7 @@ final class M6GuardianReviewScreen {
 		add_menu_page(
 			__( 'Guardian requests', 'uop-core' ),
 			__( 'Guardian requests', 'uop-core' ),
-			'uop_manage_delegations',
+			'uop_manage_delegations', // phpcs:ignore -- Registered UOP primitive capability.
 			'uop-guardians',
 			array( $this, 'render' ),
 			'dashicons-groups',
@@ -41,6 +47,7 @@ final class M6GuardianReviewScreen {
 	/** Display requests without exposing emails, birthdates or proof documents. */
 	public function render(): void {
 		$scope = $this->scope();
+		// phpcs:ignore -- Registered UOP primitive capability.
 		if ( ! $scope || ! current_user_can( 'uop_manage_delegations' ) ) {
 			wp_die( esc_html__( 'Guardian review not permitted.', 'uop-core' ) );
 		}
@@ -55,7 +62,9 @@ final class M6GuardianReviewScreen {
 		);
 		echo '<div class="wrap"><h1>' . esc_html__( 'Guardian requests', 'uop-core' ) . '</h1>';
 		echo '<p>' . esc_html__( 'A submitted relationship is only a claim. Check authority separately before granting time-limited access for one event. Neither a shared email nor an age statement is proof.', 'uop-core' ) . '</p>';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only notice.
 		if ( isset( $_GET['result'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This GET value controls only a cosmetic result notice.
 			$status = sanitize_key( wp_unslash( (string) $_GET['result'] ) );
 			if ( in_array( $status, array( 'updated', 'error' ), true ) ) {
 				echo '<p role="status" class="notice notice-' . esc_attr( 'updated' === $status ? 'success' : 'error' ) . '"><span>' . esc_html( 'updated' === $status ? __( 'Request reviewed.', 'uop-core' ) : __( 'Review rejected; no permission was granted.', 'uop-core' ) ) . '</span></p>';
@@ -92,8 +101,13 @@ final class M6GuardianReviewScreen {
 		echo '</ul></div>';
 	}
 
-	/** Require WordPress nonce and server-owned policy before any mutation. */
+	/**
+	 * Require WordPress nonce and server-owned policy before any mutation.
+	 *
+	 * @throws \RuntimeException When an invalid review is requested.
+	 */
 	public function submit(): void {
+		// phpcs:ignore -- Registered UOP primitive capability.
 		if ( ! current_user_can( 'uop_manage_delegations' ) ) {
 			wp_die( esc_html__( 'Guardian review not permitted.', 'uop-core' ) );
 		}
@@ -104,10 +118,10 @@ final class M6GuardianReviewScreen {
 			if ( ! $scope ) {
 				throw new RuntimeException( 'Organization not configured.' );
 			}
-			$claim = PublicId::from_string( sanitize_text_field( wp_unslash( (string) ( $_POST['claim_id'] ?? '' ) ) ) );
+			$claim    = PublicId::from_string( sanitize_text_field( wp_unslash( (string) ( $_POST['claim_id'] ?? '' ) ) ) );
 			$decision = sanitize_key( wp_unslash( (string) ( $_POST['decision'] ?? '' ) ) );
-			$event = absint( $_POST['event_post_id'] ?? 0 );
-			$checked = '1' === (string) ( $_POST['evidence_checked'] ?? '' );
+			$event    = absint( $_POST['event_post_id'] ?? 0 );
+			$checked  = '1' === sanitize_text_field( wp_unslash( (string) ( $_POST['evidence_checked'] ?? '' ) ) );
 			$this->reviews->review( new Actor( get_current_user_id() ), $scope, $claim, $decision, $checked, $event, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 		} catch ( InvalidArgumentException | RuntimeException ) {
 			$result = 'error';
