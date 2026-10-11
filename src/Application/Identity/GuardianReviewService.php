@@ -62,6 +62,7 @@ final class GuardianReviewService {
 	 * @param string        $now         UTC request time.
 	 * @param CorrelationId $correlation Trace reference.
 	 * @return bool Whether a new pending claim was recorded internally.
+	 * @throws \UOP\Infrastructure\Database\DatabaseException On a failed database operation, not a duplicate.
 	 */
 	public function request( Actor $claimant, OrgScope $scope, PublicId $subject, string $now, CorrelationId $correlation ): bool {
 		if ( $claimant->user_id < 1 ) {
