@@ -21,7 +21,7 @@ use WP_REST_Request;
 use WP_REST_Response;
 
 /** No export path, tenant ID, raw SQL filter or arbitrary column name is accepted. */
-final class ExportController {
+final class ExportController extends BaseController {
 	/**
 	 * Authorize and serve only reviewed export methods.
 	 *
@@ -30,46 +30,22 @@ final class ExportController {
 	 */
 	public function __construct( private ExportJobService $exports, private PolicyService $policy ) {}
 
-	/** Register the three narrow M5 routes and a no-JSON private download adapter. */
+	/** Register export DTO endpoints and protected byte-stream transport. */
 	public function register(): void {
-		register_rest_route(
-			'uop/v1',
-			'/exports',
-			array(
-				'methods'             => 'POST',
-				'callback'            => array( $this, 'create' ),
-				'permission_callback' => array( $this, 'can_export' ),
-			)
-		);
-		register_rest_route(
-			'uop/v1',
-			'/exports/(?P<uuid>[0-9a-f-]{36})',
-			array(
-				'methods'             => 'GET',
-				'callback'            => array( $this, 'status' ),
-				'permission_callback' => array( $this, 'can_export' ),
-			)
-		);
-		register_rest_route(
-			'uop/v1',
-			'/exports/(?P<uuid>[0-9a-f-]{36})/download',
-			array(
-				'methods'             => 'GET',
-				'callback'            => array( $this, 'download' ),
-				'permission_callback' => array( $this, 'can_export' ),
-			)
-		);
+		$this->register_endpoint( '/exports', 'POST', array( $this, 'create' ), array( $this, 'can_export' ) );
+		$this->register_endpoint( '/exports/(?P<uuid>[0-9a-f-]{36})', 'GET', array( $this, 'status' ), array( $this, 'can_export' ), $this->uuid_argument() );
+		$this->register_endpoint( '/exports/(?P<uuid>[0-9a-f-]{36})/download', 'GET', array( $this, 'download' ), array( $this, 'can_export' ), $this->uuid_argument() );
 		add_filter( 'rest_pre_serve_request', array( $this, 'serve_download' ), 10, 3 );
 	}
 
 	/**
 	 * Enforce current WordPress and organization capabilities on every route.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
-	public function can_export(): bool {
+	public function can_export(): bool|WP_Error {
 		$scope = $this->scope();
-		return null !== $scope && $this->policy->can( new Actor( get_current_user_id() ), 'export.create', new PolicyObject( $scope->id, 'organization', $scope->id ) )->allowed;
+		return null !== $scope && $this->policy->can( new Actor( get_current_user_id() ), 'export.create', new PolicyObject( $scope->id, 'organization', $scope->id ) )->allowed ? true : $this->denied();
 	}
 
 	/**
@@ -80,11 +56,18 @@ final class ExportController {
 	 */
 	public function create( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
-			$body = (array) $request->get_json_params();
-			if ( count( $body ) !== 3 || array_diff( array_keys( $body ), array( 'command_id', 'columns', 'status' ) )
-				|| ! is_string( $body['command_id'] ?? null ) || ! is_array( $body['columns'] ?? null ) || ! is_string( $body['status'] ?? null ) ) {
-				return new WP_Error( 'uop_invalid_export', 'Invalid export request.', array( 'status' => 400 ) );
-			}
+			$body = $this->strict_json_object(
+				$request,
+				array(
+					'command_id' => array( 'type' => 'string' ),
+					'columns'    => array(
+						'type'  => 'array',
+						'items' => array( 'type' => 'string' ),
+					),
+					'status'     => array( 'type' => 'string' ),
+				),
+				array( 'command_id', 'columns', 'status' )
+			);
 			$uuid = $this->exports->request(
 				new Actor( get_current_user_id() ),
 				$this->required_scope(),
@@ -102,9 +85,9 @@ final class ExportController {
 				202
 			);
 		} catch ( InvalidArgumentException ) {
-			return new WP_Error( 'uop_invalid_export', 'Invalid export request.', array( 'status' => 400 ) );
+			return RestError::for_kind( 'invalid_schema' );
 		} catch ( RuntimeException ) {
-			return new WP_Error( 'uop_export_conflict', 'Export request is unavailable.', array( 'status' => 409 ) );
+			return RestError::for_kind( 'conflict' );
 		}
 	}
 
@@ -121,7 +104,7 @@ final class ExportController {
 				200
 			);
 		} catch ( InvalidArgumentException | RuntimeException ) {
-			return new WP_Error( 'uop_export_unavailable', 'Export is not available.', array( 'status' => 404 ) );
+			return RestError::for_kind( 'not_found' );
 		}
 	}
 
@@ -142,7 +125,7 @@ final class ExportController {
 			$response->header( 'X-Content-Type-Options', 'nosniff' );
 			return $response;
 		} catch ( InvalidArgumentException | RuntimeException ) {
-			return new WP_Error( 'uop_export_unavailable', 'Export is not available.', array( 'status' => 404 ) );
+			return RestError::for_kind( 'not_found' );
 		}
 	}
 

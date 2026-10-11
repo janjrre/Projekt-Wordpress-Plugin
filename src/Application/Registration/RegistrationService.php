@@ -65,13 +65,14 @@ final class RegistrationService {
 	 * @phpstan-param array<string, mixed> $input
 	 * @param string        $utc_now     Trusted UTC instant.
 	 * @param CorrelationId $correlation Request correlation.
+	 * @param bool          $representative_confirmed Separate affirmative declaration required for delegated consent.
 	 * @return PublicId Canonical persisted registration UUID.
 	 * @throws RuntimeException When state, policy or required fields prohibit submission.
 	 * @throws InvalidArgumentException For malformed input.
 	 */
-	public function submit( Actor $actor, OrgScope $scope, PublicId $person_id, PublicId $event_id, ?PublicId $occurrence, PublicId $command_id, array $input, string $utc_now, CorrelationId $correlation ): PublicId {
+	public function submit( Actor $actor, OrgScope $scope, PublicId $person_id, PublicId $event_id, ?PublicId $occurrence, PublicId $command_id, array $input, string $utc_now, CorrelationId $correlation, bool $representative_confirmed = false ): PublicId {
 		return $this->tx->run(
-			fn (): PublicId => $this->submit_inside( $actor, $scope, $person_id, $event_id, $occurrence, $command_id, $input, $utc_now, $correlation, false )
+			fn (): PublicId => $this->submit_inside( $actor, $scope, $person_id, $event_id, $occurrence, $command_id, $input, $utc_now, $correlation, false, $representative_confirmed )
 		);
 	}
 
@@ -101,7 +102,7 @@ final class RegistrationService {
 				}
 				$post_id = (int) $form['event_post_id'];
 				$post    = get_post( $post_id );
-				if ( ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status ) {
+				if ( ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status || ! empty( $post->post_password ) ) {
 					throw new RuntimeException( 'Guest event is unavailable.' );
 				}
 				$occurrence_id = $this->registrations->occurrence_id( $scope, $post_id, $occurrence );
@@ -142,11 +143,12 @@ final class RegistrationService {
 	 * @param string        $utc_now     Trusted time.
 	 * @param CorrelationId $correlation Trace identity.
 	 * @param bool          $guest       Internal anonymous guest flag.
+	 * @param bool          $representative_confirmed Current actor's declaration, never trusted as authorization.
 	 * @return PublicId Stored registration identity.
 	 * @throws RuntimeException When business or policy checks fail.
 	 * @throws InvalidArgumentException When form values are invalid.
 	 */
-	private function submit_inside( Actor $actor, OrgScope $scope, PublicId $person_id, PublicId $event_id, ?PublicId $occurrence, PublicId $command_id, array $input, string $utc_now, CorrelationId $correlation, bool $guest ): PublicId {
+	private function submit_inside( Actor $actor, OrgScope $scope, PublicId $person_id, PublicId $event_id, ?PublicId $occurrence, PublicId $command_id, array $input, string $utc_now, CorrelationId $correlation, bool $guest, bool $representative_confirmed = false ): PublicId {
 		$person = $this->registrations->lock_person( $scope, $person_id );
 		if ( ! $person ) {
 			throw new RuntimeException( 'Registration subject unavailable.' );
@@ -157,7 +159,7 @@ final class RegistrationService {
 		}
 		$event_post_id = (int) $form['event_post_id'];
 		$post          = get_post( $event_post_id );
-		if ( ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status ) {
+		if ( ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status || ( $guest && ! empty( $post->post_password ) ) ) {
 			throw new RuntimeException( 'Event is not published.' );
 		}
 		if ( $guest && ( 'public' !== $form['visibility'] || 1 !== (int) $form['require_email_verification'] ) ) {
@@ -297,7 +299,7 @@ final class RegistrationService {
 		$version_id      = PublicId::from_binary( $form['form_version_public_id'] );
 		$evidence_writer = null;
 		if ( $pending_consents ) {
-			$evidence_writer = function ( int $registration_id ) use ( $actor, $scope, $person, $event_post_id, $pending_consents, $stored, $values, $utc_now, $correlation, $guest ): array {
+			$evidence_writer = function ( int $registration_id ) use ( $actor, $scope, $person, $event_post_id, $pending_consents, $stored, $values, $utc_now, $correlation, $guest, $representative_confirmed ): array {
 				$historical_fields = $stored;
 				$reference_values  = $values;
 				foreach ( $pending_consents as $key => $consent ) {
@@ -315,7 +317,8 @@ final class RegistrationService {
 						$consent['required'],
 						$guest,
 						$utc_now,
-						$correlation
+						$correlation,
+						$representative_confirmed
 					);
 					$historical_fields[ $key ] = $record['evidence'];
 					$reference_values[ $key ]  = array(

@@ -10,6 +10,16 @@ for($i=0;$i<$zip->numFiles;$i++) {
 }
 if (!str_contains($zip->getFromName('uop-core/uop-core.php'),'Version: 0.1.0-alpha.2')) throw new RuntimeException('Wrong release version');
 if ($zip->getFromName('uop-core/schema/manifest.json')!==file_get_contents($root.'/schema/manifest.json')) throw new RuntimeException('Packaged schema changed');
+foreach (['event-list', 'event-details', 'registration-form', 'portal', 'my-registrations'] as $block) {
+    $name='uop-core/blocks/'.$block.'/block.json';
+    $data=$zip->getFromName($name);
+    if (!is_string($data)) throw new RuntimeException('Packaged block metadata missing: '.$block);
+    $meta=json_decode($data,true,512,JSON_THROW_ON_ERROR);
+    if (($meta['name']??null)!=='uop/'.$block || ($meta['apiVersion']??null)!==3) throw new RuntimeException('Invalid packaged block registration: '.$block);
+}
+if (!is_string($zip->getFromName('uop-core/assets/m6-blocks-editor.js'))) throw new RuntimeException('Gutenberg editor bundle missing');
+if (!is_string($zip->getFromName('uop-core/assets/m6-blocks.css'))) throw new RuntimeException('Frontend block stylesheet missing');
+if (!is_string($zip->getFromName('uop-core/assets/m6-registration.js'))) throw new RuntimeException('M6-10 secure registration controller asset missing');
 $zip->close();
 $directory=sys_get_temp_dir().'/uop-http-'.bin2hex(random_bytes(8));
 mkdir($directory);

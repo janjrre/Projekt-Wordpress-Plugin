@@ -52,6 +52,13 @@ define( 'UOP_CORE_VERSION', '0.1.0-alpha.2' );
 define( 'UOP_CORE_FILE', __FILE__ );
 require_once __DIR__ . '/vendor/autoload.php';
 
+// Register the bundled Action Scheduler before WordPress fires plugins_loaded.
+// Composer class autoloading alone does not load its function entrypoint;
+// without this, real installations fail closed on guest verification and mail.
+// Action Scheduler's version registry selects the correct instance when another
+// plugin also bundles the library.
+require_once __DIR__ . '/vendor/woocommerce/action-scheduler/action-scheduler.php';
+
 register_activation_hook( __FILE__, array( \UOP\Core\Bootstrap::class, 'activate' ) );
 register_deactivation_hook( __FILE__, array( \UOP\Core\Bootstrap::class, 'deactivate' ) );
 add_action( 'plugins_loaded', array( \UOP\Core\Bootstrap::class, 'boot' ), -20 );

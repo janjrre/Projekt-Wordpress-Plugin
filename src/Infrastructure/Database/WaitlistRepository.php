@@ -91,7 +91,7 @@ final class WaitlistRepository {
 	 */
 	public function registration( OrgScope $scope, int $id ): ?array {
 		$rows = $this->db->rows(
-			'SELECT id, public_id, person_id, event_post_id, status, occurrence_id, email_verified_at, source FROM %i WHERE organization_id = %d AND id = %d LIMIT 1 FOR UPDATE',
+			'SELECT id, public_id, person_id, event_post_id, status, occurrence_id, email_verified_at, contact_email, source FROM %i WHERE organization_id = %d AND id = %d LIMIT 1 FOR UPDATE',
 			array( $this->prefix . 'registrations', $scope->id, $id )
 		);
 		return $rows[0] ?? null;

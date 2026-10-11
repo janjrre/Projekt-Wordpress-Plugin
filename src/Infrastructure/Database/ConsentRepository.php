@@ -103,6 +103,20 @@ final class ConsentRepository {
 		return $version;
 	}
 
+
+	/**
+	 * List a small tenant-owned page of definition metadata, no document bodies.
+	 *
+	 * @param OrgScope $scope Trusted organization.
+	 * @return list<array<string,mixed>> Opaque public identities and current version metadata.
+	 */
+	public function summaries( OrgScope $scope ): array {
+		return $this->db->rows(
+			'SELECT d.public_id, d.consent_key, d.title, d.status, v.public_id AS version_public_id, v.version FROM %i d LEFT JOIN %i v ON v.id = d.current_version_id AND v.definition_id = d.id WHERE d.organization_id = %d ORDER BY d.id DESC LIMIT 50',
+			array( $this->prefix . 'consent_definitions', $this->prefix . 'consent_versions', $scope->id )
+		);
+	}
+
 	/**
 	 * Read a historical immutable consent document through its definition owner.
 	 *

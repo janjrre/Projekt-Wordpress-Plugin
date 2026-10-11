@@ -30,7 +30,7 @@ final readonly class PolicyObject {
 		public ?int $event_post_id = null,
 		public bool $archived = false
 	) {
-		if ( $organization_id < 1 || $id < 1 || ! in_array( $type, array( 'person', 'registration', 'event', 'form', 'delegation', 'organization', 'audit' ), true ) ) {
+		if ( $organization_id < 1 || $id < 1 || ! in_array( $type, array( 'person', 'registration', 'event', 'form', 'delegation', 'relationship', 'organization', 'audit' ), true ) ) {
 			throw new InvalidArgumentException( 'Invalid policy resource.' );
 		}
 	}

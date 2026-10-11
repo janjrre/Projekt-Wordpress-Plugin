@@ -20,8 +20,16 @@ final class PolicyFixtureConnection implements Connection {
         if (str_contains($sql, 'FROM %i WHERE organization_id = %d AND user_id = %d')) {
             return array_values(array_filter($this->assignments, static fn($a) => $a['organization_id'] === $args[1] && $a['user_id'] === $args[2] && $a['status'] === 'active'));
         }
-        if (str_contains($sql, 'AND subject_person_id = %d AND permission_set = %s')) {
-            return array_values(array_filter($this->delegations, static fn($d) => $d['organization_id'] === $args[1] && $d['actor_user_id'] === $args[2] && $d['subject_person_id'] === $args[3] && $d['permission_set'] === $args[4] && ($d['scope_type'] === 'organization' || $d['scope_id'] === $args[5]) && $d['status'] === 'active'));
+        if (str_contains($sql, 'AND d.subject_person_id = %d AND d.permission_set = %s')) {
+            // Mirror the organization/active-subject joins and scope criteria
+            // from DelegationRepository::allows(), not the previous SQL shape.
+            return array_values(array_filter($this->delegations, function ($d) use ($args): bool {
+                $subject = array_filter($this->people, static fn($p) => $p['id'] === $d['subject_person_id'] && $p['organization_id'] === $args[4] && $p['status'] === 'active');
+                return $d['organization_id'] === $args[4] && $d['actor_user_id'] === $args[5]
+                    && $d['subject_person_id'] === $args[6] && $d['permission_set'] === $args[7]
+                    && ($d['scope_type'] === 'organization' || ($d['scope_type'] === 'event' && $d['scope_id'] === $args[8] && $args[9] > 0))
+                    && $d['status'] === 'active' && !empty($subject) && empty($d['relationship_id']);
+            }));
         }
         return [];
     }
@@ -39,6 +47,7 @@ final class PolicyTest extends TestCase {
 
     public function test_relationship_is_not_permission_and_cross_org_isolation(): void {
         $db = new PolicyFixtureConnection();
+        $db->people[] = ['organization_id'=>1,'id'=>40,'wp_user_id'=>null,'status'=>'active'];
         $policy = $this->policy($db, []);
         $child = new PolicyObject(1, 'person', 40);
         self::assertFalse($policy->can(new Actor(7), 'person.view', $child)->allowed);

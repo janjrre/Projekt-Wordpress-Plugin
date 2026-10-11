@@ -81,7 +81,7 @@ final class DelegationService {
 		if ( null !== $relationship_id ) {
 			$relationship   = $this->relationships->find( $scope, $relationship_id );
 			$grantee_person = $this->people->by_user( $scope, $grantee_user_id );
-			if ( ! $relationship || ! $grantee_person || 'active' !== $relationship['status'] || (int) $relationship['from_person_id'] !== (int) $grantee_person['id'] || (int) $relationship['to_person_id'] !== (int) $subject['id'] ) {
+			if ( ! $this->relationship_is_current( $relationship, $grantee_person, (int) $subject['id'] ) ) {
 				throw new RuntimeException( 'Delegation relationship evidence mismatch.' );
 			}
 		}
@@ -89,6 +89,15 @@ final class DelegationService {
 			function () use ( $manager, $scope, $grantee_user_id, $subject, $permission, $scope_type, $scope_id, $relationship, $utc_now, $correlation ): PublicId {
 				if ( ! $this->policy->can( $manager, 'delegation.manage', new PolicyObject( $scope->id, 'person', (int) $subject['id'] ) )->allowed ) {
 					throw new RuntimeException( 'Delegation no longer permitted.' );
+				}
+				// The relationship is evidence, not a permission. Re-check inside the
+				// transaction so a revoked/expired relationship cannot be regranted.
+				if ( $relationship ) {
+					$current = $this->relationships->find( $scope, PublicId::from_binary( (string) $relationship['public_id'] ) );
+					$linked  = $this->people->by_user( $scope, $grantee_user_id );
+					if ( ! $this->relationship_is_current( $current, $linked, (int) $subject['id'] ) ) {
+						throw new RuntimeException( 'Delegation relationship evidence expired or was revoked.' );
+					}
 				}
 				$new_id = PublicId::generate();
 				$this->delegations->grant( $scope, $new_id, $grantee_user_id, (int) $subject['id'], $permission, $scope_type, $scope_id, $relationship ? (int) $relationship['id'] : null, $utc_now );
@@ -131,6 +140,27 @@ final class DelegationService {
 				$this->publisher->after_commit( 'delegation.revoked', $event, $public_id );
 			}
 		);
+	}
+
+	/**
+	 * Validate a currently linked representative without treating an asserted
+	 * family relation as proof of legal authority.
+	 *
+	 * @param array<string,mixed>|null $relationship Scoped relation snapshot.
+	 * @param array<string,mixed>|null $actor_person Account-linked person.
+	 * @param int                      $subject_id   Actual subject.
+	 */
+	private function relationship_is_current( ?array $relationship, ?array $actor_person, int $subject_id ): bool {
+		if ( ! $relationship || ! $actor_person
+			|| 'active' !== $relationship['status'] || 'active' !== $actor_person['status']
+			|| ! in_array( $relationship['type_key'], array( 'guardian_of', 'representative_of' ), true )
+			|| (int) $relationship['from_person_id'] !== (int) $actor_person['id']
+			|| (int) $relationship['to_person_id'] !== $subject_id ) {
+			return false;
+		}
+		$now = gmdate( 'Y-m-d H:i:s' );
+		return ( null === $relationship['valid_from'] || $relationship['valid_from'] <= $now )
+			&& ( null === $relationship['valid_to'] || $relationship['valid_to'] > $now );
 	}
 
 	/**

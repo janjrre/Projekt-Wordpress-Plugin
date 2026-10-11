@@ -127,4 +127,21 @@ final class PersonRepository extends ScopedRepository {
 			array( $this->table, $utc_now, $scope->id, $user_id )
 		);
 	}
+
+	/**
+	 * Optimistic, organization-scoped update of the editable display name.
+	 *
+	 * @param OrgScope $scope   Trusted tenant.
+	 * @param PublicId $id      Person UUID.
+	 * @param int      $version Observed row version.
+	 * @param string   $name    Validated name.
+	 * @param string   $utc_now Trusted UTC timestamp.
+	 * @return bool Whether the current version was updated.
+	 */
+	public function rename( OrgScope $scope, PublicId $id, int $version, string $name, string $utc_now ): bool {
+		return 1 === $this->db->execute(
+			"UPDATE %i SET display_name = %s, version = version + 1, updated_at = %s WHERE organization_id = %d AND public_id = %s AND version = %d AND status = 'active'",
+			array( $this->table, $name, $utc_now, $scope->id, $id->to_binary(), $version )
+		);
+	}
 }

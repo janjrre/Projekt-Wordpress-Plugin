@@ -44,15 +44,15 @@ final class RegistrationFactsService {
 		 *
 		 * @var array<string, bool> $keys
 		 */
-		$keys      = array();
-		$needs_age = false;
-		$engine    = new ConditionEngine();
+		$keys     = array();
+		$age_keys = array();
+		$engine   = new ConditionEngine();
 		foreach ( $conditions as $condition ) {
 			$engine->validate( $condition );
-			$this->references( $condition, $keys, $needs_age );
+			$this->references( $condition, $keys, $age_keys );
 		}
 		$context = array();
-		if ( $needs_age ) {
+		if ( $age_keys ) {
 			$start = $this->repository->event_start( $scope, $event_post, $occurrence );
 			if ( null === $start ) {
 				throw new RuntimeException( 'Age requirements need a unique scheduled event start.' );
@@ -78,7 +78,10 @@ final class RegistrationFactsService {
 			if ( ! $this->policy->can( $actor, 'person.view', $object, $definition )->allowed ) {
 				throw new RuntimeException( 'Profile eligibility field is not authorized for this actor.' );
 			}
-			$type  = (string) $field['data_type'];
+			$type = (string) $field['data_type'];
+			if ( isset( $age_keys[ $key ] ) && ( 'date' !== $type || (bool) $field['subject_edit'] || (bool) $field['delegate_edit'] ) ) {
+				throw new RuntimeException( 'Age eligibility requires an organization-controlled date of birth.' );
+			}
 			$value = 'multiselect' === $type ? array() : null;
 			foreach ( $rows as $row ) {
 				if ( null === $row['ordinal'] ) {
@@ -97,6 +100,16 @@ final class RegistrationFactsService {
 					$value = $actual;
 				}
 			}
+			if ( isset( $age_keys[ $key ] ) ) {
+				$birth = is_string( $value ) ? \DateTimeImmutable::createFromFormat( '!Y-m-d', $value, new \DateTimeZone( 'UTC' ) ) : false;
+				if ( false === $birth || $birth->format( 'Y-m-d' ) !== $value || $value > gmdate( 'Y-m-d' ) ) {
+					throw new RuntimeException( 'A valid, organization-controlled date of birth is required for age eligibility.' );
+				}
+				$event_day = substr( $context['event.start'], 0, 10 );
+				if ( $value > $event_day ) {
+					throw new RuntimeException( 'Date of birth must precede the scheduled event.' );
+				}
+			}
 			$profile[ $key ] = $value;
 		}
 		return array(
@@ -111,30 +124,31 @@ final class RegistrationFactsService {
 	 * @param array<string, mixed> $node      Validated AST.
 	 * @param array<string, bool>  $keys      Mutable distinct profile keys.
 	 * @param-out array<string, bool> $keys
-	 * @param bool                 $needs_age Whether age requires event context.
+	 * @param array<string, bool>  $age_keys  Server-controlled birth fields used by age conditions.
+	 * @param-out array<string, bool> $age_keys
 	 * @throws RuntimeException When age is asserted through request-supplied data.
 	 */
-	private function references( array $node, array &$keys, bool &$needs_age ): void {
+	private function references( array $node, array &$keys, array &$age_keys ): void {
 		foreach ( array( 'all', 'any' ) as $group ) {
 			if ( isset( $node[ $group ] ) ) {
 				foreach ( $node[ $group ] as $child ) {
-					$this->references( $child, $keys, $needs_age );
+					$this->references( $child, $keys, $age_keys );
 				}
 				return;
 			}
 		}
 		if ( isset( $node['not'] ) ) {
-			$this->references( $node['not'], $keys, $needs_age );
+			$this->references( $node['not'], $keys, $age_keys );
 			return;
 		}
 		if ( ! isset( $node['source'] ) ) {
 			return;
 		}
 		if ( in_array( $node['operator'], array( 'age_lt_at', 'age_gte_at' ), true ) ) {
-			if ( 'profile' !== $node['source'] ) {
-				throw new RuntimeException( 'Age checks require a trusted profile date of birth.' );
+			if ( 'profile' !== $node['source'] || 'date_of_birth' !== $node['field'] ) {
+				throw new RuntimeException( 'Age checks require the organization-controlled date_of_birth profile field.' );
 			}
-			$needs_age = true;
+			$age_keys['date_of_birth'] = true;
 		}
 		if ( 'profile' === $node['source'] ) {
 			$keys[ (string) $node['field'] ] = true;

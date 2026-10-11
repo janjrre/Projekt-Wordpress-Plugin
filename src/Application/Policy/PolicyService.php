@@ -104,7 +104,8 @@ final class PolicyService {
 					$mode = 'self';
 				} else {
 					$permission = match ( $action ) {
-						'person.view', 'registration.view' => 'profile_view',
+						'person.view' => 'profile_view',
+						'registration.view' => 'registration_manage',
 						'person.edit' => 'profile_edit',
 						default => 'registration_manage',
 					};

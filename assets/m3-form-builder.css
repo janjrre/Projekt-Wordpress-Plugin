@@ -18,3 +18,43 @@
 .uop-m3__hint {color:#50575e;font-size:13px}
 .uop-m3__heading {margin:0;font-size:17px}
 @media (max-width:600px) {.uop-m3__toolbar,.uop-m3__field {padding:12px}.uop-m3__field-tools {width:100%}}
+
+/* P2: keyboard and touch reachability on narrow WordPress admin viewports. */
+.uop-m3,.uop-m3__panel,.uop-m3__toolbar,.uop-m3__field{min-width:0;max-width:100%;box-sizing:border-box}
+.uop-m3__cols{grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
+.uop-m3__control{min-width:0}
+.uop-m3__control input:not([type=checkbox]),.uop-m3__control select{box-sizing:border-box;min-height:44px}
+.uop-m3 button{min-width:44px;min-height:44px;white-space:normal}
+@media(max-width:480px){.uop-m3__actions button{flex:1 1 100%}.uop-m3__field-tools button{flex:1 1 auto}}
+
+/* P2 regression: WordPress .wp-core-ui .button has stronger specificity than
+   the generic UOP button rule and otherwise forces 40px controls. */
+.uop-m3 button.button,.uop-m3 button.components-button{min-height:44px;min-width:44px;height:auto;line-height:1.35}
+
+/* P4 hardening: WordPress admin button variants must not override the
+   minimum 44px mobile target in the form builder. */
+.wp-core-ui .uop-m3 button.button,
+.wp-core-ui .uop-m3 button.button-primary,
+.wp-core-ui .uop-m3 button.button-secondary {min-height:44px;min-width:44px;height:auto}
+
+
+/* Phase 00: WP's admin button variants can override the 44px target even
+   after this stylesheet is parsed. Scope the accessibility floor strictly
+   to the UOP form builder rather than relaxing the Chromium assertion. */
+body.wp-admin .uop-m3 button.button,
+body.wp-admin .uop-m3 button.button-primary,
+body.wp-admin .uop-m3 button.button-secondary,
+body.wp-admin .uop-m3 button.components-button {
+  min-height:44px !important;
+  min-width:44px !important;
+  height:auto;
+}
+
+/* Dedicated WP admin mount point: the builder's actual buttons take
+   precedence over competing button-class declarations from other admin UI. */
+#wpbody-content #uop-m3-form-builder .uop-m3 button.button,
+#wpbody-content #uop-m3-form-builder .uop-m3 button.components-button {
+  min-height:44px !important;
+  min-width:44px !important;
+  box-sizing:border-box;
+}

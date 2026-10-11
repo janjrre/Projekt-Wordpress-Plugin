@@ -196,7 +196,9 @@ final class M5ExportJobsTest extends TestCase {
         self::assertStringContainsString('REST member',$file);
         self::assertFalse(str_contains($file,'uop_private_csv'));
         $this->authorized=false;
-        self::assertFalse($controller->can_export());
+        $denied=$controller->can_export();
+        self::assertInstanceOf(\WP_Error::class,$denied);
+        self::assertSame('uop_forbidden',$denied->get_error_code());
         (new \WP_User($this->actor->user_id))->set_role('subscriber');
         wp_set_current_user(0);
         wp_set_current_user($this->actor->user_id);

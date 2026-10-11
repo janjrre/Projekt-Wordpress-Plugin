@@ -11,7 +11,7 @@ use InvalidArgumentException;
 use UOP\Core\PublicId;
 use UOP\Domain\Organization\OrgScope;
 
-/** Validated organization-owned service. */
+/** Live grants remain contingent on the subject and any linked relationship. */
 final class DelegationRepository {
 	/**
 	 * Initialize required dependencies and validated values.
@@ -36,8 +36,8 @@ final class DelegationRepository {
 			return false;
 		}
 		$rows = $this->db->rows(
-			"SELECT id FROM %i WHERE organization_id = %d AND actor_user_id = %d AND subject_person_id = %d AND permission_set = %s AND status = 'active' AND (valid_from IS NULL OR valid_from <= UTC_TIMESTAMP()) AND (valid_to IS NULL OR valid_to > UTC_TIMESTAMP()) AND ((scope_type = 'organization' AND scope_id = 0) OR (scope_type = 'event' AND scope_id = %d AND %d > 0)) LIMIT 1",
-			array( $this->prefix . 'delegations', $scope->id, $actor_id, $subject_id, $permission, $event_id, $event_id )
+			"SELECT d.id FROM %i d INNER JOIN %i subject ON subject.id = d.subject_person_id AND subject.organization_id = d.organization_id AND subject.status = 'active' LEFT JOIN %i relation ON relation.id = d.relationship_id AND relation.organization_id = d.organization_id AND relation.to_person_id = d.subject_person_id AND relation.status = 'active' AND relation.type_key IN ('guardian_of', 'representative_of') AND (relation.valid_from IS NULL OR relation.valid_from <= UTC_TIMESTAMP()) AND (relation.valid_to IS NULL OR relation.valid_to > UTC_TIMESTAMP()) LEFT JOIN %i linked_actor ON linked_actor.id = relation.from_person_id AND linked_actor.organization_id = d.organization_id AND linked_actor.wp_user_id = d.actor_user_id AND linked_actor.status = 'active' WHERE d.organization_id = %d AND d.actor_user_id = %d AND d.subject_person_id = %d AND d.permission_set = %s AND d.status = 'active' AND (d.valid_from IS NULL OR d.valid_from <= UTC_TIMESTAMP()) AND (d.valid_to IS NULL OR d.valid_to > UTC_TIMESTAMP()) AND ((d.scope_type = 'organization' AND d.scope_id = 0) OR (d.scope_type = 'event' AND d.scope_id = %d AND %d > 0)) AND (d.relationship_id IS NULL OR (relation.id IS NOT NULL AND linked_actor.id IS NOT NULL)) LIMIT 1",
+			array( $this->prefix . 'delegations', $this->prefix . 'persons', $this->prefix . 'relationships', $this->prefix . 'persons', $scope->id, $actor_id, $subject_id, $permission, $event_id, $event_id )
 		);
 		return ! empty( $rows );
 	}
@@ -51,8 +51,8 @@ final class DelegationRepository {
 	 */
 	public function for_actor( OrgScope $scope, int $actor_id ): array {
 		return $this->db->rows(
-			"SELECT id, public_id, subject_person_id, permission_set, scope_type, scope_id FROM %i WHERE organization_id = %d AND actor_user_id = %d AND status = 'active' AND (valid_from IS NULL OR valid_from <= UTC_TIMESTAMP()) AND (valid_to IS NULL OR valid_to > UTC_TIMESTAMP()) ORDER BY id ASC LIMIT 100",
-			array( $this->prefix . 'delegations', $scope->id, $actor_id )
+			"SELECT d.id, d.public_id, d.subject_person_id, d.permission_set, d.scope_type, d.scope_id FROM %i d INNER JOIN %i subject ON subject.id = d.subject_person_id AND subject.organization_id = d.organization_id AND subject.status = 'active' LEFT JOIN %i relation ON relation.id = d.relationship_id AND relation.organization_id = d.organization_id AND relation.to_person_id = d.subject_person_id AND relation.status = 'active' AND relation.type_key IN ('guardian_of', 'representative_of') AND (relation.valid_from IS NULL OR relation.valid_from <= UTC_TIMESTAMP()) AND (relation.valid_to IS NULL OR relation.valid_to > UTC_TIMESTAMP()) LEFT JOIN %i linked_actor ON linked_actor.id = relation.from_person_id AND linked_actor.organization_id = d.organization_id AND linked_actor.wp_user_id = d.actor_user_id AND linked_actor.status = 'active' WHERE d.organization_id = %d AND d.actor_user_id = %d AND d.status = 'active' AND (d.valid_from IS NULL OR d.valid_from <= UTC_TIMESTAMP()) AND (d.valid_to IS NULL OR d.valid_to > UTC_TIMESTAMP()) AND (d.relationship_id IS NULL OR (relation.id IS NOT NULL AND linked_actor.id IS NOT NULL)) ORDER BY d.id ASC LIMIT 100",
+			array( $this->prefix . 'delegations', $this->prefix . 'persons', $this->prefix . 'relationships', $this->prefix . 'persons', $scope->id, $actor_id )
 		);
 	}
 
@@ -82,7 +82,7 @@ final class DelegationRepository {
 			throw new InvalidArgumentException( 'Delegation subject is outside the organization.' );
 		}
 		$this->db->execute(
-			"INSERT INTO %i (public_id, organization_id, actor_user_id, subject_person_id, relationship_id, permission_set, scope_type, scope_id, status, created_at) VALUES (%s,%d,%d,%d,NULLIF(%d, 0),%s,%s,%d,'active',%s) ON DUPLICATE KEY UPDATE status = 'active', revoked_at = NULL, valid_from = NULL, valid_to = NULL",
+			"INSERT INTO %i (public_id, organization_id, actor_user_id, subject_person_id, relationship_id, permission_set, scope_type, scope_id, status, created_at) VALUES (%s,%d,%d,%d,NULLIF(%d, 0),%s,%s,%d,'active',%s) ON DUPLICATE KEY UPDATE status = 'active', revoked_at = NULL, valid_from = NULL, valid_to = NULL, relationship_id = COALESCE(VALUES(relationship_id), relationship_id)",
 			array( $this->prefix . 'delegations', $id->to_binary(), $scope->id, $actor_id, $subject_id, $relationship_id ?? 0, $permission, $scope_type, $scope_id, $utc_now )
 		);
 	}
