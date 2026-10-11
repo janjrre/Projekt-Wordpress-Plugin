@@ -207,6 +207,14 @@ final class M6PeopleRegistrationTest extends TestCase {
 		self::assertSame( array( $adult->to_string() ), array_column( $initial_subjects->get_data()['items'], 'public_id' ) );
 		self::assertSame( 'self', $initial_subjects->get_data()['items'][0]['decision_context'] );
 		self::assertArrayNotHasKey( 'primary_email', $initial_subjects->get_data()['items'][0] );
+		$invalid_declaration = $this->json( 'POST', '/uop/v1/registrations', array(
+			'person_id' => $adult->to_string(),
+			'event_id' => $event->to_string(),
+			'command_id' => PublicId::generate()->to_string(),
+			'fields' => array( 'name' => 'Parent' ),
+			'representative_confirmation' => 'true',
+		) );
+		self::assertSame( 400, $invalid_declaration->get_status(), 'Only a strict boolean is allowed; a string must never count as confirmation.' );
 		$submitted = $this->json( 'POST', '/uop/v1/registrations', array( 'person_id' => $adult->to_string(), 'event_id' => $event->to_string(), 'command_id' => PublicId::generate()->to_string(), 'fields' => array( 'name' => 'Parent' ) ) );
 		self::assertSame( 201, $submitted->get_status(), wp_json_encode( $submitted->get_data() ) );
 		$id = $submitted->get_data()['public_id'];
