@@ -66,6 +66,16 @@ foreach ( array( 'adult' => 'Adult Member', 'parent' => 'Caregiver Member', 'str
 }
 $minor = PublicId::generate();
 $people->create( $scope, $minor, 'Caregiver Minor', 'parent-ci@example.invalid', $now );
+// Own member login represents the dependent person's self-access, separate
+// from the caregiver's explicitly revocable registration-management grant.
+$minor_user = wp_create_user( 'uop_ci_minor', $password, 'minor-ci@example.invalid' );
+if ( is_wp_error( $minor_user ) ) {
+	throw new RuntimeException( 'Cannot create synthetic minor account.' );
+}
+( new WP_User( $minor_user ) )->set_role( 'subscriber' );
+if ( ! $people->link( $scope, $minor, $minor_user, $now ) ) {
+	throw new RuntimeException( 'Cannot link synthetic minor to own login.' );
+}
 update_option( 'uop_m610_ci_minor', $minor->to_string(), false );
 $post = wp_insert_post( array( 'post_type' => 'uop_event', 'post_status' => 'publish', 'post_title' => 'UOP CI members-only signup' ), true );
 if ( is_wp_error( $post ) || ! is_int( $post ) ) {

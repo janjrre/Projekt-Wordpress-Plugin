@@ -138,3 +138,18 @@ test('administrator: real control center, registration review, capacity acceptan
   await expect(page.locator('.uop-m6-console__table')).toBeVisible();
   action('verify-states');
 });
+
+test('dependent minor: separate own WordPress login sees own rejected registration after caregiver access was revoked', async ({ page }) => {
+  verifyIsolated();
+  await login(page, 'uop_ci_minor');
+  const root = await portal(page);
+  const people = root.locator('select.uop-portal__select');
+  await expect(people.locator('option')).toHaveCount(1);
+  await expect(people).toContainText('Caregiver Minor');
+  await expect(people).not.toContainText('Caregiver Member');
+  await expect(root.locator('.uop-portal__entry')).toContainText('rejected');
+  await expect(root.getByRole('button', { name: /Cancel registration/ })).toHaveCount(0);
+  const denied = await page.goto('/wp-admin/admin.php?page=uop-registrations');
+  expect(denied.status()).toBeGreaterThanOrEqual(400);
+  await expect(page.getByRole('heading', { name: 'Registrations', exact: true })).toHaveCount(0);
+});
