@@ -89,10 +89,12 @@ final class M5ConsentRecordsTest extends TestCase {
 		$again=$s['submit']->submit($s['actor'],$this->scope,$person,$event,null,$key,$input,$now,CorrelationId::generate());
 		self::assertSame($registration->to_string(),$again->to_string());
 		$row=$this->db->rows('SELECT id,person_id FROM %i WHERE organization_id = %d AND public_id = %s',[$this->prefix.'registrations',$this->scope->id,$registration->to_binary()])[0];
-		$records=$this->db->rows('SELECT id,public_id,decision,actor_user_id,subject_person_id,registration_id,auth_context FROM %i WHERE organization_id = %d ORDER BY id',[$this->prefix.'consent_records',$this->scope->id]);
+		$records=$this->db->rows('SELECT id,public_id,decision,actor_user_id,subject_person_id,registration_id,auth_context,evidence_json FROM %i WHERE organization_id = %d ORDER BY id',[$this->prefix.'consent_records',$this->scope->id]);
 		self::assertCount(2,$records);
 		self::assertSame(['granted','denied'],array_column($records,'decision'));
 		self::assertSame(['manager','manager'],array_column($records,'auth_context'));
+		self::assertNull($records[0]['evidence_json'], 'Ordinary decisions must retain the historical SQL NULL evidence representation.');
+		self::assertNull($records[1]['evidence_json']);
 		self::assertSame((int)$row['person_id'],(int)$records[0]['subject_person_id']);
 		self::assertSame($s['actor']->user_id,(int)$records[0]['actor_user_id']);
 		$regrepo=new RegistrationRepository($this->db,$this->prefix);
