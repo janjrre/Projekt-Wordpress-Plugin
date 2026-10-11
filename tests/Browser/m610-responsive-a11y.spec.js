@@ -129,6 +129,10 @@ test('authenticated portal keeps person selector, focus and touch actions usable
     const selector = section.getByRole('combobox', { name: 'Person to manage' });
     await expect(selector).toBeVisible();
     await noOffscreenUopControls(page, section, 'participant portal at ' + width + 'px');
+    const guardianForm = section.locator('[data-uop-guardian-claim]');
+    await expect(guardianForm.getByRole('textbox', { name: 'Dependent invitation code' })).toBeVisible();
+    const requestReview = guardianForm.getByRole('button', { name: 'Request review' });
+    expect((await requestReview.boundingBox()).height).toBeGreaterThanOrEqual(44);
     const refresh = section.getByRole('button', { name: 'Refresh access' });
     expect((await refresh.boundingBox()).height).toBeGreaterThanOrEqual(44);
     await selector.focus();
