@@ -509,6 +509,32 @@ final class M610EndToEndTest extends TestCase {
 			add_filter( 'home_url', $secure );
 			add_filter( 'uop_guest_verification_enabled', $enabled );
 			wp_set_current_user( 0 );
+			// Reject malformed JSON and mass-assigned server-owned fields before
+			// the abuse counter is charged or any guest data is persisted.
+			$malformed = new \WP_REST_Request( 'POST', '/uop/v1/registrations/guest' );
+			$malformed->set_header( 'Content-Type', 'application/json' );
+			$malformed->set_body( '{"event_id":' );
+			$malformed_response = rest_do_request( $malformed );
+			self::assertSame( 400, $malformed_response->get_status() );
+			self::assertSame( 'uop_invalid_schema', $malformed_response->get_data()['code'] );
+
+			$mass_assignment = $this->json( 'POST', '/uop/v1/registrations/guest', array(
+				'event_id'         => $event->to_string(),
+				'command_id'       => PublicId::generate()->to_string(),
+				'fields'           => array( 'name' => 'Injected', 'contact' => 'injected@example.invalid' ),
+				'email_verified_at' => '2000-01-01 00:00:00',
+			) );
+			self::assertSame( 400, $mass_assignment->get_status() );
+			self::assertSame( 'uop_invalid_schema', $mass_assignment->get_data()['code'] );
+
+			$oversized = new \WP_REST_Request( 'POST', '/uop/v1/registrations/guest' );
+			$oversized->set_header( 'Content-Type', 'application/json' );
+			$oversized->set_body( str_repeat( ' ', 32769 ) );
+			$oversized_response = rest_do_request( $oversized );
+			self::assertSame( 400, $oversized_response->get_status() );
+			self::assertSame( 'uop_invalid_schema', $oversized_response->get_data()['code'] );
+			self::assertSame( 0, (int) get_transient( $throttle ), 'Malformed requests must not consume the valid DTO throttle.' );
+
 			for ( $i = 0; $i < 6; ++$i ) {
 				$request = new \WP_REST_Request( 'POST', '/uop/v1/registrations/guest' );
 				$request->set_header( 'Content-Type', 'application/json' );
@@ -519,8 +545,8 @@ final class M610EndToEndTest extends TestCase {
 					'fields' => array( 'name' => 'No email' ),
 				) ) );
 				$response = rest_do_request( $request );
-				self::assertNotSame( 202, $response->get_status(), 'Invalid guest submission must fail.' );
-				self::assertNotSame( 429, $response->get_status(), 'The first six attempts retain the validation outcome.' );
+				self::assertSame( 422, $response->get_status(), 'Required contact must be validated before persistence.' );
+				self::assertSame( 'uop_validation', $response->get_data()['code'] );
 			}
 			$seventh = $this->json( 'POST', '/uop/v1/registrations/guest', array(
 				'event_id' => $event->to_string(),
@@ -528,11 +554,17 @@ final class M610EndToEndTest extends TestCase {
 				'fields' => array( 'name' => 'No email' ),
 			) );
 			self::assertSame( 429, $seventh->get_status() );
+			self::assertSame( 'uop_rate_limited', $seventh->get_data()['code'] );
 			$count = $this->db->rows(
 				'SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d AND source = %s',
 				array( $this->prefix . 'registrations', $this->scope->id, 'guest' )
 			);
 			self::assertSame( 0, (int) $count[0]['n'], 'Throttled invalid attempts cannot persist a guest registration.' );
+			$mail_count = $this->db->rows(
+				'SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d',
+				array( $this->prefix . 'email_messages', $this->scope->id )
+			);
+			self::assertSame( 0, (int) $mail_count[0]['n'], 'Rejected guest requests must not enqueue private mail.' );
 		} finally {
 			delete_transient( $throttle );
 			remove_filter( 'uop_guest_verification_enabled', $enabled );
