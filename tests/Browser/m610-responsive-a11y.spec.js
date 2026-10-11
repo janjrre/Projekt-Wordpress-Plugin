@@ -13,8 +13,20 @@ async function visit(page, target, options = {}) {
     try {
       return await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 30000, ...options });
     } catch (error) {
+      const expected = new URL(target, page.url());
+      // WordPress may perform a second same-target redirect while the CI
+      // proxy is still processing the first response. Accept only after the
+      // expected target has actually reached DOMContentLoaded; all caller
+      // assertions still inspect the real HTML and current permissions.
+      if (String(error).includes('is interrupted by another navigation to "' + expected.href + '"')) {
+        try {
+          await page.waitForLoadState('domcontentloaded', { timeout: 12000 });
+          if (page.url() === expected.href) return null;
+        } catch { /* Retry a still-incomplete navigation. */ }
+      }
       if (!(/net::ERR_(?:TOO_MANY_RETRIES|CONNECTION_RESET|EMPTY_RESPONSE)/.test(String(error)) ||
-        String(error).includes('chrome-error://chromewebdata/')) || attempt === 2) {
+        String(error).includes('chrome-error://chromewebdata/') ||
+        String(error).includes('is interrupted by another navigation to "' + expected.href + '"')) || attempt === 2) {
         throw error;
       }
     }
@@ -48,7 +60,13 @@ async function login(page, username) {
   await page.locator('#user_login').fill(username);
   await page.locator('#user_pass').fill(process.env.WP_ADMIN_PASSWORD);
   await page.locator('#wp-submit').click();
-  await expect(page).not.toHaveURL(/wp-login\.php\?/);
+  // A bare negative check for 'wp-login.php?' passed *before* the login
+  // navigation even started, racing subsequent admin page.goto() commands.
+  // Wait for the completed real WordPress admin landing instead.
+  await page.waitForURL(url => url.pathname.startsWith('/wp-admin/'), {
+    waitUntil: 'domcontentloaded', timeout: 20000,
+  });
+  await expect(page.locator('#wpadminbar')).toBeVisible();
 }
 
 // Verify the actual UOP content, not the surrounding third-party WordPress theme.
