@@ -156,6 +156,8 @@ test('guardian claim portal receipt and manager review queue require distinct au
   const denied = await visit(page, '/wp-admin/admin.php?page=uop-guardians', { waitUntil: 'domcontentloaded' });
   expect(denied.status()).toBeGreaterThanOrEqual(400);
 
+  // Switch between independent synthetic WordPress identities explicitly.
+  await page.context().clearCookies();
   await login(page, 'uop_test_admin');
   await visit(page, '/wp-admin/admin.php?page=uop-guardians', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'Guardian requests' })).toBeVisible();
