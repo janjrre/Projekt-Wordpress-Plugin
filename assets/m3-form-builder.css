@@ -30,3 +30,9 @@
 /* P2 regression: WordPress .wp-core-ui .button has stronger specificity than
    the generic UOP button rule and otherwise forces 40px controls. */
 .uop-m3 button.button,.uop-m3 button.components-button{min-height:44px;min-width:44px;height:auto;line-height:1.35}
+
+/* P4 hardening: WordPress admin button variants must not override the
+   minimum 44px mobile target in the form builder. */
+.wp-core-ui .uop-m3 button.button,
+.wp-core-ui .uop-m3 button.button-primary,
+.wp-core-ui .uop-m3 button.button-secondary {min-height:44px;min-width:44px;height:auto}
