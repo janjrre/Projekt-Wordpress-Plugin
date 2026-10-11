@@ -57,17 +57,35 @@ function requireCi() {
 
 async function login(page, username) {
   requireCi();
-  await visit(page, '/wp-login.php');
-  await page.locator('#user_login').fill(username);
-  await page.locator('#user_pass').fill(process.env.WP_ADMIN_PASSWORD);
-  await page.locator('#wp-submit').click();
-  // A bare negative check for 'wp-login.php?' passed *before* the login
-  // navigation even started, racing subsequent admin page.goto() commands.
-  // Wait for the completed real WordPress admin landing instead.
-  await page.waitForURL(url => url.pathname.startsWith('/wp-admin/'), {
-    waitUntil: 'domcontentloaded', timeout: 20000,
-  });
-  await expect(page.locator('#wpadminbar')).toBeVisible();
+  // The loopback-only PHP/HTTPS proxy can occasionally leave an otherwise
+  // valid login POST without a navigation. Retry only that transient transport
+  // state, never a WordPress credential rejection or an unexpected redirect.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await visit(page, '/wp-login.php');
+    await page.locator('#user_login').fill(username);
+    await page.locator('#user_pass').fill(process.env.WP_ADMIN_PASSWORD);
+    try {
+      await page.locator('#wp-submit').click();
+      await page.waitForURL(url => url.pathname.startsWith('/wp-admin/'), {
+        waitUntil: 'domcontentloaded', timeout: 35000,
+      });
+      // The actual authenticated WordPress UI must appear; a changed URL alone
+      // is not proof of a successful login.
+      await expect(page.locator('#wpadminbar')).toBeVisible();
+      return;
+    } catch (error) {
+      const rejection = await page.locator('#login_error').textContent().catch(() => '');
+      if (rejection) {
+        throw new Error('WordPress rejected test login for ' + username + ': ' + rejection.trim());
+      }
+      const stillOnLogin = new URL(page.url()).pathname === '/wp-login.php' &&
+        await page.locator('#loginform').isVisible().catch(() => false);
+      if (!stillOnLogin || attempt === 1) {
+        throw new Error('Disposable WordPress login did not complete for ' + username +
+          '; URL=' + page.url() + '; attempt=' + (attempt + 1) + '; reason=' + String(error));
+      }
+    }
+  }
 }
 
 // Verify the actual UOP content, not the surrounding third-party WordPress theme.
