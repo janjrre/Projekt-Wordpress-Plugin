@@ -209,6 +209,14 @@ test('people editor and form builder reflow without clipped controls at 320–12
     await key.focus();
     await expect(key).toBeFocused();
     const add = builder.getByRole('button', { name: 'Create draft' });
+    // DOMContentLoaded only confirms that a stylesheet link exists, not
+    // that its CSS has loaded. Measure touch targets after the actual UOP
+    // stylesheet is parsed so slow CI runners cannot report a false 40px.
+    await expect.poll(() => page.evaluate(() => {
+      const styles = [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
+        .filter(link => link.href.includes('m3-form-builder.css'));
+      return styles.length > 0 && styles.every(link => link.sheet !== null);
+    }), { timeout: 10000 }).toBe(true);
     const createSize = await add.evaluate(node => ({
       height: node.getBoundingClientRect().height,
       minHeight: globalThis.getComputedStyle(node).minHeight,
