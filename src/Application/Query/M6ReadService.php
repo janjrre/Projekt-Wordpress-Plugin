@@ -85,7 +85,7 @@ final class M6ReadService {
 	 * @param Actor    $actor   Current authenticated account.
 	 * @param OrgScope $scope   Server-owned organization.
 	 * @param PublicId $event   Verified externally opaque event identity.
-	 * @return list<array{public_id:string,display_name:string}>|null
+	 * @return list<array{public_id:string,display_name:string,decision_context:string}>|null
 	 */
 	public function registration_subjects_for_event( Actor $actor, OrgScope $scope, PublicId $event ): ?array {
 		if ( $actor->user_id < 1 || ! $this->events ) {
@@ -119,12 +119,25 @@ final class M6ReadService {
 		foreach ( $possible as $person ) {
 			$id     = (int) $person['id'];
 			$object = new PolicyObject( $scope->id, 'registration', $id, $id, $post_id );
-			if ( ! $this->policy->can( $actor, 'registration.create', $object )->allowed ) {
+			$decision = $this->policy->can( $actor, 'registration.create', $object );
+			if ( ! $decision->allowed ) {
+				continue;
+			}
+			// Inform the consent UI of the actual server-authorized acting
+			// capacity. Do not infer parenthood from names, age or email.
+			$context = match ( $decision->reason ) {
+				'ALLOW_SELF'           => 'self',
+				'ALLOW_DELEGATION'     => 'delegate',
+				'ALLOW_ORG_ASSIGNMENT' => 'manager',
+				default                => '',
+			};
+			if ( '' === $context ) {
 				continue;
 			}
 			$items[] = array(
-				'public_id'    => PublicId::from_binary( (string) $person['public_id'] )->to_string(),
-				'display_name' => (string) $person['display_name'],
+				'public_id'        => PublicId::from_binary( (string) $person['public_id'] )->to_string(),
+				'display_name'     => (string) $person['display_name'],
+				'decision_context' => $context,
 			);
 		}
 		return $items;
