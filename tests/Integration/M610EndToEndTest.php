@@ -302,7 +302,10 @@ final class M610EndToEndTest extends TestCase {
 		self::assertSame( 200, $audit->get_status() );
 		self::assertNotEmpty( $audit->get_data()['items'] );
 		self::assertArrayNotHasKey( 'actor_user_id', $audit->get_data()['items'][0] );
-		$history = $this->db->rows( 'SELECT to_status FROM %i WHERE organization_id = %d', array( $this->prefix . 'registration_history', $this->scope->id ) );
+		$history = $this->db->rows(
+			'SELECT history.to_status FROM %i history INNER JOIN %i registrations ON registrations.id = history.registration_id WHERE registrations.organization_id = %d',
+			array( $this->prefix . 'registration_history', $this->prefix . 'registrations', $this->scope->id )
+		);
 		self::assertContains( 'accepted', array_column( $history, 'to_status' ) );
 		self::assertContains( 'rejected', array_column( $history, 'to_status' ) );
 	}
@@ -535,7 +538,7 @@ final class M610EndToEndTest extends TestCase {
 			$malformed->set_body( '{"event_id":' );
 			$malformed_response = rest_do_request( $malformed );
 			self::assertSame( 400, $malformed_response->get_status() );
-			self::assertSame( 'uop_invalid_schema', $malformed_response->get_data()['code'] );
+			self::assertSame( 'rest_invalid_json', $malformed_response->get_data()['code'], 'WordPress rejects invalid JSON before invoking the UOP DTO validator.' );
 
 			$mass_assignment = $this->json( 'POST', '/uop/v1/registrations/guest', array(
 				'event_id'         => $event->to_string(),
