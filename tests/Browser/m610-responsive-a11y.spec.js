@@ -312,8 +312,11 @@ test('guardian claim → independent admin review → event-only access, without
   const claim = page.locator('[data-uop-guardian-claim]');
   await claim.getByRole('textbox', { name: 'Dependent invitation code' }).fill(dependent);
   await claim.getByRole('button', { name: 'Request review' }).click();
-  await expect(claim.getByRole('status')).toContainText('Request received.');
-  await expect(claim.getByRole('status')).toContainText('Access is not granted');
+  // Wait for either an accepted receipt or an explicit storage error before
+  // asking the synthetic-only DB probe to diagnose a missing claim.
+  await expect.poll(() => claim.getByRole('status').textContent(), {
+    timeout: 15000,
+  }).toMatch(/Request received|server could not complete|request could not be completed/i);
   const probe = JSON.parse(execFileSync('wp', [
     'eval-file', 'tests/Fixtures/m610-guardian-ci-probe.php',
     '--path=' + process.env.WP_ROOT,
@@ -323,6 +326,8 @@ test('guardian claim → independent admin review → event-only access, without
   expect(probe.child_found, JSON.stringify(probe)).toBe(true);
   expect(probe.child_active, JSON.stringify(probe)).toBe(true);
   expect(probe.pending_count, JSON.stringify(probe)).toBe(1);
+  await expect(claim.getByRole('status')).toContainText('Request received.');
+  await expect(claim.getByRole('status')).toContainText('Access is not granted');
   await expect(page.locator('[data-uop-portal-root="portal"] select.uop-portal__select')).not.toContainText('Review Dependent');
 
   await page.context().clearCookies();
