@@ -28,8 +28,12 @@ async function login(page, username) {
   await page.locator('#user_login').fill(username);
   await page.locator('#user_pass').fill(process.env.WP_ADMIN_PASSWORD);
   await page.locator('#wp-submit').click();
-  await expect(page.locator('body')).not.toContainText('ERROR: The password you entered', { timeout: 10000 });
-  await expect(page).not.toHaveURL(/wp-login\.php\?/);
+  // A negative check on wp-login.php? can succeed before WordPress has even
+  // started its redirect. Require a completed, authenticated admin landing.
+  await page.waitForURL(url => url.pathname.startsWith('/wp-admin/'), {
+    waitUntil: 'domcontentloaded', timeout: 20000,
+  });
+  await expect(page.locator('#wpadminbar')).toBeVisible();
 }
 async function memberForm(page) {
   await page.goto('/?page_id=' + process.env.UOP_M610_MEMBER_PAGE);
