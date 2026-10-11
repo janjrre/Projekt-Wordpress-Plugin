@@ -29,6 +29,7 @@ final class PeopleController extends BaseController {
 	/** Register narrowly scoped person routes. */
 	public function register(): void {
 		$this->register_endpoint( '/me/persons', 'GET', array( $this, 'my_people' ), array( $this, 'authenticated' ) );
+		$this->register_endpoint( '/me/registration-subjects', 'GET', array( $this, 'registration_subjects' ), array( $this, 'authenticated' ) );
 		$this->register_endpoint( '/people/(?P<uuid>[0-9a-f-]{36})', 'GET', array( $this, 'person' ), array( $this, 'can_view' ), $this->uuid_argument() );
 		$this->register_endpoint( '/people/(?P<uuid>[0-9a-f-]{36})', 'PATCH', array( $this, 'patch' ), array( $this, 'can_view' ), $this->uuid_argument() );
 	}
@@ -60,6 +61,30 @@ final class PeopleController extends BaseController {
 	public function my_people(): array|WP_Error {
 		$scope = $this->organization_scope();
 		return $scope ? array( 'items' => $this->reads->my_people( $this->current_actor(), $scope ) ) : RestError::for_kind( 'unavailable' );
+	}
+
+	/**
+	 * Provide subject names only under one event-scoped registration policy.
+	 * Unlike /me/persons, this grants no general profile or portal reads.
+	 *
+	 * @param WP_REST_Request $request Query containing a public event UUID.
+	 * @return array<string,mixed>|WP_Error
+	 */
+	public function registration_subjects( WP_REST_Request $request ): array|WP_Error {
+		try {
+			$raw = $request->get_param( 'event_id' );
+			if ( ! is_string( $raw ) ) {
+				return RestError::for_kind( 'invalid_schema' );
+			}
+			$scope = $this->organization_scope();
+			if ( ! $scope ) {
+				return RestError::for_kind( 'unavailable' );
+			}
+			$items = $this->reads->registration_subjects_for_event( $this->current_actor(), $scope, PublicId::from_string( $raw ) );
+			return null === $items ? RestError::for_kind( 'not_found' ) : array( 'items' => $items );
+		} catch ( InvalidArgumentException ) {
+			return RestError::for_kind( 'invalid_schema' );
+		}
 	}
 
 	/**
