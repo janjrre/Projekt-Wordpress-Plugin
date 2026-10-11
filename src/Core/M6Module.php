@@ -84,7 +84,8 @@ final class M6Module implements ModuleInterface {
 				$c->get( PersonRepository::class ),
 				$c->get( DelegationRepository::class ),
 				$c->get( RegistrationReadRepository::class ),
-				$c->get( PolicyService::class )
+				$c->get( PolicyService::class ),
+				$c->get( EventRepository::class )
 			)
 		);
 		$container->set(
