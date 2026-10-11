@@ -4,6 +4,35 @@ test.skip(process.env.UOP_HTTPS_E2E !== '1', 'Requires isolated local HTTPS Word
 test.use({ baseURL: 'https://127.0.0.1:8443', ignoreHTTPSErrors: true });
 const widths = [320, 390, 768, 1280];
 
+/**
+ * An overloaded disposable PHP/HTTPS CI proxy may reset one browser request.
+ * Retry only transient transport errors, never server/application failures.
+ */
+async function visit(page, target, options = {}) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 30000, ...options });
+    } catch (error) {
+      if (!/net::ERR_(?:TOO_MANY_RETRIES|CONNECTION_RESET|EMPTY_RESPONSE)/.test(String(error)) || attempt === 2) {
+        throw error;
+      }
+    }
+  }
+}
+
+/**
+ * DOMContentLoaded does not guarantee stylesheets completed on a slow runner.
+ * Never measure accessible target sizes from an unstyled WordPress page.
+ */
+async function waitForUopStyles(page) {
+  await expect.poll(() => page.evaluate(() => {
+    const sheets = [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
+      .filter(link => link.href.includes('/wp-content/plugins/uop-core/assets/'));
+    return sheets.length > 0 && sheets.every(link => Boolean(link.sheet));
+  }), { timeout: 20000 }).toBeTruthy();
+}
+
+
 function requireCi() {
   if (process.env.UOP_M610_CI !== '1' || !process.env.WP_ADMIN_PASSWORD ||
       !process.env.UOP_M610_PAGE_ID || !process.env.UOP_M610_MEMBER_PAGE ||
@@ -14,7 +43,7 @@ function requireCi() {
 
 async function login(page, username) {
   requireCi();
-  await page.goto('/wp-login.php');
+  await visit(page, '/wp-login.php');
   await page.locator('#user_login').fill(username);
   await page.locator('#user_pass').fill(process.env.WP_ADMIN_PASSWORD);
   await page.locator('#wp-submit').click();
@@ -24,6 +53,7 @@ async function login(page, username) {
 // Verify the actual UOP content, not the surrounding third-party WordPress theme.
 // Intentional horizontal scroll is allowed ONLY within the named audit-table region.
 async function noOffscreenUopControls(page, root, label) {
+  await waitForUopStyles(page);
   const data = await root.evaluate(element => {
     const edge = globalThis.document.documentElement.clientWidth;
     const box = element.getBoundingClientRect();
@@ -53,7 +83,7 @@ test('public HTTPS registration has labelled fields, keyboard path and 320–128
   requireCi();
   for (const width of widths) {
     await page.setViewportSize({ width, height: 850 });
-    await page.goto('/?page_id=' + process.env.UOP_M610_PAGE_ID, { waitUntil: 'domcontentloaded' });
+    await visit(page, '/?page_id=' + process.env.UOP_M610_PAGE_ID, { waitUntil: 'domcontentloaded' });
     const section = page.locator('.uop-m6-blocks--registration-form');
     const form = section.locator('[data-uop-registration-form][data-uop-guest="1"]');
     await expect(form).toBeVisible();
@@ -75,7 +105,7 @@ test('authenticated portal keeps person selector, focus and touch actions usable
   await login(page, 'uop_ci_adult');
   for (const width of widths) {
     await page.setViewportSize({ width, height: 850 });
-    await page.goto('/?page_id=' + process.env.UOP_M610_PORTAL_PAGE, { waitUntil: 'domcontentloaded' });
+    await visit(page, '/?page_id=' + process.env.UOP_M610_PORTAL_PAGE, { waitUntil: 'domcontentloaded' });
     const section = page.locator('.uop-m6-blocks--portal');
     const selector = section.getByRole('combobox', { name: 'Person to manage' });
     await expect(selector).toBeVisible();
@@ -93,7 +123,7 @@ test('admin record list and details reflow and keyboard selection moves focus to
   await login(page, 'uop_test_admin');
   for (const width of widths) {
     await page.setViewportSize({ width, height: 850 });
-    await page.goto('/wp-admin/admin.php?page=uop-registrations', { waitUntil: 'domcontentloaded' });
+    await visit(page, '/wp-admin/admin.php?page=uop-registrations', { waitUntil: 'domcontentloaded' });
     const root = page.locator('.uop-m6-admin');
     const list = root.getByRole('region', { name: 'Record list' });
     const details = root.getByRole('region', { name: 'Record details' });
@@ -120,13 +150,13 @@ test('admin overview and audit table provide responsive navigation and keyboard-
   await login(page, 'uop_test_admin');
   for (const width of widths) {
     await page.setViewportSize({ width, height: 850 });
-    await page.goto('/wp-admin/admin.php?page=uop-overview', { waitUntil: 'domcontentloaded' });
+    await visit(page, '/wp-admin/admin.php?page=uop-overview', { waitUntil: 'domcontentloaded' });
     const consoleRoot = page.locator('.uop-m6-console');
     await expect(consoleRoot.getByRole('navigation', { name: 'UOP Administration' })).toBeVisible();
     await noOffscreenUopControls(page, consoleRoot, 'admin overview at ' + width + 'px');
   }
   await page.setViewportSize({ width: 320, height: 850 });
-  await page.goto('/wp-admin/admin.php?page=uop-audit', { waitUntil: 'domcontentloaded' });
+  await visit(page, '/wp-admin/admin.php?page=uop-audit', { waitUntil: 'domcontentloaded' });
   const audit = page.locator('.uop-m6-console__table');
   await expect(audit).toBeVisible();
   await expect(audit.locator('th[scope="col"]')).toHaveCount(5);
@@ -142,7 +172,7 @@ test('people editor and form builder reflow without clipped controls at 320–12
   await login(page, 'uop_test_admin');
   for (const width of widths) {
     await page.setViewportSize({ width, height: 850 });
-    await page.goto('/wp-admin/admin.php?page=uop-people', { waitUntil: 'domcontentloaded' });
+    await visit(page, '/wp-admin/admin.php?page=uop-people', { waitUntil: 'domcontentloaded' });
     const people = page.locator('.uop-m6-admin');
     const list = people.getByRole('region', { name: 'Record list' });
     const first = list.locator('.uop-m6-items button').first();
@@ -152,7 +182,7 @@ test('people editor and form builder reflow without clipped controls at 320–12
     await page.keyboard.press('Enter');
     await expect(people.getByRole('region', { name: 'Record details' }).locator('h2')).toBeFocused({ timeout: 12000 });
 
-    await page.goto('/wp-admin/admin.php?page=uop-forms', { waitUntil: 'domcontentloaded' });
+    await visit(page, '/wp-admin/admin.php?page=uop-forms', { waitUntil: 'domcontentloaded' });
     const builder = page.locator('.uop-m3');
     const key = page.getByLabel('Form key');
     await expect(key).toBeVisible();
@@ -175,7 +205,7 @@ test('operations and consent editor keep wide tables in keyboard-scrollable regi
   await login(page, 'uop_test_admin');
   for (const width of [320, 390, 768]) {
     await page.setViewportSize({ width, height: 850 });
-    await page.goto('/wp-admin/admin.php?page=uop-operations', { waitUntil: 'domcontentloaded' });
+    await visit(page, '/wp-admin/admin.php?page=uop-operations', { waitUntil: 'domcontentloaded' });
     const operations = page.locator('.uop-m6-console');
     await expect(operations.getByRole('navigation', { name: 'Operations sections' })).toBeVisible();
     const regions = operations.locator('.uop-m6-console__table');
@@ -192,7 +222,7 @@ test('operations and consent editor keep wide tables in keyboard-scrollable regi
     await expect(privacy).toBeVisible();
     await noOffscreenUopControls(page, operations, 'operations at ' + width + 'px');
 
-    await page.goto('/wp-admin/admin.php?page=uop-consents', { waitUntil: 'domcontentloaded' });
+    await visit(page, '/wp-admin/admin.php?page=uop-consents', { waitUntil: 'domcontentloaded' });
     const consent = page.locator('.uop-m6-console');
     await expect(consent.getByRole('heading', { name: 'Consent documents' })).toBeVisible();
     await noOffscreenUopControls(page, consent, 'consent editor at ' + width + 'px');
