@@ -288,12 +288,27 @@ test('people editor and form builder reflow without clipped controls at 320–12
         .filter(link => link.href.includes('m3-form-builder.css'));
       return styles.length > 0 && styles.every(link => link.sheet !== null);
     }), { timeout: 10000 }).toBe(true);
-    const createSize = await add.evaluate(node => ({
-      height: node.getBoundingClientRect().height,
-      minHeight: globalThis.getComputedStyle(node).minHeight,
-      cssFile: [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
-        .filter(link => link.href.includes('m3-form-builder.css')).map(link => link.href),
-    }));
+    const createSize = await add.evaluate(node => {
+      const sheetRules = [...globalThis.document.styleSheets]
+        .filter(sheet => sheet.href?.includes('m3-form-builder.css'))
+        .flatMap(sheet => {
+          try {
+            return [...sheet.cssRules].filter(rule => rule.selectorText &&
+              rule.selectorText.split(',').some(selector => {
+                try { return node.matches(selector.trim()); } catch { return false; }
+              })).map(rule => rule.cssText.slice(0, 240));
+          } catch { return ['Stylesheet rules unavailable']; }
+        });
+      return {
+        height: node.getBoundingClientRect().height,
+        minHeight: globalThis.getComputedStyle(node).minHeight,
+        bodyClass: globalThis.document.body.className,
+        inBuilderMount: Boolean(node.closest('#uop-m3-form-builder')),
+        cssFile: [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
+          .filter(link => link.href.includes('m3-form-builder.css')).map(link => link.href),
+        matchedBuilderRules: sheetRules,
+      };
+    });
     expect(createSize.height, JSON.stringify(createSize)).toBeGreaterThanOrEqual(44);
   }
 });
