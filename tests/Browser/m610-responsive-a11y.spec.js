@@ -149,6 +149,12 @@ test('admin record list and details reflow and keyboard selection moves focus to
     const first = list.locator('.uop-m6-items button').first();
     await expect(first).toBeVisible();
     await noOffscreenUopControls(page, root, 'registration management at ' + width + 'px');
+    // Some CI Chromium builds expose a stylesheet link before its cascade
+    // reaches the first dynamically rendered record button. The threshold
+    // remains strict; fail if real CSS never produces a 44px touch target.
+    await expect.poll(() => first.evaluate(node => node.getBoundingClientRect().height), {
+      timeout: 10000,
+    }).toBeGreaterThanOrEqual(44);
     const itemSize = await first.evaluate(node => ({
       height: node.getBoundingClientRect().height,
       minHeight: globalThis.getComputedStyle(node).minHeight,
