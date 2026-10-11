@@ -13,6 +13,9 @@ on:
       - 'tests/Browser/m610-live-guest.spec.js'
       - 'tests/Fixtures/m610-live-seed.php'
       - 'tests/Fixtures/m610-live-helper.php'
+      - 'tests/Browser/m610-members-admin.spec.js'
+      - 'tests/Fixtures/m610-members-seed.php'
+      - 'tests/Fixtures/m610-members-helper.php'
   workflow_dispatch:
 
 permissions:
@@ -61,6 +64,8 @@ jobs:
           php -l tests/Fixtures/m610-https-router.php
           php -l tests/Fixtures/m610-mailpit.php
           node --check tests/Fixtures/m610-https-proxy.mjs
+          php -l tests/Fixtures/m610-members-seed.php
+          php -l tests/Fixtures/m610-members-helper.php
       - name: Install disposable WordPress with independent database
         env:
           COMPOSER_ROOT_VERSION: 0.1.0-alpha.2
@@ -83,9 +88,12 @@ jobs:
           cp tests/Fixtures/m610-mailpit.php "$WP_ROOT/wp-content/mu-plugins/uop-ci-mailpit.php"
           wp plugin activate uop-core --path="$WP_ROOT"
           wp eval-file tests/Fixtures/m610-live-seed.php --path="$WP_ROOT"
+          wp eval-file tests/Fixtures/m610-members-seed.php --path="$WP_ROOT"
           page_id="$(wp option get uop_m610_ci_page --path="$WP_ROOT")"
           [[ "$page_id" =~ ^[0-9]+$ ]]
           echo "UOP_M610_PAGE_ID=$page_id" >> "$GITHUB_ENV"
+          echo "UOP_M610_MEMBER_PAGE=$(wp option get uop_m610_ci_member_page --path="$WP_ROOT")" >> "$GITHUB_ENV"
+          echo "UOP_M610_PORTAL_PAGE=$(wp option get uop_m610_ci_portal_page --path="$WP_ROOT")" >> "$GITHUB_ENV"
       - name: Generate a fresh local-only self-signed HTTPS certificate
         run: |
           set -euo pipefail
@@ -142,7 +150,7 @@ jobs:
           UOP_HTTPS_E2E: '1'
         run: |
           npx playwright install --with-deps chromium
-          npx playwright test tests/Browser/m610-https.spec.js tests/Browser/m610-live-guest.spec.js
+          npx playwright test tests/Browser/m610-https.spec.js tests/Browser/m610-live-guest.spec.js tests/Browser/m610-members-admin.spec.js
       - name: Upload browser and WordPress diagnostics (never email contents)
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
