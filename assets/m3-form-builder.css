@@ -36,3 +36,16 @@
 .wp-core-ui .uop-m3 button.button,
 .wp-core-ui .uop-m3 button.button-primary,
 .wp-core-ui .uop-m3 button.button-secondary {min-height:44px;min-width:44px;height:auto}
+
+
+/* Phase 00: WP's admin button variants can override the 44px target even
+   after this stylesheet is parsed. Scope the accessibility floor strictly
+   to the UOP form builder rather than relaxing the Chromium assertion. */
+body.wp-admin .uop-m3 button.button,
+body.wp-admin .uop-m3 button.button-primary,
+body.wp-admin .uop-m3 button.button-secondary,
+body.wp-admin .uop-m3 button.components-button {
+  min-height:44px !important;
+  min-width:44px !important;
+  height:auto;
+}
