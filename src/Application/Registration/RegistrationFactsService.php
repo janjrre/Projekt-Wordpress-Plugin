@@ -46,7 +46,7 @@ final class RegistrationFactsService {
 		 */
 		$keys     = array();
 		$age_keys = array();
-		$engine    = new ConditionEngine();
+		$engine   = new ConditionEngine();
 		foreach ( $conditions as $condition ) {
 			$engine->validate( $condition );
 			$this->references( $condition, $keys, $age_keys );
