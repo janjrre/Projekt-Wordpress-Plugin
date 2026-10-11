@@ -12,7 +12,9 @@ const widths = [320, 390, 768, 1280];
 async function visit(page, target, options = {}) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      return await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 30000, ...options });
+      const response = await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 30000, ...options });
+      if (new URL(target, page.url()).pathname.startsWith('/wp-admin/')) await waitForAdminStyles(page);
+      return response;
     } catch (error) {
       const expected = new URL(target, page.url());
       // WordPress may perform a second same-target redirect while the CI
@@ -38,6 +40,27 @@ async function visit(page, target, options = {}) {
  * DOMContentLoaded does not guarantee stylesheets completed on a slow runner.
  * Never measure accessible target sizes from an unstyled WordPress page.
  */
+/**
+ * A link.sheet object can exist before the CSS response is fully parsed.
+ * Wait for same-origin WordPress/UOP admin styles to expose CSSOM rules before
+ * measuring touch targets or clicking beneath the collapsing admin sidebar.
+ */
+async function waitForAdminStyles(page) {
+  await expect.poll(() => page.evaluate(() => {
+    const local = [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
+      .filter(link => {
+        const url = new URL(link.href, globalThis.location.href);
+        return url.origin === globalThis.location.origin &&
+          (/\/wp-(?:admin|includes)\//.test(url.pathname) ||
+            url.pathname.includes('/wp-content/plugins/uop-core/'));
+      });
+    return local.length > 0 && local.every(link => {
+      try { return Boolean(link.sheet) && link.sheet.cssRules.length > 0; }
+      catch { return false; }
+    });
+  }), { timeout: 20000 }).toBeTruthy();
+}
+
 async function waitForUopStyles(page) {
   await expect.poll(() => page.evaluate(() => {
     const sheets = [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
@@ -72,6 +95,7 @@ async function login(page, username) {
       // The actual authenticated WordPress UI must appear; a changed URL alone
       // is not proof of a successful login.
       await expect(page.locator('#wpadminbar')).toBeVisible();
+      await waitForAdminStyles(page);
       return;
     } catch (error) {
       const rejection = await page.locator('#login_error').textContent().catch(() => '');
@@ -286,7 +310,10 @@ test('people editor and form builder reflow without clipped controls at 320–12
     await expect.poll(() => page.evaluate(() => {
       const styles = [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
         .filter(link => link.href.includes('m3-form-builder.css'));
-      return styles.length > 0 && styles.every(link => link.sheet !== null);
+      return styles.length > 0 && styles.every(link => {
+        try { return Boolean(link.sheet) && link.sheet.cssRules.length > 0; }
+        catch { return false; }
+      });
     }), { timeout: 10000 }).toBe(true);
     const createSize = await add.evaluate(node => {
       const sheetRules = [...globalThis.document.styleSheets]
