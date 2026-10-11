@@ -158,11 +158,18 @@ final class M5ConsentRecordsTest extends TestCase {
 		$grant=PublicId::generate();
 		$s['delegations']->grant($this->scope,$grant,$guardian,(int)$child_row['id'],'registration_manage','organization',0,(int)$s['relations']->find($this->scope,$relation)['id'],$now);
 		$actor=new Actor($guardian);
-		$registration=$s['submit']->submit($actor,$this->scope,$child,$event,null,PublicId::generate(),['name'=>'Child','portrait'=>true],$now,CorrelationId::generate());
-		$record=$this->db->rows("SELECT public_id,actor_user_id,subject_person_id,auth_context FROM %i WHERE decision='granted' LIMIT 1",[$this->prefix.'consent_records'])[0];
+		try {
+			$s['submit']->submit($actor,$this->scope,$child,$event,null,PublicId::generate(),['name'=>'Child','portrait'=>true],$now,CorrelationId::generate());
+			self::fail('Delegated consent accepted without a separate confirmation.');
+		} catch(InvalidArgumentException) { self::assertTrue(true); }
+		self::assertCount(0,$this->db->rows('SELECT id FROM %i',[$this->prefix.'registrations']));
+		self::assertCount(0,$this->db->rows('SELECT id FROM %i',[$this->prefix.'consent_records']));
+		$registration=$s['submit']->submit($actor,$this->scope,$child,$event,null,PublicId::generate(),['name'=>'Child','portrait'=>true],$now,CorrelationId::generate(),true);
+		$record=$this->db->rows("SELECT public_id,actor_user_id,subject_person_id,auth_context,evidence_json FROM %i WHERE decision='granted' LIMIT 1",[$this->prefix.'consent_records'])[0];
 		self::assertSame($guardian,(int)$record['actor_user_id']);
 		self::assertSame((int)$child_row['id'],(int)$record['subject_person_id']);
 		self::assertSame('delegate',$record['auth_context']);
+		self::assertSame(array('representative_confirmation'=>true),json_decode((string)$record['evidence_json'],true));
 		$s['delegations']->revoke($this->scope,$grant,$now);
 		try {
 			$s['consent']->withdraw($actor,$this->scope,PublicId::from_binary($record['public_id']),PublicId::generate(),$now,CorrelationId::generate());
@@ -200,7 +207,7 @@ final class M5ConsentRecordsTest extends TestCase {
 		self::assertSame($before_events,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d',[$this->prefix.'domain_events',$this->scope->id])[0]['n']);
 
 		$this->db->execute('UPDATE %i SET valid_to = NULL WHERE organization_id = %d AND public_id = %s',[$this->prefix.'relationships',$this->scope->id,$relation->to_binary()]);
-		$registration=$s['submit']->submit($actor,$this->scope,$child,$event,null,PublicId::generate(),['name'=>'Consented minor','portrait'=>true],$now,CorrelationId::generate());
+		$registration=$s['submit']->submit($actor,$this->scope,$child,$event,null,PublicId::generate(),['name'=>'Consented minor','portrait'=>true],$now,CorrelationId::generate(),true);
 		$registration_row=$this->db->rows('SELECT id FROM %i WHERE organization_id = %d AND public_id = %s',[$this->prefix.'registrations',$this->scope->id,$registration->to_binary()])[0];
 		$historic=(new RegistrationRepository($this->db,$this->prefix))->snapshot_fields($this->scope,(int)$registration_row['id']);
 		$original=PublicId::from_string($historic['portrait']['record_public_id']);
