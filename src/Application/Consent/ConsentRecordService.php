@@ -66,6 +66,7 @@ final class ConsentRecordService {
 	 * @param bool          $representative_confirmed Explicit acting-capacity acknowledgement for delegated consent.
 	 * @return array{evidence:array{record_public_id:string,definition_key:string,version:int,version_public_id:string,decision:string},reference_id:int}
 	 * @throws RuntimeException When document, policy or compulsory consent is invalid.
+	 * @throws InvalidArgumentException When a delegated consent lacks explicit representative acknowledgement.
 	 */
 	public function record_submission( Actor $actor, OrgScope $scope, int $person_id, int $event_post, int $registration, PublicId $version, bool $decision, bool $required, bool $guest, string $now, CorrelationId $correlation, bool $representative_confirmed = false ): array {
 		if ( $required && ! $decision ) {
