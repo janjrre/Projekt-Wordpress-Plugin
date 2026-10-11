@@ -157,14 +157,17 @@ final class GuardianReviewService {
 				if ( ! $row ) {
 					throw new RuntimeException( 'Guardian claim already processed or unavailable.' );
 				}
-				$from = $this->people->by_internal_id( $scope, (int) $row['from_person_id'] );
-				$to   = $this->people->by_internal_id( $scope, (int) $row['to_person_id'] );
-				if ( ! $from || ! $to || 'active' !== $from['status'] || 'active' !== $to['status'] || ! $from['wp_user_id'] ) {
-					throw new RuntimeException( 'Claim participants are no longer active or linked.' );
+				$from    = $this->people->by_internal_id( $scope, (int) $row['from_person_id'] );
+				$to      = $this->people->by_internal_id( $scope, (int) $row['to_person_id'] );
+				$grantee = (int) ( $from['wp_user_id'] ?? 0 );
+				// An orphaned claim must remain rejectable, but never approvable.
+				// Unlinking or archiving a person cannot become a new permission.
+				if ( ! $to ) {
+					throw new RuntimeException( 'Guardian request subject no longer exists.' );
 				}
-				$grantee = (int) $from['wp_user_id'];
-				if ( $grantee === $reviewer->user_id || ! get_user_by( 'id', $grantee ) ) {
-					throw new RuntimeException( 'A claim cannot be self-approved or granted to an unlinked account.' );
+				if ( 'approve' === $decision && ( ! $from || 'active' !== $from['status'] || 'active' !== $to['status']
+				|| $grantee < 1 || $grantee === $reviewer->user_id || ! get_user_by( 'id', $grantee ) ) ) {
+					throw new RuntimeException( 'Guardian claim must be reviewed for two distinct active identities.' );
 				}
 				if ( 'approve' === $decision ) {
 					$event = $this->db->rows(
