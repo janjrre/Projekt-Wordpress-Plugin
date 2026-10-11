@@ -95,7 +95,7 @@ final class M6PeopleRegistrationTest extends TestCase {
 		$outbox = new OutboxRepository( $this->db, $this->prefix );
 		$publisher = new PostCommitPublisher( $tx );
 		$person_service = new PersonService( $people, $policy, $tx, $audit, $outbox, $publisher );
-		$reads = new M6ReadService( $people, $delegations, new RegistrationReadRepository( $this->db, $this->prefix ), $policy );
+		$reads = new M6ReadService( $people, $delegations, new RegistrationReadRepository( $this->db, $this->prefix ), $policy, new EventRepository( $this->db, $this->prefix ) );
 		$registrations = new RegistrationRepository( $this->db, $this->prefix );
 		$facts = new RegistrationFactsService( new RegistrationFactsRepository( $this->db, $this->prefix ), $policy );
 		$eligibility = new RegistrationEligibilityService( $registrations, $facts );
@@ -194,8 +194,18 @@ final class M6PeopleRegistrationTest extends TestCase {
 		$form = $form_service->create( new Actor( $s['admin'] ), $this->scope, 'm6_rest', 'M6 REST', 'event', array( 'schema_version' => 1, 'fields' => array( array( 'key' => 'name', 'type' => 'text', 'label' => 'Name', 'required' => true ) ) ), $now, CorrelationId::generate() );
 		$form_service->publish( new Actor( $s['admin'] ), $this->scope, $form, 1, $now, CorrelationId::generate() );
 		( new RegistrationConfigurationService( $this->db, $this->prefix, $s['policy'], $s['tx'], $s['audit'], $s['outbox'] ) )->bind( new Actor( $s['admin'] ), $this->scope, $event, $form, $now, CorrelationId::generate() );
+		$this->db->execute(
+			'UPDATE %i SET visibility = %s WHERE organization_id = %d AND public_id = %s',
+			array( $this->prefix . 'event_settings', 'public', $this->scope->id, $event->to_binary() )
+		);
 
 		wp_set_current_user( $s['parent'] );
+		$subject_request = new \WP_REST_Request( 'GET', '/uop/v1/me/registration-subjects' );
+		$subject_request->set_query_params( array( 'event_id' => $event->to_string() ) );
+		$initial_subjects = rest_do_request( $subject_request );
+		self::assertSame( 200, $initial_subjects->get_status() );
+		self::assertSame( array( $adult->to_string() ), array_column( $initial_subjects->get_data()['items'], 'public_id' ) );
+		self::assertArrayNotHasKey( 'primary_email', $initial_subjects->get_data()['items'][0] );
 		$submitted = $this->json( 'POST', '/uop/v1/registrations', array( 'person_id' => $adult->to_string(), 'event_id' => $event->to_string(), 'command_id' => PublicId::generate()->to_string(), 'fields' => array( 'name' => 'Parent' ) ) );
 		self::assertSame( 201, $submitted->get_status(), wp_json_encode( $submitted->get_data() ) );
 		$id = $submitted->get_data()['public_id'];
@@ -215,6 +225,12 @@ final class M6PeopleRegistrationTest extends TestCase {
 		$s['delegations']->grant( $this->scope, PublicId::generate(), $s['parent'], (int) $child_row['id'], 'profile_view', 'organization', 0, null, $now );
 		self::assertSame( 404, rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/registrations/' . $child_registration->to_string() ) )->get_status() );
 		$s['delegations']->grant( $this->scope, PublicId::generate(), $s['parent'], (int) $child_row['id'], 'registration_manage', 'organization', 0, null, $now );
+		$allowed_subjects = rest_do_request( $subject_request );
+		self::assertSame( 200, $allowed_subjects->get_status() );
+		self::assertEqualsCanonicalizing(
+			array( $adult->to_string(), $child->to_string() ),
+			array_column( $allowed_subjects->get_data()['items'], 'public_id' )
+		);
 		self::assertSame( 200, rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/registrations/' . $child_registration->to_string() ) )->get_status() );
 		$scoped_request = new \WP_REST_Request( 'GET', '/uop/v1/registrations' );
 		$scoped_request->set_query_params( array( 'person_id' => $child->to_string() ) );
