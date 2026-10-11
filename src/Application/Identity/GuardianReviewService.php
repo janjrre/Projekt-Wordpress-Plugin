@@ -167,11 +167,11 @@ final class GuardianReviewService {
 					throw new RuntimeException( 'A claim cannot be self-approved or granted to an unlinked account.' );
 				}
 				if ( 'approve' === $decision ) {
-					$event  = $this->db->rows(
+					$event = $this->db->rows(
 						'SELECT event_post_id FROM %i WHERE organization_id = %d AND event_post_id = %d LIMIT 1',
 						array( $this->prefix . 'event_settings', $scope->id, $event_post_id )
 					);
-					$post = get_post( $event_post_id );
+					$post  = get_post( $event_post_id );
 					if ( ! $event || ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status ) {
 						throw new RuntimeException( 'Event is outside review scope or not published.' );
 					}
@@ -192,7 +192,7 @@ final class GuardianReviewService {
 					if ( ! $grant_row ) {
 						throw new RuntimeException( 'Review grant was not persisted.' );
 					}
-					$grant = PublicId::from_binary( (string) $grant_row['public_id'] );
+					$grant   = PublicId::from_binary( (string) $grant_row['public_id'] );
 					$expires = gmdate( 'Y-m-d H:i:s', strtotime( $now . ' UTC +90 days' ) );
 					if ( 1 !== $this->db->execute(
 						'UPDATE %i SET valid_to = %s WHERE organization_id = %d AND id = %d AND relationship_id = %d',
