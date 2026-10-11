@@ -155,9 +155,15 @@ final class M5ConsentRecordsTest extends TestCase {
 		$child_row=$s['people']->find($this->scope,$child);
 		$relation=PublicId::generate();
 		$s['relations']->create($this->scope,$relation,(int)$parent_row['id'],(int)$child_row['id'],'guardian_of',$now);
+		$actor=new Actor($guardian);
+		// A self-declared confirmation cannot manufacture a missing grant.
+		try {
+			$s['submit']->submit($actor,$this->scope,$child,$event,null,PublicId::generate(),['name'=>'Unapproved','portrait'=>true],$now,CorrelationId::generate(),true);
+			self::fail('Claimed authority bypassed the delegation policy.');
+		} catch(RuntimeException) { self::assertTrue(true); }
+		self::assertCount(0,$this->db->rows('SELECT id FROM %i',[$this->prefix.'registrations']));
 		$grant=PublicId::generate();
 		$s['delegations']->grant($this->scope,$grant,$guardian,(int)$child_row['id'],'registration_manage','organization',0,(int)$s['relations']->find($this->scope,$relation)['id'],$now);
-		$actor=new Actor($guardian);
 		try {
 			$s['submit']->submit($actor,$this->scope,$child,$event,null,PublicId::generate(),['name'=>'Child','portrait'=>true],$now,CorrelationId::generate());
 			self::fail('Delegated consent accepted without a separate confirmation.');
