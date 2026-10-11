@@ -136,6 +136,23 @@ jobs:
             echo "::endgroup::"
             exit 1
           fi
+      - name: Repeat activation/deactivation browser regression on PHP 8.4 and MariaDB
+        if: ${{ matrix.php == '8.4' && matrix.db == 'mariadb:10.11' }}
+        timeout-minutes: 5
+        run: |
+          # Verify that a green result is repeatable rather than a one-off
+          # rerun after the intermittent WordPress plugin-table timeout.
+          if ! npx playwright test tests/Browser/activation.spec.js --repeat-each=3; then
+            echo "::group::Disposable PHP web server diagnostics"
+            tail -n 160 /tmp/uop-server.log || true
+            echo "::endgroup::"
+            echo "::group::WordPress PHP debug log"
+            if [ -f "$WP_ROOT/wp-content/debug.log" ]; then
+              tail -n 80 "$WP_ROOT/wp-content/debug.log"
+            fi
+            echo "::endgroup::"
+            exit 1
+          fi
       - name: Multisite persistence regression
         run: |
           wp core multisite-convert --path="$WP_ROOT" --title=UOP-Network
