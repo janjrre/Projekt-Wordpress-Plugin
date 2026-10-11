@@ -102,7 +102,7 @@ final class M610GuardianReviewTest extends TestCase {
 	}
 
 	/** Count tenant-owned rows to prove denied operations are side-effect free. */
-	private function count( string $table ): int {
+	private function tenant_count( string $table ): int {
 		$rows = $this->db->rows(
 			'SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d',
 			array( $this->prefix . $table, $this->scope->id )
@@ -116,24 +116,24 @@ final class M610GuardianReviewTest extends TestCase {
 		$endpoint = '/uop/v1/me/guardian-claims';
 		wp_set_current_user( 0 );
 		self::assertSame( 401, $this->json( 'POST', $endpoint, array( 'subject_id' => $s['child']->to_string() ) )->get_status() );
-		self::assertSame( 0, $this->count( 'relationships' ) );
+		self::assertSame( 0, $this->tenant_count( 'relationships' ) );
 		wp_set_current_user( $s['parent'] );
 		$unknown = PublicId::generate();
 		$no_match = $this->json( 'POST', $endpoint, array( 'subject_id' => $unknown->to_string() ) );
 		self::assertSame( 202, $no_match->get_status() );
-		self::assertSame( 0, $this->count( 'relationships' ) );
+		self::assertSame( 0, $this->tenant_count( 'relationships' ) );
 		$receipt = $this->json( 'POST', $endpoint, array( 'subject_id' => $s['child']->to_string() ) );
 		self::assertSame( 202, $receipt->get_status() );
 		self::assertSame( $no_match->get_data(), $receipt->get_data(), 'Unknown persons cannot be enumerated through claim receipts.' );
-		self::assertSame( 1, $this->count( 'relationships' ) );
-		self::assertSame( 0, $this->count( 'delegations' ) );
+		self::assertSame( 1, $this->tenant_count( 'relationships' ) );
+		self::assertSame( 0, $this->tenant_count( 'delegations' ) );
 		$child_id = (int) $s['people']->find( $this->scope, $s['child'] )['id'];
 		$resource = new PolicyObject( $this->scope->id, 'registration', $child_id, $child_id, $s['post'] );
 		self::assertFalse( $s['policy']->can( new Actor( $s['parent'] ), 'registration.create', $resource )->allowed );
 		self::assertSame( 403, rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/admin/guardian-claims' ) )->get_status() );
-		$before = $this->count( 'audit_log' );
+		$before = $this->tenant_count( 'audit_log' );
 		self::assertSame( 403, $this->json( 'POST', '/uop/v1/admin/guardian-claims/' . $unknown->to_string() . '/review', array( 'decision' => 'approve', 'evidence_checked' => true, 'event_post_id' => $s['post'] ) )->get_status() );
-		self::assertSame( $before, $this->count( 'audit_log' ) );
+		self::assertSame( $before, $this->tenant_count( 'audit_log' ) );
 
 		wp_set_current_user( $s['admin'] );
 		$queue = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/admin/guardian-claims' ) );
@@ -144,19 +144,19 @@ final class M610GuardianReviewTest extends TestCase {
 		$path = '/uop/v1/admin/guardian-claims/' . $claim_id . '/review';
 		$invalid = $this->json( 'POST', $path, array( 'decision' => 'approve', 'evidence_checked' => false, 'event_post_id' => $s['post'] ) );
 		self::assertSame( 400, $invalid->get_status() );
-		self::assertSame( 0, $this->count( 'delegations' ) );
+		self::assertSame( 0, $this->tenant_count( 'delegations' ) );
 		self::assertSame( 'pending', $s['relationships']->find( $this->scope, PublicId::from_string( $claim_id ) )['status'] );
 		$forged = $this->json( 'POST', $path, array( 'decision' => 'approve', 'evidence_checked' => true, 'event_post_id' => $s['post'], 'actor_user_id' => $s['parent'] ) );
 		self::assertSame( 400, $forged->get_status() );
 		$wrong_scope = $this->json( 'POST', $path, array( 'decision' => 'approve', 'evidence_checked' => true, 'event_post_id' => 99999999 ) );
 		self::assertSame( 409, $wrong_scope->get_status() );
-		self::assertSame( 0, $this->count( 'delegations' ) );
+		self::assertSame( 0, $this->tenant_count( 'delegations' ) );
 
 		$approved = $this->json( 'POST', $path, array( 'decision' => 'approve', 'evidence_checked' => true, 'event_post_id' => $s['post'] ) );
 		self::assertSame( 200, $approved->get_status(), wp_json_encode( $approved->get_data() ) );
 		self::assertSame( 'approved', $approved->get_data()['status'] );
 		self::assertSame( 'active', $s['relationships']->find( $this->scope, PublicId::from_string( $claim_id ) )['status'] );
-		self::assertSame( 1, $this->count( 'delegations' ) );
+		self::assertSame( 1, $this->tenant_count( 'delegations' ) );
 		$grant = $this->db->rows( 'SELECT scope_type, scope_id, valid_to, relationship_id FROM %i WHERE organization_id = %d', array( $this->prefix . 'delegations', $this->scope->id ) )[0];
 		self::assertSame( 'event', $grant['scope_type'] );
 		self::assertSame( $s['post'], (int) $grant['scope_id'] );
@@ -164,7 +164,7 @@ final class M610GuardianReviewTest extends TestCase {
 		self::assertTrue( $s['policy']->can( new Actor( $s['parent'] ), 'registration.create', $resource )->allowed );
 		self::assertFalse( $s['policy']->can( new Actor( $s['parent'] ), 'registration.create', new PolicyObject( $this->scope->id, 'registration', $child_id, $child_id, $s['post'] + 99 ) )->allowed );
 		self::assertSame( 409, $this->json( 'POST', $path, array( 'decision' => 'approve', 'evidence_checked' => true, 'event_post_id' => $s['post'] ) )->get_status() );
-		self::assertSame( 1, $this->count( 'delegations' ) );
+		self::assertSame( 1, $this->tenant_count( 'delegations' ) );
 		$this->db->execute( 'UPDATE %i SET status = %s WHERE organization_id = %d AND public_id = %s', array( $this->prefix . 'relationships', 'revoked', $this->scope->id, PublicId::from_string( $claim_id )->to_binary() ) );
 		self::assertFalse( $s['policy']->can( new Actor( $s['parent'] ), 'registration.create', $resource )->allowed );
 	}
@@ -177,16 +177,16 @@ final class M610GuardianReviewTest extends TestCase {
 		$claim = '/uop/v1/me/guardian-claims';
 		self::assertSame( 202, $this->json( 'POST', $claim, array( 'subject_id' => $subject ) )->get_status() );
 		self::assertSame( 202, $this->json( 'POST', $claim, array( 'subject_id' => $subject ) )->get_status(), 'Replay uses the same private receipt.' );
-		self::assertSame( 1, $this->count( 'relationships' ) );
+		self::assertSame( 1, $this->tenant_count( 'relationships' ) );
 		$uuid = $this->db->rows( 'SELECT public_id FROM %i WHERE organization_id = %d', array( $this->prefix . 'relationships', $this->scope->id ) )[0]['public_id'];
 		$claim_id = PublicId::from_binary( $uuid )->to_string();
 		wp_set_current_user( $s['admin'] );
 		self::assertSame( 200, $this->json( 'POST', '/uop/v1/admin/guardian-claims/' . $claim_id . '/review', array( 'decision' => 'reject', 'evidence_checked' => false, 'event_post_id' => 0 ) )->get_status() );
 		self::assertSame( 'rejected', $s['relationships']->find( $this->scope, PublicId::from_string( $claim_id ) )['status'] );
-		self::assertSame( 0, $this->count( 'delegations' ) );
+		self::assertSame( 0, $this->tenant_count( 'delegations' ) );
 		wp_set_current_user( $s['parent'] );
 		self::assertSame( 202, $this->json( 'POST', $claim, array( 'subject_id' => $subject ) )->get_status() );
-		self::assertSame( 1, $this->count( 'relationships' ), 'Rejected relationship cannot be reactivated by replay.' );
-		self::assertSame( 0, $this->count( 'delegations' ) );
+		self::assertSame( 1, $this->tenant_count( 'relationships' ), 'Rejected relationship cannot be reactivated by replay.' );
+		self::assertSame( 0, $this->tenant_count( 'delegations' ) );
 	}
 }
