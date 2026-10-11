@@ -45,6 +45,9 @@ async function submit(form, subjectName, email, personName) {
   const selection = form.locator('[data-uop-subject]');
   await expect(selection).toBeEnabled();
   await selection.selectOption({ label: subjectName });
+  await expect(form.locator('[data-uop-decision-capacity]')).toContainText(
+    subjectName === 'Caregiver Minor' ? 'acting for another person' : 'registering yourself'
+  );
   await form.locator('[data-uop-field="name"]').fill(personName);
   await form.locator('[data-uop-field="contact"]').fill(email);
   await form.getByRole('button', { name: 'Submit registration' }).click();
