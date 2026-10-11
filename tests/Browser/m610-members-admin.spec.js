@@ -90,6 +90,30 @@ test('caregiver: no implicit access, explicit delegated minor submission, immedi
   await expect(root.locator('.uop-portal__entry')).toContainText('submitted');
   await expect(root.getByRole('button', { name: /Cancel registration/ })).toBeVisible();
 
+  // Relationship evidence is independent of the technical grant. Losing the
+  // former must immediately conceal the dependent and deny stale REST access.
+  action('revoke-relationship');
+  await root.getByRole('button', { name: 'Refresh access' }).click();
+  await expect(selector).not.toContainText('Caregiver Minor');
+  const relationshipDenied = await page.evaluate(async id => {
+    const nonce = globalThis.uopM6Portal?.nonce || '';
+    const response = await fetch('/?rest_route=/uop/v1/me/portal/registrations&person_id=' + encodeURIComponent(id), {
+      credentials: 'same-origin',
+      headers: { 'X-WP-Nonce': nonce, Accept: 'application/json' },
+      cache: 'no-store',
+    });
+    return response.status;
+  }, childUuid);
+  expect(relationshipDenied).toBe(404);
+
+  // Re-enabling the verified relationship restores only the still-active,
+  // explicit delegation; it never creates a new grant automatically.
+  action('reactivate-relationship');
+  await root.getByRole('button', { name: 'Refresh access' }).click();
+  await expect(selector).toContainText('Caregiver Minor');
+  await selector.selectOption({ label: 'Caregiver Minor' });
+  await expect(root.locator('.uop-portal__entry')).toContainText('submitted');
+
   // Remove authorization while the caregiver still has an open browser session.
   action('revoke-child');
   await root.getByRole('button', { name: 'Refresh access' }).click();
