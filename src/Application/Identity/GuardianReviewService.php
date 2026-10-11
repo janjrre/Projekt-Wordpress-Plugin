@@ -95,9 +95,13 @@ final class GuardianReviewService {
 					return true;
 				}
 			);
-		} catch ( \UOP\Infrastructure\Database\DatabaseException ) {
-			// Duplicate/rejected requests must not silently reactivate a claim.
-			return false;
+		} catch ( \UOP\Infrastructure\Database\DatabaseException $error ) {
+			// Only a duplicate relationship is an idempotent, opaque claim.
+			// Storage/transaction failures must not be reported as accepted.
+			if ( 1062 === $error->getCode() ) {
+				return false;
+			}
+			throw $error;
 		}
 	}
 
