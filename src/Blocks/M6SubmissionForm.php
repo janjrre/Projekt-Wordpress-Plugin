@@ -76,6 +76,8 @@ final class M6SubmissionForm {
 			$subject_id = wp_unique_id( 'uop-subject-' );
 			$html      .= '<div class="uop-m6-registration__subject"><label for="' . esc_attr( $subject_id ) . '">' . esc_html__( 'Person to register', 'uop-core' ) . '</label>';
 			$html      .= '<select id="' . esc_attr( $subject_id ) . '" data-uop-subject required disabled><option value="">' . esc_html__( 'Loading authorized persons…', 'uop-core' ) . '</option></select></div>';
+			$html      .= '<p class="uop-m6-registration__capacity" data-uop-decision-capacity role="status" aria-live="polite"></p>';
+			$html      .= '<label class="uop-m6-registration__representative" data-uop-representative hidden><input type="checkbox" data-uop-representative-confirmation /> ' . esc_html__( 'I confirm that I am authorized to give this decision for the selected person. This declaration does not itself prove legal representation.', 'uop-core' ) . '</label>';
 		}
 		$times = array_values( array_filter( $occurrences, static fn ( array $item ): bool => 'scheduled' === $item['status'] ) );
 		if ( $times ) {
@@ -108,7 +110,7 @@ final class M6SubmissionForm {
 			$attrs = ' data-uop-field="' . esc_attr( $key ) . '" data-uop-required="' . ( $required ? '1' : '0' ) . '"' . ( $required ? ' required' : '' );
 			if ( 'consent' === $type ) {
 				$html .= '<pre class="uop-m6-registration__document">' . esc_html( $documents[ $key ] ) . '</pre>';
-				$html .= '<label class="uop-m6-registration__consent-label" for="' . esc_attr( $id ) . '"><input type="checkbox" id="' . esc_attr( $id ) . '"' . $attrs . ' /> ' . esc_html__( 'I agree to this consent document.', 'uop-core' ) . '</label>';
+				$html .= '<label class="uop-m6-registration__consent-label" for="' . esc_attr( $id ) . '"><input type="checkbox" id="' . esc_attr( $id ) . '"' . $attrs . ' /> <span data-uop-consent-decision-label>' . esc_html__( 'I agree to this consent document.', 'uop-core' ) . '</span></label>';
 			} elseif ( 'textarea' === $type ) {
 				$html .= '<textarea id="' . esc_attr( $id ) . '"' . $attrs . ' rows="3" maxlength="10000"></textarea>';
 			} elseif ( 'radio' === $type ) {
