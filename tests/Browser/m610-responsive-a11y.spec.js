@@ -158,7 +158,13 @@ test('authenticated portal keeps person selector, focus and touch actions usable
     expect((await requestReview.boundingBox()).height).toBeGreaterThanOrEqual(44);
     const refresh = section.getByRole('button', { name: 'Refresh access' });
     expect((await refresh.boundingBox()).height).toBeGreaterThanOrEqual(44);
+    // The portal intentionally disables controls while both async subject and
+    // entry requests complete. Test keyboard order only after live readiness;
+    // otherwise a disabled selector cannot receive focus and Tab jumps away.
+    await expect(selector).toBeEnabled();
+    await expect(refresh).toBeEnabled();
     await selector.focus();
+    await expect(selector).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(refresh).toBeFocused();
   }
