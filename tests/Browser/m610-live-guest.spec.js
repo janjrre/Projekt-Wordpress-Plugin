@@ -49,6 +49,13 @@ test('public form → REST → actual email → one-time verification → waitli
   // Submit via the actual server-rendered Gutenberg block, not an API shortcut.
   await page.goto('/?page_id=' + encodeURIComponent(process.env.UOP_M610_PAGE_ID));
   const form = page.locator('form[data-uop-registration-form][data-uop-guest="1"]');
+  if (await form.count() === 0) {
+    // Safe pre-submission diagnostics: this public test page contains no token,
+    // private record or real participant.
+    const mainText = (await page.locator('body').innerText()).slice(0, 700);
+    throw new Error('Published UOP guest form not rendered; URL=' + new URL(page.url()).pathname +
+      '; page=' + mainText.replaceAll(/\\s+/g, ' '));
+  }
   await expect(form).toBeVisible();
   await form.locator('[data-uop-field="name"]').fill('Browser Guest');
   await form.locator('[data-uop-field="contact"]').fill('guest-ci@example.invalid');

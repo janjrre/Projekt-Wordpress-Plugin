@@ -38,8 +38,8 @@ jobs:
       mailpit:
         image: axllent/mailpit:latest
         ports:
-          - '1025:1025'
-          - '8025:8025'
+          - '127.0.0.1:1025:1025'
+          - '127.0.0.1:8025:8025'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
