@@ -255,14 +255,33 @@ final class M610EndToEndTest extends TestCase {
 		$altered['fields']['name'] = 'Changed after success';
 		self::assertSame( 409, $this->json( 'POST', '/uop/v1/registrations', $altered )->get_status() );
 
-		$child_row = $s['people']->find( $this->scope, $child );
+		$child_row  = $s['people']->find( $this->scope, $child );
+		$parent_row = $s['people']->find( $this->scope, $adult );
+		$relation_id = PublicId::generate();
+		$relations  = new \UOP\Infrastructure\Database\RelationshipRepository( $this->db, $this->prefix );
+		$relations->create( $this->scope, $relation_id, (int) $parent_row['id'], (int) $child_row['id'], 'guardian_of', $now );
 		$grant_id  = PublicId::generate();
-		$s['delegations']->grant( $this->scope, $grant_id, $s['parent'], (int) $child_row['id'], 'registration_manage', 'organization', 0, null, $now );
+		$s['delegations']->grant( $this->scope, $grant_id, $s['parent'], (int) $child_row['id'], 'registration_manage', 'organization', 0, (int) $relations->find( $this->scope, $relation_id )['id'], $now );
 		$after_grant = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal' ) );
 		self::assertContains( $child->to_string(), array_column( $after_grant->get_data()['items'], 'public_id' ) );
 		$child_response = $this->json( 'POST', '/uop/v1/registrations', $child_cmd );
 		self::assertSame( 201, $child_response->get_status(), (string) wp_json_encode( $child_response->get_data() ) );
 		$child_id = $child_response->get_data()['public_id'];
+		// A relationship-linked grant must immediately fail closed when the
+		// underlying guardian evidence is withdrawn, even if grant is active.
+		$this->db->execute(
+			'UPDATE %i SET status = %s WHERE organization_id = %d AND public_id = %s',
+			array( $this->prefix . 'relationships', 'revoked', $this->scope->id, $relation_id->to_binary() )
+		);
+		self::assertSame( 404, rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/registrations/' . $child_id ) )->get_status() );
+		self::assertSame( 404, $this->json( 'POST', '/uop/v1/registrations/' . $child_id . '/cancel', array( 'command_id' => PublicId::generate()->to_string() ) )->get_status() );
+		$relation_blocked_portal = rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/me/portal' ) );
+		self::assertNotContains( $child->to_string(), array_column( $relation_blocked_portal->get_data()['items'], 'public_id' ) );
+		$this->db->execute(
+			'UPDATE %i SET status = %s WHERE organization_id = %d AND public_id = %s',
+			array( $this->prefix . 'relationships', 'active', $this->scope->id, $relation_id->to_binary() )
+		);
+		self::assertSame( 200, rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/registrations/' . $child_id ) )->get_status() );
 		self::assertTrue( $s['delegations']->revoke( $this->scope, $grant_id, $now ) );
 		self::assertSame( 404, rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/registrations/' . $child_id ) )->get_status() );
 		self::assertSame( 404, $this->json( 'POST', '/uop/v1/registrations/' . $child_id . '/cancel', array( 'command_id' => PublicId::generate()->to_string() ) )->get_status() );
