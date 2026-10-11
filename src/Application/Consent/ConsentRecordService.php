@@ -104,7 +104,7 @@ final class ConsentRecordService {
 			$value,
 			$context,
 			$now,
-			'delegate' === $context && $representative_confirmed
+			'delegate' === $context
 		);
 		$event = PublicId::generate();
 		$this->audit->append( $scope, $actor, 'consent.decided', $object, 'success', $correlation, $event );
