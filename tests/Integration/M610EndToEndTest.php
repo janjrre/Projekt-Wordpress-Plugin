@@ -481,6 +481,8 @@ final class M610EndToEndTest extends TestCase {
 			wp_set_current_user( 0 );
 		}
 
+	}
+
 	/**
 	 * Public guest throttling uses the server-observed peer, not a client-set
 	 * X-Forwarded-For header. Rejected attempts never create registrations.
@@ -547,6 +549,5 @@ final class M610EndToEndTest extends TestCase {
 			}
 			wp_set_current_user( 0 );
 		}
-	}
 	}
 }
