@@ -49,3 +49,12 @@ body.wp-admin .uop-m3 button.components-button {
   min-width:44px !important;
   height:auto;
 }
+
+/* Dedicated WP admin mount point: the builder's actual buttons take
+   precedence over competing button-class declarations from other admin UI. */
+#wpbody-content #uop-m3-form-builder .uop-m3 button.button,
+#wpbody-content #uop-m3-form-builder .uop-m3 button.components-button {
+  min-height:44px !important;
+  min-width:44px !important;
+  box-sizing:border-box;
+}
