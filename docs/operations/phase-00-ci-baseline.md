@@ -30,6 +30,13 @@ Referenz-HEAD: `345ff661c9cf7f02e093dbb1114c76a16ac8c163`.
 
 **Reihenfolge:** Erst Phase-00-CI-Gate, dann #7 (ADR/Policy), #8 und #9 entlang der geklärten Verträge, zuletzt #10 als übergreifende Abnahme. Fachliche Rechtsprüfung bleibt ein explizites Release-Gate; eine technische Checkbox ist kein legaler Vertretungsnachweis.
 
+## Zusätzlicher Befund beim vollständigen Retest
+
+- Auf `308ba6e559f9fb65f9106a6b49bd5b8c10d7d578` war der Quality-Job inkl. PHPStan und Artefakt-Smoke **grün**; in der E2E-Suite bestanden **17/18** Chromium-Szenarien. Die ursprüngliche Guardian-Login-Stelle ist nicht mehr fehlgeschlagen.
+- Stattdessen zeigte die Browserprüfung einen **echten, nicht wegzuignorierenden** Barrierefreiheitsbefund: Der "Create draft"-Button des M3-Form-Builders war trotz geladener `m3-form-builder.css` in einem CI-Viewport nur **40px statt der geforderten 44px** hoch; berechnetes `min-height` = `40px`.
+- Korrektur in `assets/m3-form-builder.css`: expliziter, auf das WP-Admin-Form-Builder-Element begrenzter Mindestwert von **44px mit `!important`**, damit WordPress-Adminvarianten den Touch-Target-Floor nicht überschreiben. **Die 44px-Playwright-Assertion wurde nicht abgeschwächt.**
+- Die korrigierte Version benötigt erneut vollständige CI-Abnahme **auf dem jeweils finalen Commit**.
+
 ## Phase-00-Exit-Kriterien (nicht aufgrund älterer grüner Commits erfüllen)
 
 - [ ] Auf **ein und demselben neuesten HEAD**: `Foundation and persistence` vollständig abgeschlossen; Quality (Composer-Lint, PHPStan, Security-/Node-Checks, Paketierung), alle sechs Datenbank-/PHP-Matrix-Jobs, Artefakt-Smoke grün.
