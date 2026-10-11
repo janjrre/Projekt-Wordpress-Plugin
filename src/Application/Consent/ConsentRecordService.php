@@ -63,10 +63,11 @@ final class ConsentRecordService {
 	 * @param bool          $guest        Server-validated guest path.
 	 * @param string        $now          UTC evidence timestamp.
 	 * @param CorrelationId $correlation  Command correlation.
+	 * @param bool          $representative_confirmed Explicit acting-capacity acknowledgement for delegated consent.
 	 * @return array{evidence:array{record_public_id:string,definition_key:string,version:int,version_public_id:string,decision:string},reference_id:int}
 	 * @throws RuntimeException When document, policy or compulsory consent is invalid.
 	 */
-	public function record_submission( Actor $actor, OrgScope $scope, int $person_id, int $event_post, int $registration, PublicId $version, bool $decision, bool $required, bool $guest, string $now, CorrelationId $correlation ): array {
+	public function record_submission( Actor $actor, OrgScope $scope, int $person_id, int $event_post, int $registration, PublicId $version, bool $decision, bool $required, bool $guest, string $now, CorrelationId $correlation, bool $representative_confirmed = false ): array {
 		if ( $required && ! $decision ) {
 			throw new RuntimeException( 'Required consent was not granted.' );
 		}
@@ -86,6 +87,9 @@ final class ConsentRecordService {
 				throw new RuntimeException( 'Consent decision access denied.' );
 			}
 			$context = self::context( $decision_policy->reason );
+			if ( 'delegate' === $context && ! $representative_confirmed ) {
+				throw new InvalidArgumentException( 'Delegated consent requires a separate affirmative acting-capacity declaration.' );
+			}
 		}
 		$uuid  = PublicId::generate();
 		$value = $decision ? 'granted' : 'denied';
@@ -98,7 +102,8 @@ final class ConsentRecordService {
 			$registration,
 			$value,
 			$context,
-			$now
+			$now,
+			'delegate' === $context && $representative_confirmed
 		);
 		$event = PublicId::generate();
 		$this->audit->append( $scope, $actor, 'consent.decided', $object, 'success', $correlation, $event );
