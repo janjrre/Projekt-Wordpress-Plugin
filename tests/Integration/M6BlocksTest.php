@@ -369,6 +369,18 @@ final class M6BlocksTest extends TestCase {
 		);
 		self::assertStringContainsString( 'Photo permission', $html );
 		self::assertStringContainsString( 'I have read the terms for the accessible CI demonstration.', $html );
+		// Guest consent stays its own decision; no guest may claim an authenticated representative.
+		self::assertStringNotContainsString( 'data-uop-representative-confirmation', $html );
+		$member_html = ( new \UOP\Blocks\M6SubmissionForm( $docs ) )->render(
+			$this->scope, PublicId::generate()->to_string(),
+			array( 'fields' => array(
+				array( 'key' => 'agreement', 'label' => 'Photo permission', 'type' => 'consent', 'required' => true, 'consent_version_public_id' => $version->to_string() ),
+			) ), false, array()
+		);
+		self::assertStringContainsString( 'data-uop-decision-capacity', $member_html );
+		self::assertStringContainsString( 'data-uop-representative-confirmation', $member_html );
+		self::assertStringContainsString( 'data-uop-consent-decision-label', $member_html );
+		self::assertStringNotContainsString( 'data-uop-representative-confirmation', $html );
 		self::assertSame(
 			1,
 			preg_match( '/<label class="uop-m6-registration__consent-label" for="([^"]+)"><input type="checkbox" id="\1"[^>]*required[^>]*\s*\/> <span data-uop-consent-decision-label>I agree to this consent document\.<\/span><\/label>/s', $html )
