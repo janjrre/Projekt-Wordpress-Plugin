@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
 
 test.skip(process.env.UOP_HTTPS_E2E !== '1', 'Requires isolated local HTTPS WordPress CI');
 test.use({ baseURL: 'https://127.0.0.1:8443', ignoreHTTPSErrors: true });
@@ -288,4 +289,51 @@ test('operations and consent editor keep wide tables in keyboard-scrollable regi
     await noOffscreenUopControls(page, consent, 'consent editor at ' + width + 'px');
     await expect(consent.getByRole('textbox', { name: /Title/i })).toBeVisible();
   }
+});
+
+
+test('guardian claim → independent admin review → event-only access, without opening the dependent portal', async ({ page }) => {
+  requireCi();
+  if (process.env.UOP_M610_CI !== '1' || !process.env.WP_ROOT) {
+    throw new Error('Only the isolated WordPress test instance may expose the synthetic code.');
+  }
+  const dependent = execFileSync('wp', [
+    'option', 'get', 'uop_m610_ci_review_child', '--path=' + process.env.WP_ROOT,
+  ], { env: process.env, encoding: 'utf8', timeout: 30000 }).trim();
+  expect(dependent).toMatch(/^[0-9a-f-]{36}$/);
+
+  await login(page, 'uop_ci_review_parent');
+  await visit(page, '/?page_id=' + process.env.UOP_M610_MEMBER_PAGE);
+  let members = page.locator('form[data-uop-registration-form][data-uop-guest="0"]');
+  await expect(members).toBeVisible();
+  await expect(members.locator('[data-uop-subject]')).not.toContainText('Review Dependent');
+
+  await visit(page, '/?page_id=' + process.env.UOP_M610_PORTAL_PAGE);
+  const claim = page.locator('[data-uop-guardian-claim]');
+  await claim.getByRole('textbox', { name: 'Dependent invitation code' }).fill(dependent);
+  await claim.getByRole('button', { name: 'Request review' }).click();
+  await expect(claim.getByRole('status')).toContainText('Request received.');
+  await expect(claim.getByRole('status')).toContainText('Access is not granted');
+  await expect(page.locator('select.uop-portal__select')).not.toContainText('Review Dependent');
+
+  await page.context().clearCookies();
+  await login(page, 'uop_test_admin');
+  await visit(page, '/wp-admin/admin.php?page=uop-guardians');
+  const heading = page.getByRole('heading', { name: /Review Representative.*Review Dependent/ });
+  await expect(heading).toBeVisible();
+  const pending = page.locator('li').filter({ has: heading });
+  await pending.getByRole('combobox', { name: 'Limit authorization to event' })
+    .selectOption({ label: 'UOP CI members-only signup' });
+  await pending.getByRole('checkbox', { name: /independently checked the representative authority/ }).check();
+  await pending.getByRole('button', { name: 'Approve for 90 days' }).click();
+  await expect(page).toHaveURL(/result=updated/);
+  await expect(page.getByText('No pending guardian requests.')).toBeVisible();
+
+  await page.context().clearCookies();
+  await login(page, 'uop_ci_review_parent');
+  await visit(page, '/?page_id=' + process.env.UOP_M610_MEMBER_PAGE);
+  members = page.locator('form[data-uop-registration-form][data-uop-guest="0"]');
+  await expect(members.locator('[data-uop-subject]')).toContainText('Review Dependent');
+  await visit(page, '/?page_id=' + process.env.UOP_M610_PORTAL_PAGE);
+  await expect(page.locator('select.uop-portal__select')).not.toContainText('Review Dependent');
 });
