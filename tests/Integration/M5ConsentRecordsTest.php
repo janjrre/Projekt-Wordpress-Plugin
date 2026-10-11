@@ -172,6 +172,59 @@ final class M5ConsentRecordsTest extends TestCase {
 		self::assertCount(1,$this->db->rows('SELECT id FROM %i',[$this->prefix.'consent_records']));
 	}
 
+	/** A revoked family relation must deny consent and registration writes atomically. */
+	public function test_expired_guardian_cannot_write_new_consent_and_revoke_does_not_rewrite_history(): void {
+		[$s,$event,$child,$now]=$this->prepared();
+		$parent=PublicId::generate();
+		$s['people']->create($this->scope,$parent,'Guardian','shared-consent@example.invalid',$now);
+		$guardian=wp_create_user('uop_guard_consent_'.bin2hex(random_bytes(4)),wp_generate_password(24),'guardian_consent_'.bin2hex(random_bytes(4)).'@example.invalid');
+		self::assertIsInt($guardian);
+		self::assertTrue($s['people']->link($this->scope,$parent,$guardian,$now));
+		$guardian_row=$s['people']->find($this->scope,$parent);
+		$subject_row=$s['people']->find($this->scope,$child);
+		$relation=PublicId::generate();
+		$s['relations']->create($this->scope,$relation,(int)$guardian_row['id'],(int)$subject_row['id'],'guardian_of',$now);
+		$relationship_id=(int)$s['relations']->find($this->scope,$relation)['id'];
+		$s['delegations']->grant($this->scope,PublicId::generate(),$guardian,(int)$subject_row['id'],'registration_manage','organization',0,$relationship_id,$now);
+		$actor=new Actor($guardian);
+		$before_events=(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d',[$this->prefix.'domain_events',$this->scope->id])[0]['n'];
+
+		// An expired relationship must block even an otherwise active grant.
+		$this->db->execute('UPDATE %i SET valid_to = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'relationships','2000-01-01 00:00:00',$this->scope->id,$relation->to_binary()]);
+		try {
+			$s['submit']->submit($actor,$this->scope,$child,$event,null,PublicId::generate(),['name'=>'Rejected minor','portrait'=>true],$now,CorrelationId::generate());
+			self::fail('Expired relationship created a consented registration.');
+		} catch(RuntimeException) { self::assertTrue(true); }
+		self::assertSame(0,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d',[$this->prefix.'registrations',$this->scope->id])[0]['n']);
+		self::assertSame(0,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d',[$this->prefix.'consent_records',$this->scope->id])[0]['n']);
+		self::assertSame($before_events,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d',[$this->prefix.'domain_events',$this->scope->id])[0]['n']);
+
+		$this->db->execute('UPDATE %i SET valid_to = NULL WHERE organization_id = %d AND public_id = %s',[$this->prefix.'relationships',$this->scope->id,$relation->to_binary()]);
+		$registration=$s['submit']->submit($actor,$this->scope,$child,$event,null,PublicId::generate(),['name'=>'Consented minor','portrait'=>true],$now,CorrelationId::generate());
+		$registration_row=$this->db->rows('SELECT id FROM %i WHERE organization_id = %d AND public_id = %s',[$this->prefix.'registrations',$this->scope->id,$registration->to_binary()])[0];
+		$historic=(new RegistrationRepository($this->db,$this->prefix))->snapshot_fields($this->scope,(int)$registration_row['id']);
+		$original=PublicId::from_string($historic['portrait']['record_public_id']);
+		$record=$s['records']->find($this->scope,$original);
+		self::assertSame($guardian,(int)$record['actor_user_id']);
+		self::assertSame('delegate',$record['auth_context']);
+		self::assertSame((int)$subject_row['id'],(int)$record['subject_person_id']);
+		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d',[$this->prefix.'consent_records',$this->scope->id])[0]['n']);
+
+		$this->db->execute('UPDATE %i SET status = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'relationships','revoked',$this->scope->id,$relation->to_binary()]);
+		try {
+			$s['consent']->withdraw($actor,$this->scope,$original,PublicId::generate(),$now,CorrelationId::generate());
+			self::fail('Revoked guardian withdrew consent.');
+		} catch(RuntimeException) { self::assertTrue(true); }
+		self::assertSame(1,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d',[$this->prefix.'consent_records',$this->scope->id])[0]['n']);
+		self::assertSame($historic,(new RegistrationRepository($this->db,$this->prefix))->snapshot_fields($this->scope,(int)$registration_row['id']));
+		$this->db->execute('UPDATE %i SET status = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'relationships','active',$this->scope->id,$relation->to_binary()]);
+		$withdrawal=PublicId::generate();
+		self::assertSame($withdrawal->to_string(),$s['consent']->withdraw($actor,$this->scope,$original,$withdrawal,$now,CorrelationId::generate())->to_string());
+		self::assertSame($historic,(new RegistrationRepository($this->db,$this->prefix))->snapshot_fields($this->scope,(int)$registration_row['id']));
+		self::assertSame('granted',$s['records']->find($this->scope,$original)['decision']);
+		self::assertSame('withdrawn',$s['records']->find($this->scope,$withdrawal)['decision']);
+	}
+
 	/** Required and malformed decisions cannot create orphan registrations. */
 	public function test_invalid_required_decisions_and_outbox_failures_roll_back(): void {
 		[$s,$event,$person,$now]=$this->prepared();
