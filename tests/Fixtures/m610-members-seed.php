@@ -77,6 +77,22 @@ if ( ! $people->link( $scope, $minor, $minor_user, $now ) ) {
 	throw new RuntimeException( 'Cannot link synthetic minor to own login.' );
 }
 update_option( 'uop_m610_ci_minor', $minor->to_string(), false );
+
+// Separate guardian-review journey, deliberately isolated from the prior
+// caregiver delegation and registration-state browser scenarios.
+$review_parent_user = wp_create_user( 'uop_ci_review_parent', $password, 'review-parent-ci@example.invalid' );
+if ( is_wp_error( $review_parent_user ) ) {
+	throw new RuntimeException( 'Cannot create synthetic review claimant account.' );
+}
+( new WP_User( $review_parent_user ) )->set_role( 'subscriber' );
+$review_parent = PublicId::generate();
+$review_child  = PublicId::generate();
+$people->create( $scope, $review_parent, 'Review Representative', 'review-family@example.invalid', $now );
+$people->create( $scope, $review_child, 'Review Dependent', 'review-family@example.invalid', $now );
+if ( ! $people->link( $scope, $review_parent, $review_parent_user, $now ) ) {
+	throw new RuntimeException( 'Cannot link synthetic guardian reviewer claimant.' );
+}
+update_option( 'uop_m610_ci_review_child', $review_child->to_string(), false );
 $post = wp_insert_post( array( 'post_type' => 'uop_event', 'post_status' => 'publish', 'post_title' => 'UOP CI members-only signup' ), true );
 if ( is_wp_error( $post ) || ! is_int( $post ) ) {
 	throw new RuntimeException( 'Cannot create member event.' );
