@@ -52,8 +52,8 @@ final class ConsentRecordRepository {
 			? (string) wp_json_encode( array( 'representative_confirmation' => true ) )
 			: null;
 		$this->db->execute(
-			'INSERT INTO %i (public_id, organization_id, definition_version_id, subject_person_id, actor_user_id, registration_id, decision, supersedes_record_id, auth_context, evidence_json, decided_at) VALUES (%s,%d,%d,%d,NULLIF(%d,0),%d,%s,NULL,%s,%s,%s)',
-			array( $this->prefix . 'consent_records', $uuid->to_binary(), $scope->id, $version_id, $person_id, $actor_id, $registration, $decision, $context, $evidence, $now )
+			'INSERT INTO %i (public_id, organization_id, definition_version_id, subject_person_id, actor_user_id, registration_id, decision, supersedes_record_id, auth_context, evidence_json, decided_at) VALUES (%s,%d,%d,%d,NULLIF(%d,0),%d,%s,NULL,%s,NULLIF(%s,%s),%s)',
+			array( $this->prefix . 'consent_records', $uuid->to_binary(), $scope->id, $version_id, $person_id, $actor_id, $registration, $decision, $context, $evidence ?? '', '', $now )
 		);
 		return $this->inserted_id( $scope, $uuid );
 	}
