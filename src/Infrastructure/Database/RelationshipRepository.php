@@ -30,7 +30,7 @@ final class RelationshipRepository {
 	 */
 	public function find( OrgScope $scope, PublicId $id ): ?array {
 		$rows = $this->db->rows(
-			'SELECT id, organization_id, from_person_id, to_person_id, type_key, status, valid_from, valid_to FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1',
+			'SELECT id, public_id, organization_id, from_person_id, to_person_id, type_key, status, valid_from, valid_to FROM %i WHERE organization_id = %d AND public_id = %s LIMIT 1',
 			array( $this->prefix . 'relationships', $scope->id, $id->to_binary() )
 		);
 		return $rows[0] ?? null;
