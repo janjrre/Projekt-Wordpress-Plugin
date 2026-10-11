@@ -85,6 +85,7 @@ final class M6ControlCenterScreen {
 		echo '<nav class="uop-m6-console__nav" aria-label="' . esc_attr__( 'UOP Administration', 'uop-core' ) . '">';
 		$this->link( $actor, $scope, 'form.manage', 'uop_manage_forms', 'uop-forms', __( 'Form builder', 'uop-core' ) );
 		$this->link( $actor, $scope, 'person.view', 'uop_view_people', 'uop-people', __( 'People', 'uop-core' ) );
+		$this->link( $actor, $scope, 'delegation.manage', 'uop_manage_delegations', 'uop-guardians', __( 'Guardian requests', 'uop-core' ) );
 		$this->link( $actor, $scope, 'registration.view', 'uop_view_registrations', 'uop-registrations', __( 'Registrations', 'uop-core' ) );
 		$this->link( $actor, $scope, 'communication.send', 'uop_manage_settings', 'uop-operations', __( 'Communication and privacy', 'uop-core' ) );
 		$this->link( $actor, $scope, 'privacy.manage', 'uop_manage_privacy', 'uop-consents', __( 'Consent documents', 'uop-core' ) );
