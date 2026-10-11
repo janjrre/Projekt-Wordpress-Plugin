@@ -340,6 +340,34 @@ final class M6BlocksTest extends TestCase {
 		self::assertStringNotContainsString( '<form', $no_consent );
 	}
 
+	/** A consent agreement checkbox is labelled by the actual affirmative text. */
+	public function test_m610_consent_control_has_explicit_accessible_agreement_label(): void {
+		$s      = $this->fixture();
+		$docs   = new \UOP\Infrastructure\Database\ConsentRepository( $this->db, $this->prefix );
+		$now    = gmdate( 'Y-m-d H:i:s' );
+		$rootid = PublicId::generate();
+		$docs->create( $this->scope, $rootid, 'm610_a11y_consent', 'Accessibility agreement', $now );
+		$root = $docs->lock( $this->scope, $rootid );
+		self::assertNotNull( $root );
+		$version = PublicId::generate();
+		$docs->publish( $this->scope, $root, $version, 'I have read the terms for the accessible CI demonstration.', $s['self'], $now );
+		$html = ( new \UOP\Blocks\M6SubmissionForm( $docs ) )->render(
+			$this->scope,
+			PublicId::generate()->to_string(),
+			array( 'fields' => array(
+				array( 'key' => 'agreement', 'label' => 'Photo permission', 'type' => 'consent', 'required' => true, 'consent_version_public_id' => $version->to_string() ),
+			) ),
+			true,
+			array()
+		);
+		self::assertStringContainsString( 'Photo permission', $html );
+		self::assertStringContainsString( 'I have read the terms for the accessible CI demonstration.', $html );
+		self::assertSame(
+			1,
+			preg_match( '/<label class="uop-m6-registration__consent-label" for="([^"]+)"><input type="checkbox" id="\1"[^>]*required[^>]*\s*\/> I agree to this consent document\.<\/label>/s', $html )
+		);
+	}
+
 	/** Member/delegate summaries are isolated across accounts and disabled for caching. */
 	public function test_my_registrations_refuses_anonymous_and_unrelated_accounts(): void {
 		$s   = $this->fixture();

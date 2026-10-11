@@ -14,6 +14,7 @@ on:
       - 'tests/Fixtures/m610-live-seed.php'
       - 'tests/Fixtures/m610-live-helper.php'
       - 'tests/Browser/m610-members-admin.spec.js'
+      - 'tests/Browser/m610-responsive-a11y.spec.js'
       - 'tests/Fixtures/m610-members-seed.php'
       - 'tests/Fixtures/m610-members-helper.php'
   workflow_dispatch:
@@ -151,7 +152,7 @@ jobs:
           UOP_HTTPS_E2E: '1'
         run: |
           npx playwright install --with-deps chromium
-          npx playwright test tests/Browser/m610-https.spec.js tests/Browser/m610-live-guest.spec.js tests/Browser/m610-members-admin.spec.js
+          npx playwright test tests/Browser/m610-https.spec.js tests/Browser/m610-live-guest.spec.js tests/Browser/m610-members-admin.spec.js tests/Browser/m610-responsive-a11y.spec.js
       - name: Upload browser and WordPress diagnostics (never email contents)
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
