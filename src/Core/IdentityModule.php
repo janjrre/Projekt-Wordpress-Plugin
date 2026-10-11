@@ -12,6 +12,7 @@ use UOP\Application\Identity\AccountDeletionListener;
 use UOP\Application\Identity\AccountLinkService;
 use UOP\Application\Identity\AssignmentService;
 use UOP\Application\Identity\DelegationService;
+use UOP\Application\Identity\GuardianReviewService;
 use UOP\Application\Identity\PersonService;
 use UOP\Application\Policy\CapabilityRegistry;
 use UOP\Application\Policy\PolicyService;
@@ -149,6 +150,20 @@ final class IdentityModule implements ModuleInterface {
 				$c->get( AuditWriter::class ),
 				$c->get( OutboxRepository::class ),
 				$c->get( PostCommitPublisher::class )
+			)
+		);
+		$container->set(
+			GuardianReviewService::class,
+			static fn ( ServiceContainer $c ) => new GuardianReviewService(
+				$c->get( PersonRepository::class ),
+				$c->get( RelationshipRepository::class ),
+				$c->get( DelegationRepository::class ),
+				$c->get( Connection::class ),
+				$c->get( PolicyService::class ),
+				$c->get( TransactionManager::class ),
+				$c->get( AuditWriter::class ),
+				$c->get( OutboxRepository::class ),
+				$prefix
 			)
 		);
 		CapabilityRegistry::install();
