@@ -292,5 +292,33 @@
 		}
 	}
 	Portal.nextId = 1;
+	document.querySelectorAll('[data-uop-guardian-claim]').forEach(form => {
+		const input = form.querySelector('input[name="subject_id"]');
+		const submit = form.querySelector('button[type="submit"]');
+		const status = form.querySelector('[data-uop-guardian-status]');
+		form.addEventListener('submit', async event => {
+			event.preventDefault();
+			const value = String(input?.value || '').trim().toLowerCase();
+			if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)) {
+				status.textContent = t('Enter a valid invitation code.', 'uop-core');
+				return;
+			}
+			submit.disabled = true;
+			form.setAttribute('aria-busy', 'true');
+			status.textContent = t('Submitting your request…', 'uop-core');
+			try {
+				await request('/me/guardian-claims', { method: 'POST', data: { subject_id: value } });
+				input.value = '';
+				// Generic receipt for both recognized and unknown subjects avoids
+				// disclosing another participant's existence in the browser.
+				status.textContent = t('Request received. Access is not granted until independently reviewed.', 'uop-core');
+			} catch (error) {
+				status.textContent = errorMessage(error);
+			} finally {
+				submit.disabled = false;
+				form.removeAttribute('aria-busy');
+			}
+		});
+	});
 	document.querySelectorAll('[data-uop-portal-root]').forEach(root => new Portal(root));
 }());
