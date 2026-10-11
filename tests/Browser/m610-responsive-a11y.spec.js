@@ -141,6 +141,27 @@ test('authenticated portal keeps person selector, focus and touch actions usable
   }
 });
 
+test('guardian claim portal receipt and manager review queue require distinct authorities', async ({ page }) => {
+  requireCi();
+  await login(page, 'uop_ci_adult');
+  await visit(page, '/?page_id=' + process.env.UOP_M610_PORTAL_PAGE, { waitUntil: 'domcontentloaded' });
+  const form = page.locator('[data-uop-guardian-claim]');
+  await expect(form).toBeVisible();
+  await form.getByRole('textbox', { name: 'Dependent invitation code' })
+    .fill('00000000-0000-4000-8000-000000000001');
+  await form.getByRole('button', { name: 'Request review' }).click();
+  await expect(form.getByRole('status')).toContainText('Request received.');
+  await expect(form.getByRole('status')).toContainText('Access is not granted');
+  // A regular member cannot reach the manager's private review queue.
+  const denied = await visit(page, '/wp-admin/admin.php?page=uop-guardians', { waitUntil: 'domcontentloaded' });
+  expect(denied.status()).toBeGreaterThanOrEqual(400);
+
+  await login(page, 'uop_test_admin');
+  await visit(page, '/wp-admin/admin.php?page=uop-guardians', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'Guardian requests' })).toBeVisible();
+  await expect(page.getByText('No pending guardian requests.')).toBeVisible();
+});
+
 test('admin record list and details reflow and keyboard selection moves focus to loaded details', async ({ page }) => {
   requireCi();
   await login(page, 'uop_test_admin');
