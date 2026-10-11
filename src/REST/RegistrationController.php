@@ -140,6 +140,7 @@ final class RegistrationController extends BaseController {
 					'occurrence_id' => array( 'type' => 'string' ),
 					'command_id'    => array( 'type' => 'string' ),
 					'fields'        => array( 'type' => 'object' ),
+					'representative_confirmation' => array( 'type' => 'boolean' ),
 				),
 				array( 'person_id', 'event_id', 'command_id', 'fields' )
 			);
@@ -155,7 +156,7 @@ final class RegistrationController extends BaseController {
 			return RestError::for_kind( 'unavailable' );
 		}
 		try {
-			$id = $this->registrations->submit( $this->current_actor(), $scope, $person, $event, $when, $command, $body['fields'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
+			$id = $this->registrations->submit( $this->current_actor(), $scope, $person, $event, $when, $command, $body['fields'], gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate(), $body['representative_confirmation'] ?? false );
 			return new WP_REST_Response(
 				array(
 					'public_id' => $id->to_string(),
