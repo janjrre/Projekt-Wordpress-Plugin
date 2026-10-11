@@ -13,7 +13,7 @@ async function visit(page, target, options = {}) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const response = await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 30000, ...options });
-      if (new URL(target, page.url()).pathname.startsWith('/wp-admin/')) await waitForAdminStyles(page);
+      if (new URL(target, page.url()).pathname.startsWith('/wp-admin/')) await page.waitForLoadState('load', { timeout: 20000 });
       return response;
     } catch (error) {
       const expected = new URL(target, page.url());
@@ -25,7 +25,7 @@ async function visit(page, target, options = {}) {
         try {
           await page.waitForLoadState('domcontentloaded', { timeout: 12000 });
           if (page.url() === expected.href) {
-            if (expected.pathname.startsWith('/wp-admin/')) await waitForAdminStyles(page);
+            if (expected.pathname.startsWith('/wp-admin/')) await page.waitForLoadState('load', { timeout: 20000 });
             return null;
           }
         } catch { /* Retry a still-incomplete navigation. */ }
@@ -39,37 +39,13 @@ async function visit(page, target, options = {}) {
   }
 }
 
-/**
- * A link.sheet object can exist before the CSS response is fully parsed.
- * Wait for same-origin WordPress/UOP admin styles to expose CSSOM rules before
- * measuring touch targets or clicking beneath the collapsing admin sidebar.
- */
-async function waitForAdminStyles(page) {
-  await expect.poll(() => page.evaluate(() => {
-    const local = [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
-      .filter(link => {
-        const url = new URL(link.href, globalThis.location.href);
-        return url.origin === globalThis.location.origin &&
-          (/\/wp-(?:admin|includes)\//.test(url.pathname) ||
-            url.pathname.includes('/wp-content/plugins/uop-core/'));
-      });
-    return local.length > 0 && local.every(link => {
-      try {
-        const rules = link.sheet?.cssRules;
-        return Boolean(rules) && (rules.length > 0 || !link.href.includes('m3-form-builder.css'));
-      } catch { return false; }
-    });
-  }), { timeout: 20000 }).toBeTruthy();
-}
-
+/** Wait for UOP links before layout checks; the specific touch target also
+ * has its own authoritative computed-size assertion below. */
 async function waitForUopStyles(page) {
   await expect.poll(() => page.evaluate(() => {
     const sheets = [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
       .filter(link => link.href.includes('/wp-content/plugins/uop-core/assets/'));
-    return sheets.length > 0 && sheets.every(link => {
-      try { return Boolean(link.sheet) && link.sheet.cssRules.length > 0; }
-      catch { return false; }
-    });
+    return sheets.length > 0 && sheets.every(link => Boolean(link.sheet));
   }), { timeout: 20000 }).toBeTruthy();
 }
 
@@ -99,7 +75,7 @@ async function login(page, username) {
       // The actual authenticated WordPress UI must appear; a changed URL alone
       // is not proof of a successful login.
       await expect(page.locator('#wpadminbar')).toBeVisible();
-      await waitForAdminStyles(page);
+      await page.waitForLoadState('load', { timeout: 20000 });
       return;
     } catch (error) {
       const rejection = await page.locator('#login_error').textContent().catch(() => '');
@@ -308,17 +284,12 @@ test('people editor and form builder reflow without clipped controls at 320–12
     await key.focus();
     await expect(key).toBeFocused();
     const add = builder.getByRole('button', { name: 'Create draft' });
-    // DOMContentLoaded only confirms that a stylesheet link exists, not
-    // that its CSS has loaded. Measure touch targets after the actual UOP
-    // stylesheet is parsed so slow CI runners cannot report a false 40px.
-    await expect.poll(() => page.evaluate(() => {
-      const styles = [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
-        .filter(link => link.href.includes('m3-form-builder.css'));
-      return styles.length > 0 && styles.every(link => {
-        try { return Boolean(link.sheet) && link.sheet.cssRules.length > 0; }
-        catch { return false; }
-      });
-    }), { timeout: 10000 }).toBe(true);
+    // The real 44px computed geometry is the readiness and accessibility
+    // condition. CSSOM introspection is not a reliable loading signal because
+    // WordPress aggregates stylesheets that may not expose readable cssRules.
+    await expect.poll(() => add.evaluate(node =>
+      node.getBoundingClientRect().height
+    ), { timeout: 15000 }).toBeGreaterThanOrEqual(44);
     const createSize = await add.evaluate(node => {
       const sheetRules = [...globalThis.document.styleSheets]
         .filter(sheet => sheet.href?.includes('m3-form-builder.css'))
