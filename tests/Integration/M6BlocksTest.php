@@ -371,7 +371,7 @@ final class M6BlocksTest extends TestCase {
 		self::assertStringContainsString( 'I have read the terms for the accessible CI demonstration.', $html );
 		self::assertSame(
 			1,
-			preg_match( '/<label class="uop-m6-registration__consent-label" for="([^"]+)"><input type="checkbox" id="\1"[^>]*required[^>]*\s*\/> I agree to this consent document\.<\/label>/s', $html )
+			preg_match( '/<label class="uop-m6-registration__consent-label" for="([^"]+)"><input type="checkbox" id="\1"[^>]*required[^>]*\s*\/> <span data-uop-consent-decision-label>I agree to this consent document\.<\/span><\/label>/s', $html )
 		);
 	}
 
