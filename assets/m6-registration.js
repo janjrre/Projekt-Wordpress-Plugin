@@ -87,6 +87,37 @@
 		const rest = form.dataset.uopRest;
 		const nonce = guest ? '' : (globalThis.window.uopM6Registration?.nonce || '');
 		const subject = form.querySelector('[data-uop-subject]');
+		const capacityMessage = form.querySelector('[data-uop-decision-capacity]');
+		const representativeLabel = form.querySelector('[data-uop-representative]');
+		const representativeConfirmation = form.querySelector('[data-uop-representative-confirmation]');
+		const consentLabels = form.querySelectorAll('[data-uop-consent-decision-label]');
+		const hasConsents = consentLabels.length > 0;
+		function consentCapacity() {
+			const context = subject?.selectedOptions?.[0]?.dataset.decisionContext || '';
+			const delegated = context === 'delegate';
+			if (capacityMessage) capacityMessage.textContent = context === 'self'
+				? 'You are registering yourself. Any document decision is your own.'
+				: delegated
+					? 'You are acting for another person under a current delegation. This does not independently establish legal guardian status.'
+					: context === 'manager'
+						? 'You are acting with organizational authority, not as the participant or their legal representative.'
+						: 'Choose a person to identify who gives any document decision.';
+			consentLabels.forEach(label => {
+				label.textContent = delegated
+					? 'I give this decision for the selected person in my authorized representative capacity.'
+					: context === 'self'
+						? 'I agree to this consent document for myself.'
+						: context === 'manager'
+							? 'I give this decision with organizational authority.'
+							: 'I agree to this consent document.';
+			});
+			if (representativeLabel && representativeConfirmation) {
+				representativeLabel.hidden = !delegated || !hasConsents;
+				representativeConfirmation.required = delegated && hasConsents;
+				if (!delegated) representativeConfirmation.checked = false;
+			}
+			return context;
+		}
 		let command = uuid();
 		let finished = false;
 		if (!guest) {
@@ -99,8 +130,14 @@
 					'event_id=' + encodeURIComponent(form.dataset.uopEvent), {}, nonce);
 				const items = data.items || [];
 				subject.replaceChildren(new globalThis.Option('Choose a person', ''));
-				for (const item of items) subject.add(new globalThis.Option(item.display_name, item.public_id));
-				subject.disabled = items.length === 0;
+				for (const item of items) {
+					if (!['self', 'delegate', 'manager'].includes(item.decision_context)) continue;
+					const option = new globalThis.Option(item.display_name, item.public_id);
+					option.dataset.decisionContext = item.decision_context;
+					subject.add(option);
+				}
+				subject.disabled = subject.options.length <= 1;
+				consentCapacity();
 				if (!items.length) result.textContent = 'No authorized person is available for registration.';
 			} catch {
 				result.textContent = 'The authorized persons could not be loaded. Please sign in again.';
@@ -110,7 +147,7 @@
 		refresh(form);
 		button.disabled = Boolean(subject?.disabled);
 		form.addEventListener('input', () => { if (!finished) { command = uuid(); refresh(form); } });
-		form.addEventListener('change', () => { if (!finished) { command = uuid(); refresh(form); } });
+		form.addEventListener('change', () => { if (!finished) { command = uuid(); consentCapacity(); refresh(form); } });
 		form.addEventListener('submit', async event => {
 			event.preventDefault();
 			if (finished || button.disabled) return;
@@ -124,6 +161,11 @@
 			if (!guest) {
 				if (!subject?.value) { result.textContent = 'Choose an authorized person.'; button.disabled = false; return; }
 				body.person_id = subject.value;
+				if (hasConsents && consentCapacity() === 'delegate') {
+					// This declaration is recorded alongside the server-verified
+					// delegated actor/subject evidence, never used to grant access.
+					body.representative_confirmation = Boolean(representativeConfirmation?.checked);
+				}
 			}
 			try {
 				const data = await request(rest + (guest ? 'registrations/guest' : 'registrations'), {method: 'POST', body: JSON.stringify(body)}, nonce);
