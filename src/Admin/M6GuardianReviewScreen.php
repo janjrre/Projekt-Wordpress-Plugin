@@ -27,15 +27,15 @@ final class M6GuardianReviewScreen {
 
 	/** Register private staff work queue and nonce-protected review actions. */
 	public function menu(): void {
-		add_submenu_page(
-			'uop-overview',
+		add_menu_page(
 			__( 'Guardian requests', 'uop-core' ),
 			__( 'Guardian requests', 'uop-core' ),
 			'uop_manage_delegations',
 			'uop-guardians',
-			array( $this, 'render' )
+			array( $this, 'render' ),
+			'dashicons-groups',
+			31
 		);
-		add_action( 'admin_post_uop_guardian_review', array( $this, 'submit' ) );
 	}
 
 	/** Display requests without exposing emails, birthdates or proof documents. */
