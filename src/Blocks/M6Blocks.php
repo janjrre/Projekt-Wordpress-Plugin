@@ -261,7 +261,15 @@ final class M6Blocks {
 		if ( ! is_user_logged_in() ) {
 			return '<p>' . esc_html__( 'Sign in to access your participant portal.', 'uop-core' ) . ' <a href="' . esc_url( wp_login_url( get_permalink() ) ) . '">' . esc_html__( 'Sign in', 'uop-core' ) . '</a></p>';
 		}
-		return '<h2>' . esc_html__( 'Participant portal', 'uop-core' ) . '</h2><div data-uop-portal-root="portal"><p data-uop-portal-loading role="status">' . esc_html__( 'Loading your authorized persons and registrations…', 'uop-core' ) . '</p></div><noscript><p>' . esc_html__( 'JavaScript is required to change profiles and manage registrations. You can still use the My Registrations block to read your own entries.', 'uop-core' ) . '</p></noscript>';
+		$input_id = wp_unique_id( 'uop-guardian-code-' );
+		$portal   = '<h2>' . esc_html__( 'Participant portal', 'uop-core' ) . '</h2><div data-uop-portal-root="portal"><p data-uop-portal-loading role="status">' . esc_html__( 'Loading your authorized persons and registrations…', 'uop-core' ) . '</p></div>';
+		$guardian = '<section class="uop-guardian-claim"><h3>' . esc_html__( 'Request access for a dependent person', 'uop-core' ) . '</h3>';
+		$guardian .= '<p>' . esc_html__( 'Enter the private invitation code supplied by the organization or dependent person. An administrator must independently verify your authority before access is granted.', 'uop-core' ) . '</p>';
+		$guardian .= '<form data-uop-guardian-claim><label for="' . esc_attr( $input_id ) . '">' . esc_html__( 'Dependent invitation code', 'uop-core' ) . '</label>';
+		$guardian .= '<input id="' . esc_attr( $input_id ) . '" name="subject_id" type="text" autocomplete="off" maxlength="36" required pattern="[0-9a-fA-F-]{36}">';
+		$guardian .= '<button type="submit" class="uop-portal__button">' . esc_html__( 'Request review', 'uop-core' ) . '</button>';
+		$guardian .= '<p role="status" aria-live="polite" data-uop-guardian-status></p></form></section>';
+		return $portal . $guardian . '<noscript><p>' . esc_html__( 'JavaScript is required to submit a guardian request or change profiles.', 'uop-core' ) . '</p></noscript>';
 	}
 
 	/**
