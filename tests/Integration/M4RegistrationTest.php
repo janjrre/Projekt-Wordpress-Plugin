@@ -632,7 +632,7 @@ final class M4RegistrationTest extends TestCase {
 			try {
 				$facts->load($services['actor'],$this->scope,$id,$post_id,0,[$condition]);
 				self::fail('Untrusted age fact was authorized: '.$reason);
-			} catch (RuntimeException $error) {
+			} catch (RuntimeException | InvalidArgumentException $error) {
 				self::assertNotSame('', $error->getMessage());
 			}
 		};
