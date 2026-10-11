@@ -92,8 +92,11 @@
 		if (!guest) {
 			if (!nonce || !subject) return;
 			try {
-				const data = await request(rest + 'me/portal', {}, nonce);
-				const items = (data.items || []).filter(item => item.can_view_entries);
+				// Read only event-scoped registration authority. Broad portal access
+				// cannot be inferred from a narrowly reviewed guardian grant.
+				const data = await request(rest + 'me/registration-subjects?event_id=' +
+					encodeURIComponent(form.dataset.uopEvent), {}, nonce);
+				const items = data.items || [];
 				subject.replaceChildren(new globalThis.Option('Choose a person', ''));
 				for (const item of items) subject.add(new globalThis.Option(item.display_name, item.public_id));
 				subject.disabled = items.length === 0;
