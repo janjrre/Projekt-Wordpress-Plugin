@@ -100,7 +100,13 @@ test('admin record list and details reflow and keyboard selection moves focus to
     const first = list.locator('.uop-m6-items button').first();
     await expect(first).toBeVisible();
     await noOffscreenUopControls(page, root, 'registration management at ' + width + 'px');
-    expect((await first.boundingBox()).height).toBeGreaterThanOrEqual(44);
+    const itemSize = await first.evaluate(node => ({
+      height: node.getBoundingClientRect().height,
+      minHeight: globalThis.getComputedStyle(node).minHeight,
+      cssFile: [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
+        .filter(link => link.href.includes('m6-admin.css')).map(link => link.href),
+    }));
+    expect(itemSize.height, JSON.stringify(itemSize)).toBeGreaterThanOrEqual(44);
     await first.focus();
     await page.keyboard.press('Enter');
     await expect(details.locator('h2')).toBeFocused({ timeout: 12000 });
@@ -154,7 +160,13 @@ test('people editor and form builder reflow without clipped controls at 320–12
     await key.focus();
     await expect(key).toBeFocused();
     const add = builder.getByRole('button', { name: 'Create draft' });
-    expect((await add.boundingBox()).height).toBeGreaterThanOrEqual(44);
+    const createSize = await add.evaluate(node => ({
+      height: node.getBoundingClientRect().height,
+      minHeight: globalThis.getComputedStyle(node).minHeight,
+      cssFile: [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
+        .filter(link => link.href.includes('m3-form-builder.css')).map(link => link.href),
+    }));
+    expect(createSize.height, JSON.stringify(createSize)).toBeGreaterThanOrEqual(44);
   }
 });
 
