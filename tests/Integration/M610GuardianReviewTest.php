@@ -13,6 +13,7 @@ use UOP\Application\Identity\GuardianReviewService;
 use UOP\Application\Policy\Actor;
 use UOP\Application\Policy\PolicyObject;
 use UOP\Application\Policy\PolicyService;
+use UOP\Application\Query\M6ReadService;
 use UOP\Core\CorrelationId;
 use UOP\Core\PublicId;
 use UOP\Core\TransactionManager;
@@ -26,6 +27,7 @@ use UOP\Infrastructure\Database\OccurrenceRepository;
 use UOP\Infrastructure\Database\OutboxRepository;
 use UOP\Infrastructure\Database\PersonRepository;
 use UOP\Infrastructure\Database\RelationshipRepository;
+use UOP\Infrastructure\Database\RegistrationReadRepository;
 use UOP\Infrastructure\Database\SchemaManifest;
 use UOP\Infrastructure\Database\WpdbConnection;
 use UOP\REST\GuardianReviewController;
@@ -87,10 +89,14 @@ final class M610GuardianReviewTest extends TestCase {
 		self::assertTrue( $people->link( $this->scope, $parent_person, $parent, $now ) );
 		$post = wp_insert_post( array( 'post_type' => 'uop_event', 'post_status' => 'publish', 'post_title' => 'CI child event' ), true );
 		self::assertIsInt( $post );
-		( new EventService( new EventRepository( $this->db, $this->prefix ), new OccurrenceRepository( $this->db, $this->prefix ), $policy, $tx, $audit, $outbox ) )
+		$event_id = ( new EventService( new EventRepository( $this->db, $this->prefix ), new OccurrenceRepository( $this->db, $this->prefix ), $policy, $tx, $audit, $outbox ) )
 			->configure( new Actor( $admin ), $this->scope, $post, 'Europe/Berlin', $now, CorrelationId::generate() );
+		$this->db->execute(
+			'UPDATE %i SET visibility = %s WHERE organization_id = %d AND public_id = %s',
+			array( $this->prefix . 'event_settings', 'public', $this->scope->id, $event_id->to_binary() )
+		);
 		delete_transient( 'uop_guardian_claim_' . hash( 'sha256', $this->scope->id . ':' . $parent ) );
-		return compact( 'admin', 'parent', 'stranger', 'people', 'relationships', 'delegations', 'policy', 'reviews', 'child', 'other_child', 'post' );
+		return compact( 'admin', 'parent', 'stranger', 'people', 'relationships', 'delegations', 'policy', 'reviews', 'child', 'other_child', 'post', 'event_id' );
 	}
 
 	/** Send untrusted JSON to actual WordPress REST dispatch, not a mock. */
@@ -128,6 +134,16 @@ final class M610GuardianReviewTest extends TestCase {
 		self::assertSame( 1, $this->tenant_count( 'relationships' ) );
 		self::assertSame( 0, $this->tenant_count( 'delegations' ) );
 		$child_id = (int) $s['people']->find( $this->scope, $s['child'] )['id'];
+		$reads = new M6ReadService(
+			$s['people'],
+			$s['delegations'],
+			new RegistrationReadRepository( $this->db, $this->prefix ),
+			$s['policy'],
+			new EventRepository( $this->db, $this->prefix )
+		);
+		$before_scope = $reads->registration_subjects_for_event( new Actor( $s['parent'] ), $this->scope, $s['event_id'] );
+		self::assertCount( 1, $before_scope );
+		self::assertNotContains( $s['child']->to_string(), array_column( $before_scope, 'public_id' ) );
 		$resource = new PolicyObject( $this->scope->id, 'registration', $child_id, $child_id, $s['post'] );
 		self::assertFalse( $s['policy']->can( new Actor( $s['parent'] ), 'registration.create', $resource )->allowed );
 		self::assertSame( 403, rest_do_request( new \WP_REST_Request( 'GET', '/uop/v1/admin/guardian-claims' ) )->get_status() );
@@ -162,11 +178,17 @@ final class M610GuardianReviewTest extends TestCase {
 		self::assertSame( $s['post'], (int) $grant['scope_id'] );
 		self::assertNotNull( $grant['valid_to'] );
 		self::assertTrue( $s['policy']->can( new Actor( $s['parent'] ), 'registration.create', $resource )->allowed );
+		$authorized = $reads->registration_subjects_for_event( new Actor( $s['parent'] ), $this->scope, $s['event_id'] );
+		self::assertCount( 2, $authorized );
+		self::assertContains( $s['child']->to_string(), array_column( $authorized, 'public_id' ) );
+		self::assertArrayNotHasKey( 'primary_email', $authorized[1] );
+		self::assertCount( 1, $reads->my_people( new Actor( $s['parent'] ), $this->scope ), 'Event approval must not expose general child profile.' );
 		self::assertFalse( $s['policy']->can( new Actor( $s['parent'] ), 'registration.create', new PolicyObject( $this->scope->id, 'registration', $child_id, $child_id, $s['post'] + 99 ) )->allowed );
 		self::assertSame( 409, $this->json( 'POST', $path, array( 'decision' => 'approve', 'evidence_checked' => true, 'event_post_id' => $s['post'] ) )->get_status() );
 		self::assertSame( 1, $this->tenant_count( 'delegations' ) );
 		$this->db->execute( 'UPDATE %i SET status = %s WHERE organization_id = %d AND public_id = %s', array( $this->prefix . 'relationships', 'revoked', $this->scope->id, PublicId::from_string( $claim_id )->to_binary() ) );
 		self::assertFalse( $s['policy']->can( new Actor( $s['parent'] ), 'registration.create', $resource )->allowed );
+		self::assertCount( 1, $reads->registration_subjects_for_event( new Actor( $s['parent'] ), $this->scope, $s['event_id'] ) );
 	}
 
 	/** Reviewer rejection records a decision but never grants family access. */
