@@ -24,16 +24,28 @@ test('web activation and deactivation complete without PHP diagnostics', async (
     timeout: 45000,
   });
   const plugin = page.locator('tr[data-slug="uop-core"]');
-  await expect(plugin.getByRole('link', { name: 'Activate UOP Core', exact: true })).toBeVisible();
+  const activate = plugin.getByRole('link', { name: 'Activate UOP Core', exact: true });
+  const deactivate = plugin.getByRole('link', { name: 'Deactivate UOP Core', exact: true });
 
-  // Each link already performs a navigation to the refreshed WordPress table.
-  // A second unconditional page.goto() after activation/deactivation was
-  // redundant and triggered the observed 90-second 'load' timeout in CI.
-  await plugin.getByRole('link', { name: 'Activate UOP Core', exact: true }).click();
-  await expect(plugin.getByRole('link', { name: 'Deactivate UOP Core', exact: true })).toBeVisible();
+  // Another browser security check may deliberately leave UOP active.
+  // Normalize the initial state through the REAL web UI, not a database
+  // shortcut, so running this regression repeatedly remains independent.
+  if (await deactivate.isVisible()) {
+    await deactivate.click();
+    await expect(activate).toBeVisible();
+  } else {
+    await expect(activate).toBeVisible();
+  }
   await expect(page.locator('body')).not.toContainText(/Fatal error:|Warning:|Notice:|Failed checks:/);
 
-  await plugin.getByRole('link', { name: 'Deactivate UOP Core', exact: true }).click();
-  await expect(plugin.getByRole('link', { name: 'Activate UOP Core', exact: true })).toBeVisible();
+  // Each link already performs a navigation to the refreshed WordPress table.
+  // Additional unconditional page.goto() calls caused intermittent
+  // 90-second waits for unrelated admin assets in the PHP CI server.
+  await activate.click();
+  await expect(deactivate).toBeVisible();
+  await expect(page.locator('body')).not.toContainText(/Fatal error:|Warning:|Notice:|Failed checks:/);
+
+  await deactivate.click();
+  await expect(activate).toBeVisible();
   await expect(page.locator('body')).not.toContainText(/Fatal error:|Warning:|Notice:|Failed checks:/);
 });
