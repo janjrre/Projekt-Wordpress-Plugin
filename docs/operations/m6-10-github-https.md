@@ -38,3 +38,21 @@ Das HTTPS-Zertifikat wird ausschließlich im Test lokal als vertrauenswürdig be
 Änderungen an den workflow-relevanten Dateien starten den HTTPS-Workflow automatisch für einen PR. Nach Registrierung der Workflowdatei auf GitHubs Default-Branch kann der Workflow zusätzlich manuell ausgelöst werden. Der Workflow benötigt keine GitHub Secrets und hat ausschließlich `contents: read`-Berechtigung.
 
 `docs/operations/ionos-staging.md` bleibt als **optionale zukünftige** Checkliste erhalten, ist aber derzeit nicht der beschlossene Einrichtungsweg. Insbesondere darf niemand eine Staging-Instanz auf gemeinsamem Dreamloud-PHP-Webspace aktivieren, nur um einen Zusatzvertrag zu vermeiden.
+
+
+## 11. Oktober 2026 – tatsächlicher vollständiger Gast- und Wartelisten-Browserablauf
+
+Die bisherige Infrastrukturprüfung wurde durch einen **echten Ende-zu-Ende-Nutzerablauf** erweitert:
+
+- **Fixture:** `tests/Fixtures/m610-live-seed.php` erstellt ausschließlich auf dem einmaligen GitHub-CI-WordPress eine eigene öffentliche UOP-Veranstaltung, eine verbindlich veröffentlichte Formularversion und eine WordPress-Seite mit dem echten Gutenberg-Block `uop/registration-form`.
+- **Browser:** `tests/Browser/m610-live-guest.spec.js` füllt und sendet das HTML-Formular über die bestehende REST-Route. Der Nutzer bekommt keine Tokenwerte aus der REST-Antwort.
+- **Verarbeitung:** `tests/Fixtures/m610-live-helper.php` stößt ausschließlich die **registrierten echten** Outbox-/Mail-Worker über WordPress-Hooks an. Er erstellt keine Test-E-Mail oder Bestätigungs-Token durch Abkürzungen.
+- **Bestätigung:** Der Browser liest die von UOP tatsächlich über WordPress `wp_mail()` erzeugte Mail aus dem per Loopback gebundenen Mailpit-Testpostfach, öffnet den privaten Einmallink und überprüft den bestätigten Status in der UOP-Datenbank.
+- **Platzangebot:** Über die echten M4-Kapazitätsdienste wird der einzige Platz belegt, der Gast auf die Warteliste gesetzt, der Platz freigegeben und ein privates Wartelisten-Angebot erzeugt. Der Browser bestätigt dieses aus der tatsächlichen zweiten UOP-E-Mail. Abschließend wird genau ein akzeptierter Gastplatz in der Datenbank nachgewiesen.
+- **Sicherheit:** Das CI-eigene MU-Plugin schaltet Gast-/Angebotsfilter nur unter `UOP_M610_CI=1` frei. Es ist nicht Bestandteil des regulären UOP-Pakets. Mailpit-SMTP- und API-Ports sind ausschließlich an `127.0.0.1` gebunden.
+
+**Bei der Browserabnahme wurde ein echter Betriebsfehler entdeckt:** Die Composer-Abhängigkeit `woocommerce/action-scheduler` wurde vom bisherigen Plugin-Einstiegspunkt zwar autoloadbar bereitgestellt, aber ihre ausführende WordPress-Bootstrapdatei nicht eingebunden. Deshalb fehlte `as_enqueue_async_action()` in echten WordPress-Anfragen, sodass Gastanmeldungen bewusst im Vorschaumodus blieben. **Behoben im `uop-core.php`** durch das Einbinden der paketierten Action-Scheduler-Bootstrapdatei vor `plugins_loaded`.
+
+**Nachweis:** https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38127084254 – **4/4 Chromium-HTTPS-Tests erfolgreich**, einschließlich realer WordPress-/Mailpit-/Gast-/Wartelisten-Nutzerreise.
+
+Die bisherigen technischen Grenzen bleiben: Diese CI-Testumgebung ist nicht dauerhaft erreichbar; ein externer SMTP-Maildienst ist damit nicht unabhängig abgenommen, und produktives Dreamloud wurde **nicht** verändert. M6-10 verbleibt bis zum Abschluss aller relevanten Qualitäts- und Integrationsprüfungen sowie der übrigen manuellen Nutzeroberflächen als offener Meilenstein im Draft-PR. Kein Merge oder Deployment.
