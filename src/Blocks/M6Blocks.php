@@ -343,7 +343,13 @@ final class M6Blocks {
 	 * @return string
 	 */
 	private function wrap( string $slug, string $html ): string {
-		$attributes = get_block_wrapper_attributes( array( 'class' => 'uop-m6-blocks uop-m6-blocks--' . $slug ) );
+		$class = 'uop-m6-blocks uop-m6-blocks--' . $slug;
+		// WordPress sets this core context only while rendering a real WP_Block.
+		// Direct previews/service renders must not call the block-support helper
+		// with null context (PHP warning in WordPress 6.9).
+		$attributes = is_array( \WP_Block_Supports::$block_to_render )
+			? get_block_wrapper_attributes( array( 'class' => $class ) )
+			: 'class="' . esc_attr( $class ) . '"';
 		return '<section ' . $attributes . '>' . $html . '</section>';
 	}
 }
