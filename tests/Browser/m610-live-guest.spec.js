@@ -88,3 +88,33 @@ test('public form → REST → actual email → one-time verification → waitli
   await expect(page.getByRole('status')).toContainText('confirmation has been received');
   runCiAction('check-accepted');
 });
+
+
+test('public guest REST rejects malformed, mass-assigned and oversized bodies with stable errors', async ({ request }) => {
+  if (process.env.UOP_M610_CI !== '1') {
+    throw new Error('Refusing non-disposable security regression.');
+  }
+  const path = '/?rest_route=%2Fuop%2Fv1%2Fregistrations%2Fguest';
+  const scenarios = [
+    '{"event_id":',
+    JSON.stringify({
+      event_id: '00000000-0000-4000-8000-000000000001',
+      command_id: '00000000-0000-4000-8000-000000000002',
+      fields: { name: 'Attempt', contact: 'injected@example.invalid' },
+      email_verified_at: '2000-01-01 00:00:00',
+    }),
+    ' '.repeat(32769),
+  ];
+  for (const data of scenarios) {
+    const response = await request.post(path, {
+      data,
+      headers: { 'Content-Type': 'application/json' },
+      failOnStatusCode: false,
+    });
+    expect(response.status()).toBe(400);
+    const denied = await response.json();
+    expect(denied.code).toBe('uop_invalid_schema');
+    expect(JSON.stringify(denied)).not.toContain('injected@example.invalid');
+    expect(JSON.stringify(denied)).not.toContain('email_verified_at');
+  }
+});
