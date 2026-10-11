@@ -246,7 +246,8 @@ final class M6PeopleRegistrationTest extends TestCase {
 		$this->fixture();
 		wp_set_current_user( 0 );
 		$guest = $this->json( 'POST', '/uop/v1/registrations', array( 'event_id' => PublicId::generate()->to_string() ) );
-		self::assertSame( 503, $guest->get_status() );
+		self::assertSame( 401, $guest->get_status() );
+		self::assertSame( 'uop_unauthenticated', $guest->get_data()['code'] );
 		$unknown = PublicId::generate();
 		$secret = str_repeat( 'a', 64 );
 		$body = array( 'registration_id' => $unknown->to_string(), 'token' => $secret );

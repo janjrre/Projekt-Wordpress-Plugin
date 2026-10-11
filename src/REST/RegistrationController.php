@@ -127,7 +127,9 @@ final class RegistrationController extends BaseController {
 	 */
 	public function create( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		if ( 0 === get_current_user_id() ) {
-			return RestError::for_kind( 'unavailable' );
+			// A private registration write requires a logged-in actor. Do not
+			// misreport missing authentication as a transient service outage.
+			return RestError::for_kind( 'unauthenticated' );
 		}
 		try {
 			$body    = $this->strict_json_object(

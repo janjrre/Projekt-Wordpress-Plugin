@@ -153,3 +153,44 @@ test('dependent minor: separate own WordPress login sees own rejected registrati
   expect(denied.status()).toBeGreaterThanOrEqual(400);
   await expect(page.getByRole('heading', { name: 'Registrations', exact: true })).toHaveCount(0);
 });
+
+test('expired WordPress session cannot read participant data or submit an authenticated registration', async ({ page, request }) => {
+  verifyIsolated();
+  await login(page, 'uop_ci_adult');
+  const root = await portal(page);
+  await expect(root.locator('select.uop-portal__select')).toContainText('Adult Member');
+  const oldNonce = await page.evaluate(() => globalThis.uopM6Portal?.nonce || '');
+  expect(oldNonce).not.toBe('');
+  // Simulate session loss while the already-rendered portal remains open.
+  // Deliberately clear only browser authentication cookies in disposable CI.
+  await page.context().clearCookies();
+  const staleRead = await page.evaluate(async nonce => {
+    const response = await fetch('/?rest_route=%2Fuop%2Fv1%2Fme%2Fportal', {
+      credentials: 'same-origin',
+      headers: { 'X-WP-Nonce': nonce },
+      cache: 'no-store',
+    });
+    return { status: response.status, body: await response.text() };
+  }, oldNonce);
+  expect([401, 403]).toContain(staleRead.status);
+  expect(staleRead.body).not.toContain('Adult Member');
+  expect(staleRead.body).not.toContain('adult-ci@example.invalid');
+
+  // An unauthenticated command must not be accepted as a guest submission.
+  const write = await request.post('/?rest_route=%2Fuop%2Fv1%2Fregistrations', {
+    data: {
+      person_id: '00000000-0000-4000-8000-000000000001',
+      event_id: '00000000-0000-4000-8000-000000000002',
+      command_id: '00000000-0000-4000-8000-000000000003',
+      fields: { name: 'Attempt', contact: 'unauthorized@example.invalid' },
+    },
+    failOnStatusCode: false,
+    headers: { 'Content-Type': 'application/json' },
+  });
+  expect(write.status()).toBe(401);
+  const denied = await write.json();
+  expect(denied.code).toBe('uop_unauthenticated');
+  await page.goto('/?page_id=' + process.env.UOP_M610_PORTAL_PAGE);
+  await expect(page.getByText('Sign in to access your participant portal.')).toBeVisible();
+  await expect(page.locator('[data-uop-portal-root="portal"]')).toHaveCount(0);
+});
