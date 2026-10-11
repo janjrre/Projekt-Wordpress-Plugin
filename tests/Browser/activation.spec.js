@@ -26,12 +26,24 @@ test('web activation and deactivation complete without PHP diagnostics', async (
   const plugin = page.locator('tr[data-slug="uop-core"]');
   const activate = plugin.getByRole('link', { name: 'Activate UOP Core', exact: true });
   const deactivate = plugin.getByRole('link', { name: 'Deactivate UOP Core', exact: true });
+  // Follow WordPress's own nonce-protected UI action href without waiting
+  // for the entire admin asset tree and unrelated background connections to
+  // reach the 'load' event. The real WordPress action is still executed.
+  async function followAction(link) {
+    const href = await link.getAttribute('href');
+    expect(href).toBeTruthy();
+    const destination = new URL(href, page.url());
+    expect(destination.origin).toBe(new URL(page.url()).origin);
+    expect(destination.pathname).toBe('/wp-admin/plugins.php');
+    expect(destination.searchParams.has('_wpnonce')).toBeTruthy();
+    await page.goto(destination.href, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  }
 
   // Another browser security check may deliberately leave UOP active.
   // Normalize the initial state through the REAL web UI, not a database
   // shortcut, so running this regression repeatedly remains independent.
   if (await deactivate.isVisible()) {
-    await deactivate.click();
+    await followAction(deactivate);
     await expect(activate).toBeVisible();
   } else {
     await expect(activate).toBeVisible();
@@ -41,11 +53,11 @@ test('web activation and deactivation complete without PHP diagnostics', async (
   // Each link already performs a navigation to the refreshed WordPress table.
   // Additional unconditional page.goto() calls caused intermittent
   // 90-second waits for unrelated admin assets in the PHP CI server.
-  await activate.click();
+  await followAction(activate);
   await expect(deactivate).toBeVisible();
   await expect(page.locator('body')).not.toContainText(/Fatal error:|Warning:|Notice:|Failed checks:/);
 
-  await deactivate.click();
+  await followAction(deactivate);
   await expect(activate).toBeVisible();
   await expect(page.locator('body')).not.toContainText(/Fatal error:|Warning:|Notice:|Failed checks:/);
 });
