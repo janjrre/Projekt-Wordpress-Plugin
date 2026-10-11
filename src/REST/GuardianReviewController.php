@@ -18,7 +18,11 @@ use WP_REST_Response;
 
 /** A claimant cannot list or approve pending relationship requests. */
 final class GuardianReviewController extends BaseController {
-	/** Bind a single policy-enforced command service. */
+	/**
+	 * Bind a single policy-enforced command service.
+	 *
+	 * @param GuardianReviewService $service Scoped reviewer workflow.
+	 */
 	public function __construct( private GuardianReviewService $service ) {}
 
 	/** Register explicit and independently guarded transport boundaries. */
@@ -56,13 +60,19 @@ final class GuardianReviewController extends BaseController {
 	/**
 	 * Return a uniform receipt even for unknown subject IDs; no child lookup leaks.
 	 *
+	 * @param WP_REST_Request $request Incoming claim JSON.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function claim( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
-			$body = $this->strict_json_object(
+			$body  = $this->strict_json_object(
 				$request,
-				array( 'subject_id' => array( 'type' => 'string', 'maxLength' => 36 ) ),
+				array(
+					'subject_id' => array(
+						'type'      => 'string',
+						'maxLength' => 36,
+					),
+				),
 				array( 'subject_id' )
 			);
 			$scope = $this->organization_scope();
@@ -73,8 +83,8 @@ final class GuardianReviewController extends BaseController {
 				$uuid = PublicId::from_string( $body['subject_id'] );
 				$this->service->request( $this->current_actor(), $scope, $uuid, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 			} catch ( InvalidArgumentException ) {
-				// A syntactically valid UUID that refers to no accessible person
-				// has the same receipt as a claim already submitted.
+				// A syntactically invalid ID must not disclose subject existence.
+				return new WP_REST_Response( array( 'status' => 'received' ), 202 );
 			}
 			return new WP_REST_Response( array( 'status' => 'received' ), 202 );
 		} catch ( InvalidArgumentException ) {
@@ -94,6 +104,7 @@ final class GuardianReviewController extends BaseController {
 	/**
 	 * Reviewer must explicitly attest an offline evidence check.
 	 *
+	 * @param WP_REST_Request $request Incoming review JSON.
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function review( WP_REST_Request $request ): WP_REST_Response|WP_Error {
@@ -122,7 +133,10 @@ final class GuardianReviewController extends BaseController {
 				gmdate( 'Y-m-d H:i:s' ),
 				CorrelationId::generate()
 			);
-			return new WP_REST_Response( array( 'status' => 'approve' === $body['decision'] ? 'approved' : 'rejected', 'grant_id' => $grant?->to_string() ), 200 );
+			return new WP_REST_Response( array(
+					'status'   => 'approve' === $body['decision'] ? 'approved' : 'rejected',
+					'grant_id' => $grant?->to_string(),
+				), 200 );
 		} catch ( InvalidArgumentException ) {
 			return RestError::for_kind( 'invalid_schema' );
 		} catch ( RuntimeException ) {
