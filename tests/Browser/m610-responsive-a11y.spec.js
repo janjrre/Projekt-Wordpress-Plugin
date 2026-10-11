@@ -314,7 +314,7 @@ test('guardian claim → independent admin review → event-only access, without
   await claim.getByRole('button', { name: 'Request review' }).click();
   await expect(claim.getByRole('status')).toContainText('Request received.');
   await expect(claim.getByRole('status')).toContainText('Access is not granted');
-  await expect(page.locator('select.uop-portal__select')).not.toContainText('Review Dependent');
+  await expect(page.locator('[data-uop-portal-root="portal"] select.uop-portal__select')).not.toContainText('Review Dependent');
 
   await page.context().clearCookies();
   await login(page, 'uop_test_admin');
@@ -335,5 +335,5 @@ test('guardian claim → independent admin review → event-only access, without
   members = page.locator('form[data-uop-registration-form][data-uop-guest="0"]');
   await expect(members.locator('[data-uop-subject]')).toContainText('Review Dependent');
   await visit(page, '/?page_id=' + process.env.UOP_M610_PORTAL_PAGE);
-  await expect(page.locator('select.uop-portal__select')).not.toContainText('Review Dependent');
+  await expect(page.locator('[data-uop-portal-root="portal"] select.uop-portal__select')).not.toContainText('Review Dependent');
 });
