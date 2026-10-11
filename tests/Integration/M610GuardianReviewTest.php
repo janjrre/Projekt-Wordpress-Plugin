@@ -180,8 +180,15 @@ final class M610GuardianReviewTest extends TestCase {
 		self::assertSame( 1, $this->tenant_count( 'relationships' ) );
 		$uuid = $this->db->rows( 'SELECT public_id FROM %i WHERE organization_id = %d', array( $this->prefix . 'relationships', $this->scope->id ) )[0]['public_id'];
 		$claim_id = PublicId::from_binary( $uuid )->to_string();
+		// The original requester unlinks their WordPress account before staff
+		// review. Approval must fail, but staff must still be able to dismiss
+		// the stale request without fabricating a new family relationship.
+		self::assertSame( 1, $s['people']->unlink_user( $this->scope, $s['parent'], gmdate( 'Y-m-d H:i:s' ) ) );
 		wp_set_current_user( $s['admin'] );
-		self::assertSame( 200, $this->json( 'POST', '/uop/v1/admin/guardian-claims/' . $claim_id . '/review', array( 'decision' => 'reject', 'evidence_checked' => false, 'event_post_id' => 0 ) )->get_status() );
+		$review_path = '/uop/v1/admin/guardian-claims/' . $claim_id . '/review';
+		self::assertSame( 409, $this->json( 'POST', $review_path, array( 'decision' => 'approve', 'evidence_checked' => true, 'event_post_id' => $s['post'] ) )->get_status() );
+		self::assertSame( 0, $this->tenant_count( 'delegations' ) );
+		self::assertSame( 200, $this->json( 'POST', $review_path, array( 'decision' => 'reject', 'evidence_checked' => false, 'event_post_id' => 0 ) )->get_status() );
 		self::assertSame( 'rejected', $s['relationships']->find( $this->scope, PublicId::from_string( $claim_id ) )['status'] );
 		self::assertSame( 0, $this->tenant_count( 'delegations' ) );
 		wp_set_current_user( $s['parent'] );
