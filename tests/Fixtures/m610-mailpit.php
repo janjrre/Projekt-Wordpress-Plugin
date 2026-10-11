@@ -17,3 +17,7 @@ add_action(
 		$phpmailer->SMTPAutoTLS = false;
 	}
 );
+
+// Strictly disposable test-only opt-ins. No external SMTP or live participants.
+add_filter( 'uop_guest_verification_enabled', static fn (): bool => '1' === getenv( 'UOP_M610_CI' ) );
+add_filter( 'uop_waitlist_offer_enabled', static fn (): bool => '1' === getenv( 'UOP_M610_CI' ) );

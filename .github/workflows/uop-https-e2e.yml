@@ -10,6 +10,9 @@ on:
       - 'tests/Fixtures/m610-mailpit.php'
       - 'src/**'
       - 'assets/**'
+      - 'tests/Browser/m610-live-guest.spec.js'
+      - 'tests/Fixtures/m610-live-seed.php'
+      - 'tests/Fixtures/m610-live-helper.php'
   workflow_dispatch:
 
 permissions:
@@ -18,6 +21,8 @@ permissions:
 jobs:
   ephemeral-https:
     runs-on: ubuntu-latest
+    env:
+      UOP_M610_CI: '1'
     timeout-minutes: 25
     services:
       mysql:
@@ -77,6 +82,10 @@ jobs:
           mkdir -p "$WP_ROOT/wp-content/mu-plugins"
           cp tests/Fixtures/m610-mailpit.php "$WP_ROOT/wp-content/mu-plugins/uop-ci-mailpit.php"
           wp plugin activate uop-core --path="$WP_ROOT"
+          wp eval-file tests/Fixtures/m610-live-seed.php --path="$WP_ROOT"
+          page_id="$(wp option get uop_m610_ci_page --path="$WP_ROOT")"
+          [[ "$page_id" =~ ^[0-9]+$ ]]
+          echo "UOP_M610_PAGE_ID=$page_id" >> "$GITHUB_ENV"
       - name: Generate a fresh local-only self-signed HTTPS certificate
         run: |
           set -euo pipefail
@@ -133,7 +142,7 @@ jobs:
           UOP_HTTPS_E2E: '1'
         run: |
           npx playwright install --with-deps chromium
-          npx playwright test tests/Browser/m610-https.spec.js
+          npx playwright test tests/Browser/m610-https.spec.js tests/Browser/m610-live-guest.spec.js
       - name: Upload browser and WordPress diagnostics (never email contents)
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
