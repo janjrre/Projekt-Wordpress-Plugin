@@ -37,6 +37,14 @@ Referenz-HEAD: `345ff661c9cf7f02e093dbb1114c76a16ac8c163`.
 - Korrektur in `assets/m3-form-builder.css`: expliziter, auf das WP-Admin-Form-Builder-Element begrenzter Mindestwert von **44px mit `!important`**, damit WordPress-Adminvarianten den Touch-Target-Floor nicht überschreiben. **Die 44px-Playwright-Assertion wurde nicht abgeschwächt.**
 - Die korrigierte Version benötigt erneut vollständige CI-Abnahme **auf dem jeweils finalen Commit**.
 
+## Weitere CI-Befunde und gezielte Testhärtung
+
+- Auf dem nachfolgenden HTTPS-Test waren die 44px beim M3-Form-Builder weiter nicht nachgewiesen und ein WordPress-Adminmenü überdeckte zeitweise den Guardian-Review-Button. Der CSSOM-Diagnosewert `Stylesheet rules unavailable` zeigt, dass `link.sheet` oder ein sichtbarer Link allein **kein Beweis für anwendbare/auslesbare Regeln** ist.
+- Eine allgemeine Pflicht, *alle* WordPress-CSS-Dateien per `cssRules` auslesen zu können, verursachte weitere falsche CI-Abbrüche. Diese Pflicht wurde wieder entfernt; statt dessen wartet der Browser in Admin-Journeys auf das tatsächliche `load`-Ereignis und prüft den 44px-Zielwert per **computed geometry**. Ein Button unter 44px bleibt ein roter Test. Clicks erfolgen weiter physisch, nicht mittels `force` oder manipulierter DOM-Events.
+- Die CSS-Korrektur am Form-Builder wurde zusätzlich auf dessen eindeutigen Mount-Punkt `#uop-m3-form-builder` begrenzt und gegen konkurrierende WordPress-Buttonregeln priorisiert.
+- Auf PHP 8.5 + MariaDB 10.11 trat im isolierten Migration-Integrationstest einmal `Another migration runner is active` direkt **nach dem Schließen einer konkurrierenden Datenbankverbindung** auf. Die Testfixture prüft jetzt vor der Fortsetzung mit einer maximal 2,5 Sekunden begrenzten Schleife `IS_FREE_LOCK()` und verlangt den echten Datenbank-Release. Die produktive `MigrationRunner`-Semantik bleibt korrekt **fail closed** und verwendet weiterhin `GET_LOCK(...,0)`; es wurde **kein** Retry in die Produktivmigration eingeführt.
+- Diese Korrekturen sind Test-/CSS-Härtungen, **keine** Abschwächung von REST-Rechten, Einwilligungsprüfungen, Klick-Interaktions- oder Mindestgrößen-Assertions.
+
 ## Phase-00-Exit-Kriterien (nicht aufgrund älterer grüner Commits erfüllen)
 
 - [ ] Auf **ein und demselben neuesten HEAD**: `Foundation and persistence` vollständig abgeschlossen; Quality (Composer-Lint, PHPStan, Security-/Node-Checks, Paketierung), alle sechs Datenbank-/PHP-Matrix-Jobs, Artefakt-Smoke grün.
