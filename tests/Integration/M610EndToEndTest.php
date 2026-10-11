@@ -357,9 +357,40 @@ final class M610EndToEndTest extends TestCase {
 			self::assertSame( 'm610-guest@example.invalid', $mail[0]['recipient'] );
 			self::assertSame( 1, preg_match( '/#registration_id=([a-f0-9-]{36})&token=([a-f0-9]{64})/', $mail[0]['body_text'], $match ) );
 			self::assertSame( $guest_id->to_string(), $match[1] );
-			self::assertSame( 202, $this->json( 'POST', '/uop/v1/registration-verifications', array( 'registration_id' => $match[1], 'token' => str_repeat( '0', 64 ) ) )->get_status() );
-			self::assertSame( 202, $this->json( 'POST', '/uop/v1/registration-verifications', array( 'registration_id' => $match[1], 'token' => $match[2] ) )->get_status() );
-			self::assertSame( 202, $this->json( 'POST', '/uop/v1/registration-verifications', array( 'registration_id' => $match[1], 'token' => $match[2] ) )->get_status() );
+			$verify_body = array( 'registration_id' => $match[1], 'token' => $match[2] );
+			$wrong_body  = array( 'registration_id' => $match[1], 'token' => str_repeat( '0', 64 ) );
+			$wrong       = $this->json( 'POST', '/uop/v1/registration-verifications', $wrong_body );
+			self::assertSame( 202, $wrong->get_status() );
+			self::assertSame( array( 'status' => 'received' ), $wrong->get_data() );
+			// Simulate an already-expired real persisted challenge. The REST
+			// receipt must be indistinguishable and MUST NOT verify the record.
+			$challenge_rows = $this->db->rows(
+				'SELECT verification_expires_at FROM %i WHERE organization_id = %d AND public_id = %s',
+				array( $this->prefix . 'registrations', $this->scope->id, $guest_id->to_binary() )
+			);
+			self::assertCount( 1, $challenge_rows );
+			$challenge_expiry = $challenge_rows[0]['verification_expires_at'];
+			$this->db->execute(
+				'UPDATE %i SET verification_expires_at = %s WHERE organization_id = %d AND public_id = %s',
+				array( $this->prefix . 'registrations', '2000-01-01 00:00:00', $this->scope->id, $guest_id->to_binary() )
+			);
+			$expired_verification = $this->json( 'POST', '/uop/v1/registration-verifications', $verify_body );
+			self::assertSame( 202, $expired_verification->get_status() );
+			self::assertSame( $wrong->get_data(), $expired_verification->get_data() );
+			$not_verified = $this->db->rows(
+				'SELECT email_verified_at FROM %i WHERE organization_id = %d AND public_id = %s',
+				array( $this->prefix . 'registrations', $this->scope->id, $guest_id->to_binary() )
+			);
+			self::assertNull( $not_verified[0]['email_verified_at'] );
+			$this->db->execute(
+				'UPDATE %i SET verification_expires_at = %s WHERE organization_id = %d AND public_id = %s',
+				array( $this->prefix . 'registrations', $challenge_expiry, $this->scope->id, $guest_id->to_binary() )
+			);
+			$valid_verification = $this->json( 'POST', '/uop/v1/registration-verifications', $verify_body );
+			self::assertSame( 202, $valid_verification->get_status() );
+			$replayed_verification = $this->json( 'POST', '/uop/v1/registration-verifications', $verify_body );
+			self::assertSame( 202, $replayed_verification->get_status() );
+			self::assertSame( $valid_verification->get_data(), $replayed_verification->get_data() );
 			$verified = $this->db->rows( 'SELECT email_verified_at, email_verification_token_hash FROM %i WHERE organization_id = %d AND public_id = %s', array( $this->prefix . 'registrations', $this->scope->id, $guest_id->to_binary() ) );
 			self::assertNotNull( $verified[0]['email_verified_at'] );
 			self::assertNull( $verified[0]['email_verification_token_hash'] );
@@ -398,8 +429,39 @@ final class M610EndToEndTest extends TestCase {
 			self::assertSame( 1, preg_match( '/#offer_id=([a-f0-9-]{36})&token=([a-f0-9]{64})/', $sent[0]['body_text'], $offer_match ) );
 			wp_set_current_user( 0 );
 			$accept = array( 'offer_id' => $offer_match[1], 'token' => $offer_match[2], 'command_id' => PublicId::generate()->to_string() );
-			self::assertSame( 202, $this->json( 'POST', '/uop/v1/waitlist-offers/guest-accept', $accept )->get_status() );
-			self::assertSame( 202, $this->json( 'POST', '/uop/v1/waitlist-offers/guest-accept', $accept )->get_status() );
+			$wrong_offer = $accept;
+			$wrong_offer['token'] = str_repeat( '0', 64 );
+			$invalid_offer_receipt = $this->json( 'POST', '/uop/v1/waitlist-offers/guest-accept', $wrong_offer );
+			self::assertSame( 202, $invalid_offer_receipt->get_status() );
+			self::assertSame( array( 'status' => 'received' ), $invalid_offer_receipt->get_data() );
+			$offer_public = PublicId::from_string( $offer_match[1] );
+			$expiry_rows  = $this->db->rows(
+				'SELECT expires_at FROM %i WHERE organization_id = %d AND public_id = %s',
+				array( $this->prefix . 'waitlist_offers', $this->scope->id, $offer_public->to_binary() )
+			);
+			self::assertCount( 1, $expiry_rows );
+			$offer_expiry = $expiry_rows[0]['expires_at'];
+			$this->db->execute(
+				'UPDATE %i SET expires_at = %s WHERE organization_id = %d AND public_id = %s',
+				array( $this->prefix . 'waitlist_offers', '2000-01-01 00:00:00', $this->scope->id, $offer_public->to_binary() )
+			);
+			$expired_offer_receipt = $this->json( 'POST', '/uop/v1/waitlist-offers/guest-accept', $accept );
+			self::assertSame( 202, $expired_offer_receipt->get_status() );
+			self::assertSame( $invalid_offer_receipt->get_data(), $expired_offer_receipt->get_data() );
+			$before_accept = $this->db->rows(
+				'SELECT status FROM %i WHERE organization_id = %d AND public_id = %s',
+				array( $this->prefix . 'registrations', $this->scope->id, $guest_id->to_binary() )
+			);
+			self::assertSame( 'offered', $before_accept[0]['status'], 'Expired bearer must not accept a seat.' );
+			$this->db->execute(
+				'UPDATE %i SET expires_at = %s WHERE organization_id = %d AND public_id = %s',
+				array( $this->prefix . 'waitlist_offers', $offer_expiry, $this->scope->id, $offer_public->to_binary() )
+			);
+			$valid_offer_receipt = $this->json( 'POST', '/uop/v1/waitlist-offers/guest-accept', $accept );
+			self::assertSame( 202, $valid_offer_receipt->get_status() );
+			$replayed_offer_receipt = $this->json( 'POST', '/uop/v1/waitlist-offers/guest-accept', $accept );
+			self::assertSame( 202, $replayed_offer_receipt->get_status() );
+			self::assertSame( $valid_offer_receipt->get_data(), $replayed_offer_receipt->get_data() );
 			$final = $this->db->rows( 'SELECT status FROM %i WHERE organization_id = %d AND public_id = %s', array( $this->prefix . 'registrations', $this->scope->id, $guest_id->to_binary() ) );
 			self::assertSame( 'accepted', $final[0]['status'] );
 			self::assertSame( 1, (int) $this->db->rows( 'SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d AND status = %s', array( $this->prefix . 'capacity_claims', $this->scope->id, 'confirmed' ) )[0]['n'] );
@@ -418,5 +480,73 @@ final class M610EndToEndTest extends TestCase {
 			}
 			wp_set_current_user( 0 );
 		}
+
+	/**
+	 * Public guest throttling uses the server-observed peer, not a client-set
+	 * X-Forwarded-For header. Rejected attempts never create registrations.
+	 */
+	public function test_guest_rate_limit_rejects_forged_proxy_identity_and_keeps_database_empty(): void {
+		$s       = $this->fixture();
+		$event   = $this->event( $s, true );
+		$catalog = new EmailTemplateCatalog();
+		$rules   = new EmailTemplateRules( $catalog );
+		$guest   = new GuestVerificationDeliveryService(
+			$s['reg_repo'],
+			new EmailMessageRepository( $this->db, $this->prefix ),
+			$catalog, $rules, $s['tx'], $s['audit'], $s['outbox']
+		);
+		$this->routes( $s, $guest );
+		$enabled    = static fn (): bool => true;
+		$secure     = static fn ( string $url ): string => str_replace( 'http://', 'https://', $url );
+		$old_https  = $_SERVER['HTTPS'] ?? null;
+		$old_peer   = $_SERVER['REMOTE_ADDR'] ?? null;
+		$throttle   = 'uop_guest_' . hash( 'sha256', $this->scope->id . ':' . $event->to_string() . ':203.0.113.91' );
+		try {
+			$_SERVER['HTTPS']     = 'on';
+			$_SERVER['REMOTE_ADDR'] = '203.0.113.91';
+			add_filter( 'home_url', $secure );
+			add_filter( 'uop_guest_verification_enabled', $enabled );
+			wp_set_current_user( 0 );
+			for ( $i = 0; $i < 6; ++$i ) {
+				$request = new \WP_REST_Request( 'POST', '/uop/v1/registrations/guest' );
+				$request->set_header( 'Content-Type', 'application/json' );
+				$request->set_header( 'X-Forwarded-For', '192.0.2.' . ( $i + 1 ) );
+				$request->set_body( (string) wp_json_encode( array(
+					'event_id' => $event->to_string(),
+					'command_id' => PublicId::generate()->to_string(),
+					'fields' => array( 'name' => 'No email' ),
+				) ) );
+				$response = rest_do_request( $request );
+				self::assertNotSame( 202, $response->get_status(), 'Invalid guest submission must fail.' );
+				self::assertNotSame( 429, $response->get_status(), 'The first six attempts retain the validation outcome.' );
+			}
+			$seventh = $this->json( 'POST', '/uop/v1/registrations/guest', array(
+				'event_id' => $event->to_string(),
+				'command_id' => PublicId::generate()->to_string(),
+				'fields' => array( 'name' => 'No email' ),
+			) );
+			self::assertSame( 429, $seventh->get_status() );
+			$count = $this->db->rows(
+				'SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d AND source = %s',
+				array( $this->prefix . 'registrations', $this->scope->id, 'guest' )
+			);
+			self::assertSame( 0, (int) $count[0]['n'], 'Throttled invalid attempts cannot persist a guest registration.' );
+		} finally {
+			delete_transient( $throttle );
+			remove_filter( 'uop_guest_verification_enabled', $enabled );
+			remove_filter( 'home_url', $secure );
+			if ( null === $old_https ) {
+				unset( $_SERVER['HTTPS'] );
+			} else {
+				$_SERVER['HTTPS'] = $old_https;
+			}
+			if ( null === $old_peer ) {
+				unset( $_SERVER['REMOTE_ADDR'] );
+			} else {
+				$_SERVER['REMOTE_ADDR'] = $old_peer;
+			}
+			wp_set_current_user( 0 );
+		}
+	}
 	}
 }
