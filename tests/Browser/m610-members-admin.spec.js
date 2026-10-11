@@ -51,7 +51,7 @@ async function submit(form, subjectName, email, personName) {
   await form.locator('[data-uop-field="name"]').fill(personName);
   await form.locator('[data-uop-field="contact"]').fill(email);
   await form.getByRole('button', { name: 'Submit registration' }).click();
-  await expect(form.getByRole('status')).toContainText('Your registration was received', { timeout: 15000 });
+  await expect(form.locator('[data-uop-result]')).toContainText('Your registration was received', { timeout: 15000 });
 }
 async function portal(page) {
   await page.goto('/?page_id=' + process.env.UOP_M610_PORTAL_PAGE);
