@@ -94,8 +94,9 @@
 			try {
 				// Read only event-scoped registration authority. Broad portal access
 				// cannot be inferred from a narrowly reviewed guardian grant.
-				const data = await request(rest + 'me/registration-subjects?event_id=' +
-					encodeURIComponent(form.dataset.uopEvent), {}, nonce);
+				const separator = rest.includes('?') ? '&' : '?';
+				const data = await request(rest + 'me/registration-subjects' + separator +
+					'event_id=' + encodeURIComponent(form.dataset.uopEvent), {}, nonce);
 				const items = data.items || [];
 				subject.replaceChildren(new globalThis.Option('Choose a person', ''));
 				for (const item of items) subject.add(new globalThis.Option(item.display_name, item.public_id));
