@@ -97,6 +97,61 @@ final class M2IdentityTest extends TestCase {
     }
 
 
+    /** Linked guardian evidence must remain valid at every authorization decision. */
+    public function test_guardian_relationship_expiry_revocation_and_account_unlink_fail_closed(): void {
+        $f=$this->fixture();
+        $admin=new Actor($f['admin']);
+        $now=gmdate('Y-m-d H:i:s');
+        $parent=PublicId::generate();
+        $child=PublicId::generate();
+        $f['people']->create($this->scope,$parent,'Guardian','shared-family@example.invalid',$now);
+        $f['people']->create($this->scope,$child,'Dependent','shared-family@example.invalid',$now);
+        $guardian=wp_create_user('uop_guard_live_'.bin2hex(random_bytes(4)),wp_generate_password(20),'guard_live_'.bin2hex(random_bytes(4)).'@example.invalid');
+        self::assertIsInt($guardian);
+        self::assertTrue($f['people']->link($this->scope,$parent,$guardian,$now));
+        $parent_row=$f['people']->find($this->scope,$parent);
+        $child_row=$f['people']->find($this->scope,$child);
+        $relationship=PublicId::generate();
+        $f['relations']->create($this->scope,$relationship,(int)$parent_row['id'],(int)$child_row['id'],'guardian_of',$now);
+        $service=new DelegationService($f['people'],$f['relations'],$f['delegations'],$this->db,$f['policy'],$f['tx'],$f['audit'],$f['outbox'],$f['pub']);
+        $resource=new PolicyObject($this->scope->id,'person',(int)$child_row['id']);
+        $actor=new Actor($guardian);
+        self::assertFalse($f['policy']->can($actor,'person.view',$resource)->allowed,'Shared email and relationship alone confer no access.');
+
+        // Even an administrator cannot create a relationship-backed grant
+        // by referring to an already expired relationship.
+        $this->db->execute('UPDATE %i SET valid_to = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'relationships','2000-01-01 00:00:00',$this->scope->id,$relationship->to_binary()]);
+        try {
+            $service->grant($admin,$this->scope,$guardian,$child,'registration_manage','organization',0,$relationship,$now,CorrelationId::generate());
+            self::fail('Grant with expired guardian relationship succeeded.');
+        } catch (RuntimeException) { self::assertTrue(true); }
+        self::assertSame([],$f['delegations']->for_actor($this->scope,$guardian));
+        self::assertSame(0,(int)$this->db->rows('SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d',[$this->prefix.'delegations',$this->scope->id])[0]['n']);
+
+        $this->db->execute('UPDATE %i SET valid_to = NULL WHERE organization_id = %d AND public_id = %s',[$this->prefix.'relationships',$this->scope->id,$relationship->to_binary()]);
+        $grant=$service->grant($admin,$this->scope,$guardian,$child,'registration_manage','organization',0,$relationship,$now,CorrelationId::generate());
+        self::assertTrue($f['policy']->can($actor,'person.view',$resource)->allowed);
+        self::assertCount(1,$f['delegations']->for_actor($this->scope,$guardian));
+
+        $this->db->execute('UPDATE %i SET valid_from = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'relationships','2099-01-01 00:00:00',$this->scope->id,$relationship->to_binary()]);
+        self::assertFalse($f['policy']->can($actor,'person.view',$resource)->allowed,'Future relationship invalidates linked access.');
+        self::assertSame([],$f['delegations']->for_actor($this->scope,$guardian));
+        $this->db->execute('UPDATE %i SET valid_from = NULL, valid_to = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'relationships','2000-01-01 00:00:00',$this->scope->id,$relationship->to_binary()]);
+        self::assertFalse($f['policy']->can($actor,'person.view',$resource)->allowed,'Expired relationship invalidates linked access.');
+        try {
+            $service->grant($admin,$this->scope,$guardian,$child,'registration_manage','organization',0,$relationship,$now,CorrelationId::generate());
+            self::fail('Regrant with expired relationship succeeded.');
+        } catch (RuntimeException) { self::assertTrue(true); }
+        self::assertSame('active',$f['delegations']->find($this->scope,$grant)['status'],'Relationship expiry never rewrites historic grant evidence.');
+        $this->db->execute('UPDATE %i SET valid_to = NULL, status = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'relationships','revoked',$this->scope->id,$relationship->to_binary()]);
+        self::assertFalse($f['policy']->can($actor,'person.view',$resource)->allowed,'Revoked relationship invalidates linked access.');
+        $this->db->execute('UPDATE %i SET status = %s WHERE organization_id = %d AND public_id = %s',[$this->prefix.'relationships','active',$this->scope->id,$relationship->to_binary()]);
+        self::assertTrue($f['policy']->can($actor,'person.view',$resource)->allowed);
+        self::assertSame(1,$f['people']->unlink_user($this->scope,$guardian,$now));
+        self::assertFalse($f['policy']->can($actor,'person.view',$resource)->allowed,'Unlinked account is not the guardian.');
+        self::assertSame([],$f['delegations']->for_actor($this->scope,$guardian));
+    }
+
     public function test_assignment_grant_and_revoke_are_scoped_and_audited(): void {
         $f=$this->fixture();
         $manager=new Actor($f['admin']);
