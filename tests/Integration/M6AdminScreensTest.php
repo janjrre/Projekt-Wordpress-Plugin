@@ -108,7 +108,13 @@ final class M6AdminScreensTest extends TestCase {
 	 * @return \WP_REST_Response
 	 */
 	private function get( string $path ): \WP_REST_Response {
-		return rest_do_request( new \WP_REST_Request( 'GET', $path ) );
+		$parts   = wp_parse_url( $path );
+		$request = new \WP_REST_Request( 'GET', (string) ( $parts['path'] ?? '' ) );
+		if ( isset( $parts['query'] ) ) {
+			parse_str( $parts['query'], $query );
+			$request->set_query_params( $query );
+		}
+		return rest_do_request( $request );
 	}
 
 	/** Staff lists are not widened to subscribers, including same-email family. */
