@@ -66,6 +66,13 @@ final class RelationshipRepository {
 	/**
 	 * An authenticated subject claim remains non-authorizing until reviewed.
 	 * Duplicate or previously rejected claims are not silently reactivated.
+	 *
+	 * @param OrgScope $scope   Owning organization.
+	 * @param PublicId $id      New non-authorizing claim UUID.
+	 * @param int      $from_id Claimed representative person key.
+	 * @param int      $to_id   Claimed dependent person key.
+	 * @param string   $now     UTC submitted time.
+	 * @throws InvalidArgumentException If the claim is malformed.
 	 */
 	public function request_guardian( OrgScope $scope, PublicId $id, int $from_id, int $to_id, string $now ): void {
 		if ( $from_id < 1 || $to_id < 1 || $from_id === $to_id ) {
@@ -80,6 +87,7 @@ final class RelationshipRepository {
 	/**
 	 * Private reviewer queue. Never return account emails or evidence documents.
 	 *
+	 * @param OrgScope $scope Owning organization.
 	 * @return list<array<string,mixed>>
 	 */
 	public function pending_guardians( OrgScope $scope ): array {
@@ -92,6 +100,8 @@ final class RelationshipRepository {
 	/**
 	 * Lock a pending guardian request to prevent competing review decisions.
 	 *
+	 * @param OrgScope $scope Owning organization.
+	 * @param PublicId $id    Private claim UUID.
 	 * @return array<string,mixed>|null
 	 */
 	public function lock_pending_guardian( OrgScope $scope, PublicId $id ): ?array {
@@ -105,6 +115,12 @@ final class RelationshipRepository {
 	/**
 	 * Persist an explicit review decision; never apply unreviewed authorization.
 	 * The metadata is restricted to fixed status codes, not proof documents.
+	 *
+	 * @param OrgScope $scope  Owning organization.
+	 * @param int      $id     Locked claim internal key.
+	 * @param string   $status New reviewed state.
+	 * @param string   $now    UTC review time.
+	 * @throws InvalidArgumentException On invalid decision.
 	 */
 	public function decide_guardian( OrgScope $scope, int $id, string $status, string $now ): bool {
 		if ( ! in_array( $status, array( 'active', 'rejected' ), true ) ) {
