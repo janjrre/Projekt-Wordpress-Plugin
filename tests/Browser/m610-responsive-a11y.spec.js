@@ -314,6 +314,15 @@ test('guardian claim → independent admin review → event-only access, without
   await claim.getByRole('button', { name: 'Request review' }).click();
   await expect(claim.getByRole('status')).toContainText('Request received.');
   await expect(claim.getByRole('status')).toContainText('Access is not granted');
+  const probe = JSON.parse(execFileSync('wp', [
+    'eval-file', 'tests/Fixtures/m610-guardian-ci-probe.php',
+    '--path=' + process.env.WP_ROOT,
+  ], { env: process.env, encoding: 'utf8', timeout: 30000 }));
+  expect(probe.account_linked, JSON.stringify(probe)).toBe(true);
+  expect(probe.self_active, JSON.stringify(probe)).toBe(true);
+  expect(probe.child_found, JSON.stringify(probe)).toBe(true);
+  expect(probe.child_active, JSON.stringify(probe)).toBe(true);
+  expect(probe.pending_count, JSON.stringify(probe)).toBe(1);
   await expect(page.locator('[data-uop-portal-root="portal"] select.uop-portal__select')).not.toContainText('Review Dependent');
 
   await page.context().clearCookies();
