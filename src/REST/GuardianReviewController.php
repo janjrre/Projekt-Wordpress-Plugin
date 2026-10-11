@@ -82,11 +82,12 @@ final class GuardianReviewController extends BaseController {
 			}
 			try {
 				$uuid = PublicId::from_string( $body['subject_id'] );
-				$this->service->request( $this->current_actor(), $scope, $uuid, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 			} catch ( InvalidArgumentException ) {
-				// A syntactically invalid ID must not disclose subject existence.
+				// A syntactically invalid code must not disclose subject existence.
 				return new WP_REST_Response( array( 'status' => 'received' ), 202 );
 			}
+			// Never swallow application exceptions as if storage succeeded.
+			$this->service->request( $this->current_actor(), $scope, $uuid, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 			return new WP_REST_Response( array( 'status' => 'received' ), 202 );
 		} catch ( InvalidArgumentException ) {
 			return RestError::for_kind( 'invalid_schema' );
