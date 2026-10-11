@@ -117,8 +117,8 @@ final class M6ReadService {
 		}
 		$items = array();
 		foreach ( $possible as $person ) {
-			$id     = (int) $person['id'];
-			$object = new PolicyObject( $scope->id, 'registration', $id, $id, $post_id );
+			$id       = (int) $person['id'];
+			$object   = new PolicyObject( $scope->id, 'registration', $id, $id, $post_id );
 			$decision = $this->policy->can( $actor, 'registration.create', $object );
 			if ( ! $decision->allowed ) {
 				continue;
