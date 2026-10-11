@@ -33,10 +33,11 @@ final class ConsentRecordRepository {
 	 * @param string   $decision   Explicit granted or denied.
 	 * @param string   $context    Trusted self, delegate, manager or guest.
 	 * @param string   $now        Trusted UTC timestamp.
+	 * @param bool     $representative_confirmed Acknowledgement of delegated acting capacity; never proof of legal custody.
 	 * @return int Internal consent record key.
 	 * @throws RuntimeException If the subject or version is outside the scope.
 	 */
-	public function record_submission( OrgScope $scope, PublicId $uuid, int $version_id, int $person_id, int $actor_id, int $registration, string $decision, string $context, string $now ): int {
+	public function record_submission( OrgScope $scope, PublicId $uuid, int $version_id, int $person_id, int $actor_id, int $registration, string $decision, string $context, string $now, bool $representative_confirmed = false ): int {
 		$rows = $this->db->rows(
 			'SELECT r.id FROM %i r INNER JOIN %i p ON p.id = r.person_id AND p.organization_id = r.organization_id INNER JOIN %i v ON v.id = %d INNER JOIN %i d ON d.id = v.definition_id AND d.organization_id = r.organization_id WHERE r.organization_id = %d AND r.id = %d AND r.person_id = %d AND p.status = %s LIMIT 1',
 			array( $this->prefix . 'registrations', $this->prefix . 'persons', $this->prefix . 'consent_versions', $version_id, $this->prefix . 'consent_definitions', $scope->id, $registration, $person_id, 'active' )
@@ -45,9 +46,14 @@ final class ConsentRecordRepository {
 			|| ! in_array( $context, array( 'self', 'delegate', 'manager', 'guest' ), true ) ) {
 			throw new RuntimeException( 'Consent evidence could not be scoped.' );
 		}
+		// This attests what the actor explicitly declared, not that a
+		// jurisdiction-specific legal representative was independently verified.
+		$evidence = $representative_confirmed && 'delegate' === $context
+			? (string) wp_json_encode( array( 'representative_confirmation' => true ) )
+			: null;
 		$this->db->execute(
-			'INSERT INTO %i (public_id, organization_id, definition_version_id, subject_person_id, actor_user_id, registration_id, decision, supersedes_record_id, auth_context, evidence_json, decided_at) VALUES (%s,%d,%d,%d,NULLIF(%d,0),%d,%s,NULL,%s,NULL,%s)',
-			array( $this->prefix . 'consent_records', $uuid->to_binary(), $scope->id, $version_id, $person_id, $actor_id, $registration, $decision, $context, $now )
+			'INSERT INTO %i (public_id, organization_id, definition_version_id, subject_person_id, actor_user_id, registration_id, decision, supersedes_record_id, auth_context, evidence_json, decided_at) VALUES (%s,%d,%d,%d,NULLIF(%d,0),%d,%s,NULL,%s,%s,%s)',
+			array( $this->prefix . 'consent_records', $uuid->to_binary(), $scope->id, $version_id, $person_id, $actor_id, $registration, $decision, $context, $evidence, $now )
 		);
 		return $this->inserted_id( $scope, $uuid );
 	}
