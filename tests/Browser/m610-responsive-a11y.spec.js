@@ -24,7 +24,10 @@ async function visit(page, target, options = {}) {
       if (String(error).includes('is interrupted by another navigation to "' + expected.href + '"')) {
         try {
           await page.waitForLoadState('domcontentloaded', { timeout: 12000 });
-          if (page.url() === expected.href) return null;
+          if (page.url() === expected.href) {
+            if (expected.pathname.startsWith('/wp-admin/')) await waitForAdminStyles(page);
+            return null;
+          }
         } catch { /* Retry a still-incomplete navigation. */ }
       }
       if (!(/net::ERR_(?:TOO_MANY_RETRIES|CONNECTION_RESET|EMPTY_RESPONSE)/.test(String(error)) ||
@@ -36,10 +39,6 @@ async function visit(page, target, options = {}) {
   }
 }
 
-/**
- * DOMContentLoaded does not guarantee stylesheets completed on a slow runner.
- * Never measure accessible target sizes from an unstyled WordPress page.
- */
 /**
  * A link.sheet object can exist before the CSS response is fully parsed.
  * Wait for same-origin WordPress/UOP admin styles to expose CSSOM rules before
@@ -55,8 +54,10 @@ async function waitForAdminStyles(page) {
             url.pathname.includes('/wp-content/plugins/uop-core/'));
       });
     return local.length > 0 && local.every(link => {
-      try { return Boolean(link.sheet) && link.sheet.cssRules.length > 0; }
-      catch { return false; }
+      try {
+        const rules = link.sheet?.cssRules;
+        return Boolean(rules) && (rules.length > 0 || !link.href.includes('m3-form-builder.css'));
+      } catch { return false; }
     });
   }), { timeout: 20000 }).toBeTruthy();
 }
@@ -65,7 +66,10 @@ async function waitForUopStyles(page) {
   await expect.poll(() => page.evaluate(() => {
     const sheets = [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
       .filter(link => link.href.includes('/wp-content/plugins/uop-core/assets/'));
-    return sheets.length > 0 && sheets.every(link => Boolean(link.sheet));
+    return sheets.length > 0 && sheets.every(link => {
+      try { return Boolean(link.sheet) && link.sheet.cssRules.length > 0; }
+      catch { return false; }
+    });
   }), { timeout: 20000 }).toBeTruthy();
 }
 
