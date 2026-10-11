@@ -180,9 +180,28 @@ test('admin record list and details reflow and keyboard selection moves focus to
     // Some CI Chromium builds expose a stylesheet link before its cascade
     // reaches the first dynamically rendered record button. The threshold
     // remains strict; fail if real CSS never produces a 44px touch target.
-    await expect.poll(() => first.evaluate(node => node.getBoundingClientRect().height), {
-      timeout: 10000,
-    }).toBeGreaterThanOrEqual(44);
+    // An overloaded disposable TLS server may drop the admin stylesheet
+    // subrequest with ERR_TOO_MANY_RETRIES. One *documented asset failure*
+    // permits reloading the unchanged page; real CSS sizing defects still fail.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await expect.poll(() => first.evaluate(node => {
+          const sheet = [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
+            .find(link => link.href.includes('/assets/m6-admin.css'));
+          return sheet && sheet.sheet !== null ? node.getBoundingClientRect().height : 0;
+        }), { timeout: 10000 }).toBeGreaterThanOrEqual(44);
+        break;
+      } catch (error) {
+        const asset = await page.evaluate(() => {
+          const link = [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
+            .find(node => node.href.includes('/assets/m6-admin.css'));
+          return { requested: Boolean(link), loaded: Boolean(link?.sheet) };
+        });
+        if (attempt > 0 || asset.loaded || !asset.requested) throw error;
+        await visit(page, page.url(), { waitUntil: 'domcontentloaded' });
+        await expect(first).toBeVisible();
+      }
+    }
     const itemSize = await first.evaluate(node => ({
       height: node.getBoundingClientRect().height,
       minHeight: globalThis.getComputedStyle(node).minHeight,
