@@ -109,12 +109,18 @@ final class GuardianReviewController extends BaseController {
 	 */
 	public function review( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
-			$body = $this->strict_json_object(
+			$body  = $this->strict_json_object(
 				$request,
 				array(
-					'decision'         => array( 'type' => 'string', 'enum' => array( 'approve', 'reject' ) ),
+					'decision'         => array(
+						'type' => 'string',
+						'enum' => array( 'approve', 'reject' ),
+					),
 					'evidence_checked' => array( 'type' => 'boolean' ),
-					'event_post_id'    => array( 'type' => 'integer', 'minimum' => 0 ),
+					'event_post_id'    => array(
+						'type'    => 'integer',
+						'minimum' => 0,
+					),
 				),
 				array( 'decision', 'evidence_checked', 'event_post_id' )
 			);
@@ -133,10 +139,13 @@ final class GuardianReviewController extends BaseController {
 				gmdate( 'Y-m-d H:i:s' ),
 				CorrelationId::generate()
 			);
-			return new WP_REST_Response( array(
+			return new WP_REST_Response(
+				array(
 					'status'   => 'approve' === $body['decision'] ? 'approved' : 'rejected',
 					'grant_id' => $grant?->to_string(),
-				), 200 );
+				),
+				200
+			);
 		} catch ( InvalidArgumentException ) {
 			return RestError::for_kind( 'invalid_schema' );
 		} catch ( RuntimeException ) {
