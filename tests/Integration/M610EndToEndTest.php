@@ -554,7 +554,7 @@ final class M610EndToEndTest extends TestCase {
 			$oversized->set_body( str_repeat( ' ', 32769 ) );
 			$oversized_response = rest_do_request( $oversized );
 			self::assertSame( 400, $oversized_response->get_status() );
-			self::assertSame( 'uop_invalid_schema', $oversized_response->get_data()['code'] );
+			self::assertSame( 'rest_invalid_json', $oversized_response->get_data()['code'], 'WordPress rejects non-JSON bodies before the application validator.' );
 			self::assertSame( 0, (int) get_transient( $throttle ), 'Malformed requests must not consume the valid DTO throttle.' );
 
 			for ( $i = 0; $i < 6; ++$i ) {
