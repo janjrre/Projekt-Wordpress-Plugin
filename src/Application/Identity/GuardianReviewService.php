@@ -28,7 +28,19 @@ use UOP\Infrastructure\Database\RelationshipRepository;
  * A different, authorized reviewer must record an affirmative evidence check.
  */
 final class GuardianReviewService {
-	/** Bind scoped, transactional collaborators. */
+	/**
+	 * Bind scoped, transactional collaborators.
+	 *
+	 * @param PersonRepository       $people        Scoped person storage.
+	 * @param RelationshipRepository $relationships Guardian claims.
+	 * @param DelegationRepository   $delegations   Time-limited grants.
+	 * @param Connection             $db            Prepared SQL adapter.
+	 * @param PolicyService          $policy        Live scope checks.
+	 * @param TransactionManager     $tx            Atomic transaction.
+	 * @param AuditWriter            $audit         Append-only evidence.
+	 * @param OutboxRepository       $outbox        Domain events.
+	 * @param string                 $prefix        Trusted site table prefix.
+	 */
 	public function __construct(
 		private PersonRepository $people,
 		private RelationshipRepository $relationships,
@@ -44,6 +56,11 @@ final class GuardianReviewService {
 	/**
 	 * File a non-authorizing claim. Unrecognized subjects remain undisclosed.
 	 *
+	 * @param Actor         $claimant    Logged-in requesting account.
+	 * @param OrgScope      $scope       Trusted organization.
+	 * @param PublicId      $subject     Opaque subject identity.
+	 * @param string        $now         UTC request time.
+	 * @param CorrelationId $correlation Trace reference.
 	 * @return bool Whether a new pending claim was recorded internally.
 	 */
 	public function request( Actor $claimant, OrgScope $scope, PublicId $subject, string $now, CorrelationId $correlation ): bool {
@@ -87,6 +104,8 @@ final class GuardianReviewService {
 	/**
 	 * A bounded private queue; guarded by an object-level reviewer capability.
 	 *
+	 * @param Actor    $reviewer Current reviewer.
+	 * @param OrgScope $scope    Owning organization.
 	 * @return list<array<string,mixed>>
 	 */
 	public function pending( Actor $reviewer, OrgScope $scope ): array {
@@ -107,7 +126,16 @@ final class GuardianReviewService {
 	 * Approve only after verification, granting event-only 90-day authority.
 	 * Rejection makes no relationship active and creates no delegation.
 	 *
+	 * @param Actor         $reviewer         Reviewer with organization authority.
+	 * @param OrgScope      $scope            Owning organization.
+	 * @param PublicId      $claim            Pending claim.
+	 * @param string        $decision         Approve or reject.
+	 * @param bool          $evidence_checked Explicit external evidence attestation.
+	 * @param int           $event_post_id    Scoped WordPress event.
+	 * @param string        $now              UTC decision time.
+	 * @param CorrelationId $correlation      Trace reference.
 	 * @return PublicId|null Granted delegation ID on verified approval.
+	 * @throws InvalidArgumentException For insufficient approval metadata.
 	 */
 	public function review(
 		Actor $reviewer,
@@ -139,7 +167,7 @@ final class GuardianReviewService {
 					throw new RuntimeException( 'A claim cannot be self-approved or granted to an unlinked account.' );
 				}
 				if ( 'approve' === $decision ) {
-					$event = $this->db->rows(
+					$event  = $this->db->rows(
 						'SELECT event_post_id FROM %i WHERE organization_id = %d AND event_post_id = %d LIMIT 1',
 						array( $this->prefix . 'event_settings', $scope->id, $event_post_id )
 					);
@@ -183,7 +211,13 @@ final class GuardianReviewService {
 		);
 	}
 
-	/** Enforce the same live object-scoped policy for every reviewer action. */
+	/**
+	 * Enforce the same live object-scoped policy for every reviewer action.
+	 *
+	 * @param Actor    $actor Reviewer identity.
+	 * @param OrgScope $scope Owning organization.
+	 * @throws RuntimeException For insufficient reviewer permissions.
+	 */
 	private function require_manager( Actor $actor, OrgScope $scope ): void {
 		if ( ! $this->policy->can( $actor, 'delegation.manage', new PolicyObject( $scope->id, 'organization', $scope->id ) )->allowed ) {
 			throw new RuntimeException( 'Guardian review requires organization manager permission.' );
