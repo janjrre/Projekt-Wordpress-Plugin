@@ -14,6 +14,7 @@ use UOP\Application\Policy\PolicyService;
 use UOP\Core\PublicId;
 use UOP\Domain\Organization\OrgScope;
 use UOP\Infrastructure\Database\DelegationRepository;
+use UOP\Infrastructure\Database\EventRepository;
 use UOP\Infrastructure\Database\PersonRepository;
 use UOP\Infrastructure\Database\RegistrationReadRepository;
 
@@ -26,12 +27,14 @@ final class M6ReadService {
 	 * @param DelegationRepository       $delegations Live per-person delegation grants.
 	 * @param RegistrationReadRepository $registrations Read-only registration persistence.
 	 * @param PolicyService              $policy      Authoritative object and field authorization.
+	 * @param EventRepository|null      $events      Scoped public event lookup for registration selection.
 	 */
 	public function __construct(
 		private PersonRepository $people,
 		private DelegationRepository $delegations,
 		private RegistrationReadRepository $registrations,
-		private PolicyService $policy
+		private PolicyService $policy,
+		private ?EventRepository $events = null
 	) {}
 
 	/**
@@ -71,6 +74,58 @@ final class M6ReadService {
 			if ( null !== $projected ) {
 				$items[] = $projected;
 			}
+		}
+		return $items;
+	}
+
+	/**
+	 * List only subjects that may register for one verified public event.
+	 * An event-only delegation does not enable broad profile/portal access.
+	 *
+	 * @param Actor    $actor   Current authenticated account.
+	 * @param OrgScope $scope   Server-owned organization.
+	 * @param PublicId $event   Verified externally opaque event identity.
+	 * @return list<array{public_id:string,display_name:string}>|null
+	 */
+	public function registration_subjects_for_event( Actor $actor, OrgScope $scope, PublicId $event ): ?array {
+		if ( $actor->user_id < 1 || ! $this->events ) {
+			return null;
+		}
+		$settings = $this->events->by_public( $scope, $event );
+		if ( ! $settings || 'active' !== $settings['status'] || 'public' !== $settings['visibility'] ) {
+			return null;
+		}
+		$post_id = (int) $settings['event_post_id'];
+		$post    = get_post( $post_id );
+		if ( ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status || ! empty( $post->post_password ) ) {
+			return null;
+		}
+		$possible = array();
+		$self     = $this->people->by_user( $scope, $actor->user_id );
+		if ( $self && 'active' === $self['status'] ) {
+			$possible[ (int) $self['id'] ] = $self;
+		}
+		foreach ( $this->delegations->for_actor( $scope, $actor->user_id ) as $grant ) {
+			$id = (int) $grant['subject_person_id'];
+			if ( isset( $possible[ $id ] ) ) {
+				continue;
+			}
+			$subject = $this->people->by_internal_id( $scope, $id );
+			if ( $subject && 'active' === $subject['status'] ) {
+				$possible[ $id ] = $subject;
+			}
+		}
+		$items = array();
+		foreach ( $possible as $person ) {
+			$id = (int) $person['id'];
+			$object = new PolicyObject( $scope->id, 'registration', $id, $id, $post_id );
+			if ( ! $this->policy->can( $actor, 'registration.create', $object )->allowed ) {
+				continue;
+			}
+			$items[] = array(
+				'public_id'    => PublicId::from_binary( (string) $person['public_id'] )->to_string(),
+				'display_name' => (string) $person['display_name'],
+			);
 		}
 		return $items;
 	}
