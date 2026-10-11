@@ -12,6 +12,7 @@ use RuntimeException;
 use UOP\Application\Identity\GuardianReviewService;
 use UOP\Core\CorrelationId;
 use UOP\Core\PublicId;
+use UOP\Infrastructure\Database\DatabaseException;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -89,6 +90,10 @@ final class GuardianReviewController extends BaseController {
 			return new WP_REST_Response( array( 'status' => 'received' ), 202 );
 		} catch ( InvalidArgumentException ) {
 			return RestError::for_kind( 'invalid_schema' );
+		} catch ( DatabaseException ) {
+			// Do not report a receipt if the transaction was not committed.
+			// The error body never identifies the subject or claim existence.
+			return RestError::for_kind( 'unavailable' );
 		}
 	}
 
