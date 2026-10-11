@@ -97,6 +97,10 @@ final class M6SubmissionForm {
 			$html     .= '<div class="uop-m6-registration__field" data-uop-field-group="' . esc_attr( $key ) . '"' . $condition . '>';
 			if ( 'radio' === $type ) {
 				$html .= '<fieldset><legend>' . esc_html( $field['label'] ) . '</legend>';
+			} elseif ( 'consent' === $type ) {
+				// Consent is a grouped document heading; the actual checkbox needs
+				// its own explicit affirmative label, not an unrelated field title.
+				$html .= '<span class="uop-m6-registration__consent-title">' . esc_html( $field['label'] ) . '</span>';
 			} else {
 				$html .= '<label for="' . esc_attr( $id ) . '">' . esc_html( $field['label'] ) . '</label>';
 			}
@@ -104,7 +108,7 @@ final class M6SubmissionForm {
 			$attrs = ' data-uop-field="' . esc_attr( $key ) . '" data-uop-required="' . ( $required ? '1' : '0' ) . '"' . ( $required ? ' required' : '' );
 			if ( 'consent' === $type ) {
 				$html .= '<pre class="uop-m6-registration__document">' . esc_html( $documents[ $key ] ) . '</pre>';
-				$html .= '<input type="checkbox" id="' . esc_attr( $id ) . '"' . $attrs . ' /> ' . esc_html__( 'I agree to this consent document.', 'uop-core' );
+				$html .= '<label class="uop-m6-registration__consent-label" for="' . esc_attr( $id ) . '"><input type="checkbox" id="' . esc_attr( $id ) . '"' . $attrs . ' /> ' . esc_html__( 'I agree to this consent document.', 'uop-core' ) . '</label>';
 			} elseif ( 'textarea' === $type ) {
 				$html .= '<textarea id="' . esc_attr( $id ) . '"' . $attrs . ' rows="3" maxlength="10000"></textarea>';
 			} elseif ( 'radio' === $type ) {

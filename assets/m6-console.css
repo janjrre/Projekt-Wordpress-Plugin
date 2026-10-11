@@ -6,3 +6,6 @@
 .uop-m6-console__table:focus-visible{outline:3px solid #2271b1;outline-offset:2px}
 .uop-m6-console__panel textarea,.uop-m6-console__panel input,.uop-m6-console__panel select{max-width:100%;box-sizing:border-box;min-height:40px}
 @media(max-width:480px){.uop-m6-console__grid{grid-template-columns:minmax(0,1fr)}.uop-m6-console__panel{padding:12px}}
+
+/* P2: keep accessible admin navigation targets at least 44 CSS pixels tall. */
+.uop-m6-console__nav a,.uop-m6-ops-nav a,.uop-m6-console__panel .button{min-height:44px;white-space:normal;overflow-wrap:anywhere}

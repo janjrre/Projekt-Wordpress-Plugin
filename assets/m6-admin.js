@@ -41,6 +41,8 @@
 		const [error, setError] = useState('');
 		const [notice, setNotice] = useState('');
 		const alertRef = useRef(null);
+		const detailHeadingRef = useRef(null);
+		const pendingDetailFocus = useRef('');
 		const listSeq = useRef(0);
 		const detailSeq = useRef(0);
 
@@ -70,6 +72,12 @@
 		}
 		useEffect(() => { loadList(after, status); return () => { ++listSeq.current; }; }, [after, status]);
 		useEffect(() => { if (error && alertRef.current) alertRef.current.focus(); }, [error]);
+		useEffect(() => {
+			if (detailState === 'ready' && pendingDetailFocus.current === selected) {
+				pendingDetailFocus.current = '';
+				detailHeadingRef.current?.focus();
+			}
+		}, [detailState, selected]);
 		async function loadDetail(id) {
 			const seq = ++detailSeq.current;
 			setSelected(id);
@@ -159,7 +167,7 @@
 			) : null;
 			const children = items.map(item => h('li', { key: item.public_id },
 				h('button', {
-					type: 'button', onClick: () => loadDetail(item.public_id), 'aria-pressed': selected === item.public_id,
+					type: 'button', onClick: () => { pendingDetailFocus.current = item.public_id; loadDetail(item.public_id); }, 'aria-pressed': selected === item.public_id,
 					disabled: busy
 				},
 					h('strong', null, name(item)),
@@ -233,7 +241,7 @@
 		}
 		function detailView() {
 			return h('section', { className: 'uop-m6-panel', 'aria-label': t('Record details', 'uop-core'), 'aria-busy': detailState === 'loading' ? 'true' : 'false' },
-				h('h2', null, t('Details', 'uop-core')),
+				h('h2', { tabIndex: -1, ref: detailHeadingRef }, t('Details', 'uop-core')),
 				!selected ? h('p', { className: 'uop-m6-note' }, t('Select an item to view its details.', 'uop-core')) : null,
 				detailState === 'loading' ? h('p', { role: 'status' }, t('Loading details…', 'uop-core')) : null,
 				detailState === 'missing' ? h('p', { role: 'alert' }, t('Record not found or no longer accessible.', 'uop-core')) : null,

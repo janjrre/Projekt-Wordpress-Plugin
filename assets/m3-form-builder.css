@@ -18,3 +18,11 @@
 .uop-m3__hint {color:#50575e;font-size:13px}
 .uop-m3__heading {margin:0;font-size:17px}
 @media (max-width:600px) {.uop-m3__toolbar,.uop-m3__field {padding:12px}.uop-m3__field-tools {width:100%}}
+
+/* P2: keyboard and touch reachability on narrow WordPress admin viewports. */
+.uop-m3,.uop-m3__panel,.uop-m3__toolbar,.uop-m3__field{min-width:0;max-width:100%;box-sizing:border-box}
+.uop-m3__cols{grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
+.uop-m3__control{min-width:0}
+.uop-m3__control input:not([type=checkbox]),.uop-m3__control select{box-sizing:border-box;min-height:44px}
+.uop-m3 button{min-width:44px;min-height:44px;white-space:normal}
+@media(max-width:480px){.uop-m3__actions button{flex:1 1 100%}.uop-m3__field-tools button{flex:1 1 auto}}
