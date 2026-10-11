@@ -94,6 +94,19 @@ final class PersistenceTest extends TestCase {
             self::assertSame(0, (int)$this->state->read('uop_db_version', 0));
             self::assertSame([], $this->db->rows('SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND LEFT(TABLE_NAME,%d) = %s', [strlen($this->prefix),$this->prefix]));
         } finally { $other->close(); }
+        // MariaDB may observe a just-closed secondary connection slightly
+        // later under CI load. Verify the actual database lock release rather
+        // than incorrectly treating a 0-timeout retry as a migration defect.
+        $released = false;
+        for ($attempt = 0; $attempt < 25; ++$attempt) {
+            $state = $this->db->rows('SELECT IS_FREE_LOCK(%s) AS released', [Installer::lock_name()]);
+            if (1 === (int)($state[0]['released'] ?? 0)) {
+                $released = true;
+                break;
+            }
+            usleep(100000);
+        }
+        self::assertTrue($released, 'Secondary migration lock must release after disconnect.');
         $this->runner()->run();
         $this->inspector->verify_all();
         self::assertSame(1, (int)$this->state->read('uop_db_version'));
