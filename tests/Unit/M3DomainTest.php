@@ -79,6 +79,57 @@ final class M3DomainTest extends TestCase {
         }
     }
 
+    public function test_age_predicates_cannot_be_true_when_evidence_is_unknown_and_negated(): void {
+        $engine = new ConditionEngine();
+        $predicate = ['source'=>'profile','field'=>'date_of_birth','operator'=>'age_lt_at','value'=>18,'context'=>'event.start'];
+        $negated = ['schema_version'=>1,'not'=>$predicate];
+        $nested = ['schema_version'=>1,'not'=>['any'=>[
+            $predicate,
+            ['source'=>'registration','field'=>'nickname','operator'=>'eq','value'=>'known'],
+        ]]];
+        $all = ['schema_version'=>1,'all'=>[
+            $predicate,
+            ['source'=>'registration','field'=>'nickname','operator'=>'eq','value'=>'known'],
+        ]];
+        $event = ['event.start'=>'2030-05-01 12:00:00'];
+        foreach ([[], ['date_of_birth'=>null], ['date_of_birth'=>'not-a-date'], ['date_of_birth'=>'2040-01-01']] as $profile) {
+            $facts = ['profile'=>$profile,'registration'=>['nickname'=>'other']];
+            self::assertFalse($engine->evaluate($negated,$facts,$event), 'A missing DOB became true through NOT.');
+            self::assertFalse($engine->evaluate($nested,$facts,$event), 'A missing DOB became true through NOT/ANY.');
+            self::assertFalse($engine->evaluate($all,$facts,$event), 'A missing DOB became true through ALL.');
+        }
+        self::assertFalse($engine->evaluate($negated,['profile'=>['date_of_birth'=>'2015-02-28'],'registration'=>[]],[]), 'Missing event date became a grant.');
+        self::assertTrue($engine->evaluate($negated,['profile'=>['date_of_birth'=>'2000-01-01'],'registration'=>[]],$event));
+        self::assertFalse($engine->evaluate($negated,['profile'=>['date_of_birth'=>'2015-01-01'],'registration'=>[]],$event));
+    }
+
+    public function test_age_operator_only_accepts_reserved_authoritative_profile_field(): void {
+        $engine=new ConditionEngine();
+        foreach ([
+            ['source'=>'registration','field'=>'date_of_birth','operator'=>'age_gte_at','value'=>18,'context'=>'event.start'],
+            ['source'=>'profile','field'=>'birthday','operator'=>'age_gte_at','value'=>18,'context'=>'event.start'],
+            ['source'=>'profile','field'=>'age','operator'=>'age_lt_at','value'=>18,'context'=>'event.start'],
+        ] as $condition) {
+            try { $engine->validate(['schema_version'=>1,'not'=>$condition]); self::fail('Age operator accepted a user-controlled fact.'); }
+            catch (InvalidArgumentException) { self::assertTrue(true); }
+        }
+    }
+
+    public function test_reserved_age_field_must_be_explicitly_non_editable(): void {
+        $safe=['key'=>'date_of_birth','type'=>'date','label'=>'Date of birth','subject_view'=>true,'subject_edit'=>false,'delegate_edit'=>false];
+        FieldRules::validate($safe);
+        foreach ([
+            array_replace($safe,['subject_edit'=>true]),
+            array_replace($safe,['delegate_edit'=>true]),
+            array_replace($safe,['type'=>'text']),
+            ['key'=>'date_of_birth','type'=>'date','label'=>'DOB'],
+        ] as $invalid) {
+            try { FieldRules::validate($invalid); self::fail('Self-attested age field definition was accepted.'); }
+            catch (InvalidArgumentException) { self::assertTrue(true); }
+        }
+        FieldRules::validate(['key'=>'nickname','type'=>'text','label'=>'Name']); // Existing V1 self-edit defaults are unaffected.
+    }
+
     public function test_form_conditions_reject_missing_consent_and_cyclic_dependencies(): void {
         $schema=new FormSchema();
         $predicate=static fn(string $reference): array => [
