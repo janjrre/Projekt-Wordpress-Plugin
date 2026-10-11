@@ -10,10 +10,12 @@ namespace UOP\Core;
 use UOP\Admin\M6PeopleRegistrationScreen;
 use UOP\Admin\M6ControlCenterScreen;
 use UOP\Admin\M6ConsentDocumentsScreen;
+use UOP\Admin\M6GuardianReviewScreen;
 use UOP\Blocks\M6Blocks;
 use UOP\Application\Consent\ConsentDefinitionService;
 use UOP\Application\Consent\ConsentRecordService;
 use UOP\Application\Identity\PersonService;
+use UOP\Application\Identity\GuardianReviewService;
 use UOP\Application\Policy\PolicyService;
 use UOP\Application\Query\M6ReadService;
 use UOP\Application\Query\M6AdminReadService;
@@ -46,6 +48,7 @@ use UOP\Infrastructure\Database\M5OperationsRepository;
 use UOP\Infrastructure\Database\M6AdminListRepository;
 use UOP\Infrastructure\Database\DelegationRepository;
 use UOP\Infrastructure\Database\PersonRepository;
+use UOP\REST\GuardianReviewController;
 use UOP\Infrastructure\Database\RegistrationReadRepository;
 use UOP\REST\PeopleController;
 use UOP\REST\M6OperationsController;
@@ -152,6 +155,21 @@ final class M6Module implements ModuleInterface {
 			)
 		);
 
+		$container->set(
+			GuardianReviewController::class,
+			static fn ( ServiceContainer $c ) => new GuardianReviewController( $c->get( GuardianReviewService::class ) )
+		);
+		$container->set(
+			M6GuardianReviewScreen::class,
+			static fn ( ServiceContainer $c ) => new M6GuardianReviewScreen(
+				$c->get( GuardianReviewService::class ),
+				$c->get( Connection::class ),
+				$prefix
+			)
+		);
+		add_action( 'admin_menu', array( $container->get( M6GuardianReviewScreen::class ), 'menu' ) );
+		add_action( 'admin_post_uop_guardian_review', array( $container->get( M6GuardianReviewScreen::class ), 'submit' ) );
+		add_action( 'rest_api_init', array( $container->get( GuardianReviewController::class ), 'register' ) );
 		$container->set(
 			M6AdminListRepository::class,
 			static fn ( ServiceContainer $c ) => new M6AdminListRepository( $c->get( Connection::class ), $prefix )
