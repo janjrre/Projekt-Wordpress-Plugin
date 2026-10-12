@@ -293,12 +293,28 @@ test('people editor and form builder reflow without clipped controls at 320–12
     await key.focus();
     await expect(key).toBeFocused();
     const add = builder.getByRole('button', { name: 'Create draft' });
-    // The real 44px computed geometry is the readiness and accessibility
-    // condition. CSSOM introspection is not a reliable loading signal because
-    // WordPress aggregates stylesheets that may not expose readable cssRules.
-    await expect.poll(() => add.evaluate(node =>
-      node.getBoundingClientRect().height
-    ), { timeout: 15000 }).toBeGreaterThanOrEqual(44);
+    // Retain the actual 44px accessibility threshold. A disposable HTTPS
+    // server may occasionally fail to return this exact UOP stylesheet; only
+    // then permit one bounded reload. If CSS is loaded but sizing is wrong,
+    // fail rather than concealing a genuine responsive regression.
+    const checkButtonTarget = async () => {
+      await expect.poll(() => add.evaluate(node =>
+        node.getBoundingClientRect().height
+      ), { timeout: 15000 }).toBeGreaterThanOrEqual(44);
+    };
+    try {
+      await checkButtonTarget();
+    } catch (error) {
+      const css = await page.evaluate(() => {
+        const link = [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
+          .find(node => node.href.includes('m3-form-builder.css'));
+        return { requested: Boolean(link), loaded: Boolean(link?.sheet) };
+      });
+      if (!css.requested || css.loaded) throw error;
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await expect(add).toBeVisible();
+      await checkButtonTarget();
+    }
     const createSize = await add.evaluate(node => {
       const sheetRules = [...globalThis.document.styleSheets]
         .filter(sheet => sheet.href?.includes('m3-form-builder.css'))
