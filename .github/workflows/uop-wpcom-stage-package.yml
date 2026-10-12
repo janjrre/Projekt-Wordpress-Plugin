@@ -64,6 +64,36 @@ jobs:
           unzip -Z -1 dist/uop-core.zip | grep -qx 'uop-core/uop-core.php'
           unzip -Z -1 dist/uop-core.zip | grep -qx 'uop-core/vendor/autoload.php'
           echo "Package SHA256: $(sha256sum dist/uop-core.zip)"
+      - name: Build read-only host capability probe (not part of UOP Core)
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/uop-env-probe/uop-env-probe"
+          cat > "$RUNNER_TEMP/uop-env-probe/uop-env-probe/uop-env-probe.php" <<'PHP'
+          <?php
+          /**
+           * Plugin Name: UOP Environment Probe (Temporary)
+           * Description: Read-only WordPress and SQL charset capability reporting at activation.
+           * Version: 0.0.1
+           */
+          if ( ! defined( 'ABSPATH' ) ) { exit; }
+          register_activation_hook( __FILE__, static function () {
+              global $wpdb, $wp_version;
+              $evidence = array(
+                  'wp_version'                => $wp_version,
+                  'php_version'               => PHP_VERSION,
+                  'database_version'          => (string) $wpdb->get_var( 'SELECT VERSION()' ),
+                  'wpdb_declared_charset'     => (string) $wpdb->charset,
+                  'connection_charset'        => (string) $wpdb->get_var( 'SELECT @@character_set_connection' ),
+                  'client_charset'            => (string) $wpdb->get_var( 'SELECT @@character_set_client' ),
+                  'server_utf8mb4_capability' => (bool) $wpdb->has_cap( 'utf8mb4' ),
+                  'information_schema_result' => (string) $wpdb->get_var( "SELECT CHARACTER_SET_NAME FROM information_schema.CHARACTER_SETS WHERE CHARACTER_SET_NAME = 'utf8mb4'" ),
+                  'db_collate'                => (string) $wpdb->collate,
+              );
+              wp_die( esc_html( 'UOP_ENV_PROBE ' . wp_json_encode( $evidence ) ) );
+          } );
+          PHP
+          cd "$RUNNER_TEMP/uop-env-probe"
+          zip -qr "$RUNNER_TEMP/uop-env-probe.zip" uop-env-probe
       - name: Publish only staging installation ZIP on isolated artifact branch
         run: |
           set -euo pipefail
@@ -78,8 +108,9 @@ jobs:
           git rm -rf --ignore-unmatch . > /dev/null
           git clean -fdx > /dev/null
           cp "$package" uop-core.zip
+          cp "$RUNNER_TEMP/uop-env-probe.zip" uop-env-probe.zip
           printf 'source_sha=%s\nsha256=%s\n' "$source_sha" "$(sha256sum uop-core.zip | cut -d' ' -f1)" > package-provenance.txt
-          git add uop-core.zip package-provenance.txt
+          git add uop-core.zip uop-env-probe.zip package-provenance.txt
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "chore(staging): verified plugin ZIP for $source_sha"
           git push --force origin HEAD:refs/heads/staging/uop-plugin-package
           echo "Download: https://raw.githubusercontent.com/janjrre/Projekt-Wordpress-Plugin/staging/uop-plugin-package/uop-core.zip"
