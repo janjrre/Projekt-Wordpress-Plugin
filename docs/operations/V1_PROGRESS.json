@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-12 latest authenticated OrgaVela MCP checks, PR#11 HEAD 7892a258 and final GitHub Actions run/job logs 38248040810 and 38248040695; no background monitor",
+  "snapshot_basis": "2026-10-12 GitHub PR#11 2b8a65f same-SHA completed foundation and HTTPS runs; authenticated OrgaVela MCP followup; not background monitoring",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -279,7 +279,7 @@
     "discourage_search_engines": false,
     "backup_restore_verified": false,
     "real_participant_data_allowed": false,
-    "cron_overdue_events": 5,
+    "cron_overdue_events": 2,
     "cron_total_events": 19,
     "privacy_policy_page": "configured but draft/not visitor accessible",
     "wp_environment_type": "production (WordPress setting, not product release status)",
@@ -288,7 +288,12 @@
     "ionos_backup_points_account_verified": false,
     "manual_file_and_db_backup_verified": false,
     "restore_test_isolated_verified": false,
-    "access_password_protection_verified": false
+    "access_password_protection_verified": false,
+    "source_contains_uop_schema_health_check": true,
+    "uop_schema_site_health_result": "not directly obtained; 28+1 live physical audit unverified",
+    "published_uop_events": 0,
+    "published_sample_pages": 1,
+    "cron_overdue_snapshot_note": "Read-only WordPress MCP snapshots 2026-10-12: previously 5/19 overdue, later 2/19; external cron still unverified"
   },
   "integration": {
     "main_contains_merged_feature_stack": false,
@@ -301,28 +306,23 @@
       6,
       11
     ],
-    "latest_pr_11_head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
+    "latest_pr_11_head": "2b8a65f753447689190d442a038b3f76472aaa71",
     "latest_pr_11_ci": [
       {
-        "run": 38248040810,
+        "run": 38250446667,
         "kind": "pr-foundation",
-        "result": "failure",
-        "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
-        "successful_jobs": 7,
+        "result": "success",
+        "head": "2b8a65f753447689190d442a038b3f76472aaa71",
+        "successful_jobs": 8,
         "total_jobs": 8,
-        "failed_jobs": [
-          "integration (8.4, mariadb:10.11): activation.spec.js 30s timeout navigating plugin deactivation"
-        ],
-        "note": "PHP 8.5/MySQL 8.0 is green at this new SHA, not proof of complete matrix"
+        "details": "PHP 8.3/8.4/8.5 x MySQL 8.0 / MariaDB 10.11, quality, artifact smoke"
       },
       {
-        "run": 38248040695,
+        "run": 38250446526,
         "kind": "pr-https-browser",
-        "result": "failure",
-        "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
-        "failed_jobs": [
-          "caregiver WordPress login page.waitForURL timed out at 20s"
-        ]
+        "result": "success",
+        "head": "2b8a65f753447689190d442a038b3f76472aaa71",
+        "details": "isolated HTTPS, Mailpit, real caregiver/member browser E2E"
       }
     ],
     "previous_pr_11_ci": [
@@ -376,19 +376,24 @@
           "Caregiver WordPress login failed to reach admin DOMContentLoaded within 20 seconds"
         ]
       }
+    ],
+    "pr11_green_on_current_head": true,
+    "pr11_remains_draft": true,
+    "pr11_ci_fix_commits": [
+      "d36935da376224d12f16b451e43e78a5d46d6593",
+      "2b8a65f753447689190d442a038b3f76472aaa71"
     ]
   },
   "immediate_next": [
-    "O02/M1-08: independently read installed Alpha.2 UOP Site Health and information_schema metadata for 28+1 physical tables, indexes and org scope",
-    "O03: verify exact IONOS tariff/account backup points; perform real files+DB export and isolated restore only",
-    "O06: disable search indexing and implement authenticated site access protection before synthetic real-site journeys; legal privacy page review",
-    "O01: request account-level SFTP directory scoping at IONOS, never traverse other websites",
-    "O09: diagnose new PR #11 HTTPS caregiver login timeout; check completed full matrix on same SHA"
+    "O02/M1-08: read installed Alpha.2 uop_schema Site Health result and independently inspect 29 physical tables/indexes and Default Organization via isolated OrgaVela phpMyAdmin read access",
+    "O03: verify actual IONOS backup inventory, private file+DB exports and isolated restore before risky updates",
+    "O01/O06: account-level SFTP isolation and authenticated UOP test-route privacy; do not apply global noindex blindly to public product site",
+    "O09: review same-head 8/8 Foundation + green HTTPS PR#11 evidence, monitor reproducibility and stack merge gates without automatic merge"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "1.5",
+  "masterplan_version": "1.6",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
