@@ -1,4 +1,4 @@
 {
-  "operation": "sftp",
+  "operation": "probe",
   "target": "orgavela.com"
 }
