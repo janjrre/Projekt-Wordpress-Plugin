@@ -117,7 +117,7 @@ jobs:
           echo "SFTP host identity and WordPress tree verified."
           echo "The operator must independently verify that this SFTP account is scoped to orgavela.com only."
       - name: Download and verify immutable package by user-supplied hash
-        if: inputs.operation == 'install'
+        if: env.OPERATION == 'install'
         shell: bash
         run: |
           set -euo pipefail
@@ -141,7 +141,7 @@ jobs:
           test -f "$RUNNER_TEMP/unpacked/uop-core/vendor/autoload.php"
           echo "Verified plugin artifact SHA256: $local_hash"
       - name: Refuse to overwrite an existing plugin
-        if: inputs.operation == 'install'
+        if: env.OPERATION == 'install'
         shell: bash
         run: |
           set -euo pipefail
@@ -156,7 +156,7 @@ jobs:
             echo "::error::UOP Core already exists; this workflow never overwrites it."; exit 1
           fi
       - name: Upload to unique hidden staging folder (no activation)
-        if: inputs.operation == 'install'
+        if: env.OPERATION == 'install'
         shell: bash
         run: |
           set -euo pipefail
