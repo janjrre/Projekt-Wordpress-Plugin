@@ -7,7 +7,9 @@
 
 | Zählbare Achse | Ist / Soll | Interpretation |
 | --- | --- | --- |
+| **Technisch implementierte normative Pakete** | **62 / 71** M0–M7-Pakete, gemäß PR-Belegen | Das ist nur ein Code-Umsetzungsindikator, **kein** V1-Gesamtfortschritt; M6-10 und M7-Gates fehlen. |
 | **Formale V1-Meilensteinabnahmen** | **0 / 8** (M0–M7) | Code ist teilweise/weitgehend vorhanden, aber kein Meilenstein final gegen integrierte V1 akzeptiert. |
+| **Formale Release-Gates R01–R18** | **0 / 18 grün** | Kein finaler RC-/Stable-Nachweis, trotz erfolgreicher Alpha-Aktivierung. |
 | **Offene gestapelte PRs** | **7 / 7 offen**, **0 / 7 gemergt** | [#1](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/1) bis [#6](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/6) und [#11](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/11). Draft: #2, #3, #6, #11. |
 | **M6-10-Funktions-/Betriebspakete** | **P1–P3 technisch historisch bearbeitet**, P4 teilimplementiert, P5–P6 offen | Eine durchgehende IONOS-Betriebsabnahme auf V1-Kandidat fehlt. |
 | **Minderjährigen-Pakete P4-01…04** | **0 / 4 formal abgeschlossen** | [#7](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/7), [#8](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/8), [#9](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/9), [#10](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/10) offen. |
