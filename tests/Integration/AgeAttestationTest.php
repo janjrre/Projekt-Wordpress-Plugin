@@ -30,6 +30,7 @@ use UOP\Infrastructure\Database\Installer;
 use UOP\Infrastructure\Database\OccurrenceRepository;
 use UOP\Infrastructure\Database\OutboxRepository;
 use UOP\Infrastructure\Database\PersonRepository;
+use UOP\Infrastructure\Database\PrivacyAccountGateway;
 use UOP\Infrastructure\Database\RegistrationFactsRepository;
 use UOP\Infrastructure\Database\RetentionRepository;
 use UOP\Infrastructure\Database\SchemaManifest;
@@ -167,6 +168,19 @@ final class AgeAttestationTest extends TestCase {
 		}
 		self::assertSame( 409, $this->post( $route, $revoke )->get_status() );
 		self::assertSame( 2, (int) $this->db->rows( 'SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d', array( $this->prefix . 'age_attestations', $this->scope->id ) )[0]['n'] );
+		// Age evidence is personal data. The WordPress privacy exporter must
+		// include it for the linked account, and a non-held erasure must remove
+		// it without mutating historic consent or another account's records.
+		$member = wp_create_user( 'uop_age_member_' . bin2hex( random_bytes( 4 ) ), wp_generate_password( 24 ), 'age-member-' . bin2hex( random_bytes( 4 ) ) . '@example.invalid' );
+		self::assertIsInt( $member );
+		self::assertTrue( $people->link( $this->scope, $person, $member, $now ) );
+		$privacy = new PrivacyAccountGateway( $this->db, $this->prefix );
+		$export = $privacy->export_page( $member, 1 );
+		self::assertStringContainsString( 'UOP age category evidence', (string) wp_json_encode( $export ) );
+		$erased = $privacy->erase_contact_profile( $member );
+		self::assertCount( 1, $erased );
+		self::assertSame( 0, (int) $this->db->rows( 'SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d AND person_id = %d', array( $this->prefix . 'age_attestations', $this->scope->id, $person_id ) )[0]['n'] );
+		self::assertStringNotContainsString( 'UOP age category evidence', (string) wp_json_encode( $privacy->export_page( $member, 1 ) ) );
 		self::assertSame( 1, ( new RetentionRepository( $this->db, $this->prefix ) )->apply( $this->scope, 'persons', $person_id, $now ) );
 		self::assertSame( 0, (int) $this->db->rows( 'SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d AND person_id = %d', array( $this->prefix . 'age_attestations', $this->scope->id, $person_id ) )[0]['n'] );
 	}
