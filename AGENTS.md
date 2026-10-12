@@ -28,6 +28,29 @@ Diese Eintragungen **append-only** führen (frühere Zustände nicht rückwirken
 
 Eine vollständige automatische Übertragung des Chatverlaufs ist ohne entsprechende technische Anbindung **nicht** möglich. Das Protokoll wird bei tatsächlich ausgeführten Chat-Aufträgen fortgeschrieben, nicht automatisch nach Beendigung der Sitzung; spätere Assistenten müssen diese Pflicht selbst beachten.
 
+## Dauerhafte V1-Planungs- und Fortschrittspflicht (Betreiberauftrag vom 12.10.2026)
+
+Diese Regel gilt ab sofort für **jede UOP-Core-/OrgaVela-Arbeit in diesem Repository und jede UOP-bezogene Chat-Antwort**, auch neue Chats und sehr kleine Folgeaufgaben.
+
+**Kanonische Quellen:**
+1. [V1_MASTER_PLAN.md](docs/project/V1_MASTER_PLAN.md) – vollständiger, versionierter **M0–M7-/M6-10-/P4-/G-/R-Weg bis zur V1-Abnahme**, normative Pakete, Abhängigkeiten, Risiken und Stop-Gates.
+2. [V1_STATUS.md](docs/project/V1_STATUS.md) – **aktueller tatsächlich belegter Projektfortschritt**, PRs, CI/Tests, OrgaVela-Zustand, Blocker und unmittelbar nächste Pakete.
+3. [V1_ACCEPTANCE_MATRIX.md](docs/project/V1_ACCEPTANCE_MATRIX.md) – Prüffälle, Kriterien, Release-Akte, signierbare Nachweise.
+4. [ASSISTANT_WORK_LOG.md](docs/operations/ASSISTANT_WORK_LOG.md) – **append-only** Aufgaben-/Entscheidungs-/Test-/Commit-Journal.
+
+**Vor jeder UOP-Antwort / jedem Entwicklungsschritt:**
+- Diese vier Dokumente und die betroffenen GitHub-Issues, PRs, CI-Checks und – soweit verfügbar und notwendig – die OrgaVela-Testwebsite auslesen.
+- Aufgaben einer bestehenden **M0–M7-, M6-01…10/P1…6-, P4-01…04-, G-, W- oder R-ID** zuordnen; nicht ohne sachlichen Grund neue Meilensteine erfinden.
+- **Implementierung ≠ Merge ≠ getestete Installation ≠ technische/fachliche/Release-Abnahme.** Fortschritt nur mit zeitlich/versionsbezogen verifizierten Belegen verändern. Kein globaler Prozentsatz ohne sachlichen Nenner.
+- Bei neuen Erkenntnissen **Masterplan** (Scope/Priorisierung/Abhängigkeiten) **versionieren**, **V1_STATUS.md** (Fortschritt/Beleg/Blocker/Nächste) fortschreiben, bei neuer/erfüllter Abnahme **V1_ACCEPTANCE_MATRIX.md** ergänzen. GitHub-Commit(s) angeben.
+- Bei jeder UOP-Anfrage **ASSISTANT_WORK_LOG.md append-only** ergänzen, selbst bei fehlgeschlagenen Versuchen oder unverändertem Status; enthalten: Arbeitsauftrag, überprüfte Fakten, sichere Entscheidungszusammenfassung, Umsetzung, Tests, SHA/Run, noch offene Arbeit.
+- **Am Ende jeder einzelnen UOP-Antwort** stets den **V1-Fortschrittsblock** mit (a) Gesamtstatus „V1 offen/abgenommen“, (b) M0–M7-Status, (c) P4-01…04- und PR-Integrationsstatus, (d) den wichtigsten tatsächlichen Blockern, (e) exakt nächstem Paket und (f) **Links auf kompletten Masterplan, Live-Status und Abnahmematrix** erneut senden. Ohne überprüfte Statusänderung ausdrücklich „Stand unverändert“.
+- Antworten dürfen einen **kompakten Fortschrittsblock plus direkten Link zum vollständigen, jederzeit abrufbaren Masterplan** verwenden, statt jedes Mal 35.000 Zeichen zu wiederholen. Der Plan selbst muss vollständig im Repository bleiben und bei Änderungen neu verlinkt werden.
+- Keine Zusage unbeaufsichtigter Hintergrundaktualisierung: Aktualisierungen erfolgen nur, wenn der Assistent **tatsächlich mit einer neuen Aufgabe ausgeführt wird** oder eine separat beauftragte Automation läuft.
+- Bereits vorhandene Tool-Sicherheitssperren respektieren; keine indirekten GitHub-Trigger als Umgehung. Niemals reale Nutzer-, Minderjährigen- oder Secret-Daten in dem öffentlichen Repository speichern.
+
+**Ausgangszustand:** [Aktueller V1-Status](docs/project/V1_STATUS.md) vor allem betreffend sieben offene gestapelte PRs #1–#6/#11, P4-Issues #7–#10 offen, Testsite `orgavela.com` mit **UOP Core 0.1.0-alpha.2 aktiv**, DB-Optionswerte 2/2, aber noch keine vollständig geprüfte SQL-Schema-/Backup-/Cron-/Mail-/V1-Abnahme. Keine Übernahme von Dreamloud in den UOP-Plan.
+
 ## Technische Arbeitsregeln
 
 - Aktive technische Spezifikationen: `docs/specification/phase-2-v1-specification.md`, `docs/specification/phase-3-specification-freeze.md`, `docs/specification/README.md`, ADR 310–313 und Folge-ADRs.
