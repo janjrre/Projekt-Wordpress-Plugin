@@ -52,6 +52,23 @@ Weder diese Secrets noch das Passwort dürfen im Repository als Datei oder im Ch
 
 Erwartet: `Verified OrgaVela WordPress root, SSH identity and plugin write access.` Bei Fehler: nur die Fehlermeldung (ohne Secrets) im Arbeitsprotokoll festhalten und Ursachen prüfen. Ohne erfolgreichen Probe-Lauf **kein** Upload.
 
+## 4a. GitHub-Commit als automatischer Deployment-Auslöser
+
+Zusätzlich zum manuellen `Run workflow` läuft der Workflow **nur dann auf einen Push nach `main`**, wenn die exakt benannte Datei `.github/deploy-requests/orgavela.json` erstellt oder geändert wird. Dadurch kann der autorisierte Coding-Assistent nach Einrichtung der Secrets künftig einen Verbindungstest oder einen vorher freigegebenen Paket-Upload direkt mit einem GitHub-Commit anstoßen. **Andere Repository-Commits lösen kein Hosting-Deployment aus.**
+
+Beispiel für die erste, ausschließlich lesende Verbindungsprüfung:
+
+```json
+{
+  "request_id": "first-ssh-check",
+  "operation": "probe",
+  "confirm_target": "",
+  "expected_sha256": ""
+}
+```
+
+Für einen Upload muss später `operation` auf `upload`, `confirm_target` auf `orgavela.com` und `expected_sha256` auf den nachgewiesenen 64-stelligen SHA-256-Wert gesetzt werden. `request_id` kann zur Nachvollziehbarkeit geändert werden. Die bereits vorhandenen Sicherheitsprüfungen, Branch-Festlegung, Hostschlüsselprüfung und GitHub-Environment-Gates gelten genauso wie beim manuellen Lauf. **Diese Triggerdatei jetzt noch nicht erstellen**, bevor der Zugang eingerichtet und der erste Probe-Lauf vorbereitet ist; andernfalls scheitert der automatische Job wegen fehlender Secrets. Deployment-Trigger nur nach ausdrücklichem Projektauftrag und mit dokumentierten Sicherheits-Gates verändern.
+
 ## 5. Erstes Plugin-Paket hochladen
 
 Nach erfolgreicher Probe das Paket vom Branch `staging/uop-plugin-package` samt `package-provenance.txt` gegen den freigegebenen Entwicklungsstand vergleichen. Stand vor dem ersten SSH-Upload: `source_sha=4f2c4df800caf1e5708f05cce9536a7afb34aaa0`, `sha256=acbebdd9df25d996848bbca6ebe6726ee1a986207fc7c7b818474dc93134267a`. Der aktuelle SHA muss erneut geprüft werden; beim Neubau ändert sich die Prüfsumme.
