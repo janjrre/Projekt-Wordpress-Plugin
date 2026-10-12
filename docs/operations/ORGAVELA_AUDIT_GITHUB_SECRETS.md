@@ -28,8 +28,9 @@ Wenn `IONOS_WP_ROOT` nicht existiert, verwendet der **read-only Audit allein** z
 
 ## 3. Audit-Workflow und Aktionen
 
-- [`.github/workflows/orgavela-readonly-audit.yml`](../../.github/workflows/orgavela-readonly-audit.yml): Umgebung `orgavela-ionos`, nur `main`, GitHub-Token `contents: read`, `probe` oder `schema`, ausschließlich explizite manuelle oder eng begrenzte Request-Starts.
+- [`.github/workflows/orgavela-readonly-audit.yml`](../../.github/workflows/orgavela-readonly-audit.yml): Umgebung `orgavela-ionos`, nur `main`, GitHub-Token `contents: read`, `sftp`, `probe` oder `schema`, ausschließlich explizite manuelle oder eng begrenzte Request-Starts.
 - [`scripts/ci/orgavela-readonly-audit.sh`](../../scripts/ci/orgavela-readonly-audit.sh): prüft IONOS-ED25519-Hostkey gegen fest verankerten Anbieter-Fingerprint, WordPress-Root, genau `https://orgavela.com`, installierte UOP-Core-Version `0.1.0-alpha.2`. Keine Roh-SSH-/PHP-Fehlertexte oder Datenbankdatensätze in öffentlichen Actions-Logs.
+- `sftp` prüft ausschließlich **per SFTP** die erwarteten OrgaVela-WordPress-Verzeichnisse, lädt keine Daten herunter und macht keine Änderungen. **Dies ist kein SQL-Nachweis.**
 - `probe` prüft **nur** Erreichbarkeit einer SSH-**Shell** (nicht nur SFTP), verfügbare WP-CLI und die Identität der installierten OrgaVela-Seite.
 - `schema` verwendet auf der **gleichen**, bereits geprüften OrgaVela-Installation read-only WP-CLI-Funktionen zur Ermittlung technischer Schema-Health-Werte, Anzahl UOP-Tabellen, Versions- und Default-Organisationskonsistenz. Keine schreibenden SQL-Abfragen, kein DB-Dump, keine Backup-/Restore- oder Migrationsfunktionen. Ein positiver Audit ersetzt noch nicht den unabhängigen Abgleich **sämtlicher 29 physischen Tabellen, Spalten und Indizes**.
 
@@ -37,7 +38,7 @@ Die bestehende OrgaVela-**SFTP-Installation** mit `/public` wird **nicht** durch
 
 ## 4. Einmalige und später erneut abrufbare Prüfungen
 
-Manueller Start: [Actions → OrgaVela – strictly read-only SSH health audit](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/workflows/orgavela-readonly-audit.yml) → `Run workflow` → Branch `main` → zunächst `probe`, erst nach erfolgreicher Probe `schema`.
+Manueller Start: [Actions → OrgaVela – strictly read-only SSH health audit](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/workflows/orgavela-readonly-audit.yml) → `Run workflow` → Branch `main` → `sftp` für reinen Dateizugriff, `probe` für SSH + WP-CLI, danach `schema`.
 
 Für durch den Assistenten zu einem **konkret beauftragten Prüftermin** selbst ausgelöste Lesechecks dient ausschließlich der Repo-Pfad `.github/audit-requests/orgavela-readonly.json` auf `main`, nicht eine Datei unter `.github/deploy-requests/`. Der bewusst autorisierte minimale Commit-Inhalt ist beispielsweise:
 
@@ -55,4 +56,13 @@ Nach einer bestätigten Shell-Probe darf beim nächsten gezielt beauftragten Lau
 - Kein echtes Teilnehmerdatum/-datensatz, kein Versand an Dritte, kein Dreamloud-Zugriff. Vor produktiven DB-Migrationen bleibt **O03 isolierter Restore-Nachweis zwingend**.
 - Die Secrets lassen sich über `orgavela-ionos` vom Betreiber deaktivieren, austauschen oder widerrufen. Die bestehende Deployment-Umgebung wurde durch diese Audit-Einrichtung weder gelöscht noch neu beschrieben.
 
-**Nächster überprüfbarer Schritt:** Eine durch GitHub auf `main` gestartete `probe`-Action durchführen, Status/Run-ID beurteilen, erst danach ggf. `schema` prüfen und die tatsächlichen O02-/O03-Belege dokumentieren. Die V1-Fortschrittszählung bleibt bis zu realen Tests unverändert.
+## 6. Tatsächlich ausgeführte Belege (12.10.2026)
+
+- [Run #38263245050](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38263245050): Erster SSH-Test **fehlgeschlagen**, da der SFTP-Pfad `/public` nicht dem SSH-Shell-Pfad entsprach; Secret-Referenzen, Workflow-Prüfung und Runner waren funktionsfähig. Keine Geheimnisse in Logs.
+- [Run #38263689846](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38263689846): **SUCCESS** `ORGAVELA_AUDIT_SFTP=verified`, **Shell/Schema nicht geprüft**. Der existierende OrgaVela-Benutzer darf per SFTP die erwarteten WP-Verzeichnisse lesen.
+- [Run #38263987605](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38263987605): SSH-Shell tatsächlich erreichbar, das ursprünglich getestete WordPress-Root jedoch falsch. Nach IONOS-[Dokumentation zum absoluten Webspace-Pfad](https://www.ionos.de/hilfe/hosting/php-fuer-web-projekt-verwenden/absoluten-pfad-document-root-ermitteln/) wurde der Audit um eine eng begrenzte Liste üblicher Shell-/Document-Root-Varianten ergänzt; kein komplettes Webspace-Scanning.
+- [Run #38264254555](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38264254555): **SUCCESS** `ORGAVELA_AUDIT_TARGET=verified`, `ORGAVELA_AUDIT_SHELL=available`, `ORGAVELA_AUDIT_PLUGIN_VERSION=alpha2`, `ORGAVELA_AUDIT_PROBE=success`.
+- [Run #38264354774](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38264354774): **SUCCESS**, echte OrgaVela-WordPress-Instanz: `ORGAVELA_AUDIT_SCHEMA=good`, `ORGAVELA_AUDIT_TABLE_COUNT=29`, `ORGAVELA_AUDIT_DEFAULT_ORG=good`, `ORGAVELA_AUDIT_VERSIONS=good` (2/2). Installer `health()` im nachgewiesenen Alpha.2-Source verwendet `SchemaInspector::verify_all()` und `AgeAttestationSchema::verify()`; es prüft über `information_schema` physische Tabellen und deren Spalten, Indizes, Engines und Kollation gegen erwartete Definitionen. Zusätzlich wurden **unabhängig** Tabellenanzahl, Referenz auf die aktive Default-Organisation und Options-Versionen abgefragt. Keine Teilnehmerwerte ausgegeben.
+
+**Ergebnis:** SFTP, SSH-Shell, WP-CLI, Domain/Plugin-Identität und 29 physische UOP-Tabellen mit gesundem Verifikationsstatus sind **jetzt live nachgewiesen**. Es waren keine zusätzlichen Zugangsdaten, kein PHP-Upload und kein SSH-Accountwechsel notwendig. O02 hat substanziell mehr reale Evidenz; das formale M1-/V1-Signoff und O03 Backup-/isolierter Restore sind noch nicht erfolgt. Keine schreibenden Website-/SQL-/Deployment-Operationen.
+
