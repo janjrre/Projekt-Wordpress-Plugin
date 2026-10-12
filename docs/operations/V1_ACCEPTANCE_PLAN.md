@@ -1,6 +1,6 @@
 # OrgaVela / UOP Core – Verbindlicher Masterplan bis zur V1-Abnahme
 
-**Version:** 1.4 | **Bestandsaufnahme:** 12.10.2026 | **Status:** aktiv; V1 **nicht** abgenommen  
+**Version:** 1.5 | **Bestandsaufnahme:** 12.10.2026 | **Status:** aktiv; V1 **nicht** abgenommen  
 **Quellenhierarchie:** Phase 3 Specification Freeze > Phase 2 V1-Spezifikation > Phase 1 Produktstrategie; neuere freigegebene ADRs ergänzen den Freeze, ersetzen ihn nicht stillschweigend.  
 **Projekt:** janjrre/Projekt-Wordpress-Plugin | **Technischer Name:** UOP Core | **Produktname:** OrgaVela | **Staging:** https://orgavela.com
 **Zentrale GitHub-Abnahme-Issue:** [#15 – V1 Master-Abnahme](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) mit verlinkten Milestone- und Zusatzpaketen.  
@@ -360,3 +360,8 @@ Ergänzende technische Nachweise und ausführbare read-only `information_schema`
 **O09 aktualisiert:** Neuer aktueller PR-#11-HEAD `7892a25894c184a624ab4ebea13aab0e1a1c88dd`. HTTPS/Playwright [Run #38248040695](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248040695) fehlgeschlagen: Sorgeberechtigten-Login `page.waitForURL` (20 s); keine bestätigte fachliche Ursache. [Foundation #38248040810](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248040810) hatte bei erster Abfrage noch aktive Jobs. Der neue CI-Stand **überschreibt die früheren roten Fehler nicht als Erfolg**. Keine abgesenkten A11y-Grenzen und keine deaktivierten Golden-Path-Tests.
 
 **Abnahme:** O01/O02/M1-08/O03/O06/O09 weiterhin offen oder teilweise untersucht; M0–M7 unverändert **62/71 technisch implementiert**, **0/8 formell abgenommen**, P4 **0/4**, R **0/18**. Umsetzung der Prüfabfragen in IONOS/phpMyAdmin oder Admin-Site-Health erfordert einen geeigneten **separat berechtigten, read-only Zugang**, der bislang nicht durch den WordPress-MCP angeboten wird.
+
+
+### CI-Finalisierung W0/O09 – 12.10.2026 (Version 1.5)
+
+Der tatsächliche PR-#11-HEAD bleibt `7892a25894c184a624ab4ebea13aab0e1a1c88dd` (Draft). Der zuvor noch laufende [Foundation-Run 38248040810](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248040810) ist **abgeschlossen und fehlgeschlagen**: sieben von acht Jobs erfolgreich, **PHP 8.4 mit MariaDB 10.11** scheitert an `tests/Browser/activation.spec.js`, `page.goto` beim echten Plugin-Deaktivieren nach 30 Sekunden. Der parallel gelaufene [HTTPS-Run 38248040695](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248040695) bleibt **fehlgeschlagen**: Sorgeberechtigten-Login mit `page.waitForURL('/wp-admin/')` nach 20 Sekunden. Beide Logs wurden auf Job-Ebene gelesen. Weder Serverauslastung noch Applikationsursache ist dadurch abschließend bewiesen; keine blind verlängerten Timeouts oder ausgeschalteten Sicherheits-/A11y-Assertions. **O09 und R03 unverändert rot**, null neue Release-Gates. Details im [ergänzenden W0-Audit](W0_ORGAVELA_READ_ONLY_AUDIT_2026-10-12.md) und im append-only Arbeitsprotokoll.
