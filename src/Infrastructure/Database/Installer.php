@@ -85,6 +85,14 @@ final class Installer {
 				$inspector = new SchemaInspector( $db, $manifest, $wpdb->prefix . 'uop_', $wpdb->collate );
 				$inspector->verify_all();
 				AgeAttestationSchema::verify( $db, $wpdb->prefix . 'uop_', $wpdb->collate );
+				// Schema versions alone cannot prove that the transactional V1
+				// default-organization seed still exists and matches its pointer.
+				// This health check is strictly read-only; never repair data here.
+				$default_id = (int) get_option( 'uop_default_organization_id', 0 );
+				$seed       = $db->rows( 'SELECT id, status FROM %i WHERE slug = %s', array( $wpdb->prefix . 'uop_organizations', 'default' ) );
+				if ( 1 !== count( $seed ) || $default_id < 1 || $default_id !== (int) $seed[0]['id'] || 'active' !== $seed[0]['status'] ) {
+					throw new \RuntimeException( 'Default organization seed is inconsistent.' );
+				}
 			}
 		} catch ( \Throwable $error ) {
 			$good  = false;
