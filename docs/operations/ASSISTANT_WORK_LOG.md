@@ -110,3 +110,15 @@
 **Entscheidung und Gründe:** Der neue Connector verbessert WordPress-Bedienung, aber eröffnet keinen unterstützten dauerhaften Host-Datenbankzugriff. Eine Aktivierung durch Deaktivieren/Manipulieren der Unicode-Schutzprüfung wäre ein Datenintegritätsrisiko. Deshalb **keine** Aktivierung, keine mutierenden Site-Operationen und kein Theme-Code-Workaround.
 
 **Ergebnis/Status:** Neue Berechtigungen nachgewiesen; Issue #12 bleibt offen, UOP Core weiterhin inaktiv. Sichere Behebung weiterhin über unterstützten Hosting-SSH/SFTP/DB-Zugang oder WordPress.com-Support, Tabellen-/Datenanalyse und verifizierten Backup-/Restore-Pfad; danach Aktivierung und synthetische Tests. Keine kostenpflichtigen Verpflichtungen oder Dreamloud-Änderungen.
+
+## 2026-10-12 – 09: Hostingzugriff nicht vorhanden – kostenfreier Fortsetzungsplan
+
+**Arbeitsauftrag / Rückmeldung:** Der Betreiber teilt mit, dass auf der eigenen WordPress.com-Testwebsite OrgaVela **kein SFTP-/SSH-Zugriff** verfügbar ist. Gesucht ist ein praktikabler Fortsetzungsweg ohne ausgabenauslösende Verträge.
+
+**Verifizierte Informationen:** Laut WordPress.com-Support (zuletzt geprüft im Oktober 2026) sind SFTP/SSH, die erweiterten Servereinstellungen und phpMyAdmin normalerweise Business-/Commerce-Funktionen: https://wordpress.com/support/hosting-configuration/ und https://wordpress.com/support/database/ . Die konkrete fehlende Zugriffsberechtigung wurde vom Betreiber mitgeteilt. Der zuletzt über WordPress-Connector bestätigte technische Befund bleibt: Datenbankverbindung `latin1` / `latin1_swedish_ci`, UOP Core `0.1.0-alpha.2` installiert, aber inaktiv wegen Fail-closed-Anforderung `utf8mb4_required`.
+
+**Bewertete Ansätze / Entscheidung:** Kein kostenpflichtiges Upgrade, kein Erzwingen der Aktivierung, kein PHP-/Theme-Hook zur Umgehung der DB-Prüfung. Stattdessen (1) separate OrgaVela-Website beibehalten, (2) unabhängige synthetische WordPress-/Datenbank-/HTTPS-Testumgebung per bestehendem GitHub Actions CI verwenden, (3) WordPress.com-Support nach kostenloser, vom Anbieter unterstützter dauerhafter UTF8MB4-Konfigurationskorrektur fragen. Nur nach konkreter unterstützter Migrationsmöglichkeit und Backup-/Restore-Prüfung auf der Staging-Site aktivieren.
+
+**Tatsächliche Umsetzung:** Aktuelle offizielle Bedingungen geprüft, sichere nächste Schritte für die Betreiberentscheidung formuliert, diesen Status und Issue #12 dokumentiert. Keine Änderung an WordPress-Konfiguration, keinen SQL-Eingriff, keine neuen Kosten, keine Dreamloud-Änderung.
+
+**Blocker / nächster Schritt:** Betreiber/Hosting-Support muss den gesicherten Konfigurationsweg klären; andernfalls E2E-Entwicklung unabhängig von OrgaVela fortsetzen. Issue #12 bleibt offen. Dieses Protokoll ist keine automatische vollständige Chatkopie und enthält nur notwendige technische Informationen.
