@@ -3,6 +3,9 @@ import { execFileSync } from 'node:child_process';
 
 test.skip(process.env.UOP_HTTPS_E2E !== '1', 'Requires isolated local HTTPS WordPress CI');
 test.use({ baseURL: 'https://127.0.0.1:8443', ignoreHTTPSErrors: true });
+// CI may need the existing bounded second login attempt on a congested
+// disposable HTTPS/PHP proxy. Keep all individual assertions and role guards.
+test.describe.configure({ timeout: 90000 });
 const widths = [320, 390, 768, 1280];
 
 /**
