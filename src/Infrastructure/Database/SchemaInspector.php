@@ -77,7 +77,7 @@ final class SchemaInspector {
 		$names  = array_column( $actual, 'TABLE_NAME' );
 		$known  = array_map( fn ( string $name ): string => $this->prefix . $name, array_keys( $this->manifest->tables() ) );
 		$extras = array_values( array_diff( $names, $known ) );
-		if ( array_diff( $known, $names ) || ( $extras && $extras !== array( $this->prefix . 'age_attestations' ) ) ) {
+		if ( array_diff( $known, $names ) || ( $extras && array( $this->prefix . 'age_attestations' ) !== $extras ) ) {
 			throw new RuntimeException( 'Unexpected UOP table set.' );
 		}
 		// Existing V1 migration verification remains valid during a V2 upgrade.
