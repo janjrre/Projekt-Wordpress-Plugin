@@ -9,6 +9,7 @@ namespace UOP\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use UOP\Admin\M6AgeAttestationScreen;
 use UOP\Application\Event\EventService;
 use UOP\Application\Identity\AgeAttestationService;
 use UOP\Application\Policy\Actor;
@@ -108,6 +109,9 @@ final class AgeAttestationTest extends TestCase {
 		self::assertIsInt( $limited );
 		( new \WP_User( $admin ) )->set_role( 'administrator' );
 		( new \WP_User( $limited ) )->set_role( 'subscriber' );
+		$role = get_role( 'administrator' );
+		self::assertNotNull( $role );
+		$role->add_cap( 'uop_manage_organization' );
 		wp_set_current_user( $admin );
 		$actor = new Actor( $admin );
 		$now = gmdate( 'Y-m-d H:i:s' );
@@ -167,6 +171,22 @@ final class AgeAttestationTest extends TestCase {
 		self::assertFalse( $repo->matches( $this->scope, $person_id, $post, 18, 'gte', $now, gmdate( 'Y-m-d H:i:s', time() + 30 * DAY_IN_SECONDS ) ) );
 		wp_update_post( array( 'ID' => $post, 'post_status' => 'publish' ) );
 		self::assertSame( 'verified', rest_do_request( $read )->get_data()['status'] );
+
+		$screen = new M6AgeAttestationScreen( $review, $repo, $people, $policy, $this->db, $this->prefix );
+		$previous_get = $_GET;
+		$_GET = array( 'person_id' => $person->to_string(), 'event_post_id' => $post, 'threshold_age' => 21 );
+		ob_start();
+		try {
+			$screen->render();
+			$markup = (string) ob_get_clean();
+		} finally {
+			if ( ob_get_level() > 0 ) {
+				ob_end_clean();
+			}
+			$_GET = $previous_get;
+		}
+		self::assertStringContainsString( 'Not verified: independent review required.', $markup );
+		self::assertStringContainsString( 'max-width:320px', $markup );
 
 		$other_post = wp_insert_post( array( 'post_type' => 'uop_event', 'post_title' => 'Other event', 'post_status' => 'publish' ), true );
 		self::assertIsInt( $other_post );
