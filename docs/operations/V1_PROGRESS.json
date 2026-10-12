@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-12 operator confirms OrgaVela and Dreamloud in separate IONOS hosting contracts and explicitly authorizes reuse of existing full-/ OrgaVela account for bounded SSH/SFTP audit; GitHub workflow rewired to existing orgavela-ionos environment; live probe not yet established",
+  "snapshot_basis": "2026-10-12: operator-authorized existing orgavela-ionos secrets; SFTP #38263689846 success, SSH/WP-CLI exact target #38264254555 success, live UOP physical schema health plus independent 29-table/default-org/version checks #38264354774 success. Full V1 formal signoffs/restore pending.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -142,7 +142,8 @@
     },
     {
       "id": "O02",
-      "status": "partial"
+      "status": "partial",
+      "live_validation": "read-only OrgaVela physical schema health, all 28+1 tables/indexes checked by installed alpha.2 verifier, count and default-org independently checked; Run 38264354774; formal exit/signoff still pending"
     },
     {
       "id": "O03",
@@ -270,7 +271,7 @@
     "charset": "utf8mb4",
     "uop_db_version": 2,
     "uop_data_version": 2,
-    "physical_schema_check": "not independently confirmed",
+    "physical_schema_check": "LIVE VERIFIED on installed alpha.2: Installer::health good (information_schema manifest verification of 28+1 UOP tables, columns/indexes/engine/collation), separate SELECT count 29; Actions run 38264354774",
     "source_sha": "4f2c4df800caf1e5708f05cce9536a7afb34aaa0",
     "package_sha256": "acbebdd9df25d996848bbca6ebe6726ee1a986207fc7c7b818474dc93134267a",
     "install_run": 38241807035,
@@ -283,14 +284,14 @@
     "cron_total_events": 19,
     "privacy_policy_page": "configured but draft/not visitor accessible",
     "wp_environment_type": "production (WordPress setting, not product release status)",
-    "uop_site_health_physical_result": "not independently accessible",
-    "database_read_only_live_schema_audit": "pending independent information_schema comparison",
+    "uop_site_health_physical_result": "good via installed Installer::health() called from SSH/WP-CLI; WordPress MCP admin site-health route remains unavailable",
+    "database_read_only_live_schema_audit": "successful 2026-10-12 run #38264354774; schema good, 29 UOP tables, active default-org pointer good, versions 2/2; no rows or secrets exported",
     "ionos_backup_points_account_verified": false,
     "manual_file_and_db_backup_verified": false,
     "restore_test_isolated_verified": false,
     "access_password_protection_verified": false,
     "source_contains_uop_schema_health_check": true,
-    "uop_schema_site_health_result": "not directly obtained; 28+1 live physical audit unverified",
+    "uop_schema_site_health_result": "good; live WP-CLI invocation of alpha.2 Installer::health(), Run 38264354774",
     "published_uop_events": 0,
     "published_sample_pages": 1,
     "cron_overdue_snapshot_note": "Read-only WordPress MCP snapshots 2026-10-12: previously 5/19 overdue, later 2/19; external cron still unverified",
@@ -300,8 +301,8 @@
     "ionos_audit_workflow_ready": true,
     "ionos_audit_workflow_path": ".github/workflows/orgavela-readonly-audit.yml",
     "ionos_audit_secret_configuration": "references existing orgavela-ionos SSH/SFTP secrets; secret values not accessible to assistant",
-    "ionos_audit_ssh_probe": "not yet executed on this updated workflow",
-    "ionos_audit_schema_probe": "pending successful shell and WP-CLI probe",
+    "ionos_audit_ssh_probe": "verified success; 38264254555; WordPress home orgavela.com, SSH shell, WP-CLI and installed alpha.2",
+    "ionos_audit_schema_probe": "verified success; 38264354774; schema good/29 tables/default-org good/versions good",
     "ionos_audit_access_isolation_verified": false,
     "ionos_database_direct_github_runner_access": "not supported on typical IONOS shared Webhosting",
     "ionos_audit_dedicated_environment": "reuses existing orgavela-ionos environment (no duplicate audit secrets)",
@@ -309,7 +310,37 @@
     "ionos_audit_automation_enabled": true,
     "ionos_audit_manual_trigger_only": false,
     "ionos_audit_requires_isolated_account_confirmation": false,
-    "ionos_contract_separation": "operator-attested: OrgaVela and Dreamloud in separate contracts; not independently verified"
+    "ionos_contract_separation": "operator-attested: OrgaVela and Dreamloud in separate contracts; not independently verified",
+    "ionos_audit_sftp_probe": "verified success; 38263689846; directory-only, no file download",
+    "ionos_audit_shell_root_resolved": true,
+    "ionos_audit_trial_runs": [
+      {
+        "id": 38263245050,
+        "result": "failure",
+        "reason": "SFTP root not valid in SSH shell"
+      },
+      {
+        "id": 38263689846,
+        "result": "success",
+        "operation": "sftp"
+      },
+      {
+        "id": 38263987605,
+        "result": "failure",
+        "reason": "SSH shell works, initial WordPress path not found"
+      },
+      {
+        "id": 38264254555,
+        "result": "success",
+        "operation": "probe"
+      },
+      {
+        "id": 38264354774,
+        "result": "success",
+        "operation": "schema"
+      }
+    ],
+    "ionos_audit_readonly_shell_working": true
   },
   "integration": {
     "main_contains_merged_feature_stack": false,
@@ -450,15 +481,15 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "Run bounded GitHub Actions OrgaVela SSH/WP-CLI read-only probe by explicit audit-request commit on main, inspect run ID and sanitized result",
-    "If probe succeeds and identities match, run read-only uop_schema aggregate and independently confirm all 29 physical table/column/index structures (O02/M1-08)",
-    "If SSH shell unavailable despite existing SFTP rights, use operator-authenticated OrgaVela phpMyAdmin/Site Health rather than invent SQL access",
-    "Inventory backups and complete private isolated restore (O03) before any production migrations; Dreamloud contract remains excluded"
+    "O03: verify IONOS OrgaVela backup-point inventory and prepare confidential full files+DB backup with isolated restore proof before any upgrade/migration",
+    "O02/M1-08: review live run 38264354774 and sign off explicit physical schema health evidence against current source; note alpha.2 differs from open stacked V1 PRs",
+    "O01/O06: verify OrgaVela contract/site access protection, privacy page, crawler exclusion and proper cron isolation; Dreamloud must remain untouched",
+    "Continue reviewing open PR stack #1-#6/#11 and other V1 gates only after relevant restore/security controls"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.2",
+  "masterplan_version": "2.3",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
