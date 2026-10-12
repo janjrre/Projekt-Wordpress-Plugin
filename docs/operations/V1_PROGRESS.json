@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-12 prepared separate GitHub orgavela-audit workflow and operator secret guide only; credentials not set, SSH probe not run, live O02/O03 unverified",
+  "snapshot_basis": "2026-10-12 operator confirms existing IONOS SFTP/SSH account has full hosting-webspace / reach; GitHub audit auto-trigger disabled and manual isolated-account confirmation mandatory; no audits, secrets, site changes; V1 unchanged",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -299,12 +299,16 @@
     "php_error_log_available": false,
     "ionos_audit_workflow_ready": true,
     "ionos_audit_workflow_path": ".github/workflows/orgavela-readonly-audit.yml",
-    "ionos_audit_secret_configuration": "operator-action-pending, not viewable by assistant",
-    "ionos_audit_ssh_probe": "not executed",
+    "ionos_audit_secret_configuration": "operator-action-pending; do not copy existing full-webspace SSH/SFTP secrets",
+    "ionos_audit_ssh_probe": "not executed; broad existing / account must not be reused",
     "ionos_audit_schema_probe": "not executed",
     "ionos_audit_access_isolation_verified": false,
     "ionos_database_direct_github_runner_access": "not supported on typical IONOS shared Webhosting",
-    "ionos_audit_dedicated_environment": "orgavela-audit (needs operator creation)"
+    "ionos_audit_dedicated_environment": "orgavela-audit (needs operator creation)",
+    "ionos_existing_ssh_account_scope": "operator reports / access throughout entire hosting webspace; not linux host root",
+    "ionos_audit_automation_enabled": false,
+    "ionos_audit_manual_trigger_only": true,
+    "ionos_audit_requires_isolated_account_confirmation": true
   },
   "integration": {
     "main_contains_merged_feature_stack": false,
@@ -445,15 +449,15 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "Operator: create dedicated OrgaVela-only SSH-capable IONOS account, GitHub orgavela-audit environment, 3 secrets and verified IONOS_AUDIT_WP_ROOT; do not store main IONOS credentials",
-    "Run read-only GitHub workflow probe, then schema only if domain identity/WP-CLI works; record sanitized evidence, no plugin or DB writes",
-    "Independent full 29 UOP tables/indexes/default-org comparison for O02/M1-08, then safe O03 backups and isolated restore",
-    "Keep O01 SSH account isolation and O06 privacy/login protection open until real validation"
+    "Do not reuse full-webspace / SSH account in orgavela-audit; check IONOS contract's feasible account isolation (SFTP path restrictions do not isolate PHP/SSH). No extra contracts without separate approval",
+    "If no verifiably OrgaVela-limited shell rights: obtain actual WordPress Site Health uop_schema and independent table/index read evidence by operator-controlled phpMyAdmin/WordPress Admin, not broad automated SSH",
+    "After read-only metadata O02, verify safe IONOS file+DB backup inventory and isolated restore O03",
+    "Review secure long-term OrgaVela audit access only after real server-side isolation proof; do not re-enable GitHub push audit just for convenience"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.0",
+  "masterplan_version": "2.1",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
