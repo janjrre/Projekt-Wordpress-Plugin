@@ -327,5 +327,12 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "1.1"
+  "masterplan_version": "1.2",
+  "companion_documents": [
+    "docs/project/V1_MASTER_PLAN.md",
+    "docs/project/V1_STATUS.md",
+    "docs/project/V1_ACCEPTANCE_MATRIX.md"
+  ],
+  "duplicate_issue_closed_or_redirected": 14,
+  "canonicalization_note": "Sole normative plan = docs/operations/V1_ACCEPTANCE_PLAN.md, sole machine-readable status = this JSON, issue #15 is central tracker. Companion docs/project files expand explanations and acceptance test cases; count/gate truth remains here."
 }
