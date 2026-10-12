@@ -24,6 +24,7 @@ final class RegistrationFactsService {
 	 *
 	 * @param RegistrationFactsRepository $repository Scoped source data.
 	 * @param PolicyService               $policy     Field authorization.
+	 * @param AgeAttestationRepository|null $age_attestations Independently reviewed age facts.
 	 */
 	public function __construct( private RegistrationFactsRepository $repository, private PolicyService $policy, private ?AgeAttestationRepository $age_attestations = null ) {}
 
