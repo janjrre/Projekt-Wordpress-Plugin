@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-12 W0/O03 read-only GitHub Actions backup preflight #38267570599 green; synthetic-only isolated MariaDB 11.8 restore test #38267901371 green. Real provider snapshots, durable private DB/file archive and isolated restore of a real OrgaVela backup NOT verified. No changes to production.",
+  "snapshot_basis": "2026-10-12 O03 explicit next-step choice: encrypted GitHub-Actions transfer proposed, operator-owned public/private key + independent local/private backup storage required; no new live backup or restore performed; previous live read-only preflight and synthetic restore remain the only green evidence.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -153,7 +153,12 @@
       "actual_provider_backup_inventory": "unknown",
       "actual_private_full_snapshot": "not yet made/verified",
       "actual_isolated_restoration": "not performed",
-      "formal_accepted": false
+      "formal_accepted": false,
+      "planned_backup_delivery": "dedicated reviewed GitHub Actions SSH stream -> operator public-key age encryption on ephemeral runner -> encrypted temporary artifact -> independent operator-owned PC/external SSD or existing private store; no live workflow before key and destination",
+      "operator_storage_choice": "pending",
+      "recipient_public_key": "not provided/configured",
+      "encryption_pipeline_ci_test": "not yet implemented",
+      "real_backup_status": "not attempted"
     },
     {
       "id": "O04",
@@ -363,7 +368,10 @@
     "ionos_backup_provider_retention": "IONOS public Webhosting documentation: daily system backups up to 14 days, contract-specific recovery points unverified",
     "synthetic_restore_rehearsal_run": 38267901371,
     "synthetic_restore_rehearsal_status": "success with isolated MariaDB 11.8 and synthetic DB+files only, NOT actual OrgaVela backup",
-    "ionos_backup_created_by_this_workflow": false
+    "ionos_backup_created_by_this_workflow": false,
+    "o03_next_backup_strategy": "pending storage choice and operator-generated public encryption recipient; no private keys or data in public GitHub",
+    "o03_real_export_executed": false,
+    "o03_public_key_prepared": false
   },
   "integration": {
     "main_contains_merged_feature_stack": false,
@@ -504,15 +512,16 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "O03: inspect provider recovery-point inventory in IONOS authenticated account, strictly OrgaVela contract; do NOT click Restore on live website",
-    "O03: establish private access-controlled independent backup destination; create full consistent OrgaVela SQL+files snapshot there with encrypted/controlled handling, record integrity hashes privately",
-    "O03: restore this actual snapshot only into isolated private no-network/no-email clone and verify physical schema/versions/WordPress config and duration; never import into production",
-    "Only after O03 and remaining privacy/review gates, consider integration/upgrade; no impact on Dreamloud"
+    "Operator chooses independent permanent storage: recommended encrypted local PC+external SSD, alternative pre-existing private cloud; IONOS panel recovery points inspected separately",
+    "Generate age key pair locally, retain private key and recovery copy offline; supply ONLY public recipient for reviewed GitHub Actions backup pipeline",
+    "Implement and CI-test stream encryption + artifact handling using synthetic fixtures only, fail closed if key absent or if unencrypted artifacts/logs would be published",
+    "One deliberate OrgaVela live file+SQL read-only snapshot, immediately encrypted, independently stored and verified locally with hashes",
+    "Restore exact real snapshot only inside a private isolated test host with network, cron and email disabled; sign off O03/B04 after evidence"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.4",
+  "masterplan_version": "2.5",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
