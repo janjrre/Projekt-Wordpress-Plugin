@@ -1,6 +1,6 @@
 # OrgaVela / UOP Core – Verbindlicher Masterplan bis zur V1-Abnahme
 
-**Version:** 1.2 | **Bestandsaufnahme:** 12.10.2026 | **Status:** aktiv; V1 **nicht** abgenommen  
+**Version:** 1.3 | **Bestandsaufnahme:** 12.10.2026 | **Status:** aktiv; V1 **nicht** abgenommen  
 **Quellenhierarchie:** Phase 3 Specification Freeze > Phase 2 V1-Spezifikation > Phase 1 Produktstrategie; neuere freigegebene ADRs ergänzen den Freeze, ersetzen ihn nicht stillschweigend.  
 **Projekt:** janjrre/Projekt-Wordpress-Plugin | **Technischer Name:** UOP Core | **Produktname:** OrgaVela | **Staging:** https://orgavela.com
 **Zentrale GitHub-Abnahme-Issue:** [#15 – V1 Master-Abnahme](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) mit verlinkten Milestone- und Zusatzpaketen.  
@@ -317,6 +317,19 @@ Für Milestones kommt hinzu: vollständige DoD aller jeweiligen Unterpakete, def
 
 Kein fingierter Live-Abgleich und keine Fortschrittsänderung ohne Quellenbeleg. Bei langen Antworten dürfen Abschnitte kompakt zusammengefasst werden, doch der **vollständige Plan muss per Link jederzeit mitgesendet** werden.
 
+
+## W0-Start – erster bezeugter Umsetzungsstand (12.10.2026)
+
+**W0 läuft, wurde jedoch noch nicht abgenommen.** Verbindliches Live-/Sicherheitsprotokoll: [W0_BASELINE_AND_RECOVERY.md](W0_BASELINE_AND_RECOVERY.md), separates Tracking [Issue #16](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/16). Der [aktuelle Fortschritt](V1_PROGRESS.json) enthält den W0-Block mit belegten Prüfergebnissen, Blockern und den zuletzt gestarteten PR-#11-CI-Läufen.
+
+- **O01:** Domain `orgavela.com`, Plugin-Ziel `/public` und SFTP erfolgreich; das bestehende SFTP-Konto hat weiterhin größere Verzeichnisrechte als gewünscht. Weitere Pfadzugriffe **nicht** als „getestet“ ausgeben.
+- **O02:** UOP Core `0.1.0-alpha.2` live aktiv, `uop_db_version=2`; vollständige tatsächliche Tabellen-/Index-/Migration-State-Prüfung aus den vorhandenen WordPress-MCP-Read-Abilities nicht möglich, weiterhin kein Schema-Exit.
+- **O03:** Offiziellen IONOS-Datenbank-/Datei-Backup- und sicheren **isolierten Restore**-Pfad als konkrete Checkliste erarbeitet. Keine Sicherung aus Konto geladen; **Restore nicht durchgeführt**.
+- **O06:** `environment=production`, `discourage_search_engines=false`; noch keine globale Noindex-Umstellung, um die öffentliche OrgaVela-Markenwebsite nicht ohne Betreiberentscheidung aus Suchmaschinen auszuschließen. UOP-Tests weiterhin synthetisch, private Routen zu schützen.
+- **Parallele O09-Diagnose:** Letzter roter PR #11 zeigte reale WP-Admin-Menüüberlagerung und 44px-CSS-Bereitstellungsproblem in Playwright. Eng begrenzte Quellkorrekturen auf Draft-Branch, Commits `710b413e` und `7892a258`; aktuelle CI-Checks müssen auf **genau** `7892a258` neu bestanden werden. PHP-8.5/MySQL-8.0-Deaktivierungs-Timeout weiterhin nicht ursächlich behoben.
+
+**Unveränderte formale Bilanz:** 62/71 historisch implementiert, **0/8** V1-Milestones, **0/4** P4, **0/18** Release-Gates formell grün. Nächste Pflichtbelege: tatsächlicher UOP Site-Health-Schema-Status, IONOS-Backup-Inventar/privater Restore-Klon, begrenzte Testseiten-Zugriffsentscheidung und finaler neuer CI-Run auf PR #11. Bis dahin kein riskanter Live-Upgrade-/Cron-/Mail-Eingriff.
+
 ## 13. Unmittelbar nächster Arbeitsauftrag (W0)
 
 1. **M1-08/O02:** In OrgaVela Site Health das UOP-Schema-Checkresultat ermitteln und gegen 28 Basistabellen + V2-Altersattestationsschema verifizieren. Gespeicherte Versionswerte 2/2 allein reichen nicht.
@@ -334,3 +347,5 @@ Kein fingierter Live-Abgleich und keine Fortschrittsänderung ohne Quellenbeleg.
 - **2026-10-12, Version 1.0:** Initiale umfassende Bestandsaufnahme aus Phase 2/3, PR #1–#6/#11, Issues #7–#10/#12/#13, CI-Status und aktivierter IONOS-Alpha-Installation; normativen 71er-Katalog, M6-10-Unterpakete, P4 und Ops, 18 Release-Gates sowie dauerhafte Fortschrittsroutine zusammengeführt.
 
 - **2026-10-12, Version 1.2:** Nach paralleler Planerstellung auf eine einzige Kanonik konsolidiert: dieses Dokument und V1_PROGRESS.json sind maßgeblich; ergänzende /docs/project-Roadmap, Statusansicht und detaillierte Prüffallmatrix verlinkt. Doppelissue #14 wird auf #15 umgeleitet. Keine fachliche Statusänderung, weiterhin keine V1-Abnahme.
+
+- **2026-10-12, Version 1.3:** W0 tatsächlich begonnen, [W0-Belege](W0_BASELINE_AND_RECOVERY.md) und Issue #16 verlinkt, Schema-/Backup-/Privacy-Blocker statt formaler Erfolge dokumentiert und laufende CI-Nachprüfung auf neuem PR-#11-HEAD notiert; unveränderte V1-Zählung.
