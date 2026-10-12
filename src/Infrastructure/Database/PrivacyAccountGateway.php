@@ -246,7 +246,7 @@ final class PrivacyAccountGateway {
 			if ( $hold || $registration_hold ) {
 				continue;
 			}
-			$deleted     = $this->db->execute(
+			$deleted = $this->db->execute(
 				'DELETE v FROM %i v INNER JOIN %i p ON p.id = v.person_id WHERE p.organization_id = %d AND p.id = %d AND p.wp_user_id = %d',
 				array( $this->prefix . 'profile_values', $this->prefix . 'persons', $org, $id, $user_id )
 			);
