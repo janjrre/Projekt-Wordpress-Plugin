@@ -1,7 +1,7 @@
 # UOP Core / OrgaVela – verbindlicher Gesamtplan bis zur V1-Abnahme
 
 **Version 1.0 · Baseline 12. Oktober 2026 · Status: V1 NICHT abgenommen.**  
-**Kanonischer Plan:** diese Datei. **Zentrales Tracking:** [GitHub Issue #14](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/14). **Aktuelle, bei jedem Arbeitsauftrag zu prüfende Ist-Lage:** [V1_STATUS.md](V1_STATUS.md). **Prüffälle und Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md). **Historie jeder Assistenzarbeit:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).  
+**Ergänzende ausführliche Ausführungs-Roadmap (kein zweiter kanonischer Plan).** Maßgeblich sind der [normative V1-Masterplan mit 71 Paketen und 18 Release-Gates](../operations/V1_ACCEPTANCE_PLAN.md), die [maschinenlesbare Statusquelle](../operations/V1_PROGRESS.json) und das [zentrale Issue #15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15). **Aktuelle, bei jedem Arbeitsauftrag zu prüfende Ist-Lage:** [V1_STATUS.md](V1_STATUS.md). **Prüffälle und Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md). **Historie jeder Assistenzarbeit:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).  
 **Verbindliche Quellenhierarchie:** [Phase 3 – Specification Freeze](../specification/phase-3-specification-freeze.md) > [Phase 2](../specification/phase-2-v1-specification.md) > [Phase 1](../specification/phase-1-product-strategy.md). Bei Abweichung neuer ADR und Migrations-/Kompatibilitätsentscheidung vor Codeänderung.
 
 ## 1. Ziel, Grenzen und Begriffe
