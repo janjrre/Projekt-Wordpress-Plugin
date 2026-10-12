@@ -27,6 +27,8 @@ Wenn der Pfad unklar ist: zunächst selbst eine SSH-Terminalverbindung herstelle
 
 Der Hostschlüssel muss vor dem Eintrag in GitHub unabhängig verifiziert werden. Auf einem lokalen Rechner kann `ssh-keyscan -p 22 HOSTNAME > ionos_known_hosts` die öffentliche Hostschlüssel-Zeile erfassen; `ssh-keygen -lf ionos_known_hosts` zeigt den Fingerabdruck. **Das blinde Vertrauen in `ssh-keyscan` allein ist unsicher.** Den Fingerabdruck mit den aktuellen [offiziellen IONOS-Fingerabdrücken](https://www.ionos.de/hilfe/hosting/ssh-zugaenge-einrichten-und-verwalten/uebersicht-der-ssh-fingerabdruecke-im-ionos-webhosting/) oder einer ausdrücklich vom Anbieter bestätigten Hostidentität vergleichen. Erst den **verifizierten** `known_hosts`-Inhalt als Secret eintragen. Bei WordPress-Hosting können die veröffentlichten Webhosting-Fingerabdrücke abweichen; dann den zuständigen IONOS-Support fragen, keinesfalls unkontrolliert die SSH-Hostprüfung abschalten.
 
+**Vereinfachung vom 12.10.2026:** Der SSH-Workflow liest bei fehlendem `IONOS_KNOWN_HOSTS`-Secret den öffentlichen ED25519-Hostschlüssel direkt vom IONOS-Server aus, überprüft **vor jeder Verbindung** dessen SHA-256-Fingerprint gegen die offizielle IONOS-Webhosting-Referenz `SHA256:1gx2w8Rtv3wCgi7Jh8myf/KVd72cRQbow03UP8P095Q` und verweigert bei Abweichung den Zugriff. [IONOS-Fingerprintquelle](https://www.ionos.de/hilfe/hosting/ssh-zugaenge-einrichten-und-verwalten/uebersicht-der-ssh-fingerabdruecke-im-ionos-webhosting/). Ein eigener, bereits unabhängig verifizierter `known_hosts`-Eintrag kann weiterhin als optionaler Secret-Override verwendet werden. Eine andere Hostidentität ist niemals durch Blindakzeptanz freizuschalten.
+
 ## 3. Geschützte GitHub-Umgebung erstellen
 
 Im **UOP-Repository** (nicht in Dreamloud!) die [GitHub-Environments](https://github.com/janjrre/Projekt-Wordpress-Plugin/settings/environments) öffnen und die Umgebung **`orgavela-ionos`** anlegen. Wenn verfügbar, erlaubte Deployment-Branches auf **`main`** begrenzen und erforderliche Reviewer aktivieren; das Workflow-Skript kontrolliert den Branch ebenfalls.
@@ -38,7 +40,7 @@ In dieser Umgebung unter **Environment secrets** genau diese Namen anlegen:
 | `IONOS_SSH_HOST` | SSH/SFTP-Serverhostname, **nicht automatisch orgavela.com** |
 | `IONOS_SSH_USER` | Dedizierter IONOS-SSH/SFTP-Benutzer |
 | `IONOS_SSH_PASSWORD` | Passwort des dedizierten Kontos, **nur in GitHub Secret** |
-| `IONOS_KNOWN_HOSTS` | Unveränderter und unabhängig verifizierter `known_hosts`-Eintrag für den Host |
+| `IONOS_KNOWN_HOSTS` (optional) | Unveränderter, unabhängig geprüfter `known_hosts`-Eintrag nur, wenn die automatische offizielle IONOS-Fingerprintprüfung für diesen Host nicht zutrifft. |
 
 Unter **Environment variables** zusätzlich:
 
