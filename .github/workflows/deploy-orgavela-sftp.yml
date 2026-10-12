@@ -1,0 +1,153 @@
+name: OrgaVela - SFTP-only probe and first UOP plugin install
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Run a read-only probe first, then install once
+        required: true
+        default: probe
+        type: choice
+        options: [probe, install]
+      target_domain:
+        description: To install, enter orgavela.com
+        required: false
+        type: string
+      expected_sha256:
+        description: SHA-256 of the verified UOP ZIP (install only)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orgavela-ionos-sftp-first-install
+  cancel-in-progress: false
+
+jobs:
+  sftp:
+    if: github.repository == 'janjrre/Projekt-Wordpress-Plugin' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: orgavela-ionos
+    timeout-minutes: 25
+    env:
+      IONOS_HOST: ${{ secrets.IONOS_SSH_HOST }}
+      IONOS_USER: ${{ secrets.IONOS_SSH_USER }}
+      SSHPASS: ${{ secrets.IONOS_SSH_PASSWORD }}
+      IONOS_KNOWN_HOSTS: ${{ secrets.IONOS_KNOWN_HOSTS }}
+      IONOS_SFTP_ROOT: ${{ vars.IONOS_SFTP_ROOT }}
+      OPERATION: ${{ inputs.operation }}
+      EXPECTED_HASH: ${{ inputs.expected_sha256 }}
+      TARGET_DOMAIN: ${{ inputs.target_domain }}
+    steps:
+      - name: Fail closed for missing configuration and unexpected target
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in IONOS_HOST IONOS_USER SSHPASS IONOS_KNOWN_HOSTS IONOS_SFTP_ROOT; do
+            [[ -n "${!name:-}" ]] || { echo "::error::Missing $name"; exit 1; }
+          done
+          [[ "$IONOS_HOST" =~ ^[a-zA-Z0-9.-]+$ ]] || exit 1
+          [[ "$IONOS_USER" =~ ^[a-zA-Z0-9._-]+$ ]] || exit 1
+          [[ "$IONOS_SFTP_ROOT" =~ ^(/[a-zA-Z0-9._/-]*|\.)$ ]] || exit 1
+          [[ "$IONOS_SFTP_ROOT" != *'..'* && "${IONOS_SFTP_ROOT,,}" != *dreamloud* ]] || exit 1
+          if [[ "$OPERATION" == 'install' ]]; then
+            [[ "$TARGET_DOMAIN" == 'orgavela.com' && "$EXPECTED_HASH" =~ ^[A-Fa-f0-9]{64}$ ]] || {
+              echo "::error::Install requires orgavela.com and a 64-character SHA-256"; exit 1;
+            }
+          else
+            [[ "$OPERATION" == 'probe' ]] || exit 1
+          fi
+          printf '%s\n' "$IONOS_KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
+          chmod 600 "$RUNNER_TEMP/known_hosts"
+          ssh-keygen -F "$IONOS_HOST" -f "$RUNNER_TEMP/known_hosts" >/dev/null || {
+            echo "::error::Host key missing in pinned known_hosts"; exit 1;
+          }
+      - name: Set up transport
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq sshpass >/dev/null
+      - name: Probe SFTP connection and WordPress tree (read-only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="${IONOS_SFTP_ROOT%/}"
+          [[ -n "$root" ]] || root="/"
+          {
+            printf 'ls "%s/wp-admin"\n' "$root"
+            printf 'ls "%s/wp-includes"\n' "$root"
+            printf 'ls "%s/wp-content/plugins"\n' "$root"
+          } > "$RUNNER_TEMP/probe.sftp"
+          sshpass -e sftp -q -P 22 -oBatchMode=no \
+            -oPreferredAuthentications=password,keyboard-interactive \
+            -oPubkeyAuthentication=no -oConnectTimeout=15 \
+            -oStrictHostKeyChecking=yes \
+            -oUserKnownHostsFile="$RUNNER_TEMP/known_hosts" \
+            -b "$RUNNER_TEMP/probe.sftp" "$IONOS_USER@$IONOS_HOST" > /dev/null
+          echo "SFTP host identity and WordPress tree verified."
+          echo "The operator must independently verify that this SFTP account is scoped to orgavela.com only."
+      - name: Download and verify immutable package by user-supplied hash
+        if: inputs.operation == 'install'
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://raw.githubusercontent.com/janjrre/Projekt-Wordpress-Plugin/staging/uop-plugin-package"
+          curl --fail --silent --show-error --location --retry 3 "$base/uop-core.zip" -o "$RUNNER_TEMP/uop-core.zip"
+          curl --fail --silent --show-error --location --retry 3 "$base/package-provenance.txt" -o "$RUNNER_TEMP/package-provenance.txt"
+          local_hash="$(sha256sum "$RUNNER_TEMP/uop-core.zip" | cut -d' ' -f1)"
+          documented_hash="$(sed -n 's/^sha256=//p' "$RUNNER_TEMP/package-provenance.txt")"
+          [[ "$local_hash" == "${EXPECTED_HASH,,}" && "$local_hash" == "$documented_hash" ]] || {
+            echo "::error::Plugin package hash verification failed"; exit 1;
+          }
+          unzip -tqq "$RUNNER_TEMP/uop-core.zip"
+          unzip -Z1 "$RUNNER_TEMP/uop-core.zip" | grep -qx 'uop-core/uop-core.php'
+          unzip -Z1 "$RUNNER_TEMP/uop-core.zip" | grep -qx 'uop-core/vendor/autoload.php'
+          if unzip -Z1 "$RUNNER_TEMP/uop-core.zip" | grep -E '(^|/)\.\.(/|$)|^/|\\' ; then
+            echo "::error::Unsafe ZIP path"; exit 1;
+          fi
+          mkdir -p "$RUNNER_TEMP/unpacked"
+          unzip -q "$RUNNER_TEMP/uop-core.zip" -d "$RUNNER_TEMP/unpacked"
+          test -f "$RUNNER_TEMP/unpacked/uop-core/uop-core.php"
+          test -f "$RUNNER_TEMP/unpacked/uop-core/vendor/autoload.php"
+          echo "Verified plugin artifact SHA256: $local_hash"
+      - name: Refuse to overwrite an existing plugin
+        if: inputs.operation == 'install'
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="${IONOS_SFTP_ROOT%/}"
+          [[ -n "$root" ]] || root="/"
+          printf 'ls "%s/wp-content/plugins/uop-core"\n' "$root" > "$RUNNER_TEMP/exists.sftp"
+          if sshpass -e sftp -q -P 22 -oBatchMode=no \
+            -oPreferredAuthentications=password,keyboard-interactive \
+            -oPubkeyAuthentication=no -oStrictHostKeyChecking=yes \
+            -oUserKnownHostsFile="$RUNNER_TEMP/known_hosts" \
+            -b "$RUNNER_TEMP/exists.sftp" "$IONOS_USER@$IONOS_HOST" > /dev/null 2>&1; then
+            echo "::error::UOP Core already exists; this workflow never overwrites it."; exit 1
+          fi
+      - name: Upload to unique hidden staging folder (no activation)
+        if: inputs.operation == 'install'
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="${IONOS_SFTP_ROOT%/}"
+          [[ -n "$root" ]] || root="/"
+          plugins="$root/wp-content/plugins"
+          stage=".uop-stage-$GITHUB_RUN_ID"
+          {
+            printf 'mkdir "%s/%s"\n' "$plugins" "$stage"
+            printf 'put -r "%s/unpacked/uop-core" "%s/%s"\n' "$RUNNER_TEMP" "$plugins" "$stage"
+            printf 'ls "%s/%s/uop-core/uop-core.php"\n' "$plugins" "$stage"
+            printf 'ls "%s/%s/uop-core/vendor/autoload.php"\n' "$plugins" "$stage"
+            printf 'rename "%s/%s/uop-core" "%s/uop-core"\n' "$plugins" "$stage" "$plugins"
+            printf 'rmdir "%s/%s"\n' "$plugins" "$stage"
+            printf 'ls "%s/uop-core/uop-core.php"\n' "$plugins"
+          } > "$RUNNER_TEMP/install.sftp"
+          sshpass -e sftp -q -P 22 -oBatchMode=no \
+            -oPreferredAuthentications=password,keyboard-interactive \
+            -oPubkeyAuthentication=no -oStrictHostKeyChecking=yes \
+            -oUserKnownHostsFile="$RUNNER_TEMP/known_hosts" \
+            -b "$RUNNER_TEMP/install.sftp" "$IONOS_USER@$IONOS_HOST" > /dev/null
+          echo "UOP Core installed on OrgaVela as files only. Not activated. No database migrations triggered."
