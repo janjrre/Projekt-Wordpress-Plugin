@@ -9,11 +9,10 @@ on:
         type: choice
         default: probe
         options: [probe, schema]
-      confirm_dedicated_access:
-        description: "Confirmed: separate OrgaVela-only SSH account; NOT full-webspace / credentials"
-        required: true
-        type: boolean
-        default: false
+  push:
+    branches: [main]
+    paths:
+      - '.github/audit-requests/orgavela-readonly.json'
 
 permissions:
   contents: read
@@ -27,12 +26,12 @@ jobs:
     if: github.repository == 'janjrre/Projekt-Wordpress-Plugin' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    environment: orgavela-audit
+    environment: orgavela-ionos
     env:
-      IONOS_AUDIT_SSH_HOST: ${{ secrets.IONOS_AUDIT_SSH_HOST }}
-      IONOS_AUDIT_SSH_USER: ${{ secrets.IONOS_AUDIT_SSH_USER }}
-      SSHPASS: ${{ secrets.IONOS_AUDIT_SSH_PASSWORD }}
-      IONOS_AUDIT_WP_ROOT: ${{ vars.IONOS_AUDIT_WP_ROOT }}
+      IONOS_AUDIT_SSH_HOST: ${{ secrets.IONOS_SSH_HOST }}
+      IONOS_AUDIT_SSH_USER: ${{ secrets.IONOS_SSH_USER }}
+      SSHPASS: ${{ secrets.IONOS_SSH_PASSWORD }}
+      IONOS_AUDIT_WP_ROOT: ${{ vars.IONOS_WP_ROOT || '/public' }}
     steps:
       - name: Checkout only trusted main workflow and read-only script
         uses: actions/checkout@v4
@@ -41,20 +40,27 @@ jobs:
       - name: Validate checked-in SSH script syntax
         shell: bash
         run: bash -n scripts/ci/orgavela-readonly-audit.sh
-      - name: Validate explicitly confirmed isolated access
+      - name: Resolve explicit read-only audit request
         env:
           MANUAL_OPERATION: ${{ inputs.operation }}
-          DEDICATED_ACCESS_CONFIRMED: ${{ inputs.confirm_dedicated_access }}
         shell: bash
         run: |
           set -euo pipefail
-          [[ "$MANUAL_OPERATION" == probe || "$MANUAL_OPERATION" == schema ]] || {
-            echo "::error::Only read-only probe or schema operations are permitted."; exit 1;
+          if [[ "$GITHUB_EVENT_NAME" == 'push' ]]; then
+            request='.github/audit-requests/orgavela-readonly.json'
+            [[ -f "$request" ]] || exit 1
+            operation="$(jq -er '.operation // empty' "$request")"
+            target="$(jq -er '.target // empty' "$request")"
+            [[ "$target" == 'orgavela.com' ]] || {
+              echo "::error::Audit request target must be orgavela.com."; exit 1;
+            }
+          else
+            operation="$MANUAL_OPERATION"
+          fi
+          [[ "$operation" == 'probe' || "$operation" == 'schema' ]] || {
+            echo "::error::Only read-only probe/schema operations are permitted."; exit 1;
           }
-          [[ "$DEDICATED_ACCESS_CONFIRMED" == true ]] || {
-            echo "::error::The existing IONOS SSH/SFTP account has full / webspace access. Do not reuse it; confirm an independently restricted OrgaVela account before audit."; exit 1;
-          }
-          printf 'AUDIT_OPERATION=%s\n' "$MANUAL_OPERATION" >> "$GITHUB_ENV"
+          printf 'AUDIT_OPERATION=%s\n' "$operation" >> "$GITHUB_ENV"
       - name: Install SSH transport (runner only)
         shell: bash
         run: |
