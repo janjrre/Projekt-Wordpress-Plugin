@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-12 PR11 HEAD a34f4195 same-SHA Foundation run 38253835618 success 8/8 and HTTPS run 38253835549 success; OrgaVela installed Alpha.2 unchanged; W0 live acceptance remains blocked",
+  "snapshot_basis": "2026-10-12 prepared separate GitHub orgavela-audit workflow and operator secret guide only; credentials not set, SSH probe not run, live O02/O03 unverified",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -296,7 +296,15 @@
     "cron_overdue_snapshot_note": "Read-only WordPress MCP snapshots 2026-10-12: previously 5/19 overdue, later 2/19; external cron still unverified",
     "wp_mcp_sitehealth_route_allowed": false,
     "wp_mcp_uop_route_allowed": false,
-    "php_error_log_available": false
+    "php_error_log_available": false,
+    "ionos_audit_workflow_ready": true,
+    "ionos_audit_workflow_path": ".github/workflows/orgavela-readonly-audit.yml",
+    "ionos_audit_secret_configuration": "operator-action-pending, not viewable by assistant",
+    "ionos_audit_ssh_probe": "not executed",
+    "ionos_audit_schema_probe": "not executed",
+    "ionos_audit_access_isolation_verified": false,
+    "ionos_database_direct_github_runner_access": "not supported on typical IONOS shared Webhosting",
+    "ionos_audit_dedicated_environment": "orgavela-audit (needs operator creation)"
   },
   "integration": {
     "main_contains_merged_feature_stack": false,
@@ -437,16 +445,15 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "O02/M1-08: independently obtain installed OrgaVela Alpha.2 Site Health uop_schema plus 29-table/index/default-organization metadata audit (read-only; no upgrade)",
-    "O03: verify actual OrgaVela IONOS backup inventory, safely export files and SQL privately and validate restore on an isolated clone",
-    "O01: replace broad-SFTP account with verified OrgaVela-only least-privilege access and preserve path restrictions",
-    "O06: restrict access to UOP testing routes, resolve unlisted privacy policy, verify indexing decisions without blindly noindexing public brand",
-    "O09: current PR11 same-SHA CI green; perform stacked PR review/integration in authorized sequence, no automatic merging and no live deploy before W0 gates"
+    "Operator: create dedicated OrgaVela-only SSH-capable IONOS account, GitHub orgavela-audit environment, 3 secrets and verified IONOS_AUDIT_WP_ROOT; do not store main IONOS credentials",
+    "Run read-only GitHub workflow probe, then schema only if domain identity/WP-CLI works; record sanitized evidence, no plugin or DB writes",
+    "Independent full 29 UOP tables/indexes/default-org comparison for O02/M1-08, then safe O03 backups and isolated restore",
+    "Keep O01 SSH account isolation and O06 privacy/login protection open until real validation"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "1.9",
+  "masterplan_version": "2.0",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
