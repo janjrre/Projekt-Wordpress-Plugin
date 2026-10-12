@@ -31,6 +31,7 @@ use UOP\Infrastructure\Database\OccurrenceRepository;
 use UOP\Infrastructure\Database\OutboxRepository;
 use UOP\Infrastructure\Database\PersonRepository;
 use UOP\Infrastructure\Database\RegistrationFactsRepository;
+use UOP\Infrastructure\Database\RetentionRepository;
 use UOP\Infrastructure\Database\SchemaManifest;
 use UOP\Infrastructure\Database\WpdbConnection;
 use UOP\REST\AgeAttestationController;
@@ -148,6 +149,8 @@ final class AgeAttestationTest extends TestCase {
 		}
 		self::assertSame( 409, $this->post( $route, $revoke )->get_status() );
 		self::assertSame( 2, (int) $this->db->rows( 'SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d', array( $this->prefix . 'age_attestations', $this->scope->id ) )[0]['n'] );
+		self::assertSame( 1, ( new RetentionRepository( $this->db, $this->prefix ) )->apply( $this->scope, 'persons', $person_id, $now ) );
+		self::assertSame( 0, (int) $this->db->rows( 'SELECT COUNT(*) AS n FROM %i WHERE organization_id = %d AND person_id = %d', array( $this->prefix . 'age_attestations', $this->scope->id, $person_id ) )[0]['n'] );
 	}
 
 	/**
