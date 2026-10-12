@@ -40,7 +40,7 @@ jobs:
       IONOS_USER: ${{ secrets.IONOS_SSH_USER }}
       SSHPASS: ${{ secrets.IONOS_SSH_PASSWORD }}
       IONOS_KNOWN_HOSTS: ${{ secrets.IONOS_KNOWN_HOSTS }}
-      IONOS_SFTP_ROOT: ${{ vars.IONOS_SFTP_ROOT }}
+      IONOS_SFTP_ROOT: ${{ vars.IONOS_SFTP_ROOT || '.' }}
     steps:
       - name: Checkout deployment request from main
         uses: actions/checkout@v4
