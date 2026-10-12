@@ -175,12 +175,13 @@ final class AgeAttestationTest extends TestCase {
 		$screen = new M6AgeAttestationScreen( $review, $repo, $people, $policy, $this->db, $this->prefix );
 		$previous_get = $_GET;
 		$_GET = array( 'person_id' => $person->to_string(), 'event_post_id' => $post, 'threshold_age' => 21 );
+		$buffer_level = ob_get_level();
 		ob_start();
 		try {
 			$screen->render();
 			$markup = (string) ob_get_clean();
 		} finally {
-			if ( ob_get_level() > 0 ) {
+			while ( ob_get_level() > $buffer_level ) {
 				ob_end_clean();
 			}
 			$_GET = $previous_get;
