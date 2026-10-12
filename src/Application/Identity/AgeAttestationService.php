@@ -80,7 +80,7 @@ final class AgeAttestationService {
 			throw new InvalidArgumentException( 'Age attestation expiry must be bounded and after its review.' );
 		}
 		return $this->tx->run(
-			function () use ( $reviewer, $scope, $subject, $event_post, $threshold, $outcome, $method, $valid_until, $checked, $revoke, $now, $correlation ): PublicId {
+			function () use ( $reviewer, $scope, $subject, $event_post, $threshold, $outcome, $method, $valid_until, $revoke, $now, $correlation ): PublicId {
 				$person = $this->people->find( $scope, $subject );
 				$own    = $this->people->by_user( $scope, $reviewer->user_id );
 				if ( ! $person || 'active' !== $person['status'] || ( $own && (int) $own['id'] === (int) $person['id'] ) ) {
