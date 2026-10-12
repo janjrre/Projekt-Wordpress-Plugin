@@ -178,7 +178,7 @@ final class PrivacyAccountGateway {
 			'SELECT a.public_id, a.event_post_id, a.threshold_age, a.outcome, a.status, a.method_key, a.checked_at, a.valid_until FROM %i a INNER JOIN %i p ON p.id = a.person_id AND p.organization_id = a.organization_id WHERE p.wp_user_id = %d ORDER BY a.id ASC LIMIT %d OFFSET %d',
 			array( $this->prefix . 'age_attestations', $this->prefix . 'persons', $user_id, $limit, $after )
 		);
-		$done = $done && count( $age_records ) < $limit;
+		$done        = $done && count( $age_records ) < $limit;
 		foreach ( $age_records as $row ) {
 			$data[] = $this->item(
 				'uop-age-attestation',
@@ -246,7 +246,7 @@ final class PrivacyAccountGateway {
 			if ( $hold || $registration_hold ) {
 				continue;
 			}
-			$deleted = $this->db->execute(
+			$deleted     = $this->db->execute(
 				'DELETE v FROM %i v INNER JOIN %i p ON p.id = v.person_id WHERE p.organization_id = %d AND p.id = %d AND p.wp_user_id = %d',
 				array( $this->prefix . 'profile_values', $this->prefix . 'persons', $org, $id, $user_id )
 			);
@@ -256,7 +256,7 @@ final class PrivacyAccountGateway {
 				'DELETE a FROM %i a INNER JOIN %i p ON p.id = a.person_id AND p.organization_id = a.organization_id WHERE p.organization_id = %d AND p.id = %d AND p.wp_user_id = %d',
 				array( $this->prefix . 'age_attestations', $this->prefix . 'persons', $org, $id, $user_id )
 			);
-			$updated = $this->db->execute(
+			$updated     = $this->db->execute(
 				'UPDATE %i SET display_name = %s, primary_email = NULL, version = version + 1, updated_at = UTC_TIMESTAMP() WHERE organization_id = %d AND id = %d AND wp_user_id = %d AND (display_name <> %s OR primary_email IS NOT NULL)',
 				array( $this->prefix . 'persons', 'Erased person', $org, $id, $user_id, 'Erased person' )
 			);
