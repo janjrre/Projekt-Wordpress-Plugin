@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: "sftp checks safe folder access; probe checks SSH/WP-CLI; schema reads UOP aggregates"
+        description: "Read-only SFTP, SSH, UOP schema, or O03 backup metadata preflight"
         required: true
         type: choice
         default: sftp
-        options: [sftp, probe, schema]
+        options: [sftp, probe, schema, backup-preflight]
   push:
     branches: [main]
     paths:
@@ -57,8 +57,8 @@ jobs:
           else
             operation="$MANUAL_OPERATION"
           fi
-          [[ "$operation" == 'sftp' || "$operation" == 'probe' || "$operation" == 'schema' ]] || {
-            echo "::error::Only read-only sftp/probe/schema operations are permitted."; exit 1;
+          [[ "$operation" == 'sftp' || "$operation" == 'probe' || "$operation" == 'schema' || "$operation" == 'backup-preflight' ]] || {
+            echo "::error::Only sftp/probe/schema/backup-preflight read-only operations are permitted."; exit 1;
           }
           printf 'AUDIT_OPERATION=%s\n' "$operation" >> "$GITHUB_ENV"
       - name: Install SSH transport (runner only)
