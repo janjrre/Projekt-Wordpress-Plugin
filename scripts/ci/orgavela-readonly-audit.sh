@@ -70,7 +70,20 @@ set -euo pipefail
 root="$1"
 mode="$2"
 [[ "$root" =~ ^/[a-zA-Z0-9._/-]+$ && "$root" != *..* && "$root" != *dreamloud* ]] || exit 2
-[[ -f "$root/wp-config.php" && -d "$root/wp-admin" && -d "$root/wp-content/plugins/uop-core" ]] || exit 21
+# SFTP /public can map to a different absolute path inside an IONOS shell.
+# Use a short allowlist of documented conventional IONOS web roots; never
+# search other contracts or print any remote directory values.
+if [[ ! -f "$root/wp-config.php" || ! -d "$root/wp-admin" || ! -d "$root/wp-content/plugins/uop-core" ]]; then
+  selected=''
+  for candidate in "/home/www${root}" "$HOME${root}" "/home/www" "$HOME/public" "$HOME/htdocs${root}"; do
+    if [[ -f "$candidate/wp-config.php" && -d "$candidate/wp-admin" && -d "$candidate/wp-content/plugins/uop-core" ]]; then
+      selected="$candidate"
+      break
+    fi
+  done
+  [[ -n "$selected" ]] || exit 21
+  root="$selected"
+fi
 command -v wp >/dev/null || exit 22
 home="$(wp --path="$root" --skip-plugins --skip-themes option get home 2>/dev/null)"
 [[ "$home" == 'https://orgavela.com' || "$home" == 'https://orgavela.com/' ]] || exit 23
