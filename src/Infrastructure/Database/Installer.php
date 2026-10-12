@@ -41,7 +41,8 @@ final class Installer {
 		$prefix       = $wpdb->prefix . 'uop_';
 		$inspector    = new SchemaInspector( $db, $manifest, $prefix, $wpdb->collate );
 		$migration    = new InitialMigration( $db, $state, $manifest, $inspector, new SystemClock(), $prefix, $wpdb->get_charset_collate() );
-		return new MigrationRunner( $db, $state, new MigrationRegistry( array( $migration ) ), $transactions, Bootstrap::errors( ... ), self::lock_name() );
+		$age_migration = new AgeAttestationMigration( $db, $prefix, $wpdb->get_charset_collate(), $wpdb->collate );
+		return new MigrationRunner( $db, $state, new MigrationRegistry( array( $migration, $age_migration ) ), $transactions, Bootstrap::errors( ... ), self::lock_name() );
 	}
 
 	/**
@@ -57,7 +58,7 @@ final class Installer {
 
 	/** Apply initial installation or resume an interrupted upgrade. */
 	public static function ensure_current(): void {
-		if ( 1 !== (int) get_option( 'uop_db_version', 0 ) || 1 !== (int) get_option( 'uop_data_version', 0 ) ) {
+		if ( 2 !== (int) get_option( 'uop_db_version', 0 ) || 2 !== (int) get_option( 'uop_data_version', 0 ) ) {
 			self::runner()->run();
 		}
 	}
@@ -73,7 +74,7 @@ final class Installer {
 		$good  = false;
 		try {
 			$state = get_option( 'uop_migration_status', array() );
-			$good  = 1 === (int) get_option( 'uop_db_version', 0 ) && 1 === (int) get_option( 'uop_data_version', 0 ) && 'complete' === ( $state['status'] ?? '' );
+			$good  = 2 === (int) get_option( 'uop_db_version', 0 ) && 2 === (int) get_option( 'uop_data_version', 0 ) && 'complete' === ( $state['status'] ?? '' );
 			if ( Bootstrap::errors() ) {
 				$good  = false;
 				$state = array( 'status' => 'unsupported_environment' );
@@ -83,6 +84,7 @@ final class Installer {
 				$manifest  = new SchemaManifest( dirname( __DIR__, 3 ) . '/schema/manifest.json' );
 				$inspector = new SchemaInspector( $db, $manifest, $wpdb->prefix . 'uop_', $wpdb->collate );
 				$inspector->verify_all();
+				AgeAttestationSchema::verify( $db, $wpdb->prefix . 'uop_', $wpdb->collate );
 			}
 		} catch ( \Throwable $error ) {
 			$good  = false;
@@ -106,7 +108,7 @@ final class Installer {
 				'label' => 'UOP Core',
 				'color' => 'blue',
 			),
-			'description' => '<p>' . esc_html__( 'UOP Core requires schema and data version 1 with all 28 tables. Retry an interrupted migration after resolving the database or environment failure.', 'uop-core' ) . '</p><p>' . esc_html( $diagnostic ) . '</p>',
+			'description' => '<p>' . esc_html__( 'UOP Core requires schema and data version 2 (the frozen 28-table V1 plus an age-attestation table). Retry an interrupted migration after resolving the database or environment failure.', 'uop-core' ) . '</p><p>' . esc_html( $diagnostic ) . '</p>',
 			'actions'     => '',
 			'test'        => 'uop_schema',
 		);
