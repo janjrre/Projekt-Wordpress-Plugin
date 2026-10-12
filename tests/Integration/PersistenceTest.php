@@ -60,6 +60,30 @@ final class PersistenceTest extends TestCase {
         self::assertSame(2, (int)$this->state->read('uop_db_version'));
         self::assertSame('good', Installer::health()['status']);
     }
+    public function test_site_health_detects_default_organization_seed_drift_without_repairing_it(): void {
+        $this->runner()->run();
+        Installer::runner()->run();
+        self::assertSame('good', Installer::health()['status']);
+        $id = (int)$this->state->read('uop_default_organization_id', 0);
+        self::assertGreaterThan(0, $id);
+
+        // The version numbers and all 29 physical tables remain correct.
+        // A non-active default organization must nevertheless fail closed.
+        $this->db->execute('UPDATE %i SET status = %s WHERE id = %d', [$this->prefix . 'organizations', 'archived', $id]);
+        self::assertSame('critical', Installer::health()['status']);
+        self::assertSame('archived', $this->db->rows('SELECT status FROM %i WHERE id = %d', [$this->prefix . 'organizations', $id])[0]['status']);
+        self::assertSame($id, (int)$this->state->read('uop_default_organization_id'));
+
+        $this->db->execute('UPDATE %i SET status = %s WHERE id = %d', [$this->prefix . 'organizations', 'active', $id]);
+        // The row is intact, but the durable WordPress option points to the
+        // wrong organization. A health READ must not change that option.
+        $this->state->write('uop_default_organization_id', $id + 1);
+        self::assertSame('critical', Installer::health()['status']);
+        self::assertSame($id + 1, (int)$this->state->read('uop_default_organization_id'));
+
+        $this->state->write('uop_default_organization_id', $id);
+        self::assertSame('good', Installer::health()['status']);
+    }
     public function test_interruption_after_committed_ddl_resumes_without_duplicate_seed(): void {
         $interrupted = false;
         $fault = new class($this->db, $interrupted) implements Connection {
