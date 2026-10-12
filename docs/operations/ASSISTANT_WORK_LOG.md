@@ -89,3 +89,24 @@
 **Endzustand:** Auf OrgaVela WordPress.com bleibt `UOP Core 0.1.0-alpha.2` installiert und **inaktiv**, Website Coming Soon, keine Migration ausgeführt. Latest geprüfter PR-#11-HEAD `7827805ca1a9059017cc6b6b1ca470c2769f3efb` (Dokumentationsänderung). Neue CI-Läufe `38226299052` (Foundation), `38226299063` (HTTPS/Mailpit) und Push-Lauf `38226292812` waren beim letzten Check **noch ausstehend**; keine Erfolgsaussage für diesen HEAD. Issue #12 bleibt offen; der letzte historische technisch grüne Commit ist nicht mit diesem neuen HEAD gleichzusetzen.
 
 **Nächste Aktion:** Bereits verfügbaren WordPress.com-SSH/SFTP-Zugriff im Hosting-Dashboard prüfen oder Betreiber-Support um sichere, persistente UTF8MB4-Konfiguration bitten. Nur nach bestätigtem Zugriff, tatsächlicher Tabellen-/Datenprüfung und Restore-Gate konfigurieren; erneut aktivieren, Schemahealth/CI/Portal testen, Ergebnisse als neuen Eintrag dokumentieren. Keine kostenpflichtige Buchung und keine Dreamloud-Änderung.
+
+
+## 2026-10-12 – 08: Neuer OrgaVela-MCP-Connector und tatsächliche Berechtigungen
+
+**Arbeitsauftrag:** Der Betreiber hat zusätzlich „MCP Server For WordPress“ auf OrgaVela verbunden. Prüfen, ob dieser Connector weitergehende Rechte zur UOP-Core-Entwicklung sowie insbesondere zur Behebung des `latin1`-/`utf8mb4`-Blockers bietet. **Keine** Änderungen an Dreamloud.
+
+**Ausgangslage:** OrgaVela-Connector über ausdrücklich dafür eingerichtete Verbindung; WordPress.com Atomic `https://orgavela.wpcomstaging.com`. UOP Core `0.1.0-alpha.2` auf dieser Site installiert, aber wegen `utf8mb4_required` nicht aktiviert.
+
+**Durchgeführte Checks (nur lesend):**
+- `discover_abilities` meldete **278 registrierte WordPress-Abilities**; zusätzliche Suchabfragen nach `database`, `sql`, `charset`, `server`, `plugin`, `configuration`, `file`, `option`, `backup`, `wp-config`, `php` und `capability`.
+- Breiter Zugriff auf WordPress-Inhalte, Benutzer-/Rollenfunktionen, Pluginaktivierung/-Updates, Theme-Editor (nur Draft/PUBLISH-Abläufe), Health-/Serverinformationen sowie WordPress-Debuglog-Diagnose. Die vollständige Liste beinhaltet auch schreibende Fähigkeiten; diese wurden **nicht** ausgeführt.
+- Keine Fähigkeit für allgemeine SQL-Abfragen oder Schreibzugriff auf `wp-config.php`, `DB_CHARSET`, `DB_COLLATE` oder Datenbanktabellen gefunden; Theme-Codebearbeitung ist **kein** zulässiger Ersatz für Hostkonfiguration.
+- `core__get-environment-info`: WordPress `7.1.3`, PHP `8.4.26`, MariaDB `11.8.9`.
+- `mosmcp__site-get-server-info`: WordPress-Datenbankverbindung meldet `charset=latin1`, `collate=latin1_swedish_ci`; HTTPS aktiv, WordPress-Dateimodifikationen erlaubt. Dies ersetzt weder SQL-Schema-Inspektion noch den erforderlichen Nachweis einer sicheren UTF8MB4-Konversion.
+- `mosmcp__plugin-get`: UOP Core `0.1.0-alpha.2` weiterhin **inactive**.
+- `mosmcp__site-read-error-log`: WordPress-Debuglog nicht aktiviert; kein vorhandenes Log. Diese Einschränkung wurde nicht umgangen.
+- `mosmcp__site-get-url` bestätigt ausschließlich OrgaVela.
+
+**Entscheidung und Gründe:** Der neue Connector verbessert WordPress-Bedienung, aber eröffnet keinen unterstützten dauerhaften Host-Datenbankzugriff. Eine Aktivierung durch Deaktivieren/Manipulieren der Unicode-Schutzprüfung wäre ein Datenintegritätsrisiko. Deshalb **keine** Aktivierung, keine mutierenden Site-Operationen und kein Theme-Code-Workaround.
+
+**Ergebnis/Status:** Neue Berechtigungen nachgewiesen; Issue #12 bleibt offen, UOP Core weiterhin inaktiv. Sichere Behebung weiterhin über unterstützten Hosting-SSH/SFTP/DB-Zugang oder WordPress.com-Support, Tabellen-/Datenanalyse und verifizierten Backup-/Restore-Pfad; danach Aktivierung und synthetische Tests. Keine kostenpflichtigen Verpflichtungen oder Dreamloud-Änderungen.
