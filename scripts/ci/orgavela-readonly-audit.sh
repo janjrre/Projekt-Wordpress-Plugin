@@ -6,7 +6,7 @@ set -euo pipefail
 umask 077
 
 mode="$1"
-[[ "$mode" == 'probe' || "$mode" == 'schema' ]] || exit 2
+[[ "$mode" == 'sftp' || "$mode" == 'probe' || "$mode" == 'schema' ]] || exit 2
 [[ "$GITHUB_REPOSITORY" == 'janjrre/Projekt-Wordpress-Plugin' ]] || exit 2
 [[ "$GITHUB_REF" == 'refs/heads/main' ]] || exit 2
 
@@ -30,6 +30,31 @@ ssh-keyscan -T 8 -p 22 -t ed25519 "$host" > "$tmp/known_hosts" 2>/dev/null || {
 }
 if ! ssh-keygen -lf "$tmp/known_hosts" | awk '{print $2}' | grep -Fxq 'SHA256:1gx2w8Rtv3wCgi7Jh8myf/KVd72cRQbow03UP8P095Q'; then
   echo '::error::SSH host fingerprint does not match official IONOS ED25519 reference.'
+  exit 1
+fi
+
+# SFTP-only mode: verify the already operator-approved OrgaVela tree.
+# Never download configurations/files or expose directory listings in logs.
+# This proves SFTP access, NOT an interactive SSH shell or SQL access.
+if [[ "$mode" == 'sftp' ]]; then
+  {
+    printf 'ls "%s/wp-admin"\\n' "$root"
+    printf 'ls "%s/wp-content/plugins/uop-core"\\n' "$root"
+  } > "$tmp/sftp-readonly.batch"
+  if sshpass -e sftp -q -P 22 \
+    -oBatchMode=no \
+    -oPreferredAuthentications=password,keyboard-interactive \
+    -oPubkeyAuthentication=no -oConnectTimeout=15 \
+    -oStrictHostKeyChecking=yes \
+    -oUserKnownHostsFile="$tmp/known_hosts" \
+    -b "$tmp/sftp-readonly.batch" "$user@$host" \
+    > "$tmp/sftp-out" 2> "$tmp/sftp-err"; then
+    echo 'ORGAVELA_AUDIT_SFTP=verified'
+    echo 'ORGAVELA_AUDIT_SHELL=not_checked'
+    echo 'ORGAVELA_AUDIT_SCHEMA=not_checked'
+    exit 0
+  fi
+  echo '::error::SFTP access or expected OrgaVela path was not verified. All raw connection output is withheld.'
   exit 1
 fi
 
