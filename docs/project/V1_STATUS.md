@@ -120,3 +120,6 @@
 - WP-/Plugin-Konfiguration bestätigt: Alpha.2 aktiv; 5/19 Cron-Ereignisse überfällig, einschließlich Action Scheduler; Indexierungsabschreckung aus; zugewiesene Datenschutzseite noch **unveröffentlicht**. Keine echten Nutzer-/Minderjährigendaten.
 - PR #11 aktueller HEAD `7892a25894c184a624ab4ebea13aab0e1a1c88dd`: HTTPS-Run #38248040695 **rot** durch caregiver Login-Timeout; Foundation-Run #38248040810 zunächst noch im Lauf. Sieben gestapelte PRs weiterhin nicht in main; **0/18** grüne Release-Gates.
 - **O03:** offizielle IONOS-Datei-/DB-Backup-Möglichkeiten untersucht, aber kein tatsächlicher eigener Export oder isolierter Restore; keine risikobehafteten Updates. Masterplan v1.4; Statusmetriken unverändert.
+
+
+**CI-Statuskorrektur 12.10.2026, Run-Abschluss:** PR #11 auf `7892a25894c184a624ab4ebea13aab0e1a1c88dd`: Foundation [38248040810](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248040810) **7/8 grün**, PHP 8.4/MariaDB 10.11 activation/deactivation-Browsertest Timeout 30 s; HTTPS [38248040695](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248040695) **rot**, Sorgeberechtigtenlogin Timeout 20 s. **Keine Abnahme, O09 offen**, v1.5 Masterplan.
