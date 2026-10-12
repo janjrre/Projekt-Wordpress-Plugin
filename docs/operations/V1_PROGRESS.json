@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-12 live OrgaVela MCP read-only findings, inspected PR-11 7892a258 source and CI logs; not an automated monitor",
+  "snapshot_basis": "2026-10-12 latest authenticated OrgaVela read-only WordPress checks, Github PR-11 source+jobs, IONOS recovery research; no unattended monitoring",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -281,9 +281,9 @@
     "real_participant_data_allowed": false,
     "cron_overdue_events": 5,
     "cron_total_events": 19,
-    "privacy_policy_page": "configured but draft/unavailable publicly (MCP 2026-10-12)",
+    "privacy_policy_page": "configured but draft/not visitor accessible",
     "wp_environment_type": "production (WordPress setting, not product release status)",
-    "uop_site_health_physical_result": "not accessible via connected MCP abilities; M1-08 unaccepted",
+    "uop_site_health_physical_result": "not independently accessible",
     "database_read_only_live_schema_audit": "pending independent information_schema comparison",
     "ionos_backup_points_account_verified": false,
     "manual_file_and_db_backup_verified": false,
@@ -309,15 +309,15 @@
         "result": "failure",
         "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
         "failed_jobs": [
-          "m610-members-admin caregiver login navigation timed out"
+          "caregiver WordPress login waitForURL timeout; root cause pending"
         ]
       },
       {
         "run": 38248040810,
         "kind": "pr-foundation",
-        "result": "in_progress_at_read_2026-10-12",
+        "result": "in_progress_at_initial_read",
         "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
-        "note": "Do not infer a green final matrix until completed."
+        "note": "Await final state; do not claim green before completed"
       }
     ],
     "previous_pr_11_ci": [
@@ -383,7 +383,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "1.3",
+  "masterplan_version": "1.4",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
