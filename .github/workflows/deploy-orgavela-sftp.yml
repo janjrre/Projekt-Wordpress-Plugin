@@ -1,6 +1,10 @@
 name: OrgaVela - SFTP-only probe and first UOP plugin install
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/deploy-requests/orgavela-sftp.json'
   workflow_dispatch:
     inputs:
       operation:
@@ -37,10 +41,34 @@ jobs:
       SSHPASS: ${{ secrets.IONOS_SSH_PASSWORD }}
       IONOS_KNOWN_HOSTS: ${{ secrets.IONOS_KNOWN_HOSTS }}
       IONOS_SFTP_ROOT: ${{ vars.IONOS_SFTP_ROOT }}
-      OPERATION: ${{ inputs.operation }}
-      EXPECTED_HASH: ${{ inputs.expected_sha256 }}
-      TARGET_DOMAIN: ${{ inputs.target_domain }}
     steps:
+      - name: Checkout deployment request from main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Resolve manual or committed deployment request
+        shell: bash
+        env:
+          MANUAL_OPERATION: ${{ inputs.operation }}
+          MANUAL_HASH: ${{ inputs.expected_sha256 }}
+          MANUAL_TARGET: ${{ inputs.target_domain }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            request='.github/deploy-requests/orgavela-sftp.json'
+            [[ -f "$request" ]] || exit 1
+            operation="$(jq -r '.operation // ""' "$request")"
+            target="$(jq -r '.target_domain // ""' "$request")"
+            expected="$(jq -r '.expected_sha256 // ""' "$request")"
+          else
+            operation="$MANUAL_OPERATION"
+            target="$MANUAL_TARGET"
+            expected="$MANUAL_HASH"
+          fi
+          [[ "$operation" =~ ^(probe|install)$ ]] || exit 1
+          [[ "$target" =~ ^[a-zA-Z0-9.-]*$ ]] || exit 1
+          [[ "$expected" =~ ^[a-fA-F0-9]*$ ]] || exit 1
+          printf 'OPERATION=%s\nTARGET_DOMAIN=%s\nEXPECTED_HASH=%s\n' "$operation" "$target" "$expected" >> "$GITHUB_ENV"
       - name: Fail closed for missing configuration and unexpected target
         shell: bash
         run: |
