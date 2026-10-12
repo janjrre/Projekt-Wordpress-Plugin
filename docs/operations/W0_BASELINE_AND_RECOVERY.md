@@ -102,3 +102,15 @@ PR #11 HEAD `1b986587` hatte [PR Foundation #38233565475](https://github.com/jan
 3. PHP8.5/MySQL8: WordPress-`plugins.php?action=deactivate` navigiert 30s ohne DOMContentLoaded. Log beweist die Verzögerung, aber noch nicht eine PHP-Exception/Deadlock-Ursache. **Keine kosmetische Timeouterhöhung**, bevor neuer CI-Run und Request-/DB-/Serverdiagnostik vorliegen.
 
 **Aktueller PR-Branch:** `feat/p4-age-evidence` auf Source-Commit `7892a25894c184a624ab4ebea13aab0e1a1c88dd`; jüngere GitHub-Push-/PR-Workflows wurden ausgelöst; deren Erfolg **noch nicht belegt**. W0-Fortschritt und V1-Gate bleiben bis grünem aktuellen HEAD unverändert.
+
+## 8. Ergebnis der ersten Codekorrekturen – CI auf exakt demselben HEAD
+
+**Aktueller PR-#11-HEAD:** `7892a25894c184a624ab4ebea13aab0e1a1c88dd`. Die vorläufigen „pending“-Zeilen in der anfänglichen W0-Triage werden durch die abschließenden GitHub-Resultate ersetzt:
+
+| GitHub Actions Run | Ergebnis | Aussage |
+| --- | --- | --- |
+| [Push Foundation #38248031834](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248031834) | **SUCCESS 8/8** | Qualität, Integrationsmatrix und Packaging auf diesem SHA grün |
+| [PR Foundation #38248040810](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248040810) | **FAILURE 7/8** | Jetzt PHP 8.4 + MariaDB 10.11: browserseitiger Deaktivierungsaufruf `wp-admin/plugins.php` überschreitet 30s; zuvor PHP 8.5 + MySQL 8.0. Das spricht für schwankende Testserver-/Navigationslast, beweist aber **noch keine** endgültige Ursache |
+| [PR HTTPS/Mailpit #38248040695](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248040695) | **FAILURE** | Der neue Stopp liegt beim synthetischen Caregiver-Login (`waitForURL`, erwarteter WordPress-Admin-DOMContentLoaded innerhalb 20s); ursprünglicher Menü-Pointer- und Button-44px-Fehler ist in diesem Lauf **nicht** erneut als Fehler sichtbar, die betreffenden nachfolgenden Tests liefen wegen des Stopps aber teilweise **nicht** |
+
+**Fazit:** Die eng begrenzten Testverbesserungen in den Commits `710b413e` und `7892a258` sind eingecheckt; **keine vollständig grüne PR-/HTTPS-CI**. Weitere zuverlässige Server-/Login-/Navigation-Analyse als eigenes O09/W2-Paket. Keine weiteren CI-Mutationen als unbelegte „Fixes“ für W0 und keine stillschweigende Verlängerung/Deaktivierung sicherheitsrelevanter Tests. Die formalen V1-Messzahlen bleiben unverändert.
