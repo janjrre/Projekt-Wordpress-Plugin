@@ -28,6 +28,8 @@ final class AgeAttestationService {
 	private const METHODS = array( 'in_person_review', 'trusted_register', 'authorized_offline_review' );
 
 	/**
+	 * Compose the independent reviewer service and auditable persistence.
+	 *
 	 * @param AgeAttestationRepository $evidence Event-specific append-only records.
 	 * @param PersonRepository         $people Active tenant-scoped people.
 	 * @param Connection               $db Database.
@@ -64,6 +66,8 @@ final class AgeAttestationService {
 	 * @param string        $now Current UTC instant.
 	 * @param CorrelationId $correlation Correlation reference.
 	 * @return PublicId Newly appended evidence UUID.
+	 * @throws InvalidArgumentException For invalid attestation details.
+	 * @throws RuntimeException For denied, stale or out-of-scope reviews.
 	 */
 	public function decide( Actor $reviewer, OrgScope $scope, PublicId $subject, int $event_post, int $threshold, string $outcome, string $method, string $valid_until, bool $checked, bool $revoke, string $now, CorrelationId $correlation ): PublicId {
 		if ( $reviewer->user_id < 1 || ! in_array( $outcome, array( 'gte', 'lt' ), true ) || $threshold < 1 || $threshold > 120
