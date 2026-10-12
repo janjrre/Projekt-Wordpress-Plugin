@@ -6,7 +6,7 @@ Eigenständiges WordPress-Plugin für Organisationen, Personen, Rollen/Berechtig
 
 **Stand 12.10.2026: UOP Core 0.1.0-alpha.2 auf OrgaVela installiert und aktiviert, V1 ausdrücklich noch nicht abgenommen.**
 
-- **[Vollständiger V1-Masterplan – alle M0–M7, M6-10, P4, Betriebs- und Releasepakete](docs/project/V1_MASTER_PLAN.md)**.
+- **[Vollständiger V1-Masterplan – alle M0–M7, M6-10, P4, Betriebs- und Releasepakete](docs/project/V1_MASTER_PLAN.md)** · [Zentrales Tracking-Issue #14](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/14).
 - **[Aktueller V1-Status mit Meilenstein- und Risikoübersicht](docs/project/V1_STATUS.md)**.
 - **[Prüffälle, technische und fachliche V1-Abnahmematrix](docs/project/V1_ACCEPTANCE_MATRIX.md)**.
 - [Fortlaufendes Arbeitsprotokoll](docs/operations/ASSISTANT_WORK_LOG.md) mit Commit-, CI- und Betriebsnachweisen.
