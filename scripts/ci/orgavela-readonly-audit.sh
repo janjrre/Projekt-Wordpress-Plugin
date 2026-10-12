@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Explicit operator-authorized OrgaVela account from existing GitHub orgavela-ionos environment.
 # Strictly bounded OrgaVela-only W0 audit. Does not deploy, change files,
 # run migrations, export tables, execute arbitrary requests or print secrets.
 set -euo pipefail
@@ -13,7 +14,7 @@ host="$IONOS_AUDIT_SSH_HOST"
 user="$IONOS_AUDIT_SSH_USER"
 root="$IONOS_AUDIT_WP_ROOT"
 [[ -n "$host" && -n "$user" && -n "$SSHPASS" && -n "$root" ]] || {
-  echo '::error::Configure the four isolated orgavela-audit secrets/variables in GitHub. No remote access attempted.'
+  echo '::error::Missing existing orgavela-ionos SSH secret or IONOS WordPress path. No remote access attempted.'
   exit 2
 }
 [[ "$host" =~ ^[a-zA-Z0-9.-]+$ && "$user" =~ ^[a-zA-Z0-9._-]+$ ]] || exit 2
@@ -104,7 +105,7 @@ PHP
 wp --path="$root" --skip-plugins --skip-themes eval "$php_code" 2>/dev/null
 REMOTE
 then
-  echo '::error::Audit unavailable or failed. Verify dedicated SSH shell access, OrgaVela-only root path and WP-CLI in IONOS. No contents or credentials from remote output are shown.'
+  echo '::error::Audit SSH command failed. The existing IONOS account may be SFTP-only, WP-CLI may be absent, or the selected OrgaVela WordPress root may not be correct. No remote output or credentials are shown.'
   exit 1
 fi
 
