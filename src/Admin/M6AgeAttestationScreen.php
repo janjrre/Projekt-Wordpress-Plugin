@@ -87,7 +87,7 @@ final class M6AgeAttestationScreen {
 		$lookup_event = absint( $_GET['event_post_id'] ?? 0 );
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only lookup, no mutation.
 		$lookup_threshold = absint( $_GET['threshold_age'] ?? 18 );
-		$current_outcome = 'gte';
+		$current_outcome  = 'gte';
 		echo '<p><label for="uop-age-subject">' . esc_html__( 'Person UUID', 'uop-core' ) . '</label> ';
 		echo '<input required type="text" style="min-height:44px;width:100%;max-width:320px" id="uop-age-subject" name="person_id" maxlength="36" value="' . esc_attr( $lookup_id ) . '"></p>';
 		echo '<p><label for="uop-age-event">' . esc_html__( 'Event', 'uop-core' ) . '</label> ';
@@ -113,9 +113,9 @@ final class M6AgeAttestationScreen {
 				if ( ! $this->may_manage_event( $scope, $lookup_event, (int) $person['id'] ) ) {
 					throw new RuntimeException( 'Event review not permitted.' );
 				}
-				$record = $this->evidence->latest( $scope, (int) $person['id'], $lookup_event, $lookup_threshold );
+				$record          = $this->evidence->latest( $scope, (int) $person['id'], $lookup_event, $lookup_threshold );
 				$current_outcome = $record && 'lt' === $record['outcome'] ? 'lt' : 'gte';
-				$status = $record ? (string) $record['status'] : 'unknown';
+				$status          = $record ? (string) $record['status'] : 'unknown';
 				if ( $record && 'verified' === $status && (string) $record['valid_until'] < gmdate( 'Y-m-d H:i:s' ) ) {
 					$status = 'expired';
 				}
@@ -199,9 +199,16 @@ final class M6AgeAttestationScreen {
 		exit;
 	}
 
-	/** Enforce live WordPress and tenant/object permissions for review screens. */
+	/**
+	 * Enforce live WordPress and tenant/object permissions for review screens.
+	 *
+	 * @param OrgScope $scope Scoped organization.
+	 * @param int      $event_post Published WordPress event.
+	 * @param int      $person_id Scoped subject for authorization, if known.
+	 * @return bool
+	 */
 	private function may_manage_event( OrgScope $scope, int $event_post, int $person_id = 0 ): bool {
-		$post = get_post( $event_post );
+		$post  = get_post( $event_post );
 		$actor = new Actor( get_current_user_id() );
 		return $post && 'uop_event' === $post->post_type && 'publish' === $post->post_status
 			&& user_can( $actor->user_id, 'edit_post', $event_post )
