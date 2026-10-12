@@ -178,3 +178,22 @@ Zur Risikominderung wurde der automatische `push`-/Request-Trigger des neuen Aud
 **GitHub-Code geändert:** Der [Audit-Workflow](../../.github/workflows/orgavela-readonly-audit.yml) verwendet nun direkt die im bestehenden Environment **`orgavela-ionos`** verwendeten SSH-SFTP-Secrets `IONOS_SSH_HOST`/`IONOS_SSH_USER`/`IONOS_SSH_PASSWORD` und `IONOS_WP_ROOT` (sonst den Identitäts- und Dateistruktur-geprüften Fallback `/public`); **keine Secret-Werte gelesen, dupliziert oder verändert**. Audit-`push` wieder ausschließlich über `.github/audit-requests/orgavela-readonly.json` auf `main`, nur lesende Modi `probe`/`schema`. Die bestehenden SFTP-/SSH-Deployment-Workflows sind unverändert. [Dokumentation und Risikogrenzen](../operations/ORGAVELA_AUDIT_GITHUB_SECRETS.md) aktualisiert. Nächstes: tatsächlichen GitHub-Auditlauf prüfen.
 
 **Keine formale Abnahme durch Risikofreigabe:** O01 bleibt teilweise offen (technische Identität/Shell-Kontrolle), O02/M1-08 29-Tabellen-/Index-Abgleich offen, O03 Backup-/Restore-Probe offen. Status [Masterplan v2.2](../operations/V1_ACCEPTANCE_PLAN.md) · [Progress](../operations/V1_PROGRESS.json); V1 nach wie vor **62/71 Coding, 0/8 M, P4 0/4, R 0/18, 0/7 gemergte PRs**, Alpha.2 letzte verifizierte Live-Version.
+
+
+### W0/O01/O02/M1-08 – OrgaVela-Ionoszugang und Live-Datenbankschema verifiziert (12.10.2026)
+
+**Berechtigung:** Der Betreiber bestätigt, dass Dreamloud und OrgaVela **getrennte Hosting-Verträge** haben; er autorisiert ausdrücklich den bereits bestehenden, webspaceweit (`/`) berechtigten OrgaVela-SSH/SFTP-Nutzer zur GitHub-Audit-Wiederverwendung. Zugriff erfolgt unter dem **bereits bestehenden** geschützten Environment `orgavela-ionos`. **Keine** Secrets kopiert oder offengelegt; bestehende Deployment-Workflows und Dreamloud unverändert.
+
+**Beleg- und Fehlerversuchsprotokoll:**
+
+| Live-Run | Ergebnis | Tatsächlicher Nachweis |
+|---|---|---|
+| [#38263245050](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38263245050) | Rot | Erster SSH-Probeversuch mit SFTP-Root `/public`, abweichender Shell-Root |
+| [#38263689846](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38263689846) | **Grün** | `sftp`: Verzeichnisse von OrgaVela lesbar, nichts heruntergeladen |
+| [#38263987605](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38263987605) | Rot | SSH-Shell **läuft**, aber der SFTP-WordPress-Pfad existiert nicht als Shell-Absolutpfad |
+| [#38264254555](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38264254555) | **Grün** | `probe`: sichere IONOS-Pfadauflösung, WP-CLI vorhanden, exakte Homepage `orgavela.com`, UOP Core Alpha.2 |
+| [#38264354774](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38264354774) | **Grün** | `schema`: physischer 28+1-Tabellen-Schemahealth `good`, SQL-Tabellecount **29**, Default-Org-Referenz `good`, DB-/Datenversionen **2/2** |
+
+Der installierte [`SchemaInspector::verify_all()`](../../src/Infrastructure/Database/SchemaInspector.php) prüft über `information_schema` Spalten, Indexdefinitionen, Collation und Engine der eingefrorenen 28 Tabellen; das installierte [`AgeAttestationSchema::verify()`](../../src/Infrastructure/Database/AgeAttestationSchema.php) prüft die zusätzliche 29. Tabelle. Ein separater lesender SQL-Query im Workflow bestätigt die Tabellenanzahl; Default-Org und gespeicherte Versionen sind weitere unabhängige Aggregatprüfungen. **Keine personenbezogenen Daten und keine geheimen Dateipfade veröffentlicht.**
+
+**Fortschritt:** O02/M1-08 ist **live technisch sehr viel besser belegt**; die formale M1-/V1-Abnahme, Versionsintegration aller PRs und Backup-/Restore-Prüfung bleiben offen. **Nächste priorisierte Arbeit O03:** vertrauliches Backupinventar, DB+Datei-Sicherung und isolierter Restore **ohne vorherige Live-Upgrade-/Migrationsoperation**. O01 organisatorische Trennung laut Betreiber, Schutz/Gates noch weiter prüfen. **Zähler unverändert:** 62/71 historisch implementierte M-Pakete, **0/8** formal abgenommene M0–M7, **0/4** P4, **0/18** Release-Gates, **0/7** gemergte PRs. [Normativer Masterplan v2.3](../operations/V1_ACCEPTANCE_PLAN.md) · [Kanonischer Fortschritt](../operations/V1_PROGRESS.json) · [Audit-Sicherheitsdokumentation](../operations/ORGAVELA_AUDIT_GITHUB_SECRETS.md).
