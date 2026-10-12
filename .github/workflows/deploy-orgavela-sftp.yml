@@ -40,7 +40,8 @@ jobs:
       IONOS_USER: ${{ secrets.IONOS_SSH_USER }}
       SSHPASS: ${{ secrets.IONOS_SSH_PASSWORD }}
       IONOS_KNOWN_HOSTS: ${{ secrets.IONOS_KNOWN_HOSTS }}
-      IONOS_SFTP_ROOT: ${{ vars.IONOS_SFTP_ROOT || '.' }}
+      # Root is pinned to the operator-verified WordPress installation; do not use a repository variable.
+      IONOS_SFTP_ROOT: '/public'
     steps:
       - name: Checkout deployment request from main
         uses: actions/checkout@v4
