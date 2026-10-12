@@ -78,6 +78,24 @@ final class AgeAttestationTest extends TestCase {
 		self::assertSame( 0, (int) $this->db->rows( 'SELECT COUNT(*) AS n FROM %i', array( $this->prefix . 'age_attestations' ) )[0]['n'] );
 	}
 
+	/** Upgrade from a real V1 database never infers age verification from old people. */
+	public function test_v1_upgrade_preserves_people_without_backfilling_attestations(): void {
+		$now = gmdate( 'Y-m-d H:i:s' );
+		$people = new PersonRepository( $this->db, $this->prefix );
+		$person = PublicId::generate();
+		$people->create( $this->scope, $person, 'Pre-existing person', null, $now );
+		$before = $people->find( $this->scope, $person );
+		$this->db->execute( 'DROP TABLE IF EXISTS %i', array( $this->prefix . 'age_attestations' ) );
+		update_option( 'uop_db_version', 1, false );
+		update_option( 'uop_data_version', 1, false );
+		delete_option( 'uop_migration_progress_2' );
+		Installer::runner()->run();
+		self::assertSame( 2, (int) get_option( 'uop_db_version' ) );
+		self::assertSame( $before, $people->find( $this->scope, $person ) );
+		self::assertSame( 'good', Installer::health()['status'] );
+		self::assertSame( 0, (int) $this->db->rows( 'SELECT COUNT(*) AS n FROM %i', array( $this->prefix . 'age_attestations' ) )[0]['n'] );
+	}
+
 	/** Real REST handler and domain policy share the same live tenant/evidence. */
 	public function test_verified_age_is_event_scoped_and_revocation_prevents_reuse(): void {
 		if ( ! post_type_exists( 'uop_event' ) ) {
