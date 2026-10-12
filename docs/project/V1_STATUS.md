@@ -123,3 +123,11 @@
 
 
 **CI-Statuskorrektur 12.10.2026, Run-Abschluss:** PR #11 auf `7892a25894c184a624ab4ebea13aab0e1a1c88dd`: Foundation [38248040810](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248040810) **7/8 grün**, PHP 8.4/MariaDB 10.11 activation/deactivation-Browsertest Timeout 30 s; HTTPS [38248040695](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248040695) **rot**, Sorgeberechtigtenlogin Timeout 20 s. **Keine Abnahme, O09 offen**, v1.5 Masterplan.
+
+
+### W0 / O09 – neuer grüner CI-Beleg auf PR #11 (12.10.2026)
+
+- **Tatsächlich geänderte Browser-Tests:** Commits [`d36935da`](https://github.com/janjrre/Projekt-Wordpress-Plugin/commit/d36935da376224d12f16b451e43e78a5d46d6593) und [`2b8a65f7`](https://github.com/janjrre/Projekt-Wordpress-Plugin/commit/2b8a65f753447689190d442a038b3f76472aaa71), reale Redirect-Commits und sichtbaren authentifizierten/Pluginzustand geprüft statt allein auf `DOMContentLoaded` zu warten. **Keine** Prüfung übersprungen.
+- **Aktueller PR #11 HEAD:** `2b8a65f753447689190d442a038b3f76472aaa71`; [Foundation #38250446667](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38250446667) **SUCCESS 8/8**, [HTTPS/Mailpit #38250446526](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38250446526) **SUCCESS**. PR #11 bleibt Draft/unmerged; CI-Grün eines Entwicklungsbranchs ersetzt keine M-, W0- oder Release-Abnahme.
+- **OrgaVela auf installiertem Alpha.2:** `uop_schema`-Prüfcode am Paketquell-SHA vorhanden, jedoch **kein** echtes per Datenbank/Site Health bestätigtes Live-Ergebnis; 0 veröffentlichte UOP-Events, 1 veröffentlichte WordPress-Beispielseite. `DISABLE_WP_CRON` unverändert; überfällige Cron-Ereignisse zuletzt 2/19 statt zuvor 5/19, externer Zeitplan weiter ungeprüft. Datenschutzseite Entwurf, Indexierungsabschreckung aus, kein geprüfter Restore.
+- **Bilanz unverändert:** 62/71 technisch implementiert, M0–M7 0/8 formell abgenommen, P4 0/4, R01–R18 0/18, 0/7 gestapelte PRs gemergt. W0-Schema/Backup/Privatheit (O01/O02/O03/O06) weiterhin blockiert.
