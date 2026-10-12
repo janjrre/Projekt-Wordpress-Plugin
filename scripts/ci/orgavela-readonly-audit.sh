@@ -38,8 +38,8 @@ fi
 # This proves SFTP access, NOT an interactive SSH shell or SQL access.
 if [[ "$mode" == 'sftp' ]]; then
   {
-    printf 'ls "%s/wp-admin"\\n' "$root"
-    printf 'ls "%s/wp-content/plugins/uop-core"\\n' "$root"
+    printf 'ls "%s/wp-admin"\n' "$root"
+    printf 'ls "%s/wp-content/plugins/uop-core"\n' "$root"
   } > "$tmp/sftp-readonly.batch"
   if sshpass -e sftp -q -P 22 \
     -oBatchMode=no \
