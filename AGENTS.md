@@ -32,11 +32,12 @@ Eine vollständige automatische Übertragung des Chatverlaufs ist ohne entsprech
 
 Diese Regel gilt ab sofort für **jede UOP-Core-/OrgaVela-Arbeit in diesem Repository und jede UOP-bezogene Chat-Antwort**, auch neue Chats und sehr kleine Folgeaufgaben.
 
-**Kanonische Quellen:**
-1. [V1_MASTER_PLAN.md](docs/project/V1_MASTER_PLAN.md) – vollständiger, versionierter **M0–M7-/M6-10-/P4-/G-/R-Weg bis zur V1-Abnahme**, normative Pakete, Abhängigkeiten, Risiken und Stop-Gates.
-2. [V1_STATUS.md](docs/project/V1_STATUS.md) – **aktueller tatsächlich belegter Projektfortschritt**, PRs, CI/Tests, OrgaVela-Zustand, Blocker und unmittelbar nächste Pakete.
-3. [V1_ACCEPTANCE_MATRIX.md](docs/project/V1_ACCEPTANCE_MATRIX.md) – Prüffälle, Kriterien, Release-Akte, signierbare Nachweise.
-4. [ASSISTANT_WORK_LOG.md](docs/operations/ASSISTANT_WORK_LOG.md) – **append-only** Aufgaben-/Entscheidungs-/Test-/Commit-Journal.
+**Einheitliche kanonische Quellen (Vorrang, keine doppelte Wahrheit):**
+1. [V1_ACCEPTANCE_PLAN.md](docs/operations/V1_ACCEPTANCE_PLAN.md) – **alleiniger normativer V1-Masterplan**: 71 M0–M7-Pakete, M6-10, P4, O01–O12, W0–W7 und R01–R18.
+2. [V1_PROGRESS.json](docs/operations/V1_PROGRESS.json) – **alleinige maschinenlesbare Zähl- und Statusquelle** (62/71 implementierte Coding-Pakete als überprüfbare Baseline, 0/8 Milestone-Abnahmen, 0/18 Release-Gates).
+3. [V1_MASTER_PLAN.md](docs/project/V1_MASTER_PLAN.md) – **ergänzende, ausführliche erläuternde Roadmap**, keine konkurrierende Quelle; [V1_STATUS.md](docs/project/V1_STATUS.md) – menschenlesbares Status-Dashboard, Zahlen aus PROGRESS.json ableiten.
+4. [V1_ACCEPTANCE_MATRIX.md](docs/project/V1_ACCEPTANCE_MATRIX.md) – zusätzliche konkrete Testfälle/Signoff-Evidenz unter den R01–R18-Gates.
+5. [ASSISTANT_WORK_LOG.md](docs/operations/ASSISTANT_WORK_LOG.md) – **append-only** Aufgaben-/Entscheidungs-/Test-/Commit-Journal. Zentraler Abnahmeträger: [Issue #15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15); früheres Doppelissue #14 wird als Duplikat geschlossen.
 
 **Vor jeder UOP-Antwort / jedem Entwicklungsschritt:**
 - Diese vier Dokumente und die betroffenen GitHub-Issues, PRs, CI-Checks und – soweit verfügbar und notwendig – die OrgaVela-Testwebsite auslesen.
