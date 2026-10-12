@@ -1,5 +1,5 @@
 {
-  "operation": "probe",
+  "operation": "schema",
   "target": "orgavela.com",
-  "request_id": "ssh-documented-path-probe"
+  "request_id": "read-only-schema-v2-alpha2"
 }
