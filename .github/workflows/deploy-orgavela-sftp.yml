@@ -139,10 +139,9 @@ jobs:
           {
             printf 'mkdir "%s/%s"\n' "$plugins" "$stage"
             printf 'put -R "%s/unpacked/uop-core" "%s/%s"\n' "$RUNNER_TEMP" "$plugins" "$stage"
-            printf 'ls "%s/%s/uop-core/uop-core.php"\n' "$plugins" "$stage"
-            printf 'ls "%s/%s/uop-core/vendor/autoload.php"\n' "$plugins" "$stage"
-            printf 'rename "%s/%s/uop-core" "%s/uop-core"\n' "$plugins" "$stage" "$plugins"
-            printf 'rmdir "%s/%s"\n' "$plugins" "$stage"
+            printf 'ls "%s/%s/uop-core.php"\n' "$plugins" "$stage"
+            printf 'ls "%s/%s/vendor/autoload.php"\n' "$plugins" "$stage"
+            printf 'rename "%s/%s" "%s/uop-core"\n' "$plugins" "$stage" "$plugins"
             printf 'ls "%s/uop-core/uop-core.php"\n' "$plugins"
           } > "$RUNNER_TEMP/install.sftp"
           sshpass -e sftp -q -P 22 -oBatchMode=no \
