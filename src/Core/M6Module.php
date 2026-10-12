@@ -165,6 +165,7 @@ final class M6Module implements ModuleInterface {
 			static fn ( ServiceContainer $c ) => new AgeAttestationService(
 				$c->get( AgeAttestationRepository::class ),
 				$c->get( PersonRepository::class ),
+				$c->get( PolicyService::class ),
 				$c->get( Connection::class ),
 				$prefix,
 				$c->get( PolicyService::class ),
