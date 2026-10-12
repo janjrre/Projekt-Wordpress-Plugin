@@ -103,8 +103,11 @@ final class AgeAttestationTest extends TestCase {
 			register_post_type( 'uop_event', array( 'public' => true ) );
 		}
 		$admin = wp_create_user( 'uop_age_admin_' . bin2hex( random_bytes( 4 ) ), wp_generate_password( 24 ), 'age-admin-' . bin2hex( random_bytes( 4 ) ) . '@example.invalid' );
+		$limited = wp_create_user( 'uop_age_limited_' . bin2hex( random_bytes( 4 ) ), wp_generate_password( 24 ), 'age-limited-' . bin2hex( random_bytes( 4 ) ) . '@example.invalid' );
 		self::assertIsInt( $admin );
+		self::assertIsInt( $limited );
 		( new \WP_User( $admin ) )->set_role( 'administrator' );
+		( new \WP_User( $limited ) )->set_role( 'subscriber' );
 		wp_set_current_user( $admin );
 		$actor = new Actor( $admin );
 		$now = gmdate( 'Y-m-d H:i:s' );
@@ -112,7 +115,7 @@ final class AgeAttestationTest extends TestCase {
 		$person = PublicId::generate();
 		$people->create( $this->scope, $person, 'Synthetic attendee', null, $now );
 		$person_id = (int) $people->find( $this->scope, $person )['id'];
-		$policy = new PolicyService( $people, new DelegationRepository( $this->db, $this->prefix ), new AssignmentRepository( $this->db, $this->prefix ), static fn ( int $id, string $cap ): bool => $id === $admin );
+		$policy = new PolicyService( $people, new DelegationRepository( $this->db, $this->prefix ), new AssignmentRepository( $this->db, $this->prefix ), static fn ( int $id, string $cap ): bool => $id === $admin || $id === $limited );
 		$tx = new TransactionManager( $this->db, static function ( int $n ): void {}, static function ( \Throwable $e ): void {} );
 		$audit = new AuditWriter( $this->db, $this->prefix );
 		$outbox = new OutboxRepository( $this->db, $this->prefix );
@@ -150,6 +153,20 @@ final class AgeAttestationTest extends TestCase {
 		self::assertSame( 'verified', $context['contexts']['age.verified.gte.18'] );
 		self::assertTrue( ( new ConditionEngine() )->evaluate( array( 'schema_version' => 1, 'all' => array( $age ) ), array( 'profile' => array(), 'registration' => array() ), $context['contexts'] ) );
 		self::assertFalse( ( new ConditionEngine() )->evaluate( $condition, array( 'profile' => array(), 'registration' => array() ), $context['contexts'] ) );
+
+		$read = new \WP_REST_Request( 'GET', $route );
+		$read->set_param( 'person_id', $person->to_string() );
+		$read->set_param( 'event_post_id', $post );
+		$read->set_param( 'threshold_age', 18 );
+		wp_set_current_user( $limited );
+		self::assertSame( 403, rest_do_request( $read )->get_status(), 'Organization policy alone cannot bypass WordPress event editing rights.' );
+		wp_set_current_user( $admin );
+		self::assertSame( 'verified', rest_do_request( $read )->get_data()['status'] );
+		wp_update_post( array( 'ID' => $post, 'post_status' => 'draft' ) );
+		self::assertSame( 404, rest_do_request( $read )->get_status(), 'An unpublished event must never report current age evidence.' );
+		self::assertFalse( $repo->matches( $this->scope, $person_id, $post, 18, 'gte', $now, gmdate( 'Y-m-d H:i:s', time() + 30 * DAY_IN_SECONDS ) ) );
+		wp_update_post( array( 'ID' => $post, 'post_status' => 'publish' ) );
+		self::assertSame( 'verified', rest_do_request( $read )->get_data()['status'] );
 
 		$other_post = wp_insert_post( array( 'post_type' => 'uop_event', 'post_title' => 'Other event', 'post_status' => 'publish' ), true );
 		self::assertIsInt( $other_post );
