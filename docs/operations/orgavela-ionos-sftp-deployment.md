@@ -41,6 +41,18 @@ Der Workflow prüft nur die SSH-Hostidentität, die Anmeldung und lesend `wp-adm
 
 Bei fehlenden Secrets, falschem Hostschlüssel, falschem Pfad oder fehlendem Zugang bricht er ab. Die Logs dürfen keine Passwörter enthalten.
 
+### Live-Diagnose: erster Testlauf vom 12.10.2026
+
+Der erste manuelle [SFTP-Probe-Lauf #38236861923](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38236861923) hat **Secrets, Hostfingerprint, Anmeldung und SFTP-Transport bestanden**. Gescheitert ist erst die WordPress-Verzeichnisprüfung an `/./wp-admin` mit `not found`.
+
+**Ursache:** Das durch `IONOS_SFTP_ROOT=.` angesprochene SFTP-Startverzeichnis ist nicht das WordPress-Stammverzeichnis. Dies ist **kein** Passwort- oder Netzwerkfehler.
+
+**Unterstützte Ermittlung ohne Shell und ohne Änderungen:** Im IONOS-Dashboard **Menü → Web-Projekte → OrgaVela → Website verwalten → Technische Daten** das **Installationsverzeichnis (Webspace)** nachsehen. [IONOS-Anleitung für Installationsverzeichnisse](https://www.ionos.de/hilfe/mein-konto/hosting/click-build-daten-exportieren/). Bei Hostingpaketen kann alternativ der **Webspace Explorer** genutzt werden. Das dort angezeigte absolute Server-Dateisystemverzeichnis kann sich vom im SFTP-Chroot sichtbaren Pfad unterscheiden; deshalb keinen Shell-Pfad blind als SFTP-Pfad übernehmen.
+
+GitHub → `Settings → Environments → orgavela-ionos → Environment variables` den anhand des ausschließlich zu OrgaVela gehörenden SFTP-Projektverzeichnisses überprüften Wert `IONOS_SFTP_ROOT` setzen. Anschließend die **nur lesende Probe** erneut starten. Kein Passwort erforderlich; keine Dateien hochladen. Nur bestätigte, OrgaVela zugeordnete Verzeichnisse zulassen. Insbesondere **keine Verzeichnis-Suche in Dreamloud oder anderen Webprojekten** ausführen.
+
+Ab Code-Änderung `f9e985cdc68b225bf780d03e444eb4b9562334d3` erkennt der Workflow den häufigen `not found`-Fehler ausdrücklich und verweigert **jede** Installation, solange das unbestätigte Standardziel `.` oder `/` eingetragen ist. Der erfolgreiche SFTP-Handshake ersetzt nicht den belegten Domain-/Projektpfad.
+
 ## 4a. Künftig autonomer Start aus einem GitHub-Commit
 
 **Erst nach verifizierten GitHub-Secrets und IONOS-Verbindung** kann ein autorisierter Assistent die Datei `.github/deploy-requests/orgavela-sftp.json` auf `main` neu anlegen oder ändern. Diese **genau benannte Datei** löst den SFTP-Workflow automatisch aus, statt dass der Betreiber jedes Mal `Run workflow` klicken muss. Alle Ziel-/Hostschlüssel-/SHA- und Secrets-Gates bleiben aktiv. Der separate SSH-Workflow verwendet eine **andere** Datei (`orgavela.json`): niemals beide Deployments parallel auslösen.
