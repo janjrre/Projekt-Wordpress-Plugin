@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-12 latest authenticated OrgaVela read-only WordPress checks, Github PR-11 source+jobs, IONOS recovery research; no unattended monitoring",
+  "snapshot_basis": "2026-10-12 latest authenticated OrgaVela MCP checks, PR#11 HEAD 7892a258 and final GitHub Actions run/job logs 38248040810 and 38248040695; no background monitor",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -304,20 +304,25 @@
     "latest_pr_11_head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
     "latest_pr_11_ci": [
       {
+        "run": 38248040810,
+        "kind": "pr-foundation",
+        "result": "failure",
+        "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
+        "successful_jobs": 7,
+        "total_jobs": 8,
+        "failed_jobs": [
+          "integration (8.4, mariadb:10.11): activation.spec.js 30s timeout navigating plugin deactivation"
+        ],
+        "note": "PHP 8.5/MySQL 8.0 is green at this new SHA, not proof of complete matrix"
+      },
+      {
         "run": 38248040695,
         "kind": "pr-https-browser",
         "result": "failure",
         "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
         "failed_jobs": [
-          "caregiver WordPress login waitForURL timeout; root cause pending"
+          "caregiver WordPress login page.waitForURL timed out at 20s"
         ]
-      },
-      {
-        "run": 38248040810,
-        "kind": "pr-foundation",
-        "result": "in_progress_at_initial_read",
-        "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
-        "note": "Await final state; do not claim green before completed"
       }
     ],
     "previous_pr_11_ci": [
@@ -383,7 +388,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "1.4",
+  "masterplan_version": "1.5",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
