@@ -15,7 +15,7 @@ use UOP\Domain\Organization\OrgScope;
 final class AgeAttestationRepository {
 	/**
 	 * @param Connection $db Database connection.
-	 * @param string $prefix Trusted site-specific table prefix.
+	 * @param string     $prefix Trusted site-specific table prefix.
 	 */
 	public function __construct( private Connection $db, private string $prefix ) {}
 
@@ -23,9 +23,9 @@ final class AgeAttestationRepository {
 	 * Find the latest immutable decision (including a revocation tombstone).
 	 *
 	 * @param OrgScope $scope Tenant scope.
-	 * @param int $person Internal subject ID.
-	 * @param int $event Scoped WordPress event ID.
-	 * @param int $threshold Age threshold.
+	 * @param int      $person Internal subject ID.
+	 * @param int      $event Scoped WordPress event ID.
+	 * @param int      $threshold Age threshold.
 	 * @return array<string,mixed>|null
 	 */
 	public function latest( OrgScope $scope, int $person, int $event, int $threshold ): ?array {
@@ -40,12 +40,12 @@ final class AgeAttestationRepository {
 	 * Verify a positive purpose-bound class at the time of action and event.
 	 *
 	 * @param OrgScope $scope Tenant.
-	 * @param int $person Subject.
-	 * @param int $event Event.
-	 * @param int $threshold Limit.
-	 * @param string $outcome 'gte' or 'lt'.
-	 * @param string $now UTC action time.
-	 * @param string $event_start UTC date/time from scheduled occurrence.
+	 * @param int      $person Subject.
+	 * @param int      $event Event.
+	 * @param int      $threshold Limit.
+	 * @param string   $outcome 'gte' or 'lt'.
+	 * @param string   $now UTC action time.
+	 * @param string   $event_start UTC date/time from scheduled occurrence.
 	 */
 	public function matches( OrgScope $scope, int $person, int $event, int $threshold, string $outcome, string $now, string $event_start ): bool {
 		$row = $this->latest( $scope, $person, $event, $threshold );
@@ -58,15 +58,15 @@ final class AgeAttestationRepository {
 	 *
 	 * @param OrgScope $scope Organization.
 	 * @param PublicId $uuid Unique public attestation.
-	 * @param int $person Scoped subject ID.
-	 * @param int $event Published event post ID.
-	 * @param int $threshold Threshold.
-	 * @param string $outcome 'gte' or 'lt'.
-	 * @param string $status 'verified' or 'revoked'.
-	 * @param int $reviewer Authenticated independent reviewer.
-	 * @param string $method Fixed method key, or 'revoked'.
-	 * @param string $now UTC checked/created at.
-	 * @param string $expiry UTC expiry.
+	 * @param int      $person Scoped subject ID.
+	 * @param int      $event Published event post ID.
+	 * @param int      $threshold Threshold.
+	 * @param string   $outcome 'gte' or 'lt'.
+	 * @param string   $status 'verified' or 'revoked'.
+	 * @param int      $reviewer Authenticated independent reviewer.
+	 * @param string   $method Fixed method key, or 'revoked'.
+	 * @param string   $now UTC checked/created at.
+	 * @param string   $expiry UTC expiry.
 	 * @return int New internal immutable attestation ID.
 	 */
 	public function append( OrgScope $scope, PublicId $uuid, int $person, int $event, int $threshold, string $outcome, string $status, int $reviewer, string $method, string $now, string $expiry ): int {

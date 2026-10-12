@@ -45,10 +45,10 @@ final class RegistrationFactsService {
 		 *
 		 * @var array<string, bool> $keys
 		 */
-		$keys     = array();
-		$age_keys = array();
+		$keys         = array();
+		$age_keys     = array();
 		$verified_age = array();
-		$engine   = new ConditionEngine();
+		$engine       = new ConditionEngine();
 		foreach ( $conditions as $condition ) {
 			$engine->validate( $condition );
 			$this->references( $condition, $keys, $age_keys, $verified_age );
@@ -130,10 +130,10 @@ final class RegistrationFactsService {
 	/**
 	 * Recursively collect references, rejecting request-owned age assertions.
 	 *
-	 * @param array<string, mixed> $node      Validated AST.
-	 * @param array<string, bool>  $keys      Mutable distinct profile keys.
+	 * @param array<string, mixed>                               $node      Validated AST.
+	 * @param array<string, bool>                                $keys      Mutable distinct profile keys.
 	 * @param-out array<string, bool> $keys
-	 * @param array<string, bool>  $age_keys  Server-controlled birth fields used by age conditions.
+	 * @param array<string, bool>                                $age_keys  Server-controlled birth fields used by age conditions.
 	 * @param array<string, array{outcome:string,threshold:int}> $verified_age Reviewed threshold fact requests.
 	 * @param-out array<string, array{outcome:string,threshold:int}> $verified_age
 	 * @param-out array<string, bool> $age_keys
@@ -157,7 +157,7 @@ final class RegistrationFactsService {
 		}
 		if ( in_array( $node['operator'], array( 'age_verified_lt_at', 'age_verified_gte_at' ), true ) ) {
 			$verified_age[ (string) $node['operator'] . ':' . (string) $node['value'] ] = array(
-				'outcome' => 'age_verified_lt_at' === $node['operator'] ? 'lt' : 'gte',
+				'outcome'   => 'age_verified_lt_at' === $node['operator'] ? 'lt' : 'gte',
 				'threshold' => (int) $node['value'],
 			);
 			return;

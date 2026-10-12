@@ -19,9 +19,9 @@ final class Installer {
 	 */
 	public static function runner(): MigrationRunner {
 		global $wpdb;
-		$db           = new WpdbConnection( $wpdb );
-		$state        = new MigrationState( $db, $wpdb->options );
-		$transactions = new TransactionManager(
+		$db            = new WpdbConnection( $wpdb );
+		$state         = new MigrationState( $db, $wpdb->options );
+		$transactions  = new TransactionManager(
 			$db,
 			static function ( int $microseconds ): void {
 				usleep( $microseconds ); },
@@ -37,10 +37,10 @@ final class Installer {
 				);
 			}
 		);
-		$manifest     = new SchemaManifest( dirname( __DIR__, 3 ) . '/schema/manifest.json' );
-		$prefix       = $wpdb->prefix . 'uop_';
-		$inspector    = new SchemaInspector( $db, $manifest, $prefix, $wpdb->collate );
-		$migration    = new InitialMigration( $db, $state, $manifest, $inspector, new SystemClock(), $prefix, $wpdb->get_charset_collate() );
+		$manifest      = new SchemaManifest( dirname( __DIR__, 3 ) . '/schema/manifest.json' );
+		$prefix        = $wpdb->prefix . 'uop_';
+		$inspector     = new SchemaInspector( $db, $manifest, $prefix, $wpdb->collate );
+		$migration     = new InitialMigration( $db, $state, $manifest, $inspector, new SystemClock(), $prefix, $wpdb->get_charset_collate() );
 		$age_migration = new AgeAttestationMigration( $db, $prefix, $wpdb->get_charset_collate(), $wpdb->collate );
 		return new MigrationRunner( $db, $state, new MigrationRegistry( array( $migration, $age_migration ) ), $transactions, Bootstrap::errors( ... ), self::lock_name() );
 	}

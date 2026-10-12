@@ -74,8 +74,8 @@ final class SchemaInspector {
 			$this->verify_table( $name );
 		}
 		$actual = $this->db->rows( 'SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND LEFT(TABLE_NAME, %d) = %s', array( strlen( $this->prefix ), $this->prefix ) );
-		$names = array_column( $actual, 'TABLE_NAME' );
-		$known = array_map( fn ( string $name ): string => $this->prefix . $name, array_keys( $this->manifest->tables() ) );
+		$names  = array_column( $actual, 'TABLE_NAME' );
+		$known  = array_map( fn ( string $name ): string => $this->prefix . $name, array_keys( $this->manifest->tables() ) );
 		$extras = array_values( array_diff( $names, $known ) );
 		if ( array_diff( $known, $names ) || ( $extras && $extras !== array( $this->prefix . 'age_attestations' ) ) ) {
 			throw new RuntimeException( 'Unexpected UOP table set.' );

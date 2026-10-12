@@ -11,9 +11,9 @@ namespace UOP\Infrastructure\Database;
 final class AgeAttestationMigration implements Migration {
 	/**
 	 * @param Connection $db Scoped database.
-	 * @param string $prefix Trusted WordPress prefix.
-	 * @param string $charset WordPress DDL charset/collation.
-	 * @param string $collation Verified exact collation.
+	 * @param string     $prefix Trusted WordPress prefix.
+	 * @param string     $charset WordPress DDL charset/collation.
+	 * @param string     $collation Verified exact collation.
 	 */
 	public function __construct( private Connection $db, private string $prefix, private string $charset, private string $collation ) {}
 

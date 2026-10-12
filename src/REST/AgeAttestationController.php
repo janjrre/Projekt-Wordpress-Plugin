@@ -23,10 +23,10 @@ use WP_REST_Response;
 /** Never accepts personal identifiers, DOBs, uploaded documents or arbitrary methods. */
 final class AgeAttestationController extends BaseController {
 	/**
-	 * @param AgeAttestationService $reviews Review and revoke workflow.
+	 * @param AgeAttestationService    $reviews Review and revoke workflow.
 	 * @param AgeAttestationRepository $repository Verified event evidence.
-	 * @param PersonRepository $people Scoped person resolution.
-	 * @param PolicyService $policy Live permission decisions.
+	 * @param PersonRepository         $people Scoped person resolution.
+	 * @param PolicyService            $policy Live permission decisions.
 	 */
 	public function __construct(
 		private AgeAttestationService $reviews,
@@ -45,7 +45,9 @@ final class AgeAttestationController extends BaseController {
 	public function authorized(): bool|WP_Error {
 		$scope = $this->organization_scope();
 		return $scope && get_current_user_id() > 0 && $this->policy->can(
-			$this->current_actor(), 'organization.manage', new PolicyObject( $scope->id, 'organization', $scope->id )
+			$this->current_actor(),
+			'organization.manage',
+			new PolicyObject( $scope->id, 'organization', $scope->id )
 		)->allowed ? true : $this->denied();
 	}
 
@@ -56,9 +58,9 @@ final class AgeAttestationController extends BaseController {
 	 * @return array<string,mixed>|WP_Error
 	 */
 	public function current( WP_REST_Request $request ): array|WP_Error {
-		$scope = $this->organization_scope();
-		$uuid = $this->request_public_id( $request, 'person_id' );
-		$event = (int) $request['event_post_id'];
+		$scope     = $this->organization_scope();
+		$uuid      = $this->request_public_id( $request, 'person_id' );
+		$event     = (int) $request['event_post_id'];
 		$threshold = (int) $request['threshold_age'];
 		if ( ! $scope || ! $uuid || $event < 1 || $threshold < 1 || $threshold > 120 ) {
 			return RestError::for_kind( 'invalid_schema' );
@@ -76,10 +78,10 @@ final class AgeAttestationController extends BaseController {
 			$status = 'expired';
 		}
 		return array(
-			'status' => $status,
-			'outcome' => (string) $row['outcome'],
+			'status'      => $status,
+			'outcome'     => (string) $row['outcome'],
 			'valid_until' => (string) $row['valid_until'],
-			'method' => (string) $row['method_key'],
+			'method'      => (string) $row['method_key'],
 		);
 	}
 
@@ -92,27 +94,65 @@ final class AgeAttestationController extends BaseController {
 	 */
 	public function record( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		try {
-			$body = $this->strict_json_object( $request, array(
-				'person_id' => array( 'type' => 'string', 'maxLength' => 36 ),
-				'event_post_id' => array( 'type' => 'integer', 'minimum' => 1 ),
-				'threshold_age' => array( 'type' => 'integer', 'minimum' => 1, 'maximum' => 120 ),
-				'outcome' => array( 'type' => 'string', 'enum' => array( 'gte', 'lt' ) ),
-				'method' => array( 'type' => 'string', 'enum' => array( 'in_person_review', 'trusted_register', 'authorized_offline_review', 'revoked' ) ),
-				'valid_until' => array( 'type' => 'string', 'maxLength' => 19 ),
-				'evidence_checked' => array( 'type' => 'boolean' ),
-				'revoke' => array( 'type' => 'boolean' ),
-			), array( 'person_id', 'event_post_id', 'threshold_age', 'outcome', 'method', 'valid_until', 'evidence_checked', 'revoke' ) );
+			$body  = $this->strict_json_object(
+				$request,
+				array(
+					'person_id'        => array(
+						'type'      => 'string',
+						'maxLength' => 36,
+					),
+					'event_post_id'    => array(
+						'type'    => 'integer',
+						'minimum' => 1,
+					),
+					'threshold_age'    => array(
+						'type'    => 'integer',
+						'minimum' => 1,
+						'maximum' => 120,
+					),
+					'outcome'          => array(
+						'type' => 'string',
+						'enum' => array( 'gte', 'lt' ),
+					),
+					'method'           => array(
+						'type' => 'string',
+						'enum' => array( 'in_person_review', 'trusted_register', 'authorized_offline_review', 'revoked' ),
+					),
+					'valid_until'      => array(
+						'type'      => 'string',
+						'maxLength' => 19,
+					),
+					'evidence_checked' => array( 'type' => 'boolean' ),
+					'revoke'           => array( 'type' => 'boolean' ),
+				),
+				array( 'person_id', 'event_post_id', 'threshold_age', 'outcome', 'method', 'valid_until', 'evidence_checked', 'revoke' )
+			);
 			$scope = $this->organization_scope();
 			if ( ! $scope ) {
 				return RestError::for_kind( 'unavailable' );
 			}
-			$now = gmdate( 'Y-m-d H:i:s' );
-			$id = $this->reviews->decide(
-				$this->current_actor(), $scope, PublicId::from_string( $body['person_id'] ),
-				$body['event_post_id'], $body['threshold_age'], $body['outcome'], $body['method'],
-				$body['valid_until'], $body['evidence_checked'], $body['revoke'], $now, CorrelationId::generate()
+			$now      = gmdate( 'Y-m-d H:i:s' );
+			$id       = $this->reviews->decide(
+				$this->current_actor(),
+				$scope,
+				PublicId::from_string( $body['person_id'] ),
+				$body['event_post_id'],
+				$body['threshold_age'],
+				$body['outcome'],
+				$body['method'],
+				$body['valid_until'],
+				$body['evidence_checked'],
+				$body['revoke'],
+				$now,
+				CorrelationId::generate()
 			);
-			$response = new WP_REST_Response( array( 'public_id' => $id->to_string(), 'status' => $body['revoke'] ? 'revoked' : 'verified' ), 201 );
+			$response = new WP_REST_Response(
+				array(
+					'public_id' => $id->to_string(),
+					'status'    => $body['revoke'] ? 'revoked' : 'verified',
+				),
+				201
+			);
 			$response->header( 'Cache-Control', 'private, no-store, max-age=0' );
 			return $response;
 		} catch ( InvalidArgumentException ) {
