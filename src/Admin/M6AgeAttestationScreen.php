@@ -105,8 +105,8 @@ final class M6AgeAttestationScreen {
 				if ( ! $person || 'active' !== $person['status'] ) {
 					throw new RuntimeException( 'Subject is unavailable.' );
 				}
-				$record  = $this->evidence->latest( $scope, (int) $person['id'], $lookup_event, $lookup_threshold );
-				$status  = $record ? (string) $record['status'] : 'unknown';
+				$record = $this->evidence->latest( $scope, (int) $person['id'], $lookup_event, $lookup_threshold );
+				$status = $record ? (string) $record['status'] : 'unknown';
 				if ( $record && 'verified' === $status && (string) $record['valid_until'] < gmdate( 'Y-m-d H:i:s' ) ) {
 					$status = 'expired';
 				}
@@ -172,9 +172,9 @@ final class M6AgeAttestationScreen {
 			if ( ! in_array( $decision, array( 'verify', 'revoke' ), true ) ) {
 				throw new InvalidArgumentException( 'Unknown review action.' );
 			}
-			$method    = $revoke ? 'revoked' : sanitize_key( wp_unslash( (string) ( $_POST['method'] ?? '' ) ) );
-			$checked   = '1' === sanitize_text_field( wp_unslash( (string) ( $_POST['evidence_checked'] ?? '' ) ) );
-			$until     = $revoke ? gmdate( 'Y-m-d H:i:s' ) : sanitize_text_field( wp_unslash( (string) ( $_POST['valid_until'] ?? '' ) ) ) . ' 23:59:59';
+			$method  = $revoke ? 'revoked' : sanitize_key( wp_unslash( (string) ( $_POST['method'] ?? '' ) ) );
+			$checked = '1' === sanitize_text_field( wp_unslash( (string) ( $_POST['evidence_checked'] ?? '' ) ) );
+			$until   = $revoke ? gmdate( 'Y-m-d H:i:s' ) : sanitize_text_field( wp_unslash( (string) ( $_POST['valid_until'] ?? '' ) ) ) . ' 23:59:59';
 			$this->reviews->decide( new Actor( get_current_user_id() ), $scope, $subject, $event, $threshold, $outcome, $method, $until, $checked, $revoke, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 			$result = $revoke ? 'revoked' : 'verified';
 		} catch ( InvalidArgumentException | RuntimeException ) {
