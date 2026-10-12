@@ -50,6 +50,10 @@ final class AgeAttestationRepository {
 	 * @param string   $event_start UTC date/time from scheduled occurrence.
 	 */
 	public function matches( OrgScope $scope, int $person, int $event, int $threshold, string $outcome, string $now, string $event_start ): bool {
+		$post = get_post( $event );
+		if ( ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status ) {
+			return false;
+		}
 		$row = $this->latest( $scope, $person, $event, $threshold );
 		return null !== $row && 'verified' === $row['status'] && $outcome === $row['outcome']
 			&& (string) $row['checked_at'] <= $now && (string) $row['valid_until'] >= $now && (string) $row['valid_until'] >= $event_start;
