@@ -164,7 +164,7 @@ final class ConditionEngine {
 			'not_in' => null !== $actual && ! in_array( $actual, $target, true ),
 			'lt', 'lte', 'gt', 'gte' => $this->compare( $actual, $target, $node['operator'] ),
 			'date_before', 'date_after' => $this->compare_dates( $actual, $target, 'date_before' === $node['operator'] ),
-			'age_lt_at', 'age_gte_at', 'age_verified_lt_at', 'age_verified_gte_at' => $this->age_compare( $actual, $target, $contexts['event.start'] ?? '', 'age_lt_at' === $node['operator'] ),
+			'age_lt_at', 'age_gte_at' => $this->age_compare( $actual, $target, $contexts['event.start'] ?? '', 'age_lt_at' === $node['operator'] ),
 			'age_verified_lt_at', 'age_verified_gte_at' => 'verified' === ( $contexts[ 'age.verified.' . ( 'age_verified_lt_at' === $node['operator'] ? 'lt' : 'gte' ) . '.' . (string) $target ] ?? null ) ? true : null,
 			default => false,
 		};
