@@ -34,7 +34,7 @@ Eine vollständige automatische Übertragung des Chatverlaufs ist ohne entsprech
 - Projektfreigabe erlaubt selbstständige Entwicklung, Commits, Reviews, PR-Merges, kostenfreie Staging-Tests und Veröffentlichungen, **jedoch nur** bei bestandenen Qualitäts-, Abhängigkeits-, Sicherheits-, Rechts- und Betriebs-Gates.
 - Gestapelte PRs/Branch-Abhängigkeiten respektieren. Kompatibilitäts-/Datenintegritätsprüfungen nicht umgehen, um einen Deployment-Erfolg vorzutäuschen.
 - Vor produktiven Migrationen: Backup, Restore-Probe, unterstützte Konfiguration und verifizierte Tests.
-- OrgaVela WordPress.com (`https://orgavela.wpcomstaging.com`) ist ausdrücklich als **separate** UOP-Testwebsite freigegeben. Aktuelle Hosting-Blockade in `docs/operations/orgavela-wordpress-com-staging.md` und Issue #12 beachten. Keine echten Nutzer- oder Testemails an Dritte.
+- **Aktuelles UOP-Ziel:** `https://orgavela.com` bei IONOS, vollständig getrennt von Dreamloud. Für die eigene SSH-Verbindung ausschließlich das manuelle, fail-closed [IONOS-Deployment](docs/operations/orgavela-ionos-ssh-deployment.md) und seine geschützten GitHub-Environment-Secrets verwenden. Vor Upload Zielidentität und Prüfsumme nachweisen; kein automatisches Aktivieren oder Migrieren. Die alte WordPress.com-Testinstanz `orgavela.wpcomstaging.com` ist wegen `latin1` weiterhin blockiert (Issue #12) und **nicht** das SSH-Ziel. Keine echten Nutzer- oder Testemails an Dritte.
 
 ## Übergabe nach jedem Arbeitsabschnitt
 
