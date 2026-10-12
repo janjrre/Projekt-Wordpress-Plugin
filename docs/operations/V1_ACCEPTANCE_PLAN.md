@@ -1,8 +1,9 @@
 # OrgaVela / UOP Core – Verbindlicher Masterplan bis zur V1-Abnahme
 
-**Version:** 1.0 | **Bestandsaufnahme:** 12.10.2026 | **Status:** aktiv; V1 **nicht** abgenommen  
+**Version:** 1.1 | **Bestandsaufnahme:** 12.10.2026 | **Status:** aktiv; V1 **nicht** abgenommen  
 **Quellenhierarchie:** Phase 3 Specification Freeze > Phase 2 V1-Spezifikation > Phase 1 Produktstrategie; neuere freigegebene ADRs ergänzen den Freeze, ersetzen ihn nicht stillschweigend.  
-**Projekt:** janjrre/Projekt-Wordpress-Plugin | **Technischer Name:** UOP Core | **Produktname:** OrgaVela | **Staging:** https://orgavela.com  
+**Projekt:** janjrre/Projekt-Wordpress-Plugin | **Technischer Name:** UOP Core | **Produktname:** OrgaVela | **Staging:** https://orgavela.com
+**Zentrale GitHub-Abnahme-Issue:** [#15 – V1 Master-Abnahme](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) mit verlinkten Milestone- und Zusatzpaketen.  
 **Abgrenzung:** Dreamloud und das Repository janjrre/dreamloud-portal gehören NICHT zu diesem Projekt. Keine realen Teilnehmerdaten, kostenpflichtigen Verträge oder externen Veröffentlichungen ohne die erforderlichen Freigaben.
 
 > **Dieses Dokument ist das verbindliche Arbeits-, Steuerungs- und Abnahmedokument.** Jedes Arbeitspaket endet erst mit nachvollziehbarem Prüfbeleg. Geplante, implementierte, im CI getestete, auf Staging geprüfte, gemergte und für V1 abgenommene Arbeit sind verschiedene Zustände. Keine automatische Gleichsetzung. Der jeweils aktuelle kompakte Maschinenstand steht in [V1_PROGRESS.json](V1_PROGRESS.json); alle Aktionen und Änderungen werden zusätzlich append-only in [ASSISTANT_WORK_LOG.md](ASSISTANT_WORK_LOG.md) dokumentiert.
@@ -328,4 +329,5 @@ Kein fingierter Live-Abgleich und keine Fortschrittsänderung ohne Quellenbeleg.
 ---
 
 **Änderungsjournal:**  
+- **2026-10-12, Version 1.1:** Zentralen GitHub-Abnahmeträger Issue #15 verlinkt, ohne inhaltliche Fortschrittsänderung.
 - **2026-10-12, Version 1.0:** Initiale umfassende Bestandsaufnahme aus Phase 2/3, PR #1–#6/#11, Issues #7–#10/#12/#13, CI-Status und aktivierter IONOS-Alpha-Installation; normativen 71er-Katalog, M6-10-Unterpakete, P4 und Ops, 18 Release-Gates sowie dauerhafte Fortschrittsroutine zusammengeführt.
