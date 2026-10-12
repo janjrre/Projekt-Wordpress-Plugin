@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-12 O03 explicit next-step choice: encrypted GitHub-Actions transfer proposed, operator-owned public/private key + independent local/private backup storage required; no new live backup or restore performed; previous live read-only preflight and synthetic restore remain the only green evidence.",
+  "snapshot_basis": "2026-10-12 operator explicitly selected Google Drive as long-term encrypted OrgaVela backup target; new owner-only folder created and verified via connected Google Drive; new GitHub synthetic age selftest #38294515636 green. GitHub Actions OAuth upload not yet connected or tested; no live WordPress backup or actual restore.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -155,10 +155,19 @@
       "actual_isolated_restoration": "not performed",
       "formal_accepted": false,
       "planned_backup_delivery": "dedicated reviewed GitHub Actions SSH stream -> operator public-key age encryption on ephemeral runner -> encrypted temporary artifact -> independent operator-owned PC/external SSD or existing private store; no live workflow before key and destination",
-      "operator_storage_choice": "pending",
+      "operator_storage_choice": "Google Drive: new owner-only encrypted-backups folder created via Google Drive connector",
       "recipient_public_key": "not provided/configured",
-      "encryption_pipeline_ci_test": "not yet implemented",
-      "real_backup_status": "not attempted"
+      "encryption_pipeline_ci_test": "local synthetic age roundtrip passed in GitHub Actions run 38294515636; actual Drive upload pending",
+      "real_backup_status": "not attempted",
+      "google_drive_folder_created": true,
+      "google_drive_folder_shared": false,
+      "google_drive_folder_owner_only_permissions_verified": true,
+      "google_drive_github_oauth_configured": false,
+      "google_drive_encrypted_canary_uploaded": false,
+      "google_drive_ci_crypto_selftest_run": 38294515636,
+      "google_drive_ci_crypto_selftest_result": "success",
+      "google_drive_ci_oauth_upload_workflow": ".github/workflows/orgavela-google-drive-connection.yml",
+      "google_drive_operator_setup_guide": "docs/operations/ORGAVELA_GOOGLE_DRIVE_BACKUP_SETUP.md"
     },
     {
       "id": "O04",
@@ -371,7 +380,12 @@
     "ionos_backup_created_by_this_workflow": false,
     "o03_next_backup_strategy": "pending storage choice and operator-generated public encryption recipient; no private keys or data in public GitHub",
     "o03_real_export_executed": false,
-    "o03_public_key_prepared": false
+    "o03_public_key_prepared": false,
+    "google_drive_backup_folder_private_verified": true,
+    "google_drive_backup_connection_to_chatgpt": "connected and folder created",
+    "google_drive_backup_connection_to_github_actions": "not yet authenticated, no OAuth token configured",
+    "google_drive_backup_synthetic_encryption_selftest_run": 38294515636,
+    "google_drive_backup_encrypted_canary_uploaded": false
   },
   "integration": {
     "main_contains_merged_feature_stack": false,
@@ -512,16 +526,16 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "Operator chooses independent permanent storage: recommended encrypted local PC+external SSD, alternative pre-existing private cloud; IONOS panel recovery points inspected separately",
-    "Generate age key pair locally, retain private key and recovery copy offline; supply ONLY public recipient for reviewed GitHub Actions backup pipeline",
-    "Implement and CI-test stream encryption + artifact handling using synthetic fixtures only, fail closed if key absent or if unencrypted artifacts/logs would be published",
-    "One deliberate OrgaVela live file+SQL read-only snapshot, immediately encrypted, independently stored and verified locally with hashes",
-    "Restore exact real snapshot only inside a private isolated test host with network, cron and email disabled; sign off O03/B04 after evidence"
+    "Operator creates local private age key, saves recovery copy offline, adds ONLY public recipient as GitHub orgavela-backup-drive Environment variable ORGAVELA_BACKUP_AGE_RECIPIENT",
+    "Operator sets up separate personal Google OAuth Desktop client, rclone remote rooted to their private Google Drive backup folder, and encrypted GitHub Environment Secret ORGAVELA_RCLONE_CONFIG (never paste credentials into public repo/chat)",
+    "With explicit owner-side Google authorization, run GitHub Actions orgavela-google-drive-connection.yml upload-synthetic and verify encrypted synthetic canary in folder",
+    "Only after canary successful and E2E security review, implement real read-only IONOS backup encrypted before Drive upload, scheduled offsite retention and encrypted restore testing",
+    "Restore actual full snapshot only in network-isolated private test host; keep O03/B04/R03 blocked until real proof"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.5",
+  "masterplan_version": "2.6",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
