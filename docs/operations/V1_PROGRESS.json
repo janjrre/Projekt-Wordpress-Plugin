@@ -1,0 +1,328 @@
+{
+  "schema": "uop-v1-progress-v1",
+  "project": "UOP Core / OrgaVela",
+  "snapshot_date": "2026-10-12",
+  "snapshot_basis": "Actual PR/Issue metadata, Phase-3 specification and OrgaVela MCP through 2026-10-12; not a scheduled live monitor",
+  "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
+  "source_refs": [
+    "docs/specification/phase-3-specification-freeze.md",
+    "docs/specification/phase-2-v1-specification.md"
+  ],
+  "definitions": {
+    "implemented": "Technically implemented per documented PR and earlier CI, not formal V1 acceptance",
+    "accepted": "All applicable package exit criteria, current green CI, evidence, reviews, integration and release gates passed",
+    "blocked": "Blocked by a known unmet essential dependency or red check",
+    "release_gate_green": "Formally independently evidenced pass of the final candidate; not merely a prior test of an alpha"
+  },
+  "measurements": {
+    "milestone_count": 8,
+    "normative_packages": 71,
+    "reported_implemented_packages": 62,
+    "reported_implemented_fraction": "62/71",
+    "milestones_formally_v1_accepted": 0,
+    "p4_packages": 4,
+    "p4_packages_fully_accepted": 0,
+    "release_gates_total": 18,
+    "release_gates_formally_green": 0,
+    "v1_release_accepted": false,
+    "note": "Do NOT treat 62/71 (~87% technical implementation only) as a total V1 project completion percent."
+  },
+  "milestones": [
+    {
+      "id": "M0",
+      "title": "Foundation",
+      "packages": 6,
+      "reported_implemented": 6,
+      "accepted": 0,
+      "status": "implemented-review-pending",
+      "pull_request": 1
+    },
+    {
+      "id": "M1",
+      "title": "Persistence",
+      "packages": 8,
+      "reported_implemented": 8,
+      "accepted": 0,
+      "status": "implemented-live-schema-audit-pending",
+      "pull_request": 1
+    },
+    {
+      "id": "M2",
+      "title": "Identity, Authorization, Audit, Outbox",
+      "packages": 10,
+      "reported_implemented": 10,
+      "accepted": 0,
+      "status": "implemented-draft-review-pending",
+      "pull_request": 2
+    },
+    {
+      "id": "M3",
+      "title": "Profiles, Events, Forms",
+      "packages": 10,
+      "reported_implemented": 10,
+      "accepted": 0,
+      "status": "implemented-draft-review-pending",
+      "pull_request": 3
+    },
+    {
+      "id": "M4",
+      "title": "Registration, Capacity, Waitlist",
+      "packages": 9,
+      "reported_implemented": 9,
+      "accepted": 0,
+      "status": "implemented-review-pending",
+      "pull_request": 4
+    },
+    {
+      "id": "M5",
+      "title": "Consent, Privacy, Communications, Export",
+      "packages": 10,
+      "reported_implemented": 10,
+      "accepted": 0,
+      "status": "implemented-review-pending",
+      "pull_request": 5
+    },
+    {
+      "id": "M6",
+      "title": "Admin, Portal, Blocks, REST",
+      "packages": 10,
+      "reported_implemented": 9,
+      "accepted": 0,
+      "status": "m6-10-partial-draft-review-pending",
+      "pull_request": 6
+    },
+    {
+      "id": "M7",
+      "title": "Hardening and Release",
+      "packages": 8,
+      "reported_implemented": 0,
+      "accepted": 0,
+      "status": "not-started",
+      "pull_request": null
+    }
+  ],
+  "supplemental_p4": [
+    {
+      "id": "P4-01",
+      "issue": 7,
+      "pr": 11,
+      "status": "partial",
+      "accepted": false
+    },
+    {
+      "id": "P4-02",
+      "issue": 8,
+      "status": "not-started",
+      "accepted": false
+    },
+    {
+      "id": "P4-03",
+      "issue": 9,
+      "status": "partial",
+      "accepted": false
+    },
+    {
+      "id": "P4-04",
+      "issue": 10,
+      "status": "not-started",
+      "accepted": false
+    }
+  ],
+  "m6_10": {
+    "status": "partial",
+    "reported_packages_1_to_3": "completed-pr-evidence-subject-to-current-ci",
+    "package_4": "partial",
+    "packages_5_and_6": "open",
+    "accepted": false
+  },
+  "ops": [
+    {
+      "id": "O01",
+      "status": "partial"
+    },
+    {
+      "id": "O02",
+      "status": "partial"
+    },
+    {
+      "id": "O03",
+      "status": "not-started"
+    },
+    {
+      "id": "O04",
+      "status": "blocked"
+    },
+    {
+      "id": "O05",
+      "status": "not-started"
+    },
+    {
+      "id": "O06",
+      "status": "blocked"
+    },
+    {
+      "id": "O07",
+      "status": "not-started"
+    },
+    {
+      "id": "O08",
+      "status": "not-started"
+    },
+    {
+      "id": "O09",
+      "status": "blocked"
+    },
+    {
+      "id": "O10",
+      "status": "not-started"
+    },
+    {
+      "id": "O11",
+      "status": "not-started"
+    },
+    {
+      "id": "O12",
+      "status": "not-started"
+    }
+  ],
+  "gates": [
+    {
+      "id": "R01",
+      "status": "open"
+    },
+    {
+      "id": "R02",
+      "status": "open"
+    },
+    {
+      "id": "R03",
+      "status": "red"
+    },
+    {
+      "id": "R04",
+      "status": "open"
+    },
+    {
+      "id": "R05",
+      "status": "open"
+    },
+    {
+      "id": "R06",
+      "status": "open"
+    },
+    {
+      "id": "R07",
+      "status": "open"
+    },
+    {
+      "id": "R08",
+      "status": "red"
+    },
+    {
+      "id": "R09",
+      "status": "open"
+    },
+    {
+      "id": "R10",
+      "status": "open"
+    },
+    {
+      "id": "R11",
+      "status": "open"
+    },
+    {
+      "id": "R12",
+      "status": "open"
+    },
+    {
+      "id": "R13",
+      "status": "open"
+    },
+    {
+      "id": "R14",
+      "status": "open"
+    },
+    {
+      "id": "R15",
+      "status": "red"
+    },
+    {
+      "id": "R16",
+      "status": "open"
+    },
+    {
+      "id": "R17",
+      "status": "red"
+    },
+    {
+      "id": "R18",
+      "status": "open"
+    }
+  ],
+  "staging": {
+    "url": "https://orgavela.com",
+    "plugin": "UOP Core",
+    "version": "0.1.0-alpha.2",
+    "status": "active",
+    "wordpress_version": "7.1.3",
+    "php_version": "8.3.33",
+    "database": "MariaDB 11.8.8",
+    "charset": "utf8mb4",
+    "uop_db_version": 2,
+    "uop_data_version": 2,
+    "physical_schema_check": "not independently confirmed",
+    "source_sha": "4f2c4df800caf1e5708f05cce9536a7afb34aaa0",
+    "package_sha256": "acbebdd9df25d996848bbca6ebe6726ee1a986207fc7c7b818474dc93134267a",
+    "install_run": 38241807035,
+    "cron_disabled": true,
+    "external_cron_verified": false,
+    "discourage_search_engines": false,
+    "backup_restore_verified": false,
+    "real_participant_data_allowed": false
+  },
+  "integration": {
+    "main_contains_merged_feature_stack": false,
+    "open_prs": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      11
+    ],
+    "latest_pr_11_head": "1b98658704e1b4e8fb5350d7817e20af4fdecc35",
+    "latest_pr_11_ci": [
+      {
+        "run": 38233565475,
+        "kind": "pr-foundation",
+        "result": "failure",
+        "failed_jobs": [
+          "PHP 8.5 MySQL 8.0 browser activation smoke"
+        ]
+      },
+      {
+        "run": 38233565383,
+        "kind": "pr-https-browser",
+        "result": "failure",
+        "failed_jobs": [
+          "two Playwright browser test failures"
+        ]
+      },
+      {
+        "run": 38233559467,
+        "kind": "push-foundation",
+        "result": "success",
+        "successful_jobs": 8
+      }
+    ]
+  },
+  "immediate_next": [
+    "O02/M1-08: independent UOP schema health and migration status",
+    "O03: IONOS file+DB backup and actual restore test",
+    "O04: external cron and Action Scheduler functional check",
+    "O06: staging index/privacy access protection",
+    "O09: debug red PR #11 latest HEAD CI"
+  ],
+  "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task."
+}
