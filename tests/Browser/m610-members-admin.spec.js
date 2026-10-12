@@ -159,7 +159,15 @@ test('administrator: real control center, registration review, capacity acceptan
   await detail.getByRole('button', { name: 'Decide allocation' }).click();
   await expect(detail.locator('.uop-m6-status')).toHaveText('accepted', { timeout: 15000 });
 
-  await list.getByRole('button', { name: /Caregiver Minor/ }).click();
+  // WordPress's admin navigation may remain hovered after the previous
+  // click and open a submenu over the next record. Dismiss that transient
+  // platform menu by moving the pointer into the content region. We still
+  // exercise the REAL pointer click and never use force:true.
+  const currentViewport = page.viewportSize();
+  await page.mouse.move((currentViewport?.width || 1280) - 24, 110);
+  const childRecord = list.getByRole('button', { name: /Caregiver Minor/ });
+  await childRecord.click();
+  await expect(childRecord).toHaveAttribute('aria-pressed', 'true');
   await expect(detail.getByRole('button', { name: 'Reject', exact: true })).toBeVisible();
   await detail.getByRole('button', { name: 'Reject', exact: true }).click();
   await expect(detail.locator('.uop-m6-status')).toHaveText('rejected', { timeout: 15000 });
