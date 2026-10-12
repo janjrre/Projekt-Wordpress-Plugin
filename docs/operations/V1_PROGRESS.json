@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-12 M1-08 default-org read-only Site Health seed validation PR#11 HEAD 8e5cbfc; current CI queued/in progress; previous SHA 2b8a65f passed 8/8 and HTTPS; OrgaVela untouched",
+  "snapshot_basis": "2026-10-12 M1-08 regression passed Foundation 8/8 on 8e5cbfc; HTTPS 40px CSS request failed net::ERR_TOO_MANY_RETRIES in Playwright trace; CI proxy static asset correction a34f4195, current SHA runs pending",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -309,19 +309,19 @@
       6,
       11
     ],
-    "latest_pr_11_head": "8e5cbfc454ffe963b6c3121d73b0cd4608053fd9",
+    "latest_pr_11_head": "a34f4195371f9edf1fa24ea4abdef1fd479f2c19",
     "latest_pr_11_ci": [
       {
-        "run": 38252652328,
+        "run": 38253835618,
+        "head": "a34f4195371f9edf1fa24ea4abdef1fd479f2c19",
         "kind": "pr-foundation",
-        "result": "pending",
-        "head": "8e5cbfc454ffe963b6c3121d73b0cd4608053fd9"
+        "result": "pending"
       },
       {
-        "run": 38252652419,
+        "run": 38253835549,
+        "head": "a34f4195371f9edf1fa24ea4abdef1fd479f2c19",
         "kind": "pr-https-browser",
-        "result": "pending",
-        "head": "8e5cbfc454ffe963b6c3121d73b0cd4608053fd9"
+        "result": "pending"
       }
     ],
     "previous_pr_11_ci": [
@@ -408,7 +408,27 @@
       "c297a829d9a5dd74378ca09ad748a7442328d6b9",
       "8e5cbfc454ffe963b6c3121d73b0cd4608053fd9"
     ],
-    "m1_seed_health_implementation": "draft-only, code and test committed; current-SHA CI pending"
+    "m1_seed_health_implementation": "draft-only, code and test committed; current-SHA CI pending",
+    "previous_ci_m1_8e5cbfc": {
+      "head": "8e5cbfc454ffe963b6c3121d73b0cd4608053fd9",
+      "foundation": {
+        "run": 38252652328,
+        "result": "success",
+        "jobs": "8/8",
+        "comment": "M1 seed integrity tests passed across PHP and DB matrix"
+      },
+      "https": {
+        "run": 38252652419,
+        "result": "failure",
+        "failed_tests": "1/19 (40px A11y because stylesheet network ERR_TOO_MANY_RETRIES)",
+        "artifact_id": 11748822534
+      }
+    },
+    "https_asset_delivery_fix_commits": [
+      "faa8e729c27e0dc409dacb8de44c846c44247e02",
+      "a34f4195371f9edf1fa24ea4abdef1fd479f2c19"
+    ],
+    "css_fail_root_cause": "Playwright CI network trace m610-https-diagnostics 11748822534, GET m3-form-builder.css failed net::ERR_TOO_MANY_RETRIES, response -1"
   },
   "immediate_next": [
     "O02/M1-08: confirm new PR#11 seed health regressions on current CI SHA; then obtain authenticated live uop_schema Site Health and independent 29-table/index/default-org comparisons on OrgaVela, strictly read-only",
@@ -419,7 +439,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "1.7",
+  "masterplan_version": "1.8",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
