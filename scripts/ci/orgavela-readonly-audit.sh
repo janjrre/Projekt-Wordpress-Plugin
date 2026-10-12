@@ -6,7 +6,7 @@ set -euo pipefail
 umask 077
 
 mode="$1"
-[[ "$mode" == 'sftp' || "$mode" == 'probe' || "$mode" == 'schema' ]] || exit 2
+[[ "$mode" == 'sftp' || "$mode" == 'probe' || "$mode" == 'schema' || "$mode" == 'backup-preflight' ]] || exit 2
 [[ "$GITHUB_REPOSITORY" == 'janjrre/Projekt-Wordpress-Plugin' ]] || exit 2
 [[ "$GITHUB_REF" == 'refs/heads/main' ]] || exit 2
 
@@ -99,6 +99,70 @@ if [[ "$mode" == 'probe' ]]; then
   exit 0
 fi
 
+# O03: Preflight only. No dump, archive, backup file, cron, restore or remote
+# mutation; no secrets, filenames, paths, usernames or DB identifiers printed.
+if [[ "$mode" == 'backup-preflight' ]]; then
+  tool_state() {
+    if command -v "$1" >/dev/null 2>&1; then
+      printf 'available'
+    else
+      printf 'missing'
+    fi
+  }
+  bucket_kib() {
+    local amount="${1:-}"
+    if [[ ! "$amount" =~ ^[0-9]+$ ]]; then
+      printf 'unknown'
+    elif (( amount < 25600 )); then
+      printf 'under-25MiB'
+    elif (( amount < 102400 )); then
+      printf '25-100MiB'
+    elif (( amount < 512000 )); then
+      printf '100-500MiB'
+    elif (( amount < 1048576 )); then
+      printf '500MiB-1GiB'
+    elif (( amount < 5242880 )); then
+      printf '1-5GiB'
+    else
+      printf 'over-5GiB'
+    fi
+  }
+  count_kib="$(du -sk "$root" 2>/dev/null | awk 'NR==1 {print $1}')" || count_kib=''
+  free_kib="$(df -Pk "$root" 2>/dev/null | awk 'NR==2 {print $4}')" || free_kib=''
+  echo "ORGAVELA_BACKUP_WP_FILES_SIZE=$(bucket_kib "$count_kib")"
+  echo "ORGAVELA_BACKUP_HOST_FREE_SPACE=$(bucket_kib "$free_kib")"
+  echo "ORGAVELA_BACKUP_MYSQLDUMP=$(tool_state mysqldump)"
+  echo "ORGAVELA_BACKUP_MARIADBDUMP=$(tool_state mariadb-dump)"
+  echo "ORGAVELA_BACKUP_TAR=$(tool_state tar)"
+  echo "ORGAVELA_BACKUP_GZIP=$(tool_state gzip)"
+  echo "ORGAVELA_BACKUP_SHA256SUM=$(tool_state sha256sum)"
+  echo "ORGAVELA_BACKUP_MYSQLCLI=$(tool_state mysql)"
+  # WordPress already loaded through WP-CLI, using only aggregate metadata.
+  php_code="$(cat <<'PHP'
+global $wpdb;
+$bytes = $wpdb->get_var(
+    'SELECT COALESCE(SUM(DATA_LENGTH + INDEX_LENGTH), 0) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()'
+);
+$status = is_numeric($bytes) && (int) $bytes >= 0 ? 'available' : 'unavailable';
+echo 'ORGAVELA_BACKUP_DB_METADATA=' . $status . "\n";
+if ($status === 'available') {
+    $kb = (int) ceil(((float) $bytes) / 1024);
+    $bucket = $kb < 25600 ? 'under-25MiB'
+        : ($kb < 102400 ? '25-100MiB'
+        : ($kb < 512000 ? '100-500MiB'
+        : ($kb < 1048576 ? '500MiB-1GiB'
+        : ($kb < 5242880 ? '1-5GiB' : 'over-5GiB'))));
+    echo 'ORGAVELA_BACKUP_DB_SIZE=' . $bucket . "\n";
+}
+PHP
+)"
+  wp --path="$root" --skip-plugins --skip-themes eval "$php_code" 2>/dev/null || exit 25
+  echo 'ORGAVELA_BACKUP_PROVIDER_SNAPSHOTS=not-verifiable-over-shell'
+  echo 'ORGAVELA_BACKUP_EXPORT_EXECUTED=no'
+  echo 'ORGAVELA_BACKUP_RESTORE_EXECUTED=no'
+  exit 0
+fi
+
 # WordPress CLI boot is restricted to --skip-plugins --skip-themes. It reads
 # the installed UOP classes without registering their plugin lifecycle or
 # calling migration runners. Never reveal DB name, table names, IDs, rows,
@@ -153,6 +217,7 @@ else
     22) reason='SSH connected, but WP-CLI is unavailable on this hosting shell.' ;;
     23) reason='WordPress home did not match exactly orgavela.com; refused.' ;;
     24) reason='Installed UOP Core version differs from the audited Alpha.2 baseline; refused.' ;;
+    25) reason='Backup preflight metadata could not be read; no archive or restore was attempted.' ;;
     255) reason='SSH handshake/authentication failed; SFTP-only access is still possible.' ;;
     *) reason='Remote shell/WordPress read-only command failed; SSH shell or WP-CLI capability remains unverified.' ;;
   esac
@@ -173,4 +238,12 @@ $1 == "ORGAVELA_AUDIT_SCHEMA" && $2 ~ /^(good|critical)$/ { print; next }
 $1 == "ORGAVELA_AUDIT_TABLE_COUNT" && $2 ~ /^[0-9]+$/ { print; next }
 $1 == "ORGAVELA_AUDIT_DEFAULT_ORG" && $2 ~ /^(good|critical)$/ { print; next }
 $1 == "ORGAVELA_AUDIT_VERSIONS" && $2 ~ /^(good|critical)$/ { print; next }
+$1 == "ORGAVELA_BACKUP_WP_FILES_SIZE" && $2 ~ /^(under-25MiB|25-100MiB|100-500MiB|500MiB-1GiB|1-5GiB|over-5GiB|unknown)$/ { print; next }
+$1 == "ORGAVELA_BACKUP_HOST_FREE_SPACE" && $2 ~ /^(under-25MiB|25-100MiB|100-500MiB|500MiB-1GiB|1-5GiB|over-5GiB|unknown)$/ { print; next }
+$1 == "ORGAVELA_BACKUP_DB_METADATA" && $2 ~ /^(available|unavailable)$/ { print; next }
+$1 == "ORGAVELA_BACKUP_DB_SIZE" && $2 ~ /^(under-25MiB|25-100MiB|100-500MiB|500MiB-1GiB|1-5GiB|over-5GiB)$/ { print; next }
+$1 ~ /^ORGAVELA_BACKUP_(MYSQLDUMP|MARIADBDUMP|TAR|GZIP|SHA256SUM|MYSQLCLI)$/ && $2 ~ /^(available|missing)$/ { print; next }
+$1 == "ORGAVELA_BACKUP_PROVIDER_SNAPSHOTS" && $2 == "not-verifiable-over-shell" { print; next }
+$1 == "ORGAVELA_BACKUP_EXPORT_EXECUTED" && $2 == "no" { print; next }
+$1 == "ORGAVELA_BACKUP_RESTORE_EXECUTED" && $2 == "no" { print; next }
 ' "$tmp/out"
