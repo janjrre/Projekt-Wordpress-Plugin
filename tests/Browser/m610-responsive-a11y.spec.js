@@ -330,6 +330,16 @@ test('operations and consent editor keep wide tables in keyboard-scrollable regi
   for (const width of [320, 390, 768]) {
     await page.setViewportSize({ width, height: 850 });
     await visit(page, '/wp-admin/admin.php?page=uop-operations', { waitUntil: 'domcontentloaded' });
+    // An overloaded disposable HTTPS proxy can drop the CSS request while
+    // still serving valid admin markup. One bounded reload is allowed, but
+    // the test must observe the actual stylesheet and computed scroll rule.
+    const consoleSheet = page.locator('link[rel="stylesheet"][href*="m6-console.css"]');
+    if (!await consoleSheet.evaluate(link => Boolean(link.sheet)).catch(() => false)) {
+      await page.reload({ waitUntil: 'load' });
+    }
+    await expect.poll(() => consoleSheet.evaluate(link => Boolean(link.sheet)).catch(() => false), {
+      timeout: 12000,
+    }).toBe(true);
     const operations = page.locator('.uop-m6-console');
     await expect(operations.getByRole('navigation', { name: 'Operations sections' })).toBeVisible();
     const regions = operations.locator('.uop-m6-console__table');
