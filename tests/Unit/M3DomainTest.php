@@ -130,6 +130,25 @@ final class M3DomainTest extends TestCase {
         FieldRules::validate(['key'=>'nickname','type'=>'text','label'=>'Name']); // Existing V1 self-edit defaults are unaffected.
     }
 
+    public function test_verified_age_requires_evidence_context_and_ignores_claimed_birthdate(): void {
+        $engine = new ConditionEngine();
+        foreach (['age_verified_gte_at','age_verified_lt_at'] as $operator) {
+            $node = ['source'=>'profile','field'=>'date_of_birth','operator'=>$operator,'value'=>18,'context'=>'event.start'];
+            $condition = ['schema_version'=>1,'not'=>$node];
+            $facts = ['profile'=>['date_of_birth'=>'1980-01-01'],'registration'=>[]];
+            self::assertFalse($engine->evaluate($condition,$facts,['event.start'=>'2030-01-01 00:00:00']), 'NOT must not turn missing independent evidence into a grant.');
+            $key = 'age.verified.' . ('age_verified_gte_at' === $operator ? 'gte' : 'lt') . '.18';
+            self::assertTrue($engine->evaluate(['schema_version'=>1,'all'=>[$node]],$facts,[$key=>'verified','event.start'=>'2030-01-01 00:00:00']));
+            self::assertFalse($engine->evaluate($condition,$facts,[$key=>'verified','event.start'=>'2030-01-01 00:00:00']));
+        }
+        foreach (['registration','self'] as $source) {
+            try {
+                $engine->validate(['schema_version'=>1,'all'=>[['source'=>$source,'field'=>'date_of_birth','operator'=>'age_verified_gte_at','value'=>18,'context'=>'event.start']]]);
+                self::fail('Untrusted verified age predicate source was accepted.');
+            } catch (InvalidArgumentException) { self::assertTrue(true); }
+        }
+    }
+
     public function test_form_conditions_reject_missing_consent_and_cyclic_dependencies(): void {
         $schema=new FormSchema();
         $predicate=static fn(string $reference): array => [
