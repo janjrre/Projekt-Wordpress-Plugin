@@ -1,6 +1,10 @@
 name: OrgaVela – secure SSH probe and first UOP upload
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/deploy-requests/orgavela.json'
   workflow_dispatch:
     inputs:
       operation:
@@ -38,12 +42,35 @@ jobs:
       IONOS_HOST_KEYS: ${{ secrets.IONOS_KNOWN_HOSTS }}
       WP_ROOT: ${{ vars.IONOS_WP_ROOT }}
     steps:
-      - name: Validate deployment settings and pin SSH identity
+      - name: Checkout deployment request from main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Resolve manual or committed deployment request
         shell: bash
         env:
-          OPERATION: ${{ inputs.operation }}
-          CONFIRM: ${{ inputs.confirm_target }}
-          EXPECTED: ${{ inputs.expected_sha256 }}
+          MANUAL_OPERATION: ${{ inputs.operation }}
+          MANUAL_CONFIRM: ${{ inputs.confirm_target }}
+          MANUAL_SHA: ${{ inputs.expected_sha256 }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            request='.github/deploy-requests/orgavela.json'
+            [[ -f "$request" ]] || exit 1
+            operation="$(jq -r '.operation // ""' "$request")"
+            confirm="$(jq -r '.confirm_target // ""' "$request")"
+            expected="$(jq -r '.expected_sha256 // ""' "$request")"
+          else
+            operation="$MANUAL_OPERATION"
+            confirm="$MANUAL_CONFIRM"
+            expected="$MANUAL_SHA"
+          fi
+          [[ "$operation" =~ ^(probe|upload)$ ]] || exit 1
+          [[ "$confirm" =~ ^[a-zA-Z0-9.-]*$ ]] || exit 1
+          [[ "$expected" =~ ^[a-fA-F0-9]*$ ]] || exit 1
+          printf 'OPERATION=%s\nCONFIRM=%s\nEXPECTED=%s\n' "$operation" "$confirm" "$expected" >> "$GITHUB_ENV"
+      - name: Validate deployment settings and pin SSH identity
+        shell: bash
         run: |
           set -euo pipefail
           for v in IONOS_HOST IONOS_USER SSHPASS IONOS_HOST_KEYS WP_ROOT; do
@@ -85,10 +112,8 @@ jobs:
           echo 'Verified OrgaVela WordPress root, SSH identity and plugin write access.'
           REMOTE
       - name: Download checked staging artifact
-        if: inputs.operation == 'upload'
+        if: env.OPERATION == 'upload'
         shell: bash
-        env:
-          EXPECTED: ${{ inputs.expected_sha256 }}
         run: |
           set -euo pipefail
           base='https://raw.githubusercontent.com/janjrre/Projekt-Wordpress-Plugin/staging/uop-plugin-package'
@@ -112,7 +137,7 @@ jobs:
           fi
           echo "Verified artifact digest: $actual"
       - name: Transfer archive over secure SSH transport
-        if: inputs.operation == 'upload'
+        if: env.OPERATION == 'upload'
         shell: bash
         run: |
           sshpass -e scp -q -P 22 -o StrictHostKeyChecking=yes \
@@ -121,7 +146,7 @@ jobs:
             -o PubkeyAuthentication=no "$RUNNER_TEMP/uop-core.zip" \
             "$IONOS_USER@$IONOS_HOST:.uop-install-$GITHUB_RUN_ID.zip"
       - name: Install only a new UOP plugin directory (no activation)
-        if: inputs.operation == 'upload'
+        if: env.OPERATION == 'upload'
         shell: bash
         run: |
           set -euo pipefail
