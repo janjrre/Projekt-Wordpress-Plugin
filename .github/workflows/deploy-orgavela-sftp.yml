@@ -138,7 +138,7 @@ jobs:
           stage=".uop-stage-$GITHUB_RUN_ID"
           {
             printf 'mkdir "%s/%s"\n' "$plugins" "$stage"
-            printf 'put -r "%s/unpacked/uop-core" "%s/%s"\n' "$RUNNER_TEMP" "$plugins" "$stage"
+            printf 'put -R "%s/unpacked/uop-core" "%s/%s"\n' "$RUNNER_TEMP" "$plugins" "$stage"
             printf 'ls "%s/%s/uop-core/uop-core.php"\n' "$plugins" "$stage"
             printf 'ls "%s/%s/uop-core/vendor/autoload.php"\n' "$plugins" "$stage"
             printf 'rename "%s/%s/uop-core" "%s/uop-core"\n' "$plugins" "$stage" "$plugins"
