@@ -87,3 +87,14 @@ Der frühere PR-#11-HEAD `1b98658704e1b4e8fb5350d7817e20af4fdecc35` hatte zwei r
 **Nächste harte Blocker:** direkter `uop_schema`- und `information_schema`-Livebeleg; OrgaVela-spezifischer Backup-/Restore-Nachweis; Zugangsschutz/Datenschutz; rote neueste CI.
 
 **Abnahmeentscheidung:** O01, O02/M1-08, O03, O06, O09 **nicht abgeschlossen**. Die Gesamtzählung 62/71, 0/8, 0/4 und 0/18 bleibt unverändert.
+
+
+## 8. Folgelauf: PR-#11-Browserkorrektur verifiziert (12.10.2026)
+
+Seit dem ersten W0-Audit wurden zwei minimal-invasive Playwright-Anpassungen am Draft-Branch `feat/p4-age-evidence` vorgenommen: `d36935da376224d12f16b451e43e78a5d46d6593` (Plugin-Aktivierungs-/Deaktivierungs-Redirect bei `commit`, finaler HTTP-200-Status und WordPress-Plugins-Pfad, echte Plugin-Link-/Fatal-Assertions unverändert); `2b8a65f753447689190d442a038b3f76472aaa71` (realer Caregiver-Login-Redirect bei `commit`, anschließende tatsächliche WordPress-Admin-Leiste bleibt Pflicht). Assertions, Berechtigungen und A11y-Bedingungen wurden **nicht** aufgeweicht.
+
+**CI exakt auf `2b8a65f753447689190d442a038b3f76472aaa71`:** [Foundation #38250446667](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38250446667) **8/8 SUCCESS**, [HTTPS/Mailpit #38250446526](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38250446526) **SUCCESS**. Diese Ergebnisse belegen einen erfolgreichen neuen CI-Lauf; eine definitive Aussage zur sporadischen Alt-Timeout-Ursache oder zur Dauerstabilität setzt weitere Wiederholungsbelege voraus.
+
+**O02 read-only Quell-Querprüfung:** Der tatsächlich auf OrgaVela installierten Paketprovenienz zugeordnete SHA `4f2c4df800caf1e5708f05cce9536a7afb34aaa0` enthält `Installer::health`, `SchemaInspector::verify_all`, `AgeAttestationSchema` und die Registrierung unter `site_status_tests`. Die bloße Quellverfügbarkeit ist **keine** Liveabnahme; weiterhin kein verbindlicher `uop_schema=good`-Resultat oder physischer 29-Tabellen-/Index-Report.
+
+**O06 read-only WordPress-MCP:** genau 0 veröffentlichte `uop_event`-Beiträge, 1 veröffentlichte WP-Standard-Beispielseite. Keine Siteänderung. Indexierungsabschreckung weiterhin false; Datenschutzerklärung weiterhin Draft. `DISABLE_WP_CRON=true`, später 2/19 überfällige Ereignisse statt zuvor 5/19 (ein Indiz für vergangene Ausführung, aber kein Beweis eines verlässlichen externen Cron). O03 Backups und Restore nicht ausgeführt. Alle Freigabe-/Isolation-/Datenschutz-Gates behalten ihre Sperrwirkung.
