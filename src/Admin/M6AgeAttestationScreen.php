@@ -11,6 +11,8 @@ use InvalidArgumentException;
 use RuntimeException;
 use UOP\Application\Identity\AgeAttestationService;
 use UOP\Application\Policy\Actor;
+use UOP\Application\Policy\PolicyObject;
+use UOP\Application\Policy\PolicyService;
 use UOP\Core\CorrelationId;
 use UOP\Core\PublicId;
 use UOP\Domain\Organization\OrgScope;
@@ -26,6 +28,7 @@ final class M6AgeAttestationScreen {
 	 * @param AgeAttestationService    $reviews  Server-side reviewer permission.
 	 * @param AgeAttestationRepository $evidence Verified age class reads.
 	 * @param PersonRepository         $people   Scoped subject resolution.
+	 * @param PolicyService            $policy   Live event-scoped authorization.
 	 * @param Connection               $db       Private published-event list.
 	 * @param string                   $prefix   Tenant-specific database prefix.
 	 */
@@ -33,6 +36,7 @@ final class M6AgeAttestationScreen {
 		private AgeAttestationService $reviews,
 		private AgeAttestationRepository $evidence,
 		private PersonRepository $people,
+		private PolicyService $policy,
 		private Connection $db,
 		private string $prefix
 	) {}
@@ -83,14 +87,15 @@ final class M6AgeAttestationScreen {
 		$lookup_event = absint( $_GET['event_post_id'] ?? 0 );
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only lookup, no mutation.
 		$lookup_threshold = absint( $_GET['threshold_age'] ?? 18 );
+		$current_outcome = 'gte';
 		echo '<p><label for="uop-age-subject">' . esc_html__( 'Person UUID', 'uop-core' ) . '</label> ';
-		echo '<input required type="text" style="min-height:44px;min-width:320px" id="uop-age-subject" name="person_id" maxlength="36" value="' . esc_attr( $lookup_id ) . '"></p>';
+		echo '<input required type="text" style="min-height:44px;width:100%;max-width:320px" id="uop-age-subject" name="person_id" maxlength="36" value="' . esc_attr( $lookup_id ) . '"></p>';
 		echo '<p><label for="uop-age-event">' . esc_html__( 'Event', 'uop-core' ) . '</label> ';
 		echo '<select required style="min-height:44px" name="event_post_id" id="uop-age-event">';
 		echo '<option value="">' . esc_html__( 'Choose published event', 'uop-core' ) . '</option>';
 		foreach ( $events as $event ) {
 			$post = get_post( (int) $event['event_post_id'] );
-			if ( $post && 'uop_event' === $post->post_type && 'publish' === $post->post_status ) {
+			if ( $post && $this->may_manage_event( $scope, (int) $post->ID ) ) {
 				echo '<option value="' . esc_attr( (string) $post->ID ) . '" ' . selected( $lookup_event, (int) $post->ID, false ) . '>' . esc_html( get_the_title( $post ) ) . '</option>';
 			}
 		}
@@ -105,12 +110,22 @@ final class M6AgeAttestationScreen {
 				if ( ! $person || 'active' !== $person['status'] ) {
 					throw new RuntimeException( 'Subject is unavailable.' );
 				}
+				if ( ! $this->may_manage_event( $scope, $lookup_event, (int) $person['id'] ) ) {
+					throw new RuntimeException( 'Event review not permitted.' );
+				}
 				$record = $this->evidence->latest( $scope, (int) $person['id'], $lookup_event, $lookup_threshold );
+				$current_outcome = $record && 'lt' === $record['outcome'] ? 'lt' : 'gte';
 				$status = $record ? (string) $record['status'] : 'unknown';
 				if ( $record && 'verified' === $status && (string) $record['valid_until'] < gmdate( 'Y-m-d H:i:s' ) ) {
 					$status = 'expired';
 				}
-				echo '<p role="status"><strong>' . esc_html__( 'Current age attestation:', 'uop-core' ) . '</strong> ' . esc_html( $status ) . '</p>';
+				$labels = array(
+					'unknown'  => __( 'Not verified: independent review required.', 'uop-core' ),
+					'verified' => __( 'Verified for this event and age threshold.', 'uop-core' ),
+					'expired'  => __( 'Expired: new independent review required.', 'uop-core' ),
+					'revoked'  => __( 'Revoked: new independent review required.', 'uop-core' ),
+				);
+				echo '<p role="status"><strong>' . esc_html__( 'Current age attestation:', 'uop-core' ) . '</strong> ' . esc_html( $labels[ $status ] ?? $labels['unknown'] ) . '</p>';
 			} catch ( InvalidArgumentException | RuntimeException ) {
 				echo '<p role="status">' . esc_html__( 'Person or event unavailable.', 'uop-core' ) . '</p>';
 			}
@@ -121,13 +136,13 @@ final class M6AgeAttestationScreen {
 		wp_nonce_field( 'uop_age_review' );
 		echo '<input type="hidden" name="action" value="uop_age_review">';
 		echo '<p><label for="uop-age-review-person">' . esc_html__( 'Person UUID', 'uop-core' ) . '</label> ';
-		echo '<input required id="uop-age-review-person" type="text" style="min-height:44px;min-width:320px" name="person_id" maxlength="36" value="' . esc_attr( $lookup_id ) . '"></p>';
+		echo '<input required id="uop-age-review-person" type="text" style="min-height:44px;width:100%;max-width:320px" name="person_id" maxlength="36" value="' . esc_attr( $lookup_id ) . '"></p>';
 		echo '<p><label for="uop-age-review-event">' . esc_html__( 'Event', 'uop-core' ) . '</label> ';
 		echo '<select required id="uop-age-review-event" name="event_post_id" style="min-height:44px">';
 		echo '<option value="">' . esc_html__( 'Choose published event', 'uop-core' ) . '</option>';
 		foreach ( $events as $event ) {
 			$post = get_post( (int) $event['event_post_id'] );
-			if ( $post && 'uop_event' === $post->post_type && 'publish' === $post->post_status ) {
+			if ( $post && $this->may_manage_event( $scope, (int) $post->ID ) ) {
 				echo '<option value="' . esc_attr( (string) $post->ID ) . '" ' . selected( $lookup_event, (int) $post->ID, false ) . '>' . esc_html( get_the_title( $post ) ) . '</option>';
 			}
 		}
@@ -135,7 +150,7 @@ final class M6AgeAttestationScreen {
 		echo '<p><label for="uop-age-review-threshold">' . esc_html__( 'Verified age threshold', 'uop-core' ) . '</label> ';
 		echo '<input required type="number" min="1" max="120" id="uop-age-review-threshold" name="threshold_age" style="min-height:44px;width:80px" value="' . esc_attr( (string) $lookup_threshold ) . '"></p>';
 		echo '<p><label for="uop-age-review-outcome">' . esc_html__( 'Verified category', 'uop-core' ) . '</label> ';
-		echo '<select id="uop-age-review-outcome" name="outcome" style="min-height:44px"><option value="gte">' . esc_html__( 'At least the threshold', 'uop-core' ) . '</option><option value="lt">' . esc_html__( 'Below the threshold', 'uop-core' ) . '</option></select></p>';
+		echo '<select id="uop-age-review-outcome" name="outcome" style="min-height:44px"><option value="gte" ' . selected( $current_outcome, 'gte', false ) . '>' . esc_html__( 'At least the threshold', 'uop-core' ) . '</option><option value="lt" ' . selected( $current_outcome, 'lt', false ) . '>' . esc_html__( 'Below the threshold', 'uop-core' ) . '</option></select></p>';
 		echo '<p><label for="uop-age-review-method">' . esc_html__( 'Offline review method', 'uop-core' ) . '</label> ';
 		echo '<select id="uop-age-review-method" name="method" style="min-height:44px"><option value="in_person_review">' . esc_html__( 'In-person review', 'uop-core' ) . '</option><option value="trusted_register">' . esc_html__( 'Trusted register', 'uop-core' ) . '</option><option value="authorized_offline_review">' . esc_html__( 'Other authorized offline review', 'uop-core' ) . '</option></select></p>';
 		echo '<p><label for="uop-age-review-until">' . esc_html__( 'Valid until (UTC)', 'uop-core' ) . '</label> ';
@@ -182,6 +197,15 @@ final class M6AgeAttestationScreen {
 		}
 		wp_safe_redirect( admin_url( 'admin.php?page=uop-age&result=' . $result ) );
 		exit;
+	}
+
+	/** Enforce live WordPress and tenant/object permissions for review screens. */
+	private function may_manage_event( OrgScope $scope, int $event_post, int $person_id = 0 ): bool {
+		$post = get_post( $event_post );
+		$actor = new Actor( get_current_user_id() );
+		return $post && 'uop_event' === $post->post_type && 'publish' === $post->post_status
+			&& user_can( $actor->user_id, 'edit_post', $event_post )
+			&& $this->policy->can( $actor, 'event.manage', new PolicyObject( $scope->id, 'event', $event_post, $person_id > 0 ? $person_id : null, $event_post ) )->allowed;
 	}
 
 	/** Resolve the single server-configured tenant. */
