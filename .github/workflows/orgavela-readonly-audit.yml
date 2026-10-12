@@ -9,10 +9,11 @@ on:
         type: choice
         default: probe
         options: [probe, schema]
-  push:
-    branches: [main]
-    paths:
-      - '.github/audit-requests/orgavela-readonly.json'
+      confirm_dedicated_access:
+        description: "Confirmed: separate OrgaVela-only SSH account; NOT full-webspace / credentials"
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -40,21 +41,20 @@ jobs:
       - name: Validate checked-in SSH script syntax
         shell: bash
         run: bash -n scripts/ci/orgavela-readonly-audit.sh
-      - name: Validate read-only operation
+      - name: Validate explicitly confirmed isolated access
         env:
           MANUAL_OPERATION: ${{ inputs.operation }}
+          DEDICATED_ACCESS_CONFIRMED: ${{ inputs.confirm_dedicated_access }}
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
-            requested="$(jq -r '.operation // ""' .github/audit-requests/orgavela-readonly.json)"
-          else
-            requested="$MANUAL_OPERATION"
-          fi
-          [[ "$requested" == probe || "$requested" == schema ]] || {
-            echo "::error::Only the read-only probe/schema operations are allowed."; exit 1;
+          [[ "$MANUAL_OPERATION" == probe || "$MANUAL_OPERATION" == schema ]] || {
+            echo "::error::Only read-only probe or schema operations are permitted."; exit 1;
           }
-          printf 'AUDIT_OPERATION=%s\n' "$requested" >> "$GITHUB_ENV"
+          [[ "$DEDICATED_ACCESS_CONFIRMED" == true ]] || {
+            echo "::error::The existing IONOS SSH/SFTP account has full / webspace access. Do not reuse it; confirm an independently restricted OrgaVela account before audit."; exit 1;
+          }
+          printf 'AUDIT_OPERATION=%s\n' "$MANUAL_OPERATION" >> "$GITHUB_ENV"
       - name: Install SSH transport (runner only)
         shell: bash
         run: |
