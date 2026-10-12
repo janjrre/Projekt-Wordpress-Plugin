@@ -37,6 +37,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Validate checked-in SSH script syntax
+        shell: bash
+        run: bash -n scripts/ci/orgavela-readonly-audit.sh
       - name: Validate read-only operation
         env:
           MANUAL_OPERATION: ${{ inputs.operation }}
