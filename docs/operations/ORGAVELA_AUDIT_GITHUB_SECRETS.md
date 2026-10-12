@@ -3,6 +3,8 @@
 **Stand 12.10.2026 · W0/O01/O02/M1-08 · ausschließlich https://orgavela.com.**
 Dieses Dokument erklärt eine **vorbereitete** technische Verbindung, **keinen bestätigten Live-Zugang**. Dreamloud bleibt vollständig außerhalb des Scopes.
 
+> **Wichtiger Sicherheitsnachtrag 12.10.2026:** Der Betreiber hat bestätigt, dass das **bereits hinterlegte** SFTP/SSH-Konto den gesamten Pfad `/` des IONOS-Webspaces erreichen kann. Bei Shared Webhosting ist `/` üblicherweise die eigene eingeschränkte Webspace-/Chroot-Umgebung, **nicht** System-Root des IONOS-Servers. Dennoch kann das Konto andere Websites im selben Hosting-Vertrag erreichen. **Bestehende `orgavela-ionos`-Deployment-Secrets keinesfalls in `orgavela-audit` kopieren.** Die zusätzliche Audit-Action ist vorsorglich nur noch **manuell** mit einer expliziten Isolationsbestätigung verfügbar; der automatische Commit-/Push-Auslöser ist abgeschaltet. Keine bisherige GitHub-Secret-Konfiguration wurde geändert. Das Kennwort eines solchen breit berechtigten Kontos darf nicht als harmloser Lesezugang behandelt werden. Quelle: [IONOS SFTP/SSH-Konto erstellen](https://www.ionos.de/hilfe/hosting/ftp-zugaenge-einrichten-und-verwalten/sftp/ssh-konto-erstellen/) und [IONOS SSH/chroot](https://www.ionos.de/hilfe/hosting/ssh-zugaenge-einrichten-und-verwalten/was-ist-ssh/).
+
 ## Weshalb kein IONOS-Hauptlogin oder direkter MySQL-Runner?
 
 - Das **persönliche IONOS-Kundenkonto** besitzt unnötig weitgehende Hosting-, Vertrags-, Domain- und Billing-Berechtigungen und ggf. Zwei-Faktor-Authentifizierung. **Niemals** dessen Passwort, 2FA-Seed, Recovery-Codes oder Sessions in GitHub-Secrets, Issues oder den Chat kopieren.
@@ -19,7 +21,7 @@ Zur Vorbereitung nur intern bereithalten:
 3. **SSH-Passwort** dieses Kontos, nur direkt in GitHub-Secrets eintragen.
 4. **Absolutes Shell-Verzeichnis der WordPress-Installation**, in dem `wp-config.php`, `wp-admin/` und `wp-content/plugins/uop-core/` vorhanden sind. **SSH-Shell-Pfad ist nicht zwingend der bereits geprüfte SFTP-Pfad `/public`.** Kein blindes Raten und keine Suche durch andere Websites.
 
-**Wichtig:** Ein Shell-Login hat ggf. trotz eingeschränkter Workflow-Kommandos weitreichende Webspace-Rechte; der Workflow selbst ersetzt **keine echte serverseitige Account-Isolation** (W0/O01 bleibt offen, bis der Betreiber sie unabhängig nachweist).
+**Wichtig:** Eine IONOS-Einstellung „Verzeichnis `/public`“ für einen zusätzlichen Benutzer beschränkt laut IONOS **nur SFTP**, nicht automatisch PHP- oder SSH-Zugriffe. Das ist kein Beleg für einen wirklich von anderen Websites isolierten SSH-Nutzer. Wenn sich keine wirksame unabhängige Shell-/Account-Trennung nachweisen lässt, **keinen** solchen Secret-Zugang einrichten oder freigeben; für O02 stattdessen den WordPress-Admin-/IONOS-phpMyAdmin-Weg unter Betreiberkontrolle verwenden. O01 bleibt offen. Eine kostenpflichtige Trennung auf einen eigenen Webspace wird **nicht** automatisch bestellt.
 
 ## 2 – GitHub-Environment einrichten (Betreiberaktion)
 
@@ -49,25 +51,15 @@ Vorbereitete, im Repository überprüfbare Dateien:
 - [GitHub-Workflow](../../.github/workflows/orgavela-readonly-audit.yml): ausschließlich `main`, `orgavela-audit`-Environment, GitHub-Token mit `contents: read`, `probe` oder `schema`; niemals Upload-/Delete-/Migrate-Operationen.
 - [Eng begrenztes SSH-Prüfskript](../../scripts/ci/orgavela-readonly-audit.sh): Offiziellen IONOS-ED25519-Fingerprint prüfen, Domain `https://orgavela.com`, UOP-Version `0.1.0-alpha.2`, verifiziertes WordPress-Root; lokale Shell-/PHP-Fehlertexte, WP-Config und Ausgaben aus der DB bleiben **aus öffentlichen Logs ausgeschlossen**.
 
-Zuerst unter [GitHub Actions → OrgaVela – strictly read-only SSH health audit](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/workflows/orgavela-readonly-audit.yml) auf **Run workflow → Branch main → `probe`** klicken. Ein erfolgreicher Probe-Lauf meldet nur generische Prüfzustände, **nicht** Serverpfade oder Datenbankinhalte. Scheitert er, die öffentliche CI-Meldung auf fehlenden SSH-/WP-CLI-Zugang oder ungeprüfte WordPress-Zielidentität untersuchen; **nicht** einfach Guard-Prüfungen entfernen.
+**Nur nach belegter OrgaVela-exklusiver SSH-Kontotrennung** unter [GitHub Actions → OrgaVela – strictly read-only SSH health audit](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/workflows/orgavela-readonly-audit.yml) **Run workflow → Branch main → `probe`** wählen und den Pflichtschalter **`confirm_dedicated_access`** nur bei tatsächlich unabhängigen Zugriffsrechten aktivieren. **Für das derzeit vorhandene `/`-Konto den Schalter NICHT aktivieren.** Ein erfolgreicher Probe-Lauf meldet nur generische Prüfzustände, **nicht** Serverpfade oder Datenbankinhalte. Scheitert er, die öffentliche CI-Meldung auf fehlenden SSH-/WP-CLI-Zugang oder ungeprüfte WordPress-Zielidentität untersuchen; **nicht** einfach Guard-Prüfungen entfernen.
 
 Erst danach **`schema`** wählen; es werden nur die **installierten** Site-Health-/Migrationsstatus-Codes, Zahl der UOP-Tabellen, Default-Org-Konsistenz und Versionsbedingungen ermittelt. Die bekannte Alpha.2-Version wird bewusst vorausgesetzt; andere Versionen benötigen eine erneute Paket-/Abnahmeprüfung. Aus GitHub kann man diese Zustandswerte lesen und ihre Belege in Issues/Plan dokumentieren. Eine erfolgreiche Action allein bedeutet **nicht** bereits, dass alle 29 Tabellen **unabhängig** auf alle Spalten und Indizes geprüft wurden; ergänzend braucht O02 einen eigenen Metadata-Soll/Ist-Vergleich.
 
-## 4 – Spätere überprüfbare Läufe durch den Assistenten
+## 4 – Sicherer Auslöseweg und Grenzen der Autonomie
 
-Der Workflow erlaubt einen genau begrenzten **`push`-Trigger auf `main` nur für `.github/audit-requests/orgavela-readonly.json`**. Nach nachgewiesener Einrichtung und der Betreiberfreigabe für den nächsten Lesecheck kann dieser operative Request erzeugt werden:
+Der automatische `push`-Trigger über `.github/audit-requests/orgavela-readonly.json` wurde **deaktiviert**, nachdem der Betreiber die weitreichenden `/`-Rechte des bestehenden SSH/SFTP-Kontos gemeldet hat. Aktuell sind ausschließlich **manuelle GitHub-Actions-Läufe** mit vorausgesetztem `confirm_dedicated_access=true` vorgesehen, und zwar **nur** wenn eine reale serverseitige OrgaVela-Isolation unabhängig nachgewiesen wurde. Ein bestätigtes Kontrollkästchen ist eine Betreiberbestätigung, **keine technische Rechteabsicherung**.
 
-```json
-{"operation":"probe"}
-```
-
-oder nach erfolgreicher Probe:
-
-```json
-{"operation":"schema"}
-```
-
-Damit kann der angeschlossene GitHub-Assistent einen **lesenden, durch das Workflow-/Environment-Gate begrenzten** GitHub-Actions-Lauf über eine gezielte Commit-Änderung auslösen und danach CI-Status und nur die bereinigten Berichte abrufen. **Die Request-Datei wird nicht vorsorglich erstellt oder ausgelöst, solange keine Secrets und serverseitige Isolation bestätigt sind.** Der Betreiber kann seine Secrets jederzeit in den Environment-Einstellungen löschen/rotieren; keine asynchrone Arbeit ohne konkreten Auftrag.
+Bis diese Voraussetzung erfüllt ist, können Assistenten über GitHub **keine autonomen SSH-Abfragen** starten; der bisherige SFTP-Deployment-Workflow wird nicht stillschweigend wiederverwendet. Ein späteres autonomes Leseverfahren erfordert eine neue dokumentierte Sicherheitsbewertung, eingeschränkte Berechtigungen, Schutz von `main`/GitHub-Environment und ausdrückliche Freigabe. Als sichere Alternative können die benötigten Schema-Metadaten manuell im WordPress-Admin oder in IONOS phpMyAdmin **lesend** erhoben und anschließend als anonymisierte Ergebnisse im Projekt dokumentiert werden.
 
 ## 5 – Ausdrückliche Grenzen
 
