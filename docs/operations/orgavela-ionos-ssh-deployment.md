@@ -4,7 +4,9 @@
 
 ## Architektur und Sicherheitsgrenzen
 
-Die GitHub-Action [deploy-orgavela-ssh.yml](../../.github/workflows/deploy-orgavela-ssh.yml) ist absichtlich **nur manuell** über `workflow_dispatch` startbar und nur vom Branch `main`. Sie verwendet die GitHub-Deployment-Umgebung `orgavela-ionos` und ausschließlich die dort konfigurierten Secrets. Sie setzt **keinen** fremden SSH-Hostschlüssel automatisch als vertrauenswürdig voraus: der hinterlegte `known_hosts`-Eintrag muss zur IONOS-Hostidentität passen.
+Die GitHub-Action [deploy-orgavela-ssh.yml](../../.github/workflows/deploy-orgavela-ssh.yml) ist nur auf `main` freigegeben: über **manuelles `workflow_dispatch`** oder bei einer **gezielten Änderung an `.github/deploy-requests/orgavela.json`** (nach Einrichtung und freigegebenem Auftrag). Sie verwendet die GitHub-Deployment-Umgebung `orgavela-ionos` und ausschließlich die dort konfigurierten Secrets. Sie setzt **keinen** fremden SSH-Hostschlüssel automatisch als vertrauenswürdig voraus: der hinterlegte `known_hosts`-Eintrag muss zur IONOS-Hostidentität passen.
+
+**Ohne SSH-Shell:** Der [SFTP-only-Workflow](../../.github/workflows/deploy-orgavela-sftp.yml) und dessen [separate Anleitung](orgavela-ionos-sftp-deployment.md) sind der sichere Fallback. Diese Alternative läuft ausschließlich manuell und verlangt statt `IONOS_WP_ROOT` die eigene Variable `IONOS_SFTP_ROOT`. Niemals beide Deployment-Wege parallel auf derselben Website ausführen.
 
 Betriebsarten:
 - `probe`: SSH-Anmeldung und rein lesende Prüfungen, einschließlich WordPress-Verzeichnis, `WP-CLI`, HTTPS-Adresse **genau `https://orgavela.com`**, vorhandener Schreibrechte und `unzip`. **Keine Datei-Uploads und keine Änderungen am Ziel.**
