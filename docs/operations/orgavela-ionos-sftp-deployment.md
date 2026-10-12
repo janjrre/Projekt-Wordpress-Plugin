@@ -1,0 +1,62 @@
+# OrgaVela IONOS – GitHub → SFTP/SSH-Deployment
+
+**Stand:** 12.10.2026 · Ziel **ausschließlich** `https://orgavela.com`. Keine Verbindung zu Dreamloud, keine Teilnehmerdaten in den Tests. **SFTP ist der Standard**, weil IONOS WordPress-Zugänge keine SSH-Shell garantieren. Beide Workflows laufen nur manuell auf `main`.
+
+## 1. Aktueller Iststand
+
+- IONOS WordPress ist unter `https://orgavela.com` über den OrgaVela-MCP-Zugang verifiziert: WordPress 7.1.3, PHP 8.3.33, MariaDB 11.8.8; DB-Verbindung `utf8mb4`, Kollation `utf8mb4_unicode_520_ci`, HTTPS.
+- UOP Core ist dort **noch nicht installiert**. Die bisherige WordPress.com-Installation bleibt getrennt.
+- Verifiziertes, aber frühes UOP-Testpaket: GitHub-Branch `staging/uop-plugin-package`, Datei `uop-core.zip`, Provenienz `package-provenance.txt`, SHA-256 `acbebdd9df25d996848bbca6ebe6726ee1a986207fc7c7b818474dc93134267a`. Die Prüfsumme bei jedem neuen Paket neu abgleichen; **nicht** blind wiederverwenden.
+- Workflows: [reiner SFTP-Weg](../../.github/workflows/deploy-orgavela-sftp.yml), [optionaler SSH/WP-CLI-Weg](../../.github/workflows/deploy-orgavela-ssh.yml). Beide müssen auf GitHub erst mit Zugangsdaten versehen und erfolgreich getestet werden. Sie deaktivieren die Sicherheitsprüfungen des Plugins nicht.
+
+## 2. In IONOS: eigenen, auf OrgaVela begrenzten SFTP-Nutzer erstellen
+
+1. IONOS Konto → **Menü → Web-Projekte → OrgaVela → Einstellungen → Erweiterte Einstellungen → SFTP & SSH → Neues Konto erstellen**. Siehe [offizielle Anleitung für WordPress](https://www.ionos.de/hilfe/wordpress/administration-von-wordpress/sftp-benutzer-fuer-wordpress-anlegen/).
+2. Einen **eigenen** Benutzer für den OrgaVela-Webspace statt eines Kontos mit Zugriff auf Dreamloud anlegen. Berechtigungen auf **OrgaVela allein** begrenzen. Ein Passwort direkt bei IONOS setzen, **niemals** im Chat, Issue, Commit oder öffentlichen Workflow-Log mitteilen.
+3. Den SFTP-Servernamen, Benutzernamen, Port (typischerweise **22**) und den vom SFTP-Benutzer aus sichtbaren WordPress-Ordner ermitteln. Der Zielordner muss `wp-admin`, `wp-includes` und `wp-content/plugins` enthalten. Er darf weder Dreamloud noch ein anderes Projekt umfassen.
+4. Beim ersten Kontakt den **SSH-Hostschlüssel / SHA-256-Fingerabdruck** mit einer vertrauenswürdigen IONOS-Auskunft vergleichen. Hinweise: [IONOS SSH-Fingerabdrücke für Webhosting](https://www.ionos.de/hilfe/hosting/ssh-zugaenge-einrichten-und-verwalten/uebersicht-der-ssh-fingerabdruecke-im-ionos-webhosting/). Die Fingerprints dort können paketabhängig sein. Einen ungeprüften Schlüssel aus `ssh-keyscan` **nicht** blind als vertrauenswürdig akzeptieren.
+5. Falls IONOS SSH-Shell erlaubt, optional den SSH-Workflow nutzen; zusätzliche SFTP-Benutzer haben **nicht zwingend** Shell-Rechte. Der SFTP-Workflow benötigt ausdrücklich **keine** SSH-Shell, `wp` oder `unzip` auf dem Server.
+
+## 3. In GitHub: Umgebung und Secrets einrichten
+
+Repository: `janjrre/Projekt-Wordpress-Plugin` → **Settings → Environments → New environment → `orgavela-ionos`**.
+
+- **Deployment branches/tags:** ausschließlich `main` erlauben; idealerweise eine Freigabeprüfung aktivieren.
+- **Environment secrets** (Values **nicht** hier oder im Chat eintragen):
+  - `IONOS_SSH_HOST`: der tatsächliche von IONOS genannte SFTP-Hostname – nicht pauschal `orgavela.com`.
+  - `IONOS_SSH_USER`: ausschließlich für OrgaVela angelegter SFTP-Benutzer.
+  - `IONOS_SSH_PASSWORD`: Passwort dieses SFTP-Benutzers.
+  - `IONOS_KNOWN_HOSTS`: vollständige, nach Fingerprintprüfung bestätigte OpenSSH-`known_hosts`-Zeile wie `HOSTNAME ssh-ed25519 AAAA...`; der Fingerprint selbst ist **kein** gültiger `known_hosts`-Eintrag. Keine Verbindung mit `StrictHostKeyChecking=no`.
+- **Environment variable** `IONOS_SFTP_ROOT`: vom SFTP-Benutzer aus sichtbares WordPress-Stammverzeichnis, z.B. `.`, `/htdocs` oder `/pfad/zur/wordpress-site`. **Kein** absoluter Server-Pfad ohne Bestätigung durch IONOS. Dieses Verzeichnis muss genau `orgavela.com` gehören.
+
+Der getrennte SSH-/WP-CLI-Workflow benötigt zusätzlich `IONOS_WP_ROOT` als **Shell-Pfad** und funktionierendes `wp` und `unzip` auf IONOS. SFTP-Pfad und SSH-Shell-Pfad können unterschiedlich sein; diese Werte niemals ungeprüft gleichsetzen.
+
+[GitHub Actions: Environment-Secrets](https://docs.github.com/en/actions/concepts/security/secrets) · [Deployment-Environments](https://docs.github.com/en/actions/concepts/workflows-and-actions/deployment-environments).
+
+## 4. Schritt 1 – nur lesen: SFTP-Probe
+
+Unter [GitHub Actions](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/workflows/deploy-orgavela-sftp.yml) → **Run workflow**, Branch `main`, operation `probe` wählen.
+
+Der Workflow prüft nur die SSH-Hostidentität, die Anmeldung und lesend `wp-admin`, `wp-includes`, `wp-content/plugins`. Er führt **keine** Plugininstallation aus. Eine erfolgreiche Probe allein beweist **nicht** die Domainzuordnung des Verzeichnisses; die ist vorher in IONOS unabhängig zu verifizieren.
+
+Bei fehlenden Secrets, falschem Hostschlüssel, falschem Pfad oder fehlendem Zugang bricht er ab. Die Logs dürfen keine Passwörter enthalten.
+
+## 5. Schritt 2 – einmalige Installation ohne Aktivierung
+
+Nur nach bestandener Probe, bestätigter OrgaVela-Pfadzuordnung, geeignetem Backup-/Restore-Weg, CI-Validierung des konkreten Pakets und geklärter Testseiten-Sichtbarkeit:
+
+- In demselben Workflow: operation `install`, `target_domain=orgavela.com`, `expected_sha256` = **aktuell geprüfte** Paket-Checksumme aus GitHub. Kein automatisches Upgrade bestehender Plugin-Dateien.
+- Paket und veröffentlichte Provenienz werden verglichen; das ZIP wird auf sichere Dateinamen und Plugin-Struktur kontrolliert.
+- Per **SFTP** in ein eindeutiges temporäres, verstecktes Plugin-Verzeichnis übertragen, anschließend auf `wp-content/plugins/uop-core` umbenannt. Existiert UOP Core bereits, verweigert der Workflow ein Überschreiben.
+- **Keine Aktivierung, keine Tabellenmigration, kein Zugriff auf Dreamloud**. Bei gescheitertem Upload kann ein verstecktes `.uop-stage-<Run-ID>`-Verzeichnis zurückbleiben; nur nach exakter Pfadprüfung aufräumen.
+
+Nach erfolgreicher Dateiinstallation den vorhandenen **OrgaVela WordPress-MCP-Zugang** verwenden, um das Plugin unabhängig lesend zu verifizieren. Aktivierung erst in einem separaten Schritt nach gesicherten Datenbank-/Backup-Gates und synthetischem Testszenario.
+
+## 6. Noch nicht freigegeben / nächste Schritte
+
+- Noch **keine** SFTP/SSH-Secrets eingerichtet oder verifiziert, **keine** Verbindung aus GitHub Actions bestätigt, **keine** Übertragung nach IONOS ausgeführt. Die nötigen Kontodaten können ausschließlich vom Betreiber sicher in GitHub hinterlegt werden.
+- `orgavela.com` verlangt vor echten E2E-Tests besonderen Sichtbarkeitsschutz: Suchmaschinen-Indexierung ist aktuell nicht verhindert, Datenschutzseite noch ein Entwurf, `DISABLE_WP_CRON` gesetzt. Ein separater externer Scheduler ist nicht belegt.
+- Vor produktiven Migrationen Backup und Restore-Nachweis; für die Tests nur synthetische Teilnehmerdaten.
+- Spätere Updates benötigen einen eigenen atomaren Rollback-/Versionierungsworkflow. Dieser erste Installationsworkflow **verweigert** bewusst jegliches Überschreiben.
+
+**Verbindlich:** Jede Aktion, einschließlich fehlgeschlagener Probes/Deployments, im [UOP-Arbeitslog](ASSISTANT_WORK_LOG.md) nachvollziehbar protokollieren.
