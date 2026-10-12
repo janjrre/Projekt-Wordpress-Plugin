@@ -116,3 +116,10 @@ Das vorherige M1-08-Fix-Commit `8e5cbfc4` bestand **Foundation #38252652328 voll
 **Scope-begrenzte Testfixes:** `faa8e729` stellt im lokalen TLS-Proxy statische, per einfacher Basename-Allowlist begrenzte UOP-Stylesheets/Skripte direkt aus dem Checkout bereit. PHP verarbeitet weiter WordPress-/REST-Anfragen, keine Live-Dateien/Geheimnisse oder nicht erlaubten Pfade werden veröffentlicht. `a34f4195` prüft die tatsächlichen CSS-/JS-Ressourcen vor den Browserprüfungen per lokalem TLS-`curl`. Die CSS-Regel 44px, der Browserassert und die Auth-/Guardian-Szenarios bleiben unverändert. Exakter finaler Branch-HEAD `a34f4195371f9edf1fa24ea4abdef1fd479f2c19`; vollständige neue CI vor formellem O09-„grün“ abzuwarten.
 
 **Live-Einschränkungen unverändert:** Die GitHub-Trace ist synthetische Testumgebung und darf **nicht** als OrgaVela-Datenbankschema- oder Hosting-Backup-Nachweis umgedeutet werden.
+
+
+## 11. Finaler CI-Befund der W0-O09-Folgerunde (12.10.2026)
+
+Auf dem **aktuellsten** Draft-PR-#11-HEAD `a34f4195371f9edf1fa24ea4abdef1fd479f2c19` haben die beiden zuvor instabilen Workflows **vollständig bestanden**: [Foundation #38253835618](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38253835618) acht von acht Jobs erfolgreich mit Quality, sechs PHP-/DB-Integrationskombinationen und Artefakt-Smoke; [HTTPS/Mailpit #38253835549](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38253835549) erfolgreich einschließlich responsivem Formular-Button mit unverändertem 44px-Minimum. Dadurch ist die isolierte Testinfrastrukturkorrektur durch einen realen aktuellen CI-Lauf nachgewiesen, nicht bloß behauptet. Ursache des vorherigen HTTP-Asset-Fehlers wurde direkt aus dem Playwright-Netzwerk-Trace abgeleitet. **Keine** M1-/W0-/V1-Live-Abnahme und kein Merge.
+
+Dies darf nicht mit der OrgaVela-Installation verwechselt werden: auf dem echten IONOS-WordPress bleibt die ältere Alpha.2 aktiv; ein Live-Schema-Readcheck und ein tatsächlicher isolierter Backup-Restore stehen unverändert aus. O01/O02/M1-08/O03/O06 bleiben offen; nur **O09-Code/CI auf diesem Draft-HEAD** besitzt jetzt einen erfolgreichen Prüfbeleg.
