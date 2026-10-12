@@ -65,7 +65,16 @@ final class M6ControlCenterScreen {
 		if ( 'toplevel_page_uop-audit' === $hook && ! $this->can_audit( $actor, $scope ) ) {
 			return;
 		}
-		if ( 'toplevel_page_uop-audit' !== $hook && ! $this->can_overview( $actor, $scope ) ) {
+		if ( 'toplevel_page_uop-overview' === $hook && ! $this->can_overview( $actor, $scope ) ) {
+			return;
+		}
+		// Operations is available to authorized mail, privacy or export staff,
+		// not just organization-overview managers. Match its own access policy
+		// so a legitimate operator never receives an unstyled, overflowing UI.
+		if ( 'toplevel_page_uop-operations' === $hook
+			&& ! ( $this->allowed( $actor, $scope, 'communication.send', 'uop_manage_settings' )
+				|| $this->allowed( $actor, $scope, 'privacy.manage', 'uop_manage_settings' )
+				|| $this->allowed( $actor, $scope, 'export.create', 'uop_manage_settings' ) ) ) {
 			return;
 		}
 		$url     = plugin_dir_url( dirname( __DIR__, 2 ) . '/uop-core.php' );
