@@ -66,3 +66,44 @@ Offizielle IONOS-Webhosting-Hilfe beschreibt **tägliche automatische Systemsich
 | O03-G5 Nachweisbare Recovery-Verantwortung und Wiederholung | **offen** (synthetischer CI-Smoketest läuft bereits und kann als Hilfsbeleg dienen) |
 
 **Stop-Regel:** Bis G2–G4 tatsächlich belegt sind, **keine produktiven UOP-Migrationen, Upgrades, Restore-Klicks oder automatisierten echten Teilnehmerprozesse**. Der Betreiber muss keine neuen Zugangsdaten in Chat/GitHub veröffentlichen, da die bestehenden OrgaVela-SSH-Secrets ausschließlich für enge Metadaten-Audits weitergenutzt werden.
+
+
+## 7. Konkreter nächster Durchlauf – minimaler Betreiberaufwand, keine Vertragskosten (Entscheidungsstand 12.10.2026)
+
+**Empfohlener Ablauf:** Die vorhandene OrgaVela-SSH-/WP-CLI-Verbindung erzeugt unter einem eigenen, künftig zu entwickelnden **streng reviewten** GitHub-Actions-Workflow eine **konsistente vollständige WordPress-Datei- und SQL-Sicherung**. Der Workflow soll die Nutzdaten **vor jeder Veröffentlichung als Actions-Artefakt mit Public-Key-Verschlüsselung (z. B. `age`) verschlüsseln**. Der Betreiber lädt das **ausschließlich verschlüsselte** Ergebnis herunter, bewahrt es auf **einem eigenen Rechner und idealerweise zusätzlich einer externen SSD** außerhalb des IONOS-Webspaces auf und behält den privaten Entschlüsselungsschlüssel ausschließlich bei sich. Ein vorhandener eigener privater Offsite-Cloudspeicher ist nach gesonderter Wahl ebenfalls möglich; keine kostenpflichtige Neubuchung. In einer zweiten Phase wird genau dieses Backup in einem **offline-/netzwerkisolierten lokalen Container/VM-Klon** restauriert, nicht in OrgaVela.
+
+**Grundsatz:** Das Repository ist öffentlich. GitHub beschreibt, dass Artefakte für Repository-Lesende abrufbar sind und die Aufbewahrung bei öffentlichen Repositories standardmäßig 90 Tage beträgt und höchstens 90 Tage erreichen kann. Auch verschlüsselte GitHub-Artefakte dürfen daher **nur temporärer Transfer**, **nicht die einzige Langzeitkopie**, sein. Quellen: [GitHub Artefakte herunterladen](https://docs.github.com/de/actions/how-tos/manage-workflow-runs/download-workflow-artifacts), [GitHub Aufbewahrung](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features/enabling-features/). **Nie unverschlüsselte Dumps, `wp-config.php`, personenbezogene WP-Daten oder den privaten Key in Commit, Issue, Logs oder Artefakt schreiben.**
+
+### G0 – zwei Betreiberentscheidungen (noch nicht vorliegend)
+
+1. **Dauerhafter Speicherort festlegen:** empfohlene kostenlose Standardvariante = eigener PC + verschlüsselte externe Festplatte/SSD. Alternative: bereits vorhandene private Cloudablage mit explizit vereinbartem Zugriffs-/Löschkonzept. Genug Kapazität für mindestens mehrere Versionen einplanen; Live-Preflight zeigt 100–500 MiB WP-Dateien und unter 25 MiB DB, aber gepackte Sicherungsgröße ist noch unbekannt.
+2. **Empfänger-Schlüsselpaar beim Betreiber erstellen:** z. B. über `age-keygen` auf einem Betreibergerät. Privater Schlüssel **ausschließlich lokal**, mit getrennter sicherer Recovery-Kopie; in GitHub später **nur der öffentliche Empfängerschlüssel** als nicht geheime Variable/konfigurierter Wert. **Nicht** im Chat nach Passwort, privatem Schlüssel, 2FA oder `wp-config.php` fragen. Der Betreiber muss den Entschlüsselungstest lokal nachweisen; sonst ist ein erfolgreich erstelltes verschlüsseltes Backup unbrauchbar.
+
+### G1 – sichere Implementierung und Test, bevor echte Daten fließen
+
+- Backup-Skript in separatem neuen GitHub-Workflow auf `main` **nur manuell/mit explizitem Backup-Request** ausführen; **kein** automatisches Triggern bei normalen Commits, keine durch frei formatierten Inputs injizierbaren Shell-Befehle. Bestehende `orgavela-ionos`-Secrets nur zur SSH-Identifizierung verwenden.
+- Exakte WordPress-Zielidentität `orgavela.com`, aktiver Plugin-/WP-Stand, zulässiges Root und IONOS-Hostkey **vor dem Lesen** prüfen. Ausschließlich OrgaVela-WordPress und die dazugehörige DB; keine Dreamloud-URLs, -Secrets oder -Repos.
+- DB-Export möglichst als **konsistenter Snapshot** mit `--single-transaction --no-tablespaces`; sicherstellen, dass Tabellen transaktional sind und die Sicherung mit den Dateien zeitlich korrespondiert. Keine Credentials in Kommandoargumenten/Output/Shell-History. `wp db export`-Ausgabe-/Stream-Semantik und Rechte **zuerst ausschließlich mit synthetischen Daten** verifizieren.
+- Kompletter notwendiger WordPress-Dateibestand einschließlich Uploads/Themes/Plugins/config außer eventuell generierten Caches; Symlinks, Archive-Pfade und `wp-config.php` sorgfältig behandeln. Die Dateiarchive dürfen **nicht** in einem öffentlich erreichbaren IONOS-Pfad zurückbleiben.
+- Verschlüsseln **bevor** GitHub `upload-artifact` aufgerufen wird; nur `*.age`/verschlüsseltes Paket darf in Artefakte gelangen. Verschlüsselte Prüfsummen-/Manifestdatei beilegen; Logs nur mit booleschen Status/Größenklassen. Unverschlüsselte temporäre Daten nach Ausführung bereinigen und CI-Runner verwerfen. Eine kurzzeitige Verarbeitung echter WP-Daten auf dem GitHub-Runner bleibt ein relevantes Risiko und erfordert Review des **exakten Workflows**.
+- Zuerst vollständige CI-Probe **nur mit synthetischer WordPress-/DB-Fixture und öffentlichem Testempfängerschlüssel**, inklusive negativem Test bei falschem Ziel, fehlender Verschlüsselung, fehlerhafter Dateiintegrität und fehlender SSH-Verbindung. Erst danach einmaliger bewusster Echtgeld-/Live-Snapshot-Start.
+
+### G2 – erster tatsächlich gesicherter OrgaVela-Snapshot
+
+- Als Betreiber zunächst den **IONOS-Vertrag mit OrgaVela** auf aktuelle Webspace- und Datenbank-Recoverypunkte kontrollieren (nur **Sichten**, nie „Wiederherstellen“ anklicken).
+- Einmaligen bestätigten Backupworkflow ausführen: berechtigter SSH-/WP-CLI-Lesezugriff → SQL- und Datei-Backup → SHA-256-Prüfung → Public-Key-Verschlüsselung → **nur verschlüsseltes** temporäres Artefakt; kein WordPress-Upload/Restore, kein DB-Write.
+- Betreiber lädt das Artefakt herunter, verwahrt es lokal und mindestens an einem unabhängigen Ort, entschlüsselt/testet es **außerhalb GitHub** und bestätigt Prüfsummen, erwartete Archivstruktur und SQL-Lesbarkeit. Original-Backup nicht in öffentliche GitHub-Dateien einchecken; nach bestätigter privater Kopie temporäres GitHub-Artefakt entsprechend Retention-/Datenschutzplan löschen.
+
+### G3 – echte, abgeschottete Wiederherstellung
+
+- Auf Betreiber-PC oder separatem privatem Testgerät einen **isolierten** Container/VM-Stack aufbauen: WordPress/PHP mit zur Sicherung passender Version, MariaDB mit passender Version, eigenem Test-DB-Namen/Passwort, kein öffentlicher Port, Internet-Egress blockiert, WordPress-Cron/Mail/Webhooks ausgeschaltet.
+- Privaten Schlüssel nur auf dem lokalen/privaten Restore-Host verfügbar halten; Backup **nur dort** entschlüsseln. Niemals private Schlüssel als GitHub-Secret zur öffentlichen CI hochladen.
+- Vor Dateiextraktion/SQL-Import Originalziel `orgavela.com` oder reale DB-Hostnamen **hart als verboten** prüfen. Separaten physischen Restore-Pfad/DB-Namen bestätigen. In die private Test-DB importieren, Dateien in die private Clone-Struktur kopieren; URLs und Dienste für Tests neutralisieren, niemals Originalkonfiguration unverändert ins Internet verbinden.
+- Mit realem gesichertem Stand exakt prüfen: Konsistenz WP-Prefix/DB-/Datenversionen (2/2), UOP-Health, 29 Tabellen/Indizes, Standardorganisation, Datei-/DB-Zähler, Test-Benutzerfluss nur mit **synthetischen** Daten, Dauer und Hash-Nachweise. Bei Fehlschlag **O03 rot/offen**, echte OrgaVela-Installation unangetastet.
+
+### G4 – signoff, Recovery und Wartung
+
+- Nur nach bestätigtem G2 und G3 formale O03-/B04-Abnahme setzen; vollständigen Ersatz/PR-/Release-Stack nicht automatisch freigeben.
+- Betreiber verwahrt privaten Wiederherstellungsschlüssel redundant und getrennt von verschlüsselten Backups; Backup-Recovery-Verantwortliche und Rotation/Retention festlegen. Regelmäßige Restore-Proben künftig nur nach expliziter Automationsfreigabe planen.
+
+**Aktueller Entscheidungspunkt:** Wie soll die **dauerhafte private Backup-Kopie** abgelegt werden: auf dem eigenen Rechner mit zusätzlicher externer SSD (empfohlen) oder in einem bereits vorhandenen, privaten Cloudspeicher? Vor dieser Entscheidung und dem lokalen Public-Key-Setup **noch keinen Live-Backup-Workflow starten**. `O03` bleibt `partial`; [Read-only-Preflight #38267570599](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38267570599) und [synthetischer Restore #38267901371](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38267901371) sind nur Vorabbelege.
