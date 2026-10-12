@@ -14,7 +14,7 @@
 1. IONOS Konto → **Menü → Web-Projekte → OrgaVela → Einstellungen → Erweiterte Einstellungen → SFTP & SSH → Neues Konto erstellen**. Siehe [offizielle Anleitung für WordPress](https://www.ionos.de/hilfe/wordpress/administration-von-wordpress/sftp-benutzer-fuer-wordpress-anlegen/).
 2. Einen **eigenen** Benutzer für den OrgaVela-Webspace statt eines Kontos mit Zugriff auf Dreamloud anlegen. Berechtigungen auf **OrgaVela allein** begrenzen. Ein Passwort direkt bei IONOS setzen, **niemals** im Chat, Issue, Commit oder öffentlichen Workflow-Log mitteilen.
 3. Den SFTP-Servernamen, Benutzernamen, Port (typischerweise **22**) und den vom SFTP-Benutzer aus sichtbaren WordPress-Ordner ermitteln. Der Zielordner muss `wp-admin`, `wp-includes` und `wp-content/plugins` enthalten. Er darf weder Dreamloud noch ein anderes Projekt umfassen.
-4. Beim ersten Kontakt den **SSH-Hostschlüssel / SHA-256-Fingerabdruck** mit einer vertrauenswürdigen IONOS-Auskunft vergleichen. Hinweise: [IONOS SSH-Fingerabdrücke für Webhosting](https://www.ionos.de/hilfe/hosting/ssh-zugaenge-einrichten-und-verwalten/uebersicht-der-ssh-fingerabdruecke-im-ionos-webhosting/). Die Fingerprints dort können paketabhängig sein. Einen ungeprüften Schlüssel aus `ssh-keyscan` **nicht** blind als vertrauenswürdig akzeptieren.
+4. Der GitHub-Workflow ermittelt beim Verbindungsaufbau den öffentlichen ED25519-Hostschlüssel und prüft dessen **SHA-256-Fingerabdruck gegen die offizielle, fest hinterlegte IONOS-Webhosting-Referenz** (`SHA256:1gx2w8Rtv3wCgi7Jh8myf/KVd72cRQbow03UP8P095Q`). Nur bei Übereinstimmung wird fortgefahren. Quelle: [IONOS SSH-Fingerabdrücke](https://www.ionos.de/hilfe/hosting/ssh-zugaenge-einrichten-und-verwalten/uebersicht-der-ssh-fingerabdruecke-im-ionos-webhosting/). Bei abweichendem Fingerabdruck: **abbrechen**, IONOS-Support fragen. Auf keinen Fall `StrictHostKeyChecking=no` verwenden.
 5. Falls IONOS SSH-Shell erlaubt, optional den SSH-Workflow nutzen; zusätzliche SFTP-Benutzer haben **nicht zwingend** Shell-Rechte. Der SFTP-Workflow benötigt ausdrücklich **keine** SSH-Shell, `wp` oder `unzip` auf dem Server.
 
 ## 3. In GitHub: Umgebung und Secrets einrichten
@@ -22,12 +22,12 @@
 Repository: `janjrre/Projekt-Wordpress-Plugin` → **Settings → Environments → New environment → `orgavela-ionos`**.
 
 - **Deployment branches/tags:** ausschließlich `main` erlauben; idealerweise eine Freigabeprüfung aktivieren.
-- **Environment secrets** (Values **nicht** hier oder im Chat eintragen):
+- **Environment secrets** (Werte **nicht** hier oder im Chat eintragen):
   - `IONOS_SSH_HOST`: der tatsächliche von IONOS genannte SFTP-Hostname – nicht pauschal `orgavela.com`.
   - `IONOS_SSH_USER`: ausschließlich für OrgaVela angelegter SFTP-Benutzer.
   - `IONOS_SSH_PASSWORD`: Passwort dieses SFTP-Benutzers.
-  - `IONOS_KNOWN_HOSTS`: vollständige, nach Fingerprintprüfung bestätigte OpenSSH-`known_hosts`-Zeile wie `HOSTNAME ssh-ed25519 AAAA...`; der Fingerprint selbst ist **kein** gültiger `known_hosts`-Eintrag. Keine Verbindung mit `StrictHostKeyChecking=no`.
-- **Environment variable** `IONOS_SFTP_ROOT`: vom SFTP-Benutzer aus sichtbares WordPress-Stammverzeichnis, z.B. `.`, `/htdocs` oder `/pfad/zur/wordpress-site`. **Kein** absoluter Server-Pfad ohne Bestätigung durch IONOS. Dieses Verzeichnis muss genau `orgavela.com` gehören.
+  - `IONOS_KNOWN_HOSTS` **optional**: Nur falls der Host einen anderen, von IONOS unabhängig bestätigten Fingerprint hat: vollständige geprüfte `known_hosts`-Zeile. Ohne dieses Secret prüft der Workflow automatisch den veröffentlichten IONOS-ED25519-Fingerprint. Nicht blind auf abweichende Schlüssel umstellen.
+- **Environment variable** `IONOS_SFTP_ROOT` **optional für die erste Probe**: Standardwert ist `.` (Startverzeichnis des SFTP-Kontos). Falls dort nicht direkt `wp-admin`, `wp-includes` und `wp-content` liegen, nach dem fehlgeschlagenen rein lesenden Test den richtigen relativen WordPress-Stammordner bei IONOS ermitteln und als Variable hinterlegen. Dieses Verzeichnis muss genau `orgavela.com` gehören; niemals einen Pfad zu Dreamloud verwenden.
 
 Der getrennte SSH-/WP-CLI-Workflow benötigt zusätzlich `IONOS_WP_ROOT` als **Shell-Pfad** und funktionierendes `wp` und `unzip` auf IONOS. SFTP-Pfad und SSH-Shell-Pfad können unterschiedlich sein; diese Werte niemals ungeprüft gleichsetzen.
 
