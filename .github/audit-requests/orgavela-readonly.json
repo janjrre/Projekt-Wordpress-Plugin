@@ -1,5 +1,5 @@
 {
-  "operation": "schema",
+  "operation": "backup-preflight",
   "target": "orgavela.com",
-  "request_id": "read-only-schema-v2-alpha2"
+  "request_id": "w0-o03-read-only-inventory-2026-10-12"
 }
