@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-12: operator-authorized existing orgavela-ionos secrets; SFTP #38263689846 success, SSH/WP-CLI exact target #38264254555 success, live UOP physical schema health plus independent 29-table/default-org/version checks #38264354774 success. Full V1 formal signoffs/restore pending.",
+  "snapshot_basis": "2026-10-12 W0/O03 read-only GitHub Actions backup preflight #38267570599 green; synthetic-only isolated MariaDB 11.8 restore test #38267901371 green. Real provider snapshots, durable private DB/file archive and isolated restore of a real OrgaVela backup NOT verified. No changes to production.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -147,7 +147,13 @@
     },
     {
       "id": "O03",
-      "status": "partial"
+      "status": "partial",
+      "preflight_verified_run": 38267570599,
+      "synthetic_restore_verified_run": 38267901371,
+      "actual_provider_backup_inventory": "unknown",
+      "actual_private_full_snapshot": "not yet made/verified",
+      "actual_isolated_restoration": "not performed",
+      "formal_accepted": false
     },
     {
       "id": "O04",
@@ -340,7 +346,24 @@
         "operation": "schema"
       }
     ],
-    "ionos_audit_readonly_shell_working": true
+    "ionos_audit_readonly_shell_working": true,
+    "backup_preflight_run": 38267570599,
+    "backup_preflight_status": "success",
+    "backup_wordpress_files_size_range": "100-500MiB",
+    "backup_database_size_range": "under-25MiB",
+    "backup_webspace_free_range": "over-5GiB",
+    "backup_tool_availability": {
+      "mysqldump": true,
+      "mariadb_dump": true,
+      "mysql": true,
+      "tar": true,
+      "gzip": true,
+      "sha256sum": true
+    },
+    "ionos_backup_provider_retention": "IONOS public Webhosting documentation: daily system backups up to 14 days, contract-specific recovery points unverified",
+    "synthetic_restore_rehearsal_run": 38267901371,
+    "synthetic_restore_rehearsal_status": "success with isolated MariaDB 11.8 and synthetic DB+files only, NOT actual OrgaVela backup",
+    "ionos_backup_created_by_this_workflow": false
   },
   "integration": {
     "main_contains_merged_feature_stack": false,
@@ -481,15 +504,15 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "O03: verify IONOS OrgaVela backup-point inventory and prepare confidential full files+DB backup with isolated restore proof before any upgrade/migration",
-    "O02/M1-08: review live run 38264354774 and sign off explicit physical schema health evidence against current source; note alpha.2 differs from open stacked V1 PRs",
-    "O01/O06: verify OrgaVela contract/site access protection, privacy page, crawler exclusion and proper cron isolation; Dreamloud must remain untouched",
-    "Continue reviewing open PR stack #1-#6/#11 and other V1 gates only after relevant restore/security controls"
+    "O03: inspect provider recovery-point inventory in IONOS authenticated account, strictly OrgaVela contract; do NOT click Restore on live website",
+    "O03: establish private access-controlled independent backup destination; create full consistent OrgaVela SQL+files snapshot there with encrypted/controlled handling, record integrity hashes privately",
+    "O03: restore this actual snapshot only into isolated private no-network/no-email clone and verify physical schema/versions/WordPress config and duration; never import into production",
+    "Only after O03 and remaining privacy/review gates, consider integration/upgrade; no impact on Dreamloud"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.3",
+  "masterplan_version": "2.4",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
