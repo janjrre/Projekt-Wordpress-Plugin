@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-12 GitHub PR#11 2b8a65f same-SHA completed foundation and HTTPS runs; authenticated OrgaVela MCP followup; not background monitoring",
+  "snapshot_basis": "2026-10-12 M1-08 default-org read-only Site Health seed validation PR#11 HEAD 8e5cbfc; current CI queued/in progress; previous SHA 2b8a65f passed 8/8 and HTTPS; OrgaVela untouched",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -293,7 +293,10 @@
     "uop_schema_site_health_result": "not directly obtained; 28+1 live physical audit unverified",
     "published_uop_events": 0,
     "published_sample_pages": 1,
-    "cron_overdue_snapshot_note": "Read-only WordPress MCP snapshots 2026-10-12: previously 5/19 overdue, later 2/19; external cron still unverified"
+    "cron_overdue_snapshot_note": "Read-only WordPress MCP snapshots 2026-10-12: previously 5/19 overdue, later 2/19; external cron still unverified",
+    "wp_mcp_sitehealth_route_allowed": false,
+    "wp_mcp_uop_route_allowed": false,
+    "php_error_log_available": false
   },
   "integration": {
     "main_contains_merged_feature_stack": false,
@@ -306,23 +309,19 @@
       6,
       11
     ],
-    "latest_pr_11_head": "2b8a65f753447689190d442a038b3f76472aaa71",
+    "latest_pr_11_head": "8e5cbfc454ffe963b6c3121d73b0cd4608053fd9",
     "latest_pr_11_ci": [
       {
-        "run": 38250446667,
+        "run": 38252652328,
         "kind": "pr-foundation",
-        "result": "success",
-        "head": "2b8a65f753447689190d442a038b3f76472aaa71",
-        "successful_jobs": 8,
-        "total_jobs": 8,
-        "details": "PHP 8.3/8.4/8.5 x MySQL 8.0 / MariaDB 10.11, quality, artifact smoke"
+        "result": "pending",
+        "head": "8e5cbfc454ffe963b6c3121d73b0cd4608053fd9"
       },
       {
-        "run": 38250446526,
+        "run": 38252652419,
         "kind": "pr-https-browser",
-        "result": "success",
-        "head": "2b8a65f753447689190d442a038b3f76472aaa71",
-        "details": "isolated HTTPS, Mailpit, real caregiver/member browser E2E"
+        "result": "pending",
+        "head": "8e5cbfc454ffe963b6c3121d73b0cd4608053fd9"
       }
     ],
     "previous_pr_11_ci": [
@@ -377,15 +376,42 @@
         ]
       }
     ],
-    "pr11_green_on_current_head": true,
+    "pr11_green_on_current_head": false,
     "pr11_remains_draft": true,
     "pr11_ci_fix_commits": [
       "d36935da376224d12f16b451e43e78a5d46d6593",
       "2b8a65f753447689190d442a038b3f76472aaa71"
-    ]
+    ],
+    "last_confirmed_green_pr_11_ci": {
+      "head": "2b8a65f753447689190d442a038b3f76472aaa71",
+      "runs": [
+        {
+          "run": 38250446667,
+          "kind": "pr-foundation",
+          "result": "success",
+          "head": "2b8a65f753447689190d442a038b3f76472aaa71",
+          "successful_jobs": 8,
+          "total_jobs": 8,
+          "details": "PHP 8.3/8.4/8.5 x MySQL 8.0 / MariaDB 10.11, quality, artifact smoke"
+        },
+        {
+          "run": 38250446526,
+          "kind": "pr-https-browser",
+          "result": "success",
+          "head": "2b8a65f753447689190d442a038b3f76472aaa71",
+          "details": "isolated HTTPS, Mailpit, real caregiver/member browser E2E"
+        }
+      ]
+    },
+    "m1_seed_health_fix_commits": [
+      "200624274b1e6300d7ec7d080bbb5ae366369d45",
+      "c297a829d9a5dd74378ca09ad748a7442328d6b9",
+      "8e5cbfc454ffe963b6c3121d73b0cd4608053fd9"
+    ],
+    "m1_seed_health_implementation": "draft-only, code and test committed; current-SHA CI pending"
   },
   "immediate_next": [
-    "O02/M1-08: read installed Alpha.2 uop_schema Site Health result and independently inspect 29 physical tables/indexes and Default Organization via isolated OrgaVela phpMyAdmin read access",
+    "O02/M1-08: confirm new PR#11 seed health regressions on current CI SHA; then obtain authenticated live uop_schema Site Health and independent 29-table/index/default-org comparisons on OrgaVela, strictly read-only",
     "O03: verify actual IONOS backup inventory, private file+DB exports and isolated restore before risky updates",
     "O01/O06: account-level SFTP isolation and authenticated UOP test-route privacy; do not apply global noindex blindly to public product site",
     "O09: review same-head 8/8 Foundation + green HTTPS PR#11 evidence, monitor reproducibility and stack merge gates without automatic merge"
@@ -393,7 +419,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "1.6",
+  "masterplan_version": "1.7",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
