@@ -23,6 +23,8 @@ use WP_REST_Response;
 /** Never accepts personal identifiers, DOBs, uploaded documents or arbitrary methods. */
 final class AgeAttestationController extends BaseController {
 	/**
+	 * Compose the scoped REST controller.
+	 *
 	 * @param AgeAttestationService    $reviews Review and revoke workflow.
 	 * @param AgeAttestationRepository $repository Verified event evidence.
 	 * @param PersonRepository         $people Scoped person resolution.
@@ -41,7 +43,11 @@ final class AgeAttestationController extends BaseController {
 		$this->register_endpoint( '/admin/age-attestations', 'POST', array( $this, 'record' ), array( $this, 'authorized' ) );
 	}
 
-	/** @return bool|WP_Error Only tenant-specific administrators with live permission. */
+	/**
+	 * Check the live administrative authorization for one tenant.
+	 *
+	 * @return bool|WP_Error Only administrators with live permission.
+	 */
 	public function authorized(): bool|WP_Error {
 		$scope = $this->organization_scope();
 		return $scope && get_current_user_id() > 0 && $this->policy->can(
