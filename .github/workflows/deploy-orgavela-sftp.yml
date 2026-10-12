@@ -195,10 +195,13 @@ jobs:
           stage=".uop-stage-$GITHUB_RUN_ID"
           {
             printf 'mkdir "%s/%s"\n' "$plugins" "$stage"
+            # With an existing directory destination, OpenSSH sftp put -R
+            # nests the local basename uop-core under the staging directory.
             printf 'put -R "%s/unpacked/uop-core" "%s/%s"\n' "$RUNNER_TEMP" "$plugins" "$stage"
-            printf 'ls "%s/%s/uop-core.php"\n' "$plugins" "$stage"
-            printf 'ls "%s/%s/vendor/autoload.php"\n' "$plugins" "$stage"
-            printf 'rename "%s/%s" "%s/uop-core"\n' "$plugins" "$stage" "$plugins"
+            printf 'ls "%s/%s/uop-core/uop-core.php"\n' "$plugins" "$stage"
+            printf 'ls "%s/%s/uop-core/vendor/autoload.php"\n' "$plugins" "$stage"
+            printf 'rename "%s/%s/uop-core" "%s/uop-core"\n' "$plugins" "$stage" "$plugins"
+            printf 'rmdir "%s/%s"\n' "$plugins" "$stage"
             printf 'ls "%s/uop-core/uop-core.php"\n' "$plugins"
           } > "$RUNNER_TEMP/install.sftp"
           sshpass -e sftp -q -P 22 -oBatchMode=no \
