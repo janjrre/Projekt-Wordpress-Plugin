@@ -1,0 +1,53 @@
+name: OrgaVela - synthetic isolated restore rehearsal
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/orgavela-restore-rehearsal.yml'
+      - 'scripts/ci/orgavela-synthetic-restore.sh'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orgavela-synthetic-restore-rehearsal
+  cancel-in-progress: false
+
+jobs:
+  synthetic-restore:
+    if: github.repository == 'janjrre/Projekt-Wordpress-Plugin' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_ROOT_PASSWORD: synthetic-restore-ci-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      RESTORE_TEST_DATABASE_PASSWORD: synthetic-restore-ci-only
+    steps:
+      - name: Check out read-only committed fixture
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check restore script syntax
+        shell: bash
+        run: bash -n scripts/ci/orgavela-synthetic-restore.sh
+      - name: Install local client tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mariadb-client >/dev/null
+      - name: Backup and restore only synthetic data in disposable service
+        shell: bash
+        run: bash scripts/ci/orgavela-synthetic-restore.sh
