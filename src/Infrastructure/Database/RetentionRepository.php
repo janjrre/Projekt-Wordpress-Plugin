@@ -152,10 +152,13 @@ final class RetentionRepository {
 	 */
 	public function apply( OrgScope $scope, string $data_class, int $id, string $now ): int {
 		if ( 'profile_values' === $data_class ) {
-			return $this->db->execute(
+			$removed = $this->db->execute(
 				'DELETE v FROM %i v INNER JOIN %i p ON p.id = v.person_id WHERE p.organization_id = %d AND p.id = %d',
 				array( $this->prefix . 'profile_values', $this->prefix . 'persons', $scope->id, $id )
 			);
+			// A legal-hold-checked profile purge must also erase derived personal age attestations.
+			$this->db->execute( 'DELETE FROM %i WHERE organization_id = %d AND person_id = %d', array( $this->prefix . 'age_attestations', $scope->id, $id ) );
+			return $removed;
 		}
 		if ( 'registration_snapshots' === $data_class ) {
 			$deleted = $this->db->execute(
@@ -172,10 +175,14 @@ final class RetentionRepository {
 			return $updated + $deleted;
 		}
 		if ( 'persons' === $data_class ) {
-			return $this->db->execute(
+			$archived = $this->db->execute(
 				"UPDATE %i SET status = 'archived', archived_at = %s, updated_at = %s, version = version + 1 WHERE organization_id = %d AND id = %d AND status = 'active' AND archived_at IS NULL",
 				array( $this->prefix . 'persons', $now, $now, $scope->id, $id )
 			);
+			if ( $archived > 0 ) {
+				$this->db->execute( 'DELETE FROM %i WHERE organization_id = %d AND person_id = %d', array( $this->prefix . 'age_attestations', $scope->id, $id ) );
+			}
+			return $archived;
 		}
 		throw new RuntimeException( 'Unsupported retention action.' );
 	}

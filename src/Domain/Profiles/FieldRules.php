@@ -48,6 +48,11 @@ final class FieldRules {
 				throw new InvalidArgumentException( 'Field policy flags must be boolean.' );
 			}
 		}
+		// A birth date used by admission policy must not be self-attested as an editable profile fact.
+		// This is a configuration safety boundary, not an independent identity check.
+		if ( 'date_of_birth' === $key && ( 'date' !== $type || false !== ( $definition['subject_edit'] ?? true ) || false !== ( $definition['delegate_edit'] ?? false ) ) ) {
+			throw new InvalidArgumentException( 'Age eligibility birth date must be a manager-controlled, non-delegated date field.' );
+		}
 		foreach ( array(
 			'privacy_purpose'   => 255,
 			'lawful_basis_note' => 2000,

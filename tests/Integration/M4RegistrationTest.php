@@ -632,7 +632,7 @@ final class M4RegistrationTest extends TestCase {
 			try {
 				$facts->load($services['actor'],$this->scope,$id,$post_id,0,[$condition]);
 				self::fail('Untrusted age fact was authorized: '.$reason);
-			} catch (RuntimeException $error) {
+			} catch (RuntimeException | InvalidArgumentException $error) {
 				self::assertNotSame('', $error->getMessage());
 			}
 		};
@@ -641,9 +641,11 @@ final class M4RegistrationTest extends TestCase {
 		$fields = new ProfileFieldRepository($this->db,$this->prefix);
 		$values = new ProfileValueRepository($this->db,$this->prefix);
 		$uuid = PublicId::generate();
-		$fields->create($this->scope,$uuid,['key'=>'date_of_birth','type'=>'date','label'=>'Date of birth','subject_view'=>true,'subject_edit'=>true,'delegate_edit'=>false],$now);
+		$fields->create($this->scope,$uuid,['key'=>'date_of_birth','type'=>'date','label'=>'Date of birth','subject_view'=>true,'subject_edit'=>false,'delegate_edit'=>false],$now);
 		$field_id=(int)$fields->find($this->scope,$uuid)['id'];
 		$values->replace($this->scope,$id,$field_id,FieldRules::normalize('date','2000-01-01'),$now);
+		// Simulate a pre-ADR 312 legacy profile definition bypassing new authoring guards.
+		$this->db->execute('UPDATE %i SET subject_edit = 1 WHERE organization_id = %d AND id = %d',[$this->prefix.'profile_fields',$this->scope->id,$field_id]);
 		$expect_denied($negated,'self-editable date');
 		$this->db->execute('UPDATE %i SET subject_edit = 0, delegate_edit = 1 WHERE organization_id = %d AND id = %d',[$this->prefix.'profile_fields',$this->scope->id,$field_id]);
 		$expect_denied($negated,'delegated editable date');

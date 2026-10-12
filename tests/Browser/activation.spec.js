@@ -36,7 +36,16 @@ test('web activation and deactivation complete without PHP diagnostics', async (
     expect(destination.origin).toBe(new URL(page.url()).origin);
     expect(destination.pathname).toBe('/wp-admin/plugins.php');
     expect(destination.searchParams.has('_wpnonce')).toBeTruthy();
-    await page.goto(destination.href, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    // A committed server redirect is the navigation proof; a busy unrelated
+    // WP admin script must not decide whether the action succeeded. The caller
+    // still checks the opposite plugin link and absence of PHP diagnostics.
+    const response = await page.goto(destination.href, {
+      waitUntil: 'commit',
+      timeout: 30000,
+    });
+    expect(response).not.toBeNull();
+    expect(response.status()).toBe(200);
+    expect(new URL(page.url()).pathname).toBe('/wp-admin/plugins.php');
   }
 
   // Another browser security check may deliberately leave UOP active.

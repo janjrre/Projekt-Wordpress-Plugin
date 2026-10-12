@@ -172,6 +172,30 @@ final class PrivacyAccountGateway {
 			);
 		}
 
+		// Export only the authenticated account's explicitly linked subjects;
+		// an age proof is distinct from a guardian's delegated subjects.
+		$age_records = $this->db->rows(
+			'SELECT a.public_id, a.event_post_id, a.threshold_age, a.outcome, a.status, a.method_key, a.checked_at, a.valid_until FROM %i a INNER JOIN %i p ON p.id = a.person_id AND p.organization_id = a.organization_id WHERE p.wp_user_id = %d ORDER BY a.id ASC LIMIT %d OFFSET %d',
+			array( $this->prefix . 'age_attestations', $this->prefix . 'persons', $user_id, $limit, $after )
+		);
+		$done        = $done && count( $age_records ) < $limit;
+		foreach ( $age_records as $row ) {
+			$data[] = $this->item(
+				'uop-age-attestation',
+				'UOP age category evidence',
+				PublicId::from_binary( (string) $row['public_id'] )->to_string(),
+				array(
+					$this->datum( 'Event', (string) $row['event_post_id'] ),
+					$this->datum( 'Threshold', (string) $row['threshold_age'] ),
+					$this->datum( 'Category', (string) $row['outcome'] ),
+					$this->datum( 'Status', (string) $row['status'] ),
+					$this->datum( 'Method', (string) $row['method_key'] ),
+					$this->datum( 'Checked', (string) $row['checked_at'] ),
+					$this->datum( 'Valid until', (string) $row['valid_until'] ),
+				)
+			);
+		}
+
 		$messages = $this->db->rows(
 			'SELECT m.id, m.public_id, m.template_key, m.status, m.queued_at, m.recipient FROM %i m INNER JOIN %i r ON r.id = m.registration_id AND r.organization_id = m.organization_id INNER JOIN %i p ON p.id = r.person_id AND p.organization_id = r.organization_id WHERE p.wp_user_id = %d ORDER BY m.id ASC LIMIT %d OFFSET %d',
 			array( $this->prefix . 'email_messages', $this->prefix . 'registrations', $this->prefix . 'persons', $user_id, $limit, $after )
@@ -226,11 +250,17 @@ final class PrivacyAccountGateway {
 				'DELETE v FROM %i v INNER JOIN %i p ON p.id = v.person_id WHERE p.organization_id = %d AND p.id = %d AND p.wp_user_id = %d',
 				array( $this->prefix . 'profile_values', $this->prefix . 'persons', $org, $id, $user_id )
 			);
-			$updated = $this->db->execute(
+			// A permitted account erasure also destroys its event-specific age
+			// threshold evidence; never change other linked/delegated persons.
+			$age_deleted = $this->db->execute(
+				'DELETE a FROM %i a INNER JOIN %i p ON p.id = a.person_id AND p.organization_id = a.organization_id WHERE p.organization_id = %d AND p.id = %d AND p.wp_user_id = %d',
+				array( $this->prefix . 'age_attestations', $this->prefix . 'persons', $org, $id, $user_id )
+			);
+			$updated     = $this->db->execute(
 				'UPDATE %i SET display_name = %s, primary_email = NULL, version = version + 1, updated_at = UTC_TIMESTAMP() WHERE organization_id = %d AND id = %d AND wp_user_id = %d AND (display_name <> %s OR primary_email IS NOT NULL)',
 				array( $this->prefix . 'persons', 'Erased person', $org, $id, $user_id, 'Erased person' )
 			);
-			if ( $deleted > 0 || $updated > 0 ) {
+			if ( $deleted > 0 || $age_deleted > 0 || $updated > 0 ) {
 				$removed[] = array(
 					'id'              => $id,
 					'organization_id' => $org,

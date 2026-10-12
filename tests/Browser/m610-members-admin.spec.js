@@ -31,9 +31,12 @@ async function login(page, username) {
   // A negative check on wp-login.php? can succeed before WordPress has even
   // started its redirect. Require a completed, authenticated admin landing.
   await page.waitForURL(url => url.pathname.startsWith('/wp-admin/'), {
-    waitUntil: 'domcontentloaded', timeout: 20000,
+    // Commit verifies WordPress's real authenticated redirect. Requiring the
+    // admin bar below independently verifies the parsed, authenticated page;
+    // a slow optional DOMContentLoaded event cannot itself grant a pass.
+    waitUntil: 'commit', timeout: 20000,
   });
-  await expect(page.locator('#wpadminbar')).toBeVisible();
+  await expect(page.locator('#wpadminbar')).toBeVisible({ timeout: 15000 });
 }
 async function memberForm(page) {
   await page.goto('/?page_id=' + process.env.UOP_M610_MEMBER_PAGE);
@@ -159,7 +162,15 @@ test('administrator: real control center, registration review, capacity acceptan
   await detail.getByRole('button', { name: 'Decide allocation' }).click();
   await expect(detail.locator('.uop-m6-status')).toHaveText('accepted', { timeout: 15000 });
 
-  await list.getByRole('button', { name: /Caregiver Minor/ }).click();
+  // WordPress's admin navigation may remain hovered after the previous
+  // click and open a submenu over the next record. Dismiss that transient
+  // platform menu by moving the pointer into the content region. We still
+  // exercise the REAL pointer click and never use force:true.
+  const currentViewport = page.viewportSize();
+  await page.mouse.move((currentViewport?.width || 1280) - 24, 110);
+  const childRecord = list.getByRole('button', { name: /Caregiver Minor/ });
+  await childRecord.click();
+  await expect(childRecord).toHaveAttribute('aria-pressed', 'true');
   await expect(detail.getByRole('button', { name: 'Reject', exact: true })).toBeVisible();
   await detail.getByRole('button', { name: 'Reject', exact: true }).click();
   await expect(detail.locator('.uop-m6-status')).toHaveText('rejected', { timeout: 15000 });

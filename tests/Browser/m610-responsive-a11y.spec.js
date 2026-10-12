@@ -3,6 +3,9 @@ import { execFileSync } from 'node:child_process';
 
 test.skip(process.env.UOP_HTTPS_E2E !== '1', 'Requires isolated local HTTPS WordPress CI');
 test.use({ baseURL: 'https://127.0.0.1:8443', ignoreHTTPSErrors: true });
+// CI may need the existing bounded second login attempt on a congested
+// disposable HTTPS/PHP proxy. Keep all individual assertions and role guards.
+test.describe.configure({ timeout: 90000 });
 const widths = [320, 390, 768, 1280];
 
 /**
@@ -158,7 +161,13 @@ test('authenticated portal keeps person selector, focus and touch actions usable
     expect((await requestReview.boundingBox()).height).toBeGreaterThanOrEqual(44);
     const refresh = section.getByRole('button', { name: 'Refresh access' });
     expect((await refresh.boundingBox()).height).toBeGreaterThanOrEqual(44);
+    // The portal intentionally disables controls while both async subject and
+    // entry requests complete. Test keyboard order only after live readiness;
+    // otherwise a disabled selector cannot receive focus and Tab jumps away.
+    await expect(selector).toBeEnabled();
+    await expect(refresh).toBeEnabled();
     await selector.focus();
+    await expect(selector).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(refresh).toBeFocused();
   }
@@ -284,12 +293,28 @@ test('people editor and form builder reflow without clipped controls at 320–12
     await key.focus();
     await expect(key).toBeFocused();
     const add = builder.getByRole('button', { name: 'Create draft' });
-    // The real 44px computed geometry is the readiness and accessibility
-    // condition. CSSOM introspection is not a reliable loading signal because
-    // WordPress aggregates stylesheets that may not expose readable cssRules.
-    await expect.poll(() => add.evaluate(node =>
-      node.getBoundingClientRect().height
-    ), { timeout: 15000 }).toBeGreaterThanOrEqual(44);
+    // Retain the actual 44px accessibility threshold. A disposable HTTPS
+    // server may occasionally fail to return this exact UOP stylesheet; only
+    // then permit one bounded reload. If CSS is loaded but sizing is wrong,
+    // fail rather than concealing a genuine responsive regression.
+    const checkButtonTarget = async () => {
+      await expect.poll(() => add.evaluate(node =>
+        node.getBoundingClientRect().height
+      ), { timeout: 15000 }).toBeGreaterThanOrEqual(44);
+    };
+    try {
+      await checkButtonTarget();
+    } catch (error) {
+      const css = await page.evaluate(() => {
+        const link = [...globalThis.document.querySelectorAll('link[rel="stylesheet"]')]
+          .find(node => node.href.includes('m3-form-builder.css'));
+        return { requested: Boolean(link), loaded: Boolean(link?.sheet) };
+      });
+      if (!css.requested || css.loaded) throw error;
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await expect(add).toBeVisible();
+      await checkButtonTarget();
+    }
     const createSize = await add.evaluate(node => {
       const sheetRules = [...globalThis.document.styleSheets]
         .filter(sheet => sheet.href?.includes('m3-form-builder.css'))
@@ -321,6 +346,16 @@ test('operations and consent editor keep wide tables in keyboard-scrollable regi
   for (const width of [320, 390, 768]) {
     await page.setViewportSize({ width, height: 850 });
     await visit(page, '/wp-admin/admin.php?page=uop-operations', { waitUntil: 'domcontentloaded' });
+    // An overloaded disposable HTTPS proxy can drop the CSS request while
+    // still serving valid admin markup. One bounded reload is allowed, but
+    // the test must observe the actual stylesheet and computed scroll rule.
+    const consoleSheet = page.locator('link[rel="stylesheet"][href*="m6-console.css"]');
+    if (!await consoleSheet.evaluate(link => Boolean(link.sheet)).catch(() => false)) {
+      await page.reload({ waitUntil: 'load' });
+    }
+    await expect.poll(() => consoleSheet.evaluate(link => Boolean(link.sheet)).catch(() => false), {
+      timeout: 12000,
+    }).toBe(true);
     const operations = page.locator('.uop-m6-console');
     await expect(operations.getByRole('navigation', { name: 'Operations sections' })).toBeVisible();
     const regions = operations.locator('.uop-m6-console__table');
@@ -404,4 +439,29 @@ test('guardian claim → independent admin review → event-only access, without
   await expect(members.locator('[data-uop-subject]')).toContainText('Review Dependent');
   await visit(page, '/?page_id=' + process.env.UOP_M610_PORTAL_PAGE);
   await expect(page.locator('[data-uop-portal-root="portal"] select.uop-portal__select')).not.toContainText('Review Dependent');
+});
+
+test('age review is manager-only, accessible and requires an explicit evidence check', async ({ page }) => {
+  requireCi();
+  await login(page, 'uop_ci_adult');
+  const denied = await visit(page, '/wp-admin/admin.php?page=uop-age');
+  expect(denied?.status() === 403 || denied?.status() === 404 ||
+    await page.getByText('Sorry, you are not allowed to access this page.').isVisible()).toBeTruthy();
+
+  await login(page, 'uop_test_admin');
+  for (const width of [390, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await visit(page, '/wp-admin/admin.php?page=uop-age', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: 'Age verification' })).toBeVisible();
+    const form = page.locator('form[action*="admin-post.php"]');
+    await expect(form).toBeVisible();
+    await expect(form.locator('input[name="_wpnonce"]')).toHaveCount(1);
+    await expect(form.locator('input[name="evidence_checked"]')).toHaveCount(1);
+    await expect(form.getByRole('button', { name: 'Record verified class' })).toBeVisible();
+    await expect(form.getByRole('button', { name: 'Revoke current class' })).toBeVisible();
+    const person = form.getByRole('textbox', { name: 'Person UUID' });
+    await expect(person).toBeVisible();
+    expect((await form.getByRole('button', { name: 'Record verified class' }).boundingBox()).height).toBeGreaterThanOrEqual(44);
+    await expect(form.getByRole('combobox', { name: 'Offline review method' })).toBeVisible();
+  }
 });

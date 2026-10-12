@@ -14,7 +14,7 @@ use InvalidArgumentException;
 /** No runtime code, unknown operators or request-defined paths can execute. */
 final class ConditionEngine {
 	/** Whitelisted comparison operators. */
-	private const OPS = array( 'eq', 'neq', 'in', 'not_in', 'exists', 'empty', 'lt', 'lte', 'gt', 'gte', 'date_before', 'date_after', 'age_lt_at', 'age_gte_at' );
+	private const OPS = array( 'eq', 'neq', 'in', 'not_in', 'exists', 'empty', 'lt', 'lte', 'gt', 'gte', 'date_before', 'date_after', 'age_lt_at', 'age_gte_at', 'age_verified_lt_at', 'age_verified_gte_at' );
 
 	/**
 	 * Validate the complete schema and depth before evaluating anything.
@@ -45,7 +45,7 @@ final class ConditionEngine {
 	public function evaluate( array $ast, array $facts, array $contexts = array() ): bool {
 		$this->validate( $ast );
 		unset( $ast['schema_version'] );
-		return $this->evaluate_node( $ast, $facts, $contexts );
+		return true === $this->evaluate_node( $ast, $facts, $contexts );
 	}
 
 	/**
@@ -105,11 +105,11 @@ final class ConditionEngine {
 				throw new InvalidArgumentException( 'Condition value is not a supported literal.' );
 			}
 		}
-		if ( in_array( $op, array( 'age_lt_at', 'age_gte_at' ), true )
-			&& ( 'event.start' !== ( $node['context'] ?? null ) || ! is_int( $node['value'] ?? null ) || $node['value'] < 0 || $node['value'] > 150 ) ) {
+		if ( in_array( $op, array( 'age_lt_at', 'age_gte_at', 'age_verified_lt_at', 'age_verified_gte_at' ), true )
+			&& ( 'profile' !== $node['source'] || 'date_of_birth' !== $node['field'] || 'event.start' !== ( $node['context'] ?? null ) || ! is_int( $node['value'] ?? null ) || $node['value'] < 0 || $node['value'] > 150 ) ) {
 			throw new InvalidArgumentException( 'Age comparisons require an event start context.' );
 		}
-		if ( isset( $node['context'] ) && ! in_array( $op, array( 'age_lt_at', 'age_gte_at' ), true ) ) {
+		if ( isset( $node['context'] ) && ! in_array( $op, array( 'age_lt_at', 'age_gte_at', 'age_verified_lt_at', 'age_verified_gte_at' ), true ) ) {
 			throw new InvalidArgumentException( 'Unexpected condition context.' );
 		}
 	}
@@ -122,27 +122,34 @@ final class ConditionEngine {
 	 * @phpstan-param array<string, array<string, mixed>> $facts
 	 * @param array                $contexts Trusted UTC event dates.
 	 * @phpstan-param array<string, string> $contexts
-	 * @return bool
+	 * @return bool|null Null means the age fact is unknown, never a grant.
 	 */
-	private function evaluate_node( array $node, array $facts, array $contexts ): bool {
+	private function evaluate_node( array $node, array $facts, array $contexts ): ?bool {
 		if ( isset( $node['all'] ) ) {
+			$unknown = false;
 			foreach ( $node['all'] as $child ) {
-				if ( ! $this->evaluate_node( $child, $facts, $contexts ) ) {
+				$result = $this->evaluate_node( $child, $facts, $contexts );
+				if ( false === $result ) {
 					return false;
 				}
+				$unknown = $unknown || null === $result;
 			}
-			return true;
+			return $unknown ? null : true;
 		}
 		if ( isset( $node['any'] ) ) {
+			$unknown = false;
 			foreach ( $node['any'] as $child ) {
-				if ( $this->evaluate_node( $child, $facts, $contexts ) ) {
+				$result = $this->evaluate_node( $child, $facts, $contexts );
+				if ( true === $result ) {
 					return true;
 				}
+				$unknown = $unknown || null === $result;
 			}
-			return false;
+			return $unknown ? null : false;
 		}
 		if ( isset( $node['not'] ) ) {
-			return ! $this->evaluate_node( $node['not'], $facts, $contexts );
+			$result = $this->evaluate_node( $node['not'], $facts, $contexts );
+			return null === $result ? null : ! $result;
 		}
 		$source = (string) $node['source'];
 		$field  = (string) $node['field'];
@@ -158,6 +165,7 @@ final class ConditionEngine {
 			'lt', 'lte', 'gt', 'gte' => $this->compare( $actual, $target, $node['operator'] ),
 			'date_before', 'date_after' => $this->compare_dates( $actual, $target, 'date_before' === $node['operator'] ),
 			'age_lt_at', 'age_gte_at' => $this->age_compare( $actual, $target, $contexts['event.start'] ?? '', 'age_lt_at' === $node['operator'] ),
+			'age_verified_lt_at', 'age_verified_gte_at' => 'verified' === ( $contexts[ 'age.verified.' . ( 'age_verified_lt_at' === $node['operator'] ? 'lt' : 'gte' ) . '.' . (string) $target ] ?? null ) ? true : null,
 			default => false,
 		};
 	}
@@ -205,20 +213,20 @@ final class ConditionEngine {
 	 * @param mixed  $target   Integer age threshold.
 	 * @param string $event_at UTC event start.
 	 * @param bool   $under    Compare strictly under threshold.
-	 * @return bool
+	 * @return bool|null Unknown for missing, invalid or contradictory age evidence.
 	 */
-	private function age_compare( mixed $dob, mixed $target, string $event_at, bool $under ): bool {
-		if ( ! $this->date_valid( $dob ) || ! is_int( $target ) ) {
-			return false;
+	private function age_compare( mixed $dob, mixed $target, string $event_at, bool $under ): ?bool {
+		if ( ! $this->date_valid( $dob ) || ! is_int( $target ) || '' === $event_at ) {
+			return null;
 		}
 		try {
 			$event = new DateTimeImmutable( $event_at, new DateTimeZone( 'UTC' ) );
 			$born  = new DateTimeImmutable( $dob . 'T00:00:00+00:00' );
 		} catch ( \Exception ) {
-			return false;
+			return null;
 		}
 		if ( $event < $born ) {
-			return false;
+			return null;
 		}
 		$age = $born->diff( $event )->y;
 		return $under ? $age < $target : $age >= $target;

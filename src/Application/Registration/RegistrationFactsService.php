@@ -15,16 +15,18 @@ use UOP\Application\Policy\PolicyService;
 use UOP\Domain\Conditions\ConditionEngine;
 use UOP\Domain\Organization\OrgScope;
 use UOP\Infrastructure\Database\RegistrationFactsRepository;
+use UOP\Infrastructure\Database\AgeAttestationRepository;
 
 /** Never uses profile claims supplied by an applicant's request payload. */
 final class RegistrationFactsService {
 	/**
 	 * Compose scoped reads and live field visibility policy.
 	 *
-	 * @param RegistrationFactsRepository $repository Scoped source data.
-	 * @param PolicyService               $policy     Field authorization.
+	 * @param RegistrationFactsRepository   $repository Scoped source data.
+	 * @param PolicyService                 $policy     Field authorization.
+	 * @param AgeAttestationRepository|null $age_attestations Independently reviewed age facts.
 	 */
-	public function __construct( private RegistrationFactsRepository $repository, private PolicyService $policy ) {}
+	public function __construct( private RegistrationFactsRepository $repository, private PolicyService $policy, private ?AgeAttestationRepository $age_attestations = null ) {}
 
 	/**
 	 * Gather all referenced server fields from validated condition ASTs.
@@ -44,20 +46,28 @@ final class RegistrationFactsService {
 		 *
 		 * @var array<string, bool> $keys
 		 */
-		$keys     = array();
-		$age_keys = array();
-		$engine   = new ConditionEngine();
+		$keys         = array();
+		$age_keys     = array();
+		$verified_age = array();
+		$engine       = new ConditionEngine();
 		foreach ( $conditions as $condition ) {
 			$engine->validate( $condition );
-			$this->references( $condition, $keys, $age_keys );
+			$this->references( $condition, $keys, $age_keys, $verified_age );
 		}
 		$context = array();
-		if ( $age_keys ) {
+		if ( $age_keys || $verified_age ) {
 			$start = $this->repository->event_start( $scope, $event_post, $occurrence );
 			if ( null === $start ) {
 				throw new RuntimeException( 'Age requirements need a unique scheduled event start.' );
 			}
 			$context['event.start'] = $start;
+		}
+		// Independently reviewed age classes are not inferred from date_of_birth.
+		foreach ( $verified_age as $item ) {
+			if ( ! $this->age_attestations || ! $this->age_attestations->matches( $scope, $person_id, $event_post, $item['threshold'], $item['outcome'], gmdate( 'Y-m-d H:i:s' ), $context['event.start'] ) ) {
+				throw new RuntimeException( 'Current event age attestation is required.' );
+			}
+			$context[ 'age.verified.' . $item['outcome'] . '.' . $item['threshold'] ] = 'verified';
 		}
 		$profile = array();
 		foreach ( array_keys( $keys ) as $key ) {
@@ -121,27 +131,36 @@ final class RegistrationFactsService {
 	/**
 	 * Recursively collect references, rejecting request-owned age assertions.
 	 *
-	 * @param array<string, mixed> $node      Validated AST.
-	 * @param array<string, bool>  $keys      Mutable distinct profile keys.
+	 * @param array<string, mixed>                               $node      Validated AST.
+	 * @param array<string, bool>                                $keys      Mutable distinct profile keys.
 	 * @param-out array<string, bool> $keys
-	 * @param array<string, bool>  $age_keys  Server-controlled birth fields used by age conditions.
+	 * @param array<string, bool>                                $age_keys  Server-controlled birth fields used by age conditions.
+	 * @param array<string, array{outcome:string,threshold:int}> $verified_age Reviewed threshold fact requests.
+	 * @param-out array<string, array{outcome:string,threshold:int}> $verified_age
 	 * @param-out array<string, bool> $age_keys
 	 * @throws RuntimeException When age is asserted through request-supplied data.
 	 */
-	private function references( array $node, array &$keys, array &$age_keys ): void {
+	private function references( array $node, array &$keys, array &$age_keys, array &$verified_age ): void {
 		foreach ( array( 'all', 'any' ) as $group ) {
 			if ( isset( $node[ $group ] ) ) {
 				foreach ( $node[ $group ] as $child ) {
-					$this->references( $child, $keys, $age_keys );
+					$this->references( $child, $keys, $age_keys, $verified_age );
 				}
 				return;
 			}
 		}
 		if ( isset( $node['not'] ) ) {
-			$this->references( $node['not'], $keys, $age_keys );
+			$this->references( $node['not'], $keys, $age_keys, $verified_age );
 			return;
 		}
 		if ( ! isset( $node['source'] ) ) {
+			return;
+		}
+		if ( in_array( $node['operator'], array( 'age_verified_lt_at', 'age_verified_gte_at' ), true ) ) {
+			$verified_age[ (string) $node['operator'] . ':' . (string) $node['value'] ] = array(
+				'outcome'   => 'age_verified_lt_at' === $node['operator'] ? 'lt' : 'gte',
+				'threshold' => (int) $node['value'],
+			);
 			return;
 		}
 		if ( in_array( $node['operator'], array( 'age_lt_at', 'age_gte_at' ), true ) ) {

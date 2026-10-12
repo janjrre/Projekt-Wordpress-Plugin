@@ -11,11 +11,13 @@ use UOP\Admin\M6PeopleRegistrationScreen;
 use UOP\Admin\M6ControlCenterScreen;
 use UOP\Admin\M6ConsentDocumentsScreen;
 use UOP\Admin\M6GuardianReviewScreen;
+use UOP\Admin\M6AgeAttestationScreen;
 use UOP\Blocks\M6Blocks;
 use UOP\Application\Consent\ConsentDefinitionService;
 use UOP\Application\Consent\ConsentRecordService;
 use UOP\Application\Identity\PersonService;
 use UOP\Application\Identity\GuardianReviewService;
+use UOP\Application\Identity\AgeAttestationService;
 use UOP\Application\Policy\PolicyService;
 use UOP\Application\Query\M6ReadService;
 use UOP\Application\Query\M6AdminReadService;
@@ -50,6 +52,8 @@ use UOP\Infrastructure\Database\DelegationRepository;
 use UOP\Infrastructure\Database\PersonRepository;
 use UOP\REST\GuardianReviewController;
 use UOP\Infrastructure\Database\RegistrationReadRepository;
+use UOP\Infrastructure\Database\AgeAttestationRepository;
+use UOP\REST\AgeAttestationController;
 use UOP\REST\PeopleController;
 use UOP\REST\M6OperationsController;
 use UOP\REST\M6AdminController;
@@ -156,6 +160,42 @@ final class M6Module implements ModuleInterface {
 			)
 		);
 
+		$container->set(
+			AgeAttestationService::class,
+			static fn ( ServiceContainer $c ) => new AgeAttestationService(
+				$c->get( AgeAttestationRepository::class ),
+				$c->get( PersonRepository::class ),
+				$c->get( Connection::class ),
+				$prefix,
+				$c->get( PolicyService::class ),
+				$c->get( TransactionManager::class ),
+				$c->get( AuditWriter::class ),
+				$c->get( OutboxRepository::class )
+			)
+		);
+		$container->set(
+			AgeAttestationController::class,
+			static fn ( ServiceContainer $c ) => new AgeAttestationController(
+				$c->get( AgeAttestationService::class ),
+				$c->get( AgeAttestationRepository::class ),
+				$c->get( PersonRepository::class ),
+				$c->get( PolicyService::class )
+			)
+		);
+		add_action( 'rest_api_init', array( $container->get( AgeAttestationController::class ), 'register' ) );
+		$container->set(
+			M6AgeAttestationScreen::class,
+			static fn ( ServiceContainer $c ) => new M6AgeAttestationScreen(
+				$c->get( AgeAttestationService::class ),
+				$c->get( AgeAttestationRepository::class ),
+				$c->get( PersonRepository::class ),
+				$c->get( PolicyService::class ),
+				$c->get( Connection::class ),
+				$prefix
+			)
+		);
+		add_action( 'admin_menu', array( $container->get( M6AgeAttestationScreen::class ), 'menu' ) );
+		add_action( 'admin_post_uop_age_review', array( $container->get( M6AgeAttestationScreen::class ), 'submit' ) );
 		$container->set(
 			GuardianReviewController::class,
 			static fn ( ServiceContainer $c ) => new GuardianReviewController( $c->get( GuardianReviewService::class ) )
