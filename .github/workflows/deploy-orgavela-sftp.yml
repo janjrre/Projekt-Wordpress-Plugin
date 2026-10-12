@@ -80,14 +80,15 @@ jobs:
           [[ "$IONOS_USER" =~ ^[a-zA-Z0-9._-]+$ ]] || exit 1
           [[ "$IONOS_SFTP_ROOT" =~ ^(/[a-zA-Z0-9._/-]*|\.)$ ]] || exit 1
           [[ "$IONOS_SFTP_ROOT" != *'..'* && "${IONOS_SFTP_ROOT,,}" != *dreamloud* ]] || exit 1
+          # Operator verified /public/wp-content/plugins in OrgaVela's own IONOS Webspace Explorer.
+          # Account can access other folders: never accept a different tree for this workflow.
+          [[ "$IONOS_SFTP_ROOT" == '/public' ]] || {
+            echo "::error title=OrgaVela folder not set::Set IONOS_SFTP_ROOT=/public as an Environment variable in orgavela-ionos. No files changed."
+            exit 1
+          }
           if [[ "$OPERATION" == 'install' ]]; then
             [[ "$TARGET_DOMAIN" == 'orgavela.com' && "$EXPECTED_HASH" =~ ^[A-Fa-f0-9]{64}$ ]] || {
               echo "::error::Install requires orgavela.com and a 64-character SHA-256"; exit 1;
-            }
-            # The root was not the WordPress directory in the first live probe.
-            # Never install while the location is still the default SFTP login directory.
-            [[ "$IONOS_SFTP_ROOT" != '.' && "$IONOS_SFTP_ROOT" != '/' ]] || {
-              echo "::error::Install refused: specify the verified OrgaVela WordPress folder in the IONOS_SFTP_ROOT environment variable."; exit 1;
             }
           else
             [[ "$OPERATION" == 'probe' ]] || exit 1
