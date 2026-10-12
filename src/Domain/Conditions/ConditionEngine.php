@@ -14,7 +14,7 @@ use InvalidArgumentException;
 /** No runtime code, unknown operators or request-defined paths can execute. */
 final class ConditionEngine {
 	/** Whitelisted comparison operators. */
-	private const OPS = array( 'eq', 'neq', 'in', 'not_in', 'exists', 'empty', 'lt', 'lte', 'gt', 'gte', 'date_before', 'date_after', 'age_lt_at', 'age_gte_at' );
+	private const OPS = array( 'eq', 'neq', 'in', 'not_in', 'exists', 'empty', 'lt', 'lte', 'gt', 'gte', 'date_before', 'date_after', 'age_lt_at', 'age_gte_at', 'age_verified_lt_at', 'age_verified_gte_at' );
 
 	/**
 	 * Validate the complete schema and depth before evaluating anything.
@@ -105,11 +105,11 @@ final class ConditionEngine {
 				throw new InvalidArgumentException( 'Condition value is not a supported literal.' );
 			}
 		}
-		if ( in_array( $op, array( 'age_lt_at', 'age_gte_at' ), true )
+		if ( in_array( $op, array( 'age_lt_at', 'age_gte_at', 'age_verified_lt_at', 'age_verified_gte_at' ), true )
 			&& ( 'profile' !== $node['source'] || 'date_of_birth' !== $node['field'] || 'event.start' !== ( $node['context'] ?? null ) || ! is_int( $node['value'] ?? null ) || $node['value'] < 0 || $node['value'] > 150 ) ) {
 			throw new InvalidArgumentException( 'Age comparisons require an event start context.' );
 		}
-		if ( isset( $node['context'] ) && ! in_array( $op, array( 'age_lt_at', 'age_gte_at' ), true ) ) {
+		if ( isset( $node['context'] ) && ! in_array( $op, array( 'age_lt_at', 'age_gte_at', 'age_verified_lt_at', 'age_verified_gte_at' ), true ) ) {
 			throw new InvalidArgumentException( 'Unexpected condition context.' );
 		}
 	}
@@ -164,7 +164,8 @@ final class ConditionEngine {
 			'not_in' => null !== $actual && ! in_array( $actual, $target, true ),
 			'lt', 'lte', 'gt', 'gte' => $this->compare( $actual, $target, $node['operator'] ),
 			'date_before', 'date_after' => $this->compare_dates( $actual, $target, 'date_before' === $node['operator'] ),
-			'age_lt_at', 'age_gte_at' => $this->age_compare( $actual, $target, $contexts['event.start'] ?? '', 'age_lt_at' === $node['operator'] ),
+			'age_lt_at', 'age_gte_at', 'age_verified_lt_at', 'age_verified_gte_at' => $this->age_compare( $actual, $target, $contexts['event.start'] ?? '', 'age_lt_at' === $node['operator'] ),
+			'age_verified_lt_at', 'age_verified_gte_at' => 'verified' === ( $contexts[ 'age.verified.' . ( 'age_verified_lt_at' === $node['operator'] ? 'lt' : 'gte' ) . '.' . (string) $target ] ?? null ) ? true : null,
 			default => false,
 		};
 	}
