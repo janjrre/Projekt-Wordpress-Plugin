@@ -51,10 +51,14 @@ final class MigrationRunner {
 			if ( $installed > $this->registry->latest() ) {
 				throw new RuntimeException( 'Schema downgrade is not supported.' );
 			}
-			if ( $installed === $this->registry->latest() ) {
-				foreach ( $this->registry->pending( $installed - 1 ) as $migration ) {
-					$migration->verify( new MigrationContext( $this->state, $this->transactions, $installed ) );
+			// An upgrade may not hide drift in already installed schema versions.
+			// Verify every preceding migration before changing any further tables.
+			foreach ( $this->registry->pending( 0 ) as $prior ) {
+				if ( $prior->version() <= $installed ) {
+					$prior->verify( new MigrationContext( $this->state, $this->transactions, $prior->version() ) );
 				}
+			}
+			if ( $installed === $this->registry->latest() ) {
 				if ( $installed !== (int) $this->state->read( 'uop_data_version', 0 ) ) {
 					throw new RuntimeException( 'Schema and data versions are inconsistent.' );
 				}
