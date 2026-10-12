@@ -1,0 +1,86 @@
+name: Package UOP for isolated WordPress.com staging
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/p4-age-evidence
+    paths:
+      - '.github/workflows/uop-wpcom-stage-package.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: uop-wpcom-stage-package
+  cancel-in-progress: false
+
+jobs:
+  package:
+    if: github.repository == 'janjrre/Projekt-Wordpress-Plugin' && github.ref == 'refs/heads/feat/p4-age-evidence'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      COMPOSER_ROOT_VERSION: 0.1.0-alpha.2
+    steps:
+      - name: Checkout explicit staging source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: true
+      - name: PHP packaging toolchain
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, mbstring, zip
+          tools: composer:v2
+          coverage: none
+      - name: Node build toolchain
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Quality gates before staging artifact
+        run: |
+          set -euo pipefail
+          composer install --no-interaction --prefer-dist
+          composer validate --strict
+          composer audit
+          composer lint
+          composer analyse
+          composer test
+          npm ci
+          npm audit --audit-level=high
+          npm run lint
+          node bin/schema-manifest.mjs --check
+          npm run build
+      - name: Build verifiable production dependency ZIP
+        run: |
+          set -euo pipefail
+          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+          php bin/package.php
+          php tests/packaging.php
+          unzip -t dist/uop-core.zip
+          unzip -Z -1 dist/uop-core.zip | grep -qx 'uop-core/uop-core.php'
+          unzip -Z -1 dist/uop-core.zip | grep -qx 'uop-core/vendor/autoload.php'
+          echo "Package SHA256: $(sha256sum dist/uop-core.zip)"
+      - name: Publish only staging installation ZIP on isolated artifact branch
+        run: |
+          set -euo pipefail
+          package="$RUNNER_TEMP/uop-core.zip"
+          cp dist/uop-core.zip "$package"
+          source_sha="$(git rev-parse HEAD)"
+          staging_dir="$RUNNER_TEMP/uop-artifact-branch"
+          mkdir -p "$staging_dir"
+          git worktree add --detach "$staging_dir" HEAD
+          cd "$staging_dir"
+          git switch --orphan staging-package-local
+          git rm -rf --ignore-unmatch . > /dev/null
+          git clean -fdx > /dev/null
+          cp "$package" uop-core.zip
+          printf 'source_sha=%s\nsha256=%s\n' "$source_sha" "$(sha256sum uop-core.zip | cut -d' ' -f1)" > package-provenance.txt
+          git add uop-core.zip package-provenance.txt
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "chore(staging): verified plugin ZIP for $source_sha"
+          git push --force origin HEAD:refs/heads/staging/uop-plugin-package
+          echo "Download: https://raw.githubusercontent.com/janjrre/Projekt-Wordpress-Plugin/staging/uop-plugin-package/uop-core.zip"
+          echo "This is a development staging artifact, not a public release."
