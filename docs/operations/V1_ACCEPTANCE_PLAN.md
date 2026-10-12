@@ -1,6 +1,6 @@
 # OrgaVela / UOP Core – Verbindlicher Masterplan bis zur V1-Abnahme
 
-**Version:** 1.3 | **Bestandsaufnahme:** 12.10.2026 | **Status:** aktiv; V1 **nicht** abgenommen  
+**Version:** 1.4 | **Bestandsaufnahme:** 12.10.2026 | **Status:** aktiv; V1 **nicht** abgenommen  
 **Quellenhierarchie:** Phase 3 Specification Freeze > Phase 2 V1-Spezifikation > Phase 1 Produktstrategie; neuere freigegebene ADRs ergänzen den Freeze, ersetzen ihn nicht stillschweigend.  
 **Projekt:** janjrre/Projekt-Wordpress-Plugin | **Technischer Name:** UOP Core | **Produktname:** OrgaVela | **Staging:** https://orgavela.com
 **Zentrale GitHub-Abnahme-Issue:** [#15 – V1 Master-Abnahme](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) mit verlinkten Milestone- und Zusatzpaketen.  
@@ -349,3 +349,14 @@ Kein fingierter Live-Abgleich und keine Fortschrittsänderung ohne Quellenbeleg.
 - **2026-10-12, Version 1.2:** Nach paralleler Planerstellung auf eine einzige Kanonik konsolidiert: dieses Dokument und V1_PROGRESS.json sind maßgeblich; ergänzende /docs/project-Roadmap, Statusansicht und detaillierte Prüffallmatrix verlinkt. Doppelissue #14 wird auf #15 umgeleitet. Keine fachliche Statusänderung, weiterhin keine V1-Abnahme.
 
 - **2026-10-12, Version 1.3:** W0 tatsächlich begonnen, [W0-Belege](W0_BASELINE_AND_RECOVERY.md) und Issue #16 verlinkt, Schema-/Backup-/Privacy-Blocker statt formaler Erfolge dokumentiert und laufende CI-Nachprüfung auf neuem PR-#11-HEAD notiert; unveränderte V1-Zählung.
+
+
+### Ergänzung zur W0-Live-Verifikation vom 12.10.2026 (Version 1.4)
+
+Ergänzende technische Nachweise und ausführbare read-only `information_schema`-SQL-Abfragen sind im [W0-Read-only-Audit](W0_ORGAVELA_READ_ONLY_AUDIT_2026-10-12.md) dokumentiert. Diese ergänzen den bereits vorhandenen [W0-Basisbericht](W0_BASELINE_AND_RECOVERY.md), ohne konkurrierende Zählung.
+
+**Auf dem OrgaVela-MCP neu verifiziert:** `uop-core/uop-core.php` Alpha.2 aktiv, WP 7.1.3/PHP 8.3.33/MariaDB 11.8.8/utf8mb4; `cron-test` 5/19 überfällige Events einschließlich `action_scheduler_run_queue`; `discourage_search_engines=false`; zugewiesene Datenschutzseite **Entwurf, nicht öffentlich erreichbar**. Aktueller Admin-/Hosting-Zugang bietet keinen sicheren generischen SQL- oder direkten UOP Site-Health-Abfragekanal. Der Code registriert `Installer::health` und kontrolliert 28+1 physische Tabellen; **das tatsächliche Live-Ergebnis wurde nicht ausgelesen**. Bis zum Backup-/isolierten Restore-Gate keine risikobehafteten Migrationen oder Upgrade-Versuche.
+
+**O09 aktualisiert:** Neuer aktueller PR-#11-HEAD `7892a25894c184a624ab4ebea13aab0e1a1c88dd`. HTTPS/Playwright [Run #38248040695](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248040695) fehlgeschlagen: Sorgeberechtigten-Login `page.waitForURL` (20 s); keine bestätigte fachliche Ursache. [Foundation #38248040810](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248040810) hatte bei erster Abfrage noch aktive Jobs. Der neue CI-Stand **überschreibt die früheren roten Fehler nicht als Erfolg**. Keine abgesenkten A11y-Grenzen und keine deaktivierten Golden-Path-Tests.
+
+**Abnahme:** O01/O02/M1-08/O03/O06/O09 weiterhin offen oder teilweise untersucht; M0–M7 unverändert **62/71 technisch implementiert**, **0/8 formell abgenommen**, P4 **0/4**, R **0/18**. Umsetzung der Prüfabfragen in IONOS/phpMyAdmin oder Admin-Site-Health erfordert einen geeigneten **separat berechtigten, read-only Zugang**, der bislang nicht durch den WordPress-MCP angeboten wird.
