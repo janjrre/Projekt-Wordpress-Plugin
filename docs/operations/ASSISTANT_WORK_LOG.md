@@ -75,3 +75,17 @@
 **Ergebnis:** Dokumentationsregel ist im Repository und auf dem aktiven Branch nachlesbar. Die Datenbankkonfiguration selbst konnte mit den aktuell verfügbaren WordPress.com-Werkzeugen **nicht** sicher geändert werden. UOP Core bleibt installiert, aber **inaktiv**; kein Deployment-Erfolg behauptet.
 
 **Nächster erforderlicher externer Schritt:** In WordPress.com Hosting → OrgaVela → Einstellungen → Server prüfen, ob ohne Upgrade ein bestehender SSH/SFTP-/Datenbankzugriff verfügbar ist; andernfalls WordPress.com-Support nach einer betreiberseitig unterstützten UTF8MB4-Umstellung fragen. Vor SQL/Config-Schreibzugriff zunächst Tabellenkollationen und Backups/Restore-Fähigkeit prüfen, anschließend Korrektur und neue Aktivierung/Tests dokumentieren. Ohne sicheren Zugang bleibt Issue #12 ausdrücklich offen. Keine Dreamloud-Arbeit, keine kostenpflichtige Buchung.
+
+## 2026-10-12 – 07: PR-Protokollpflicht, Remote-Verfügbarkeit und letzter verifizierter Zustand
+
+**Arbeitsauftrag:** Derselbe fortgesetzte Auftrag, UOP-Datenbankzeichensatz zu beheben und die Pflichtdokumentation dauerhaft sicherzustellen.
+
+**Ansatz/Entscheidung:** Dauerhaftes `AGENTS.md` und README-Verweise allein sind nicht immer sichtbar, wenn ein PR zur Prüfung ansteht. Deshalb ist zusätzlich ein PR-Checklisteneintrag mit Nachweispflicht sinnvoll. Ein möglicher SSH-/Serverkonfigurationszugriff über den bereits verbundenen Remote-Rechner wurde geprüft, um ohne neue Verträge den Hoster zu erreichen.
+
+**Umsetzung:** `.github/pull_request_template.md` mit Pflichtangaben zu Arbeitsauftrag, Entscheidungsgründen, Logverweis, SHA/CI, Datenschutz, Sicherheits-Gates und offenen Schritten auf `main` (Commit `3520100c17a5222fd4ba19a78cda7606d981fdb0`) und `feat/p4-age-evidence` (Commit `7827805ca1a9059017cc6b6b1ca470c2769f3efb`) gespeichert.
+
+**Remote-Prüfung:** Ein bereits bekannter autorisierter Desktop-Commander-Rechner ist aktuell **offline**. Keine SSH-/SFTP-Verbindung und kein Webhosting-Dateizugriff über den Rechner ausgeführt; keine Zugangsdaten beschafft. Der WordPress.com-Connector bietet weiter keinen unterstützten Schreibzugriff auf `wp-config.php` oder Datenbank-Konfiguration.
+
+**Endzustand:** Auf OrgaVela WordPress.com bleibt `UOP Core 0.1.0-alpha.2` installiert und **inaktiv**, Website Coming Soon, keine Migration ausgeführt. Latest geprüfter PR-#11-HEAD `7827805ca1a9059017cc6b6b1ca470c2769f3efb` (Dokumentationsänderung). Neue CI-Läufe `38226299052` (Foundation), `38226299063` (HTTPS/Mailpit) und Push-Lauf `38226292812` waren beim letzten Check **noch ausstehend**; keine Erfolgsaussage für diesen HEAD. Issue #12 bleibt offen; der letzte historische technisch grüne Commit ist nicht mit diesem neuen HEAD gleichzusetzen.
+
+**Nächste Aktion:** Bereits verfügbaren WordPress.com-SSH/SFTP-Zugriff im Hosting-Dashboard prüfen oder Betreiber-Support um sichere, persistente UTF8MB4-Konfiguration bitten. Nur nach bestätigtem Zugriff, tatsächlicher Tabellen-/Datenprüfung und Restore-Gate konfigurieren; erneut aktivieren, Schemahealth/CI/Portal testen, Ergebnisse als neuen Eintrag dokumentieren. Keine kostenpflichtige Buchung und keine Dreamloud-Änderung.
