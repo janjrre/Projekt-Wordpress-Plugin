@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "W0 OrgaVela MCP read-only check, official IONOS backup documentation, actual GitHub Actions results at HEAD 7892a258, verified 2026-10-12.",
+  "snapshot_basis": "2026-10-12 live OrgaVela MCP read-only findings, inspected PR-11 7892a258 source and CI logs; not an automated monitor",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -146,7 +146,7 @@
     },
     {
       "id": "O03",
-      "status": "not-started"
+      "status": "partial"
     },
     {
       "id": "O04",
@@ -170,7 +170,7 @@
     },
     {
       "id": "O09",
-      "status": "blocked"
+      "status": "partial"
     },
     {
       "id": "O10",
@@ -278,7 +278,17 @@
     "external_cron_verified": false,
     "discourage_search_engines": false,
     "backup_restore_verified": false,
-    "real_participant_data_allowed": false
+    "real_participant_data_allowed": false,
+    "cron_overdue_events": 5,
+    "cron_total_events": 19,
+    "privacy_policy_page": "configured but draft/unavailable publicly (MCP 2026-10-12)",
+    "wp_environment_type": "production (WordPress setting, not product release status)",
+    "uop_site_health_physical_result": "not accessible via connected MCP abilities; M1-08 unaccepted",
+    "database_read_only_live_schema_audit": "pending independent information_schema comparison",
+    "ionos_backup_points_account_verified": false,
+    "manual_file_and_db_backup_verified": false,
+    "restore_test_isolated_verified": false,
+    "access_password_protection_verified": false
   },
   "integration": {
     "main_contains_merged_feature_stack": false,
@@ -293,6 +303,48 @@
     ],
     "latest_pr_11_head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
     "latest_pr_11_ci": [
+      {
+        "run": 38248040695,
+        "kind": "pr-https-browser",
+        "result": "failure",
+        "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
+        "failed_jobs": [
+          "m610-members-admin caregiver login navigation timed out"
+        ]
+      },
+      {
+        "run": 38248040810,
+        "kind": "pr-foundation",
+        "result": "in_progress_at_read_2026-10-12",
+        "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
+        "note": "Do not infer a green final matrix until completed."
+      }
+    ],
+    "previous_pr_11_ci": [
+      {
+        "run": 38233565475,
+        "kind": "pr-foundation",
+        "result": "failure",
+        "failed_jobs": [
+          "PHP 8.5 MySQL 8.0 browser activation smoke"
+        ]
+      },
+      {
+        "run": 38233565383,
+        "kind": "pr-https-browser",
+        "result": "failure",
+        "failed_jobs": [
+          "two Playwright browser test failures"
+        ]
+      },
+      {
+        "run": 38233559467,
+        "kind": "push-foundation",
+        "result": "success",
+        "successful_jobs": 8
+      }
+    ],
+    "previous_pr_11_ci_snapshot": [
       {
         "run": 38248031834,
         "kind": "push-foundation",
@@ -319,38 +371,14 @@
           "Caregiver WordPress login failed to reach admin DOMContentLoaded within 20 seconds"
         ]
       }
-    ],
-    "previous_pr_11_ci": [
-      {
-        "run": 38233565475,
-        "kind": "pr-foundation",
-        "result": "failure",
-        "failed_jobs": [
-          "PHP 8.5 MySQL 8.0 browser activation smoke"
-        ]
-      },
-      {
-        "run": 38233565383,
-        "kind": "pr-https-browser",
-        "result": "failure",
-        "failed_jobs": [
-          "two Playwright browser test failures"
-        ]
-      },
-      {
-        "run": 38233559467,
-        "kind": "push-foundation",
-        "result": "success",
-        "successful_jobs": 8
-      }
     ]
   },
   "immediate_next": [
-    "O02/M1-08 physical schema and migration-state proof",
-    "O03 IONOS file+DB backup inventory and isolated restore proof",
-    "O01/O06 least-privilege and protected test area decision",
-    "O09 review latest HEAD 7892a258 GitHub CI results",
-    "O04 external cron only after W0 prerequisites"
+    "O02/M1-08: independently read installed Alpha.2 UOP Site Health and information_schema metadata for 28+1 physical tables, indexes and org scope",
+    "O03: verify exact IONOS tariff/account backup points; perform real files+DB export and isolated restore only",
+    "O06: disable search indexing and implement authenticated site access protection before synthetic real-site journeys; legal privacy page review",
+    "O01: request account-level SFTP directory scoping at IONOS, never traverse other websites",
+    "O09: diagnose new PR #11 HTTPS caregiver login timeout; check completed full matrix on same SHA"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
@@ -410,5 +438,6 @@
         "Root-cause PR11 browser server/navigation stability; avoid masking actual failures, treat as W2 O09."
       ]
     }
-  }
+  },
+  "audit_evidence_path": "docs/operations/W0_ORGAVELA_READ_ONLY_AUDIT_2026-10-12.md"
 }
