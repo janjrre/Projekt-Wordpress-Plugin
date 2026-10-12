@@ -73,7 +73,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for v in IONOS_HOST IONOS_USER SSHPASS IONOS_HOST_KEYS WP_ROOT; do
+          for v in IONOS_HOST IONOS_USER SSHPASS WP_ROOT; do
             [[ -n "${!v:-}" ]] || { echo "Missing $v"; exit 1; }
           done
           [[ "$IONOS_HOST" =~ ^[a-zA-Z0-9.-]+$ && "$IONOS_USER" =~ ^[a-zA-Z0-9._-]+$ ]] || exit 1
@@ -83,7 +83,16 @@ jobs:
           else
             [[ "$OPERATION" == probe ]] || exit 1
           fi
-          printf '%s\n' "$IONOS_HOST_KEYS" > "$RUNNER_TEMP/known_hosts"
+          if [[ -n "${IONOS_HOST_KEYS:-}" ]]; then
+            # Optional independently verified known_hosts override.
+            printf '%s\n' "$IONOS_HOST_KEYS" > "$RUNNER_TEMP/known_hosts"
+          else
+            # Official IONOS Webhosting ED25519 fingerprint verified from ionos.de/help.
+            ssh-keyscan -T 8 -p 22 -t ed25519 "$IONOS_HOST" > "$RUNNER_TEMP/known_hosts" 2>/dev/null
+            ssh-keygen -lf "$RUNNER_TEMP/known_hosts" | awk '{print $2}' | grep -Fxq 'SHA256:1gx2w8Rtv3wCgi7Jh8myf/KVd72cRQbow03UP8P095Q' || {
+              echo 'SSH host key differs from official IONOS ED25519 fingerprint'; exit 1;
+            }
+          fi
           chmod 600 "$RUNNER_TEMP/known_hosts"
           ssh-keygen -F "$IONOS_HOST" -f "$RUNNER_TEMP/known_hosts" >/dev/null || {
             echo 'No pinned SSH host key for this host.'; exit 1;
