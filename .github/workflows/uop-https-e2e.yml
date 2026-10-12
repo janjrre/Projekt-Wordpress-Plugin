@@ -135,6 +135,17 @@ jobs:
             tail -n 60 "$RUNNER_TEMP/uop-https-proxy.log" || true
             exit 1
           fi
+          # This is a real CSS delivery assertion, not a relaxed 44px target.
+          # A prior trace showed Chromium net::ERR_TOO_MANY_RETRIES for this
+          # exact asset under the disposable PHP web server's competing load.
+          for i in $(seq 1 3); do
+            curl -fsS --cacert "$UOP_HTTPS_CERT" \
+              "https://127.0.0.1:8443/wp-content/plugins/uop-core/assets/m3-form-builder.css" \
+              | grep -Fq 'min-height:44px'
+            curl -fsS --cacert "$UOP_HTTPS_CERT" \
+              "https://127.0.0.1:8443/wp-content/plugins/uop-core/assets/m3-form-builder.js" \
+              >/dev/null
+          done
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8025/api/v1/messages >/dev/null; then
               break
