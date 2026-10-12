@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: "probe checks shell and exact OrgaVela identity; schema reads UOP health and aggregates"
+        description: "sftp checks safe folder access; probe checks SSH/WP-CLI; schema reads UOP aggregates"
         required: true
         type: choice
-        default: probe
-        options: [probe, schema]
+        default: sftp
+        options: [sftp, probe, schema]
   push:
     branches: [main]
     paths:
@@ -57,8 +57,8 @@ jobs:
           else
             operation="$MANUAL_OPERATION"
           fi
-          [[ "$operation" == 'probe' || "$operation" == 'schema' ]] || {
-            echo "::error::Only read-only probe/schema operations are permitted."; exit 1;
+          [[ "$operation" == 'sftp' || "$operation" == 'probe' || "$operation" == 'schema' ]] || {
+            echo "::error::Only read-only sftp/probe/schema operations are permitted."; exit 1;
           }
           printf 'AUDIT_OPERATION=%s\n' "$operation" >> "$GITHUB_ENV"
       - name: Install SSH transport (runner only)
