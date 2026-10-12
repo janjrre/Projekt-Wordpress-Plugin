@@ -1,0 +1,162 @@
+name: OrgaVela – secure SSH probe and first UOP upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        type: choice
+        description: First choose probe (read-only), then upload
+        required: true
+        default: probe
+        options: [probe, upload]
+      confirm_target:
+        type: string
+        description: Enter orgavela.com before upload
+        required: false
+      expected_sha256:
+        type: string
+        description: Verified SHA-256 of the UOP ZIP for upload
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orgavela-ssh
+  cancel-in-progress: false
+
+jobs:
+  access:
+    if: github.repository == 'janjrre/Projekt-Wordpress-Plugin' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: orgavela-ionos
+    env:
+      IONOS_HOST: ${{ secrets.IONOS_SSH_HOST }}
+      IONOS_USER: ${{ secrets.IONOS_SSH_USER }}
+      SSHPASS: ${{ secrets.IONOS_SSH_PASSWORD }}
+      IONOS_HOST_KEYS: ${{ secrets.IONOS_KNOWN_HOSTS }}
+      WP_ROOT: ${{ vars.IONOS_WP_ROOT }}
+    steps:
+      - name: Validate deployment settings and pin SSH identity
+        shell: bash
+        env:
+          OPERATION: ${{ inputs.operation }}
+          CONFIRM: ${{ inputs.confirm_target }}
+          EXPECTED: ${{ inputs.expected_sha256 }}
+        run: |
+          set -euo pipefail
+          for v in IONOS_HOST IONOS_USER SSHPASS IONOS_HOST_KEYS WP_ROOT; do
+            [[ -n "${!v:-}" ]] || { echo "Missing $v"; exit 1; }
+          done
+          [[ "$IONOS_HOST" =~ ^[a-zA-Z0-9.-]+$ && "$IONOS_USER" =~ ^[a-zA-Z0-9._-]+$ ]] || exit 1
+          [[ "$WP_ROOT" =~ ^/[a-zA-Z0-9._/-]+$ && "${WP_ROOT,,}" != *dreamloud* ]] || exit 1
+          if [[ "$OPERATION" == upload ]]; then
+            [[ "$CONFIRM" == orgavela.com && "$EXPECTED" =~ ^[a-fA-F0-9]{64}$ ]] || exit 1
+          else
+            [[ "$OPERATION" == probe ]] || exit 1
+          fi
+          printf '%s\n' "$IONOS_HOST_KEYS" > "$RUNNER_TEMP/known_hosts"
+          chmod 600 "$RUNNER_TEMP/known_hosts"
+          ssh-keygen -F "$IONOS_HOST" -f "$RUNNER_TEMP/known_hosts" >/dev/null || {
+            echo 'No pinned SSH host key for this host.'; exit 1;
+          }
+      - name: Install SSH transport
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq sshpass >/dev/null
+      - name: Read-only connection and target identity verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          sshpass -e ssh -T -p 22 -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" \
+            -o PreferredAuthentications=password,keyboard-interactive \
+            -o PubkeyAuthentication=no -o ConnectTimeout=15 \
+            "$IONOS_USER@$IONOS_HOST" "bash -s -- '$WP_ROOT'" <<'REMOTE'
+          set -euo pipefail
+          root="$1"
+          [[ -f "$root/wp-config.php" && -d "$root/wp-content/plugins" ]] || exit 1
+          command -v wp >/dev/null || { echo 'WP-CLI missing.'; exit 1; }
+          command -v unzip >/dev/null || { echo 'unzip missing.'; exit 1; }
+          home="$(wp --path="$root" --skip-plugins --skip-themes option get home)"
+          [[ "$home" == 'https://orgavela.com' ]] || { echo 'Incorrect WordPress target.'; exit 1; }
+          [[ -w "$root/wp-content/plugins" ]] || exit 1
+          echo 'Verified OrgaVela WordPress root, SSH identity and plugin write access.'
+          REMOTE
+      - name: Download checked staging artifact
+        if: inputs.operation == 'upload'
+        shell: bash
+        env:
+          EXPECTED: ${{ inputs.expected_sha256 }}
+        run: |
+          set -euo pipefail
+          base='https://raw.githubusercontent.com/janjrre/Projekt-Wordpress-Plugin/staging/uop-plugin-package'
+          curl -fsSL --retry 3 "$base/uop-core.zip" -o "$RUNNER_TEMP/uop-core.zip"
+          curl -fsSL --retry 3 "$base/package-provenance.txt" -o "$RUNNER_TEMP/provenance.txt"
+          actual="$(sha256sum "$RUNNER_TEMP/uop-core.zip" | cut -d' ' -f1)"
+          declared="$(sed -n 's/^sha256=//p' "$RUNNER_TEMP/provenance.txt")"
+          [[ "$actual" == "${EXPECTED,,}" && "$actual" == "$declared" ]] || {
+            echo 'Artifact checksum mismatch; refused.'; exit 1;
+          }
+          unzip -tqq "$RUNNER_TEMP/uop-core.zip"
+          unzip -Z -1 "$RUNNER_TEMP/uop-core.zip" | grep -qx 'uop-core/uop-core.php'
+          unzip -Z -1 "$RUNNER_TEMP/uop-core.zip" | grep -qx 'uop-core/vendor/autoload.php'
+          if unzip -Z -1 "$RUNNER_TEMP/uop-core.zip" |
+             grep -Ev '^uop-core/[a-zA-Z0-9_./-]+$' | grep -q .; then
+            echo 'Unexpected ZIP path.'; exit 1
+          fi
+          if unzip -Z -1 "$RUNNER_TEMP/uop-core.zip" |
+             grep -E '(^|/)\.\.(/|$)' | grep -q .; then
+            echo 'ZIP traversal blocked.'; exit 1
+          fi
+          echo "Verified artifact digest: $actual"
+      - name: Transfer archive over secure SSH transport
+        if: inputs.operation == 'upload'
+        shell: bash
+        run: |
+          sshpass -e scp -q -P 22 -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" \
+            -o PreferredAuthentications=password,keyboard-interactive \
+            -o PubkeyAuthentication=no "$RUNNER_TEMP/uop-core.zip" \
+            "$IONOS_USER@$IONOS_HOST:.uop-install-$GITHUB_RUN_ID.zip"
+      - name: Install only a new UOP plugin directory (no activation)
+        if: inputs.operation == 'upload'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sshpass -e ssh -T -p 22 -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$RUNNER_TEMP/known_hosts" \
+            -o PreferredAuthentications=password,keyboard-interactive \
+            -o PubkeyAuthentication=no \
+            "$IONOS_USER@$IONOS_HOST" "bash -s -- '$WP_ROOT' '$GITHUB_RUN_ID'" <<'REMOTE'
+          set -euo pipefail
+          root="$1"; run_id="$2"
+          [[ "$run_id" =~ ^[0-9]+$ ]] || exit 1
+          home="$(wp --path="$root" --skip-plugins --skip-themes option get home)"
+          [[ "$home" == https://orgavela.com ]] || exit 1
+          [[ -f "$root/wp-config.php" && -d "$root/wp-content/plugins" ]] || exit 1
+          destination="$root/wp-content/plugins/uop-core"
+          [[ ! -e "$destination" && ! -L "$destination" ]] || {
+            echo 'Plugin already exists; updates require separate rollback planning.'; exit 1;
+          }
+          zip="$HOME/.uop-install-$run_id.zip"
+          stage="$HOME/.uop-stage-$run_id"
+          [[ -f "$zip" && ! -e "$stage" ]] || exit 1
+          mkdir -m 700 "$stage"
+          installed=0
+          cleanup() {
+            code=$?
+            if (( code != 0 && installed == 1 )); then rm -rf -- "$destination"; fi
+            rm -rf -- "$stage"
+            rm -f -- "$zip"
+            exit "$code"
+          }
+          trap cleanup EXIT
+          unzip -q "$zip" -d "$stage"
+          [[ -f "$stage/uop-core/uop-core.php" && -f "$stage/uop-core/vendor/autoload.php" ]] || exit 1
+          mv -- "$stage/uop-core" "$destination"
+          installed=1
+          wp --path="$root" --skip-plugins --skip-themes plugin get uop-core --field=version >/dev/null
+          echo 'UOP plugin files installed and verified – NOT activated; no DB migration.'
+          REMOTE
