@@ -411,3 +411,28 @@ test('guardian claim → independent admin review → event-only access, without
   await visit(page, '/?page_id=' + process.env.UOP_M610_PORTAL_PAGE);
   await expect(page.locator('[data-uop-portal-root="portal"] select.uop-portal__select')).not.toContainText('Review Dependent');
 });
+
+test('age review is manager-only, accessible and requires an explicit evidence check', async ({ page }) => {
+  requireCi();
+  await login(page, 'uop_ci_adult');
+  const denied = await visit(page, '/wp-admin/admin.php?page=uop-age');
+  expect(denied?.status() === 403 || denied?.status() === 404 ||
+    await page.getByText('Sorry, you are not allowed to access this page.').isVisible()).toBeTruthy();
+
+  await login(page, 'uop_test_admin');
+  for (const width of [390, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await visit(page, '/wp-admin/admin.php?page=uop-age', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: 'Age verification' })).toBeVisible();
+    const form = page.locator('form[action*="admin-post.php"]');
+    await expect(form).toBeVisible();
+    await expect(form.locator('input[name="_wpnonce"]')).toHaveCount(1);
+    await expect(form.locator('input[name="evidence_checked"]')).toHaveCount(1);
+    await expect(form.getByRole('button', { name: 'Record verified class' })).toBeVisible();
+    await expect(form.getByRole('button', { name: 'Revoke current class' })).toBeVisible();
+    const person = form.getByRole('textbox', { name: 'Person UUID' });
+    await expect(person).toBeVisible();
+    expect((await form.getByRole('button', { name: 'Record verified class' }).boundingBox()).height).toBeGreaterThanOrEqual(44);
+    await expect(form.getByRole('combobox', { name: 'Offline review method' })).toBeVisible();
+  }
+});
