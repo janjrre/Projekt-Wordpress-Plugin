@@ -50,7 +50,11 @@ final class M6AgeAttestationScreen {
 		);
 	}
 
-	/** Render a clearly bounded offline review with current evidence state. */
+	/**
+	 * Render a clearly bounded offline review with current evidence state.
+	 *
+	 * @throws RuntimeException When the selected person is unavailable.
+	 */
 	public function render(): void {
 		$scope = $this->scope();
 		// phpcs:ignore -- Registered UOP primitive capability.
@@ -97,12 +101,12 @@ final class M6AgeAttestationScreen {
 		if ( '' !== $lookup_id && $lookup_event > 0 && $lookup_threshold > 0 && $lookup_threshold <= 120 ) {
 			try {
 				$subject = PublicId::from_string( $lookup_id );
-				$person = $this->people->find( $scope, $subject );
+				$person  = $this->people->find( $scope, $subject );
 				if ( ! $person || 'active' !== $person['status'] ) {
 					throw new RuntimeException( 'Subject is unavailable.' );
 				}
-				$record = $this->evidence->latest( $scope, (int) $person['id'], $lookup_event, $lookup_threshold );
-				$status = $record ? (string) $record['status'] : 'unknown';
+				$record  = $this->evidence->latest( $scope, (int) $person['id'], $lookup_event, $lookup_threshold );
+				$status  = $record ? (string) $record['status'] : 'unknown';
 				if ( $record && 'verified' === $status && (string) $record['valid_until'] < gmdate( 'Y-m-d H:i:s' ) ) {
 					$status = 'expired';
 				}
@@ -145,6 +149,7 @@ final class M6AgeAttestationScreen {
 	 * Apply nonce-protected commands using the same live policy as REST.
 	 *
 	 * @throws RuntimeException When the organization is unavailable.
+	 * @throws InvalidArgumentException When review details are malformed.
 	 */
 	public function submit(): void {
 		// phpcs:ignore -- Registered UOP primitive capability.
@@ -158,18 +163,18 @@ final class M6AgeAttestationScreen {
 			if ( ! $scope ) {
 				throw new RuntimeException( 'Organization not configured.' );
 			}
-			$subject = PublicId::from_string( sanitize_text_field( wp_unslash( (string) ( $_POST['person_id'] ?? '' ) ) ) );
-			$event = absint( $_POST['event_post_id'] ?? 0 );
+			$subject   = PublicId::from_string( sanitize_text_field( wp_unslash( (string) ( $_POST['person_id'] ?? '' ) ) ) );
+			$event     = absint( $_POST['event_post_id'] ?? 0 );
 			$threshold = absint( $_POST['threshold_age'] ?? 0 );
-			$outcome = sanitize_key( wp_unslash( (string) ( $_POST['outcome'] ?? '' ) ) );
-			$decision = sanitize_key( wp_unslash( (string) ( $_POST['decision'] ?? '' ) ) );
-			$revoke = 'revoke' === $decision;
+			$outcome   = sanitize_key( wp_unslash( (string) ( $_POST['outcome'] ?? '' ) ) );
+			$decision  = sanitize_key( wp_unslash( (string) ( $_POST['decision'] ?? '' ) ) );
+			$revoke    = 'revoke' === $decision;
 			if ( ! in_array( $decision, array( 'verify', 'revoke' ), true ) ) {
 				throw new InvalidArgumentException( 'Unknown review action.' );
 			}
-			$method = $revoke ? 'revoked' : sanitize_key( wp_unslash( (string) ( $_POST['method'] ?? '' ) ) );
-			$checked = '1' === sanitize_text_field( wp_unslash( (string) ( $_POST['evidence_checked'] ?? '' ) ) );
-			$until = $revoke ? gmdate( 'Y-m-d H:i:s' ) : sanitize_text_field( wp_unslash( (string) ( $_POST['valid_until'] ?? '' ) ) ) . ' 23:59:59';
+			$method    = $revoke ? 'revoked' : sanitize_key( wp_unslash( (string) ( $_POST['method'] ?? '' ) ) );
+			$checked   = '1' === sanitize_text_field( wp_unslash( (string) ( $_POST['evidence_checked'] ?? '' ) ) );
+			$until     = $revoke ? gmdate( 'Y-m-d H:i:s' ) : sanitize_text_field( wp_unslash( (string) ( $_POST['valid_until'] ?? '' ) ) ) . ' 23:59:59';
 			$this->reviews->decide( new Actor( get_current_user_id() ), $scope, $subject, $event, $threshold, $outcome, $method, $until, $checked, $revoke, gmdate( 'Y-m-d H:i:s' ), CorrelationId::generate() );
 			$result = $revoke ? 'revoked' : 'verified';
 		} catch ( InvalidArgumentException | RuntimeException ) {
