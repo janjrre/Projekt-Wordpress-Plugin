@@ -75,6 +75,16 @@ final class AgeAttestationController extends BaseController {
 		if ( ! $person || 'active' !== $person['status'] ) {
 			return RestError::for_kind( 'not_found' );
 		}
+		$post = get_post( $event );
+		if ( ! $post || 'uop_event' !== $post->post_type || 'publish' !== $post->post_status ) {
+			return RestError::for_kind( 'not_found' );
+		}
+		$actor  = $this->current_actor();
+		$object = new PolicyObject( $scope->id, 'event', $event, (int) $person['id'], $event );
+		if ( ! user_can( $actor->user_id, 'edit_post', $event )
+			|| ! $this->policy->can( $actor, 'event.manage', $object )->allowed ) {
+			return RestError::for_kind( 'forbidden' );
+		}
 		$row = $this->repository->latest( $scope, (int) $person['id'], $event, $threshold );
 		if ( ! $row ) {
 			return array( 'status' => 'unknown' );
