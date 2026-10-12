@@ -429,3 +429,17 @@
 **Grenzen:** Nur Plan-/Policy-/GitHub-Dokumentationsarbeiten; kein UOP-Featurecode gemergt oder auf OrgaVela aktualisiert, keine Teilnehmerdaten verändert, keine bezahlten Verträge abgeschlossen, keine Dreamloud-Aktion. Diese bindende Projektroutine funktioniert **bei tatsächlichen Folgeanfragen**, nicht als automatischer Hintergrundprozess.
 
 **Nächster Schritt:** W0 mit physischer M1-Schemahealth-/Migrationstestsituation und Backup-/Restore-Betriebsnachweis, parallel CI-Fehlerursachen in aktuellem PR #11 beheben. Jede künftige UOP-Antwort endet mit dem **vollständigen Masterplanlink**, dem geprüften Cockpit (62/71, 0/8, 0/4, 0/18) und dem jeweils nächsten konkreten Paket.
+
+## 2026-10-12 – 31: Betreiber-Nachfrage zum Stand des V1-Masterplans, kanonische Unterlagen verifiziert
+
+**Arbeitsauftrag:** Betreiber fragt „Wie weit bist du mit dem Masterplan?“. Gefordert ist eine überprüfte Statusantwort, kein neuer Feature-/Deploymentauftrag. Alle V1-Antworten müssen die aktuell belastbare Fortschrittsanzeige und Links zum vollständigen Plan enthalten.
+
+**Aktuell überprüft:** `main` enthält den normativen [V1-Gesamtplan Version 1.2](V1_ACCEPTANCE_PLAN.md) (ca. 40 k Zeichen, **71 M0–M7-Fachpakete, M6-10, P4-01…04, 12 Ops-Pakete und R01–R18 Release-Gates**), die [maschinenlesbare Fortschrittsdatei](V1_PROGRESS.json), das ergänzende [V1-Status-Dashboard](../project/V1_STATUS.md), die [konkrete Abnahmematrix](../project/V1_ACCEPTANCE_MATRIX.md) und die [verbindliche wiederkehrende Fortschrittsregel](../../AGENTS.md). Auf Repo-`main` erneut ausgelesen. Das zentrale [Issue #15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) ist **open**; das versehentlich parallele Issue #14 ist **closed** und ausdrücklich als Duplikat gekennzeichnet. Die README verweist auf den kanonischen Plan und Issue #15.
+
+**Planstatus:** Inhaltliche **Ersterstellung abgeschlossen**, Hauptstruktur, Arbeitspakete, Abhängigkeiten, Tests, Betriebsstopps, Prioritäten, Golden Paths, Release-/Review-Gates und permanente Updatepflicht sind in GitHub vorhanden. Ein Plan bleibt lebendig und ist bei neuen Befunden zu versionieren. Das ist **nicht** mit der Produkt-V1-Freigabe gleichzusetzen.
+
+**Zuletzt belegter Produktstatus (unverändert):** Gemäß kanonischem Snapshot 62/71 normative Pakete **technisch** nach älteren PR-Belegen implementiert; **0/8** formale Meilensteinabnahmen, **0/4** P4-Abnahmen, **0/18** grüne Release-Gates. **0/7** gestapelte PRs (#1–#6/#11) gemergt. `UOP Core 0.1.0-alpha.2` auf OrgaVela aktiv; DB-/Datenversion 2/2 gespeichert, aber keine vollständige Live-SQL-Schema-/Restore-Abnahme. Letztes PR-#11-CI hatte grüne Push-Fundamentchecks, aber rote PR-Foundation-/HTTPS-Browserchecks. Weitere wesentliche Gates: Backup/Restore, Cron, reale synthetische Testmail, sichere Site-Privatheit, Minderjährigen-/Doppelconsent-Paket, M6-10/M7.
+
+**Umsetzung/Prüfung:** Nachlesen der bestehenden Pläne/AGENTS/README/Abnahme-Issues, mit diesem Eintrag append-only dokumentiert; keine Feature-Commits, keine Plugin-/Websiteänderungen, keine neuen Tests und keine Verschiebung des V1-Fortschrittsstatus. Kein Zugriff auf Dreamloud, keine kostenpflichtigen Vorgänge.
+
+**Nächster Arbeitsblock:** W0 zuerst UOP-Schema-Health/DB-Struktur verifizieren und gesicherten Backup-/Restorepfad festlegen, parallel die zwei roten PR-#11-CI-Läufe analysieren und beheben. Weitere Antworten weiterhin mit kanonischem Plan-/Statuslink und Fortschrittscockpit.
