@@ -70,12 +70,12 @@ set -euo pipefail
 root="$1"
 mode="$2"
 [[ "$root" =~ ^/[a-zA-Z0-9._/-]+$ && "$root" != *..* && "$root" != *dreamloud* ]] || exit 2
-[[ -f "$root/wp-config.php" && -d "$root/wp-admin" && -d "$root/wp-content/plugins/uop-core" ]] || exit 2
-command -v wp >/dev/null || exit 3
+[[ -f "$root/wp-config.php" && -d "$root/wp-admin" && -d "$root/wp-content/plugins/uop-core" ]] || exit 21
+command -v wp >/dev/null || exit 22
 home="$(wp --path="$root" --skip-plugins --skip-themes option get home 2>/dev/null)"
-[[ "$home" == 'https://orgavela.com' || "$home" == 'https://orgavela.com/' ]] || exit 2
+[[ "$home" == 'https://orgavela.com' || "$home" == 'https://orgavela.com/' ]] || exit 23
 version="$(wp --path="$root" --skip-plugins --skip-themes plugin get uop-core --field=version 2>/dev/null)"
-[[ "$version" == '0.1.0-alpha.2' ]] || exit 4
+[[ "$version" == '0.1.0-alpha.2' ]] || exit 24
 
 echo 'ORGAVELA_AUDIT_TARGET=verified'
 echo 'ORGAVELA_AUDIT_SHELL=available'
@@ -130,7 +130,18 @@ PHP
 wp --path="$root" --skip-plugins --skip-themes eval "$php_code" 2>/dev/null
 REMOTE
 then
-  echo '::error::Audit SSH command failed. The existing IONOS account may be SFTP-only, WP-CLI may be absent, or the selected OrgaVela WordPress root may not be correct. No remote output or credentials are shown.'
+  # This branch is only entered on failure. Print safe categories, not any
+  # raw SSH/php/WP-CLI output or server paths (all remain in temp files).
+  code="$?"
+  case "$code" in
+    21) reason='OrgaVela WordPress root was not found at the verified SSH path.' ;;
+    22) reason='SSH connected, but WP-CLI is unavailable on this hosting shell.' ;;
+    23) reason='WordPress home did not match exactly orgavela.com; refused.' ;;
+    24) reason='Installed UOP Core version differs from the audited Alpha.2 baseline; refused.' ;;
+    255) reason='SSH handshake/authentication failed; SFTP-only access is still possible.' ;;
+    *) reason='Remote shell/WordPress read-only command failed; SSH shell or WP-CLI capability remains unverified.' ;;
+  esac
+  echo "::error::$reason No raw server output or credentials are published."
   exit 1
 fi
 
