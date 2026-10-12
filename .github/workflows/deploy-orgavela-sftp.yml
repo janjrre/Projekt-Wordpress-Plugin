@@ -73,7 +73,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for name in IONOS_HOST IONOS_USER SSHPASS IONOS_KNOWN_HOSTS IONOS_SFTP_ROOT; do
+          for name in IONOS_HOST IONOS_USER SSHPASS IONOS_SFTP_ROOT; do
             [[ -n "${!name:-}" ]] || { echo "::error::Missing $name"; exit 1; }
           done
           [[ "$IONOS_HOST" =~ ^[a-zA-Z0-9.-]+$ ]] || exit 1
@@ -87,7 +87,17 @@ jobs:
           else
             [[ "$OPERATION" == 'probe' ]] || exit 1
           fi
-          printf '%s\n' "$IONOS_KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
+          if [[ -n "${IONOS_KNOWN_HOSTS:-}" ]]; then
+            # Optional independently verified host-key override, stored privately as an Environment secret.
+            printf '%s\n' "$IONOS_KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
+          else
+            # IONOS officially publishes this ED25519 SHA256 fingerprint for Webhosting.
+            # Fetching a key is not trust: compare it to the pinned official fingerprint first.
+            ssh-keyscan -T 8 -p 22 -t ed25519 "$IONOS_HOST" > "$RUNNER_TEMP/known_hosts" 2>/dev/null
+            ssh-keygen -lf "$RUNNER_TEMP/known_hosts" | awk '{print $2}' | grep -Fxq 'SHA256:1gx2w8Rtv3wCgi7Jh8myf/KVd72cRQbow03UP8P095Q' || {
+              echo "::error::SSH host key differs from official IONOS ED25519 fingerprint"; exit 1;
+            }
+          fi
           chmod 600 "$RUNNER_TEMP/known_hosts"
           ssh-keygen -F "$IONOS_HOST" -f "$RUNNER_TEMP/known_hosts" >/dev/null || {
             echo "::error::Host key missing in pinned known_hosts"; exit 1;
