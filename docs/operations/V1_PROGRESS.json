@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-12 M1-08 regression passed Foundation 8/8 on 8e5cbfc; HTTPS 40px CSS request failed net::ERR_TOO_MANY_RETRIES in Playwright trace; CI proxy static asset correction a34f4195, current SHA runs pending",
+  "snapshot_basis": "2026-10-12 PR11 HEAD a34f4195 same-SHA Foundation run 38253835618 success 8/8 and HTTPS run 38253835549 success; OrgaVela installed Alpha.2 unchanged; W0 live acceptance remains blocked",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -313,15 +313,19 @@
     "latest_pr_11_ci": [
       {
         "run": 38253835618,
-        "head": "a34f4195371f9edf1fa24ea4abdef1fd479f2c19",
         "kind": "pr-foundation",
-        "result": "pending"
+        "result": "success",
+        "head": "a34f4195371f9edf1fa24ea4abdef1fd479f2c19",
+        "successful_jobs": 8,
+        "total_jobs": 8,
+        "details": "quality, six PHP/DB integrations including default organization Site Health regressions, artifact smoke"
       },
       {
         "run": 38253835549,
-        "head": "a34f4195371f9edf1fa24ea4abdef1fd479f2c19",
         "kind": "pr-https-browser",
-        "result": "pending"
+        "result": "success",
+        "head": "a34f4195371f9edf1fa24ea4abdef1fd479f2c19",
+        "details": "disposable HTTPS Mailpit and browser responsive 44px checks after bounded static asset delivery"
       }
     ],
     "previous_pr_11_ci": [
@@ -376,7 +380,7 @@
         ]
       }
     ],
-    "pr11_green_on_current_head": false,
+    "pr11_green_on_current_head": true,
     "pr11_remains_draft": true,
     "pr11_ci_fix_commits": [
       "d36935da376224d12f16b451e43e78a5d46d6593",
@@ -408,7 +412,7 @@
       "c297a829d9a5dd74378ca09ad748a7442328d6b9",
       "8e5cbfc454ffe963b6c3121d73b0cd4608053fd9"
     ],
-    "m1_seed_health_implementation": "draft-only, code and test committed; current-SHA CI pending",
+    "m1_seed_health_implementation": "draft-only, CI verified 8/8 on current source HEAD; not deployed to OrgaVela or live site-health accepted",
     "previous_ci_m1_8e5cbfc": {
       "head": "8e5cbfc454ffe963b6c3121d73b0cd4608053fd9",
       "foundation": {
@@ -428,18 +432,21 @@
       "faa8e729c27e0dc409dacb8de44c846c44247e02",
       "a34f4195371f9edf1fa24ea4abdef1fd479f2c19"
     ],
-    "css_fail_root_cause": "Playwright CI network trace m610-https-diagnostics 11748822534, GET m3-form-builder.css failed net::ERR_TOO_MANY_RETRIES, response -1"
+    "css_fail_root_cause": "Playwright CI network trace m610-https-diagnostics 11748822534, GET m3-form-builder.css failed net::ERR_TOO_MANY_RETRIES, response -1",
+    "css_network_trace_rca_verified": true,
+    "https_static_assets_verified": true
   },
   "immediate_next": [
-    "O02/M1-08: confirm new PR#11 seed health regressions on current CI SHA; then obtain authenticated live uop_schema Site Health and independent 29-table/index/default-org comparisons on OrgaVela, strictly read-only",
-    "O03: verify actual IONOS backup inventory, private file+DB exports and isolated restore before risky updates",
-    "O01/O06: account-level SFTP isolation and authenticated UOP test-route privacy; do not apply global noindex blindly to public product site",
-    "O09: review same-head 8/8 Foundation + green HTTPS PR#11 evidence, monitor reproducibility and stack merge gates without automatic merge"
+    "O02/M1-08: independently obtain installed OrgaVela Alpha.2 Site Health uop_schema plus 29-table/index/default-organization metadata audit (read-only; no upgrade)",
+    "O03: verify actual OrgaVela IONOS backup inventory, safely export files and SQL privately and validate restore on an isolated clone",
+    "O01: replace broad-SFTP account with verified OrgaVela-only least-privilege access and preserve path restrictions",
+    "O06: restrict access to UOP testing routes, resolve unlisted privacy policy, verify indexing decisions without blindly noindexing public brand",
+    "O09: current PR11 same-SHA CI green; perform stacked PR review/integration in authorized sequence, no automatic merging and no live deploy before W0 gates"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "1.8",
+  "masterplan_version": "1.9",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
@@ -479,7 +486,8 @@
         "Real OrgaVela environment reverified without site writes",
         "Scoped baseline and recovery runbook committed",
         "Separate W0 tracking issue #16 opened",
-        "PR11 code/test commits 710b413e and 7892a258 verified; Push Foundation 8/8 success, PR Foundation 7/8 failed at PHP8.4 MariaDB browser activation, HTTPS Playwright failed at caregiver WP login. No CI gate accepted."
+        "PR11 code/test commits 710b413e and 7892a258 verified; Push Foundation 8/8 success, PR Foundation 7/8 failed at PHP8.4 MariaDB browser activation, HTTPS Playwright failed at caregiver WP login. No CI gate accepted.",
+        "Read-only M1-08 default organization Site Health invariant fixed on Draft PR#11 and tested on 8/8 PHP/DB Foundation matrix; isolated HTTPS 44px failure traced to net::ERR_TOO_MANY_RETRIES asset and test proxy corrected; current PR head a34f4195 both workflows green; live O01/O02/O03/O06 not yet accepted."
       ],
       "blockers": [
         "No authenticated capability to read full WP Site Health schema or SQL indexes",
