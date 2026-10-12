@@ -67,6 +67,7 @@ final class Installer {
 	 * Report stored migration state in WordPress Site Health.
 	 *
 	 * @return array<string, mixed>
+	 * @throws \RuntimeException Internal seed verification errors are caught and mapped to critical health.
 	 */
 	public static function health(): array {
 		MigrationState::register_option_reads();
