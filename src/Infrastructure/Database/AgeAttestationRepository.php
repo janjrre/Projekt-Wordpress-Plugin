@@ -14,6 +14,8 @@ use UOP\Domain\Organization\OrgScope;
 /** Stores only a reviewed threshold result, not birth dates or identity documents. */
 final class AgeAttestationRepository {
 	/**
+	 * Bind the tenant-scoped immutable evidence storage.
+	 *
 	 * @param Connection $db Database connection.
 	 * @param string     $prefix Trusted site-specific table prefix.
 	 */
@@ -68,6 +70,7 @@ final class AgeAttestationRepository {
 	 * @param string   $now UTC checked/created at.
 	 * @param string   $expiry UTC expiry.
 	 * @return int New internal immutable attestation ID.
+	 * @throws RuntimeException When the evidence is invalid or could not be persisted.
 	 */
 	public function append( OrgScope $scope, PublicId $uuid, int $person, int $event, int $threshold, string $outcome, string $status, int $reviewer, string $method, string $now, string $expiry ): int {
 		if ( $person < 1 || $event < 1 || $reviewer < 1 || $threshold < 1 || $threshold > 120
