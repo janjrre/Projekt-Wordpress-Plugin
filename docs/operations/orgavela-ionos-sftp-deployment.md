@@ -1,6 +1,6 @@
 # OrgaVela IONOS – GitHub → SFTP/SSH-Deployment
 
-**Stand:** 12.10.2026 · Ziel **ausschließlich** `https://orgavela.com`. Keine Verbindung zu Dreamloud, keine Teilnehmerdaten in den Tests. **SFTP ist der Standard**, weil IONOS WordPress-Zugänge keine SSH-Shell garantieren. Beide Workflows laufen nur manuell auf `main`.
+**Stand:** 12.10.2026 · Ziel **ausschließlich** `https://orgavela.com`. Keine Verbindung zu Dreamloud, keine Teilnehmerdaten in den Tests. **SFTP ist der Standard**, weil IONOS WordPress-Zugänge keine SSH-Shell garantieren. Die Workflows sind auf `main` beschränkt und lassen sich manuell oder durch jeweils eigene, exakt begrenzte Deployment-Request-Dateien auslösen; **normale Commits lösen kein Hosting-Deployment aus**.
 
 ## 1. Aktueller Iststand
 
@@ -40,6 +40,23 @@ Unter [GitHub Actions](https://github.com/janjrre/Projekt-Wordpress-Plugin/actio
 Der Workflow prüft nur die SSH-Hostidentität, die Anmeldung und lesend `wp-admin`, `wp-includes`, `wp-content/plugins`. Er führt **keine** Plugininstallation aus. Eine erfolgreiche Probe allein beweist **nicht** die Domainzuordnung des Verzeichnisses; die ist vorher in IONOS unabhängig zu verifizieren.
 
 Bei fehlenden Secrets, falschem Hostschlüssel, falschem Pfad oder fehlendem Zugang bricht er ab. Die Logs dürfen keine Passwörter enthalten.
+
+## 4a. Künftig autonomer Start aus einem GitHub-Commit
+
+**Erst nach verifizierten GitHub-Secrets und IONOS-Verbindung** kann ein autorisierter Assistent die Datei `.github/deploy-requests/orgavela-sftp.json` auf `main` neu anlegen oder ändern. Diese **genau benannte Datei** löst den SFTP-Workflow automatisch aus, statt dass der Betreiber jedes Mal `Run workflow` klicken muss. Alle Ziel-/Hostschlüssel-/SHA- und Secrets-Gates bleiben aktiv. Der separate SSH-Workflow verwendet eine **andere** Datei (`orgavela.json`): niemals beide Deployments parallel auslösen.
+
+Beispiel für den ersten, rein lesenden Test (erst nach Einrichtung des SFTP-Zugangs anlegen):
+
+```json
+{
+  "request_id": "first-sftp-probe",
+  "operation": "probe",
+  "target_domain": "",
+  "expected_sha256": ""
+}
+```
+
+Für einen späteren Upload müssen `operation=install`, `target_domain=orgavela.com` und `expected_sha256` mit dem nachgewiesenen aktuellen 64-stelligen Paket-Hash gesetzt werden. Änderungen an dieser Datei müssen vorher gegen `AGENTS.md` und den Sicherheits-/Recovery-Plan geprüft und im Arbeitsprotokoll begründet werden. **Noch keinen Deploy-Request anlegen**, solange Geheimnisse fehlen – andernfalls startet nur ein zwangsläufig fehlschlagender Job.
 
 ## 5. Schritt 2 – einmalige Installation ohne Aktivierung
 
