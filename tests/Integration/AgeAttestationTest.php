@@ -58,6 +58,13 @@ final class AgeAttestationTest extends TestCase {
 		$this->scope = new OrgScope( (int) get_option( 'uop_default_organization_id' ) );
 	}
 
+	/** Avoid leaking a newly initialized REST server across independent suites. */
+	protected function tearDown(): void {
+		global $wp_rest_server;
+		$wp_rest_server = null;
+		wp_set_current_user( 0 );
+	}
+
 	/** Clean V2 bootstrap is repeatable and never grants legacy age statements. */
 	public function test_additive_schema_is_verified_and_restart_is_idempotent(): void {
 		global $wpdb;
