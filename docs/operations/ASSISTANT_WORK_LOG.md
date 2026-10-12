@@ -61,3 +61,17 @@
 **Prüfung/Status:** Regel ist als Repository-Datei hinterlegt; sie dokumentiert ausführbare Entscheidungen und Arbeitsschritte, **nicht** private Denkketten oder jede wörtliche Chatnachricht. Hostingblocker bis zu nachgewiesener unterstützter Umstellung offen, Plugin vorerst inaktiv.
 
 **Nächste Schritte:** Unterstützte Hostingkonfiguration und ggf. Backup/Restore vor Änderung verifizieren; falls kein sicherer erlaubter Zugang erreichbar, Blocker präzise im GitHub-Issue dokumentieren statt Schutzprüfung zu deaktivieren. Branch/PRs mit zentraler Protokollregel synchron halten.
+
+## 2026-10-12 – 06: Hoster-Supportpfad, Recovery-Prüfung und verbindlicher Übergabestatus
+
+**Auftrag:** Fortsetzung des UTF8MB4-Reparaturauftrags und Absicherung der dauerhaften GitHub-Dokumentationspflicht.
+
+**Durchgeführte Prüfungen:** Live-WordPress.com-Connector zeigt `orgavela.wpcomstaging.com` als Atomic/Coming Soon; UOP Core weiterhin `inactive`. Nachgeschlagene WordPress.com-Konfigurationsoperation `settings.update` unterstützt nur normale Website-Einstellungen, jedoch **nicht** `DB_CHARSET`, `DB_COLLATE`, MySQL-Tabellen oder `wp-config.php`. Read-only `backup.rewind_status`: aktiver Backupdienst, letzter erfolgreicher Backupversuch 2026-10-12 08:24 UTC, **ohne bestätigte Restore-Probe**. WordPress.com-Dokumentation bestätigt einen unterstützten SFTP/Servereinstellungen-Weg unter bestimmten Tarifen, die Zugriffsberechtigung für diese Website konnte über die verfügbaren Werkzeuge nicht geprüft werden.
+
+**Abgewogene Optionen/Entscheidung:** Ein Plugin könnte in PHP möglicherweise die Verbindung im laufenden Request manipulieren, würde aber den Datenintegritätsvertrag unterlaufen und kein persistentes, hostunterstütztes Schema herstellen. Eine blinde Umstellung aller WordPress-Tabellen ist ohne verifizierte Kodierungen und Restore-Probe ebenfalls nicht verantwortbar. Deshalb **kein** `SET NAMES`-Workaround, **keine** Änderung an `wp-config.php` oder Bestandstabellen; Schutzprüfung bleibt absichtlich aktiv.
+
+**Erledigte Umsetzung:** Reproduzierbaren Korrektur-/Recovery-Runbook [orgavela-utf8mb4-recovery.md](orgavela-utf8mb4-recovery.md) auf `main` angelegt (Commit `696cc48a6b2132b40aae22ae6182d9070725b457`), Daueranweisung `AGENTS.md` auch in aktive Entwicklung `feat/p4-age-evidence` übernommen (Commit `23dd84cff9262ccfff390c1a8d9c0c533a2ca387`), Verlinkungen im README des Haupt- und Entwicklungsbranches ergänzt (Commits `e56d6f8531173e99baf5c8c4417ed9a21a7f9c28` und `b41e507fac3e52135f37546ef48664e459050960`). GitHub [Issue #12](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/12) mit Prüfungen, Verantwortlichkeiten und noch fehlenden Gates aktualisiert.
+
+**Ergebnis:** Dokumentationsregel ist im Repository und auf dem aktiven Branch nachlesbar. Die Datenbankkonfiguration selbst konnte mit den aktuell verfügbaren WordPress.com-Werkzeugen **nicht** sicher geändert werden. UOP Core bleibt installiert, aber **inaktiv**; kein Deployment-Erfolg behauptet.
+
+**Nächster erforderlicher externer Schritt:** In WordPress.com Hosting → OrgaVela → Einstellungen → Server prüfen, ob ohne Upgrade ein bestehender SSH/SFTP-/Datenbankzugriff verfügbar ist; andernfalls WordPress.com-Support nach einer betreiberseitig unterstützten UTF8MB4-Umstellung fragen. Vor SQL/Config-Schreibzugriff zunächst Tabellenkollationen und Backups/Restore-Fähigkeit prüfen, anschließend Korrektur und neue Aktivierung/Tests dokumentieren. Ohne sicheren Zugang bleibt Issue #12 ausdrücklich offen. Keine Dreamloud-Arbeit, keine kostenpflichtige Buchung.
