@@ -17,6 +17,7 @@ final class AgeAttestationSchema {
 	 * @param string $prefix Validated WordPress-specific prefix.
 	 * @param string $charset WordPress charset and collation.
 	 * @return string
+	 * @throws RuntimeException When the table prefix is invalid.
 	 */
 	public static function ddl( string $prefix, string $charset ): string {
 		if ( ! preg_match( '/^[a-zA-Z0-9_]+$/D', $prefix ) ) {
@@ -48,6 +49,7 @@ KEY ix_current (organization_id, person_id, event_post_id, threshold_age, id)
 	 * @param Connection $db Scoped database connection.
 	 * @param string     $prefix Safe site prefix.
 	 * @param string     $collation Exact site collation.
+	 * @throws RuntimeException On schema drift or missing indexes.
 	 */
 	public static function verify( Connection $db, string $prefix, string $collation ): void {
 		$name = $prefix . 'age_attestations';
