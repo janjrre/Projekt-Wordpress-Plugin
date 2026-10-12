@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "W0 live read-only OrgaVela WordPress MCP, GitHub PR #11 logs and commits 710b413e/7892a258, original M0-M7 PR evidence; CI pending at current HEAD.",
+  "snapshot_basis": "W0 OrgaVela MCP read-only check, official IONOS backup documentation, actual GitHub Actions results at HEAD 7892a258, verified 2026-10-12.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -296,20 +296,28 @@
       {
         "run": 38248031834,
         "kind": "push-foundation",
-        "result": "in_progress",
-        "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd"
+        "result": "success",
+        "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
+        "successful_jobs": 8
       },
       {
         "run": 38248040810,
         "kind": "pr-foundation",
-        "result": "in_progress",
-        "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd"
+        "result": "failure",
+        "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
+        "failed_jobs": [
+          "PHP 8.4 MariaDB 10.11 browser activation smoke navigation timeout"
+        ],
+        "passed_jobs": 7
       },
       {
         "run": 38248040695,
         "kind": "pr-https-browser",
-        "result": "in_progress",
-        "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd"
+        "result": "failure",
+        "head": "7892a25894c184a624ab4ebea13aab0e1a1c88dd",
+        "failed_jobs": [
+          "Caregiver WordPress login failed to reach admin DOMContentLoaded within 20 seconds"
+        ]
       }
     ],
     "previous_pr_11_ci": [
@@ -347,7 +355,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "1.2",
+  "masterplan_version": "1.3",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
@@ -387,7 +395,7 @@
         "Real OrgaVela environment reverified without site writes",
         "Scoped baseline and recovery runbook committed",
         "Separate W0 tracking issue #16 opened",
-        "Two narrow PR11 browser-test corrections committed; latest same-SHA CI in progress"
+        "PR11 code/test commits 710b413e and 7892a258 verified; Push Foundation 8/8 success, PR Foundation 7/8 failed at PHP8.4 MariaDB browser activation, HTTPS Playwright failed at caregiver WP login. No CI gate accepted."
       ],
       "blockers": [
         "No authenticated capability to read full WP Site Health schema or SQL indexes",
@@ -399,7 +407,7 @@
         "Obtain UOP Site Health schema result via authenticated WordPress Admin, sanitized",
         "Inventory OrgaVela IONOS backups, export DB+files privately, restore only isolated",
         "Decide product site vs protected UOP staging paths; no global noindex without approval",
-        "Verify GitHub runs 38248031834,38248040810,38248040695 on HEAD 7892a258"
+        "Root-cause PR11 browser server/navigation stability; avoid masking actual failures, treat as W2 O09."
       ]
     }
   }
