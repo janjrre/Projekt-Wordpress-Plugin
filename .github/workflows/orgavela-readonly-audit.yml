@@ -1,0 +1,63 @@
+name: OrgaVela - strictly read-only SSH health audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "probe checks shell and exact OrgaVela identity; schema reads UOP health and aggregates"
+        required: true
+        type: choice
+        default: probe
+        options: [probe, schema]
+  push:
+    branches: [main]
+    paths:
+      - '.github/audit-requests/orgavela-readonly.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orgavela-readonly-audit
+  cancel-in-progress: false
+
+jobs:
+  readonly-audit:
+    if: github.repository == 'janjrre/Projekt-Wordpress-Plugin' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: orgavela-audit
+    env:
+      IONOS_AUDIT_SSH_HOST: ${{ secrets.IONOS_AUDIT_SSH_HOST }}
+      IONOS_AUDIT_SSH_USER: ${{ secrets.IONOS_AUDIT_SSH_USER }}
+      SSHPASS: ${{ secrets.IONOS_AUDIT_SSH_PASSWORD }}
+      IONOS_AUDIT_WP_ROOT: ${{ vars.IONOS_AUDIT_WP_ROOT }}
+    steps:
+      - name: Checkout only trusted main workflow and read-only script
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate read-only operation
+        env:
+          MANUAL_OPERATION: ${{ inputs.operation }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            requested="$(jq -r '.operation // ""' .github/audit-requests/orgavela-readonly.json)"
+          else
+            requested="$MANUAL_OPERATION"
+          fi
+          [[ "$requested" == probe || "$requested" == schema ]] || {
+            echo "::error::Only the read-only probe/schema operations are allowed."; exit 1;
+          }
+          printf 'AUDIT_OPERATION=%s\n' "$requested" >> "$GITHUB_ENV"
+      - name: Install SSH transport (runner only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq sshpass >/dev/null
+      - name: Run scoped read-only audit with secret-safe output
+        shell: bash
+        run: bash scripts/ci/orgavela-readonly-audit.sh "$AUDIT_OPERATION"
