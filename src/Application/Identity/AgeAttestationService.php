@@ -67,7 +67,6 @@ final class AgeAttestationService {
 	 * @param CorrelationId $correlation Correlation reference.
 	 * @return PublicId Newly appended evidence UUID.
 	 * @throws InvalidArgumentException For invalid attestation details.
-	 * @throws RuntimeException For denied, stale or out-of-scope reviews.
 	 */
 	public function decide( Actor $reviewer, OrgScope $scope, PublicId $subject, int $event_post, int $threshold, string $outcome, string $method, string $valid_until, bool $checked, bool $revoke, string $now, CorrelationId $correlation ): PublicId {
 		if ( $reviewer->user_id < 1 || ! in_array( $outcome, array( 'gte', 'lt' ), true ) || $threshold < 1 || $threshold > 120
