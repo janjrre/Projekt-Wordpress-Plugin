@@ -112,3 +112,11 @@
 - Den jeweiligen Arbeitsauftrag, Entscheidungen, Commits, Fehlversuche, Testergebnisse und Übergabe verpflichtend in [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md) fortführen.
 - **Jede UOP-Antwort endet mit einem V1-Fortschrittsblock** (M0–M7, P4, PR-Integrationen, wesentliche Blocker, nächstes Paket) und **Direktlinks zu diesem Status sowie vollständigem Masterplan**. Ohne Fortschritt explizit „Stand unverändert“.
 - Diese Regeln gelten bei neuen Chats aufgrund [AGENTS.md](../../AGENTS.md) für Coding-Arbeiten, solange der Assistent das Repository öffnet; sie sind **keine Hintergrundüberwachung**.
+
+
+### W0 – ergänzender authentifizierter Livebefund (12.10.2026)
+
+- [Technischer W0-Audit und sichere SQL-Readchecks](../operations/W0_ORGAVELA_READ_ONLY_AUDIT_2026-10-12.md); vollständige physische DB-Struktur **noch nicht** bestätigt, `uop_schema`-Ergebnis nicht über MCP lesbar. `Installer::health` ist im Plugin-Quellcode registriert, aber das ist kein Live-Resultat.
+- WP-/Plugin-Konfiguration bestätigt: Alpha.2 aktiv; 5/19 Cron-Ereignisse überfällig, einschließlich Action Scheduler; Indexierungsabschreckung aus; zugewiesene Datenschutzseite noch **unveröffentlicht**. Keine echten Nutzer-/Minderjährigendaten.
+- PR #11 aktueller HEAD `7892a25894c184a624ab4ebea13aab0e1a1c88dd`: HTTPS-Run #38248040695 **rot** durch caregiver Login-Timeout; Foundation-Run #38248040810 zunächst noch im Lauf. Sieben gestapelte PRs weiterhin nicht in main; **0/18** grüne Release-Gates.
+- **O03:** offizielle IONOS-Datei-/DB-Backup-Möglichkeiten untersucht, aber kein tatsächlicher eigener Export oder isolierter Restore; keine risikobehafteten Updates. Masterplan v1.4; Statusmetriken unverändert.
