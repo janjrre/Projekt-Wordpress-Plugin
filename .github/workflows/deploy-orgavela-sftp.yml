@@ -84,6 +84,11 @@ jobs:
             [[ "$TARGET_DOMAIN" == 'orgavela.com' && "$EXPECTED_HASH" =~ ^[A-Fa-f0-9]{64}$ ]] || {
               echo "::error::Install requires orgavela.com and a 64-character SHA-256"; exit 1;
             }
+            # The root was not the WordPress directory in the first live probe.
+            # Never install while the location is still the default SFTP login directory.
+            [[ "$IONOS_SFTP_ROOT" != '.' && "$IONOS_SFTP_ROOT" != '/' ]] || {
+              echo "::error::Install refused: specify the verified OrgaVela WordPress folder in the IONOS_SFTP_ROOT environment variable."; exit 1;
+            }
           else
             [[ "$OPERATION" == 'probe' ]] || exit 1
           fi
@@ -118,14 +123,26 @@ jobs:
             printf 'ls "%s/wp-includes"\n' "$root"
             printf 'ls "%s/wp-content/plugins"\n' "$root"
           } > "$RUNNER_TEMP/probe.sftp"
-          sshpass -e sftp -q -P 22 -oBatchMode=no \
+          # Authentication/host trust is confirmed by the SFTP session. If the path
+          # check fails, report the difference without exposing a directory listing,
+          # credentials or other websites in public CI logs.
+          if sshpass -e sftp -q -P 22 -oBatchMode=no \
             -oPreferredAuthentications=password,keyboard-interactive \
             -oPubkeyAuthentication=no -oConnectTimeout=15 \
             -oStrictHostKeyChecking=yes \
             -oUserKnownHostsFile="$RUNNER_TEMP/known_hosts" \
-            -b "$RUNNER_TEMP/probe.sftp" "$IONOS_USER@$IONOS_HOST" > /dev/null
-          echo "SFTP host identity and WordPress tree verified."
-          echo "The operator must independently verify that this SFTP account is scoped to orgavela.com only."
+            -b "$RUNNER_TEMP/probe.sftp" "$IONOS_USER@$IONOS_HOST" \
+              > "$RUNNER_TEMP/sftp-probe.out" 2>&1; then
+            echo "SFTP WordPress directory checks passed."
+            echo "The operator must independently verify that the directory belongs to orgavela.com only."
+          else
+            if grep -Fq 'not found' "$RUNNER_TEMP/sftp-probe.out"; then
+              echo "::error title=Incorrect WordPress folder::SFTP authentication succeeded, but wp-admin/wp-includes/wp-content were not found at IONOS_SFTP_ROOT. Find OrgaVela's installation directory in IONOS > Web Projects > Site details/Technical data and configure that path as a GitHub Environment variable. No files were changed."
+            else
+              echo "::error title=SFTP probe failed::SFTP could not verify the WordPress tree. Confirm SFTP credentials, target host, assigned root and permissions in IONOS. Error details are withheld from public logs."
+            fi
+            exit 1
+          fi
       - name: Download and verify immutable package by user-supplied hash
         if: env.OPERATION == 'install'
         shell: bash
