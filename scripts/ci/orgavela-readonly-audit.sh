@@ -59,7 +59,7 @@ if [[ "$mode" == 'sftp' ]]; then
 fi
 
 # Record BOTH streams privately and report only explicitly safe status keys.
-if ! sshpass -e ssh -T -p 22 \
+if sshpass -e ssh -T -p 22 \
   -o StrictHostKeyChecking=yes \
   -o UserKnownHostsFile="$tmp/known_hosts" \
   -o PreferredAuthentications=password,keyboard-interactive \
@@ -130,6 +130,8 @@ PHP
 wp --path="$root" --skip-plugins --skip-themes eval "$php_code" 2>/dev/null
 REMOTE
 then
+  : # Successful remote read. Output is still allowlist-filtered below.
+else
   # This branch is only entered on failure. Print safe categories, not any
   # raw SSH/php/WP-CLI output or server paths (all remain in temp files).
   code="$?"
