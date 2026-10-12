@@ -3,6 +3,20 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Aktuelle Welle: W0 – Bestands- und Sicherheitsabnahme
+
+**Stand 12.10.2026: IN ARBEIT, noch nicht abgenommen.** [W0-Live-/Restore-Bericht](../operations/W0_BASELINE_AND_RECOVERY.md) · [Issue #16](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/16) · [verbindliche maschinenlesbare Messwerte](../operations/V1_PROGRESS.json).
+
+| Paket | Stand nach aktuellem Live-Abgleich | Nächster belastbarer Nachweis |
+| --- | --- | --- |
+| **O01 – OrgaVela-Isolation** | HTTPS/SFTP `/public` erfolgreich, Konto mit breiterem Webspace-Zugriff | engere IONOS-Rechte und begrenzter Negativtest |
+| **O02 – M1-08 SQL-Schemahealth** | Plugin aktiv; DB-/Datenversion 2/2; keine physische Tabellen-/Indexkontrolle | bereinigter WordPress-Site-Health-/SQL-Strukturbeleg |
+| **O03 – Backup/Restore** | Sicherungsverfahren anhand offizieller IONOS-Anleitungen spezifiziert; kein echtes Backup verifiziert | IONOS-Backupstände, privater DB-/Dateien-Export, isolierter Restore |
+| **O06 – Staging-Datenschutz** | WordPress-Marker `production`; `discourage_search_engines=false`; keine Live-Änderung | öffentliche Produktseite vs. geschützter UOP-Testbereich entscheiden |
+| **Parallel O09 – CI-Fehler** | Zwei enge, teststärkenerhaltende Korrekturen auf PR-#11-Branch (HEAD `7892a258`), neue Runs gestartet | [Push](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248031834) / [PR Foundation](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248040810) / [HTTPS Browser](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38248040695) **noch nicht als bestanden gewertet** |
+
+**Gesperrt bis W0-Belegen:** keine neue IONOS-DB-Migration, keine echten Teilnehmerdaten, kein ungeprüfter WP-Cron-/Mailer-Effekt, kein produktives UOP-Beta-Opt-in. Das aktuelle Alpha bleibt unverändert.
+
 ## 1. Übersicht auf einen Blick
 
 | Zählbare Achse | Ist / Soll | Interpretation |
@@ -15,7 +29,7 @@
 | **Minderjährigen-Pakete P4-01…04** | **0 / 4 formal abgeschlossen** | [#7](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/7), [#8](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/8), [#9](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/9), [#10](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/10) offen. |
 | **M7-Releasepakete** | **0 / 8 formal abgeschlossen** | Frühere Teilprüfungen sind Ausgangspunkt, nicht abschließende M7-Abnahme. |
 | **OrgaVela-Testbetrieb** | **Installation + Aktivierung + DB-Versionen 2/2 bestätigt** | Site Health physische Tabellen, Cron, Mail, Backup/Restore, Noindex weiter offen. |
-| **Jüngste CI PR #11** | **Push 8/8 grün, PR-Fundament 7/8 und HTTPS-E2E rot** | Unterschiedliche Checks, also NICHT „CI komplett grün“. |
+| **Jüngste CI PR #11** | **Älterer Stand mit roten PR-Checks, neuer HEAD `7892a258` in Prüfung** | Noch keine vollständig grüne aktuelle Pflichtmatrix. |
 | **Formale Stable-Freigabe** | **0 / 1** | V1 bleibt gesperrt, bis R01–R08 vollständig nachgewiesen. |
 
 **Keine Gesamt-Prozentangabe:** Implementierung, Merge, Betrieb und Abnahme haben unterschiedliche Nenner. 0/8 formale Meilensteinabnahmen bedeutet **nicht**, dass 0 % Code geschrieben wurden. Umgekehrt bedeutet das aktive Alpha-Plugin **nicht**, dass V1 bereits fertig ist.
