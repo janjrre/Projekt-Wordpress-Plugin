@@ -80,3 +80,54 @@ GitHub Releases erlauben laut [GitHub Docs](https://docs.github.com/en/repositor
 **Erforderlicher Betreiber-Schritt (keine verfügbaren Connector-Admin-Writes):** [Source-Repository → Settings → Branches](https://github.com/janjrre/Projekt-Wordpress-Plugin/settings/branches) → **Add classic branch protection rule** → Branch name pattern **`main`**. **Require a pull request before merging** aktivieren und **Do not allow bypassing the above settings** aktivieren, sofern UI verfügbar. **Allow force pushes** und **Allow deletions** ausgeschaltet lassen; gegebenenfalls **Require conversation resolution** einschalten. **Require approvals** nur konfigurieren, wenn ein tatsächlich unabhängiger Reviewer mit erforderlichen Rechten existiert (sonst Single-Owner-Deadlock). **Require status checks** erst dann festlegen, wenn ein nachweislich verfügbarer CI-Check auf dem geplanten Branch läuft. Speichern und GitHub API `/branches/main` erneut lesen: `protected: true` allein beweist nicht alle einzelnen Regeln, deswegen UI oder Admin-API zusätzlich kontrollieren. Eine GitHub-Free-öffentliche Repository-Branchregel ist offiziell verfügbar: [GitHub Docs](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule).
 
 **Nach Aktivierung:** Künftige Assistenten-Dokumentation und Codeänderungen ausschließlich in neuen Branches/PRs (keine direkten `main`-Updates); existierende ungemergte PRs unverändert lassen; Merge nur mit separater Betreiberfreigabe. Selbst bei `protected=true` vor Context-PAT-Einrichtung noch CircleCI-PR-/Fork-/Branch-Semantik und tatsächliche Context-Regeln verifizieren. Eine noch robustere Option wäre später ein separates CircleCI-Projekt für das private Backup-Repo, statt Tokens im öffentlichen Source-Repo auszuwerten; die bisherige Betriebsstrategie nicht stillschweigend ändern. GH-02 `partial/blocked`, GH-03 bis GH-08 offen; keine produktiven Uploads oder Kosten.
+
+
+## 8. GH-02 neuer Sicherheitsnachweis und GH-03 Betreiber-Schlüsseltest (13.10.2026)
+
+### GH-02 – GitHub-Branchschutz nach Betreiberaktion
+
+Der Betreiber hat den Branchschutz für das öffentliche Source-Repository erstellt. Neu **direkt über GitHub REST GET `/repos/janjrre/Projekt-Wordpress-Plugin/branches/main`** nachgewiesen: `protected: true`, `protection.enabled: true`, HEAD `0adacb427bd95dd87594e358ec9c6f2f5b38aae8`. Dies **ersetzt den früheren `protected:false`-Befund** aus Abschnitt 7. Im selben Abruf: `required_status_checks.enforcement_level=off`, leere Checks – bewusst noch keine festen Statuschecks verlangt. GET `/rulesets` weiter `[]`; dies widerspricht einer klassischen Branchschutzregel nicht. **GET `/branches/main/protection` bleibt mit 403 wegen GitHub-App-Rechten gesperrt**, daher sind Pflicht-PR, No-Bypass, Force-Push/Löschen und tatsächliche Admin-Ausnahmen **noch nicht unabhängig bestätigt**. Die CircleCI-Expression im Backup-Context bleibt **nur betreiberbestätigt**, nicht über CircleCI-Admin-API gelesen. **GH-02 ist deshalb teilweise belegt, NICHT voll abgenommen.** Bis alle Voraussetzungen geklärt sind **keine Backup-PATs, keine IONOS-Secrets** in CircleCI. Der Assistent bearbeitet ab jetzt GitHub ausschließlich auf separaten Branches/PRs und führt keine eigenmächtigen Merges durch.
+
+Zur endgültigen Freigabe der Backup-Tokenverwendung: (a) GitHub-UI-Screenshot **Source-Repo Settings → Branches → classic rule for main** ohne Zugangsdaten mit Require PR, Do not allow bypass, no force push/no deletions; (b) CircleCI-UI-Screenshot des gespeicherten Expression-Ausdrucks (vorzugsweise Context-Restriktionsanzeige, keine Secrets); (c) CircleCI Free Usage/Plan und Prüfung der Sichtbarkeit für untrusted Branch-/Fork-Pipelines. Erst danach Security-Risiko und GH-02 abschließend beurteilen.
+
+### GH-03 – `age` auf einem **vertrauenswürdigen Betreiber-Windows-PC** (noch nicht ausgeführt)
+
+Dieser Schritt ist eine **lokale Betreiberaktion**, keine Schlüsselgenerierung durch ChatGPT oder CircleCI. Der Benutzer speichert **nur den öffentlichen `age1…`-Empfänger** zur späteren Konfiguration; der private Schlüssel darf niemals GitHub, CircleCI, IONOS, diesem Chat oder einem Synchronisationsordner/öffentlich sichtbaren Terminal-Log übermittelt werden.
+
+1. Auf einem **eigenen Windows-PC** im PowerShell-Terminal die offiziell dokumentierte [age-Installation](https://github.com/FiloSottile/age#installation) ausführen (Free/Open Source, keine Cloudregistrierung):
+
+   ```powershell
+   winget install --id FiloSottile.age --exact
+   ```
+
+   PowerShell neu öffnen und mit `age --version` / `age-keygen --version` prüfen.
+
+2. Sicheren **lokalen, nicht mit OneDrive/Google Drive/iCloud synchronisierten** Ordner oder (besser) **verschlüsselten USB-Datenträger** auswählen, dorthin wechseln. **Nicht** in `Dokumente`/`Desktop`/`Downloads` erzeugen, sofern die Geräte diese Ordner synchronisieren. Beispiel (nur Platzhalter durch tatsächlichen *privaten* Laufwerksbuchstaben ersetzen):
+
+   ```powershell
+   Set-Location "E:\OrgaVela-Recovery"
+   age-keygen -o orgavela-private-age-key.txt
+   age-keygen -y orgavela-private-age-key.txt
+   ```
+
+   Das `age-keygen -o` erstellt die **vertrauliche** Schlüsseldatei. `age-keygen -y` zeigt nur die öffentliche `age1…`-Empfängeradresse. Den privaten Dateiinhalt unter keinen Umständen kopieren oder hochladen. Die `age1…`-Zeichenfolge darf später zur Einrichtung mitgeteilt werden.
+
+3. **Zweite verschlüsselte Offline-Kopie** dieser Datei auf einem getrennten geschützten Medium erstellen und die Lesbarkeit mit `age-keygen -y <Pfad-der-Zweitkopie>` **lokal** gegen die erste öffentliche Adresse prüfen. Das ist **Schlüsselredundanz**, keine zusätzliche WordPress-Backupablage. Ohne sichere zweite Kopie noch keinen produktiven GitHub-Backupflow aktivieren: Schlüsselverlust macht alle verschlüsselten Sicherungen unlesbar.
+
+4. Lokalen **rein synthetischen** Verschlüsselungs-/Entschlüsselungstest im selben vertraulichen Arbeitsordner ausführen (keine echten Daten, keine Cloud, kein CircleCI):
+
+   ```powershell
+   $recipient = (age-keygen -y .\orgavela-private-age-key.txt).Trim()
+   "synthetischer Test – keine OrgaVela-Daten" | Set-Content -Encoding utf8 .\orgavela-test.txt
+   age -r $recipient -o .\orgavela-test.txt.age .\orgavela-test.txt
+   age -d -i .\orgavela-private-age-key.txt -o .\orgavela-test-restored.txt .\orgavela-test.txt.age
+   if ((Get-FileHash .\orgavela-test.txt -Algorithm SHA256).Hash -ne (Get-FileHash .\orgavela-test-restored.txt -Algorithm SHA256).Hash) {
+     throw "Verschlüsselungs-/Entschlüsselungstest FEHLGESCHLAGEN"
+   }
+   Write-Host "Lokaler age-Test erfolgreich; Hashes identisch."
+   Remove-Item .\orgavela-test.txt, .\orgavela-test.txt.age, .\orgavela-test-restored.txt -Force
+   ```
+
+   Wenn Installation oder Test fehlschlägt, kein produktives Setup, sondern Fehlermeldung **ohne** privaten Schlüsselinhalt dokumentieren.
+
+**Abnahmelogik:** GH-03 erst nach Nutzerbestätigung des echten privaten Offline-Schlüssels, Wiederherstellungszweikopie und erfolgreichem synthetischem lokalen Roundtrip; dabei die privaten Dateien nicht an den Assistenten senden. Nur die öffentliche `age1…`-Adresse ist später für die Verschlüsselungsjobs erforderlich. GH-04 (synthetischer Release-Upload) und GH-06/07 (echte Datensicherung und privater Restore) bleiben separat offen.
