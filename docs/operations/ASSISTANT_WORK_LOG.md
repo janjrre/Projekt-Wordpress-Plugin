@@ -888,3 +888,10 @@ Die Ergebniskommunikation an die GitHub-Issues wurde ausgeführt: [W0 #16 Kommen
 ## 2026-10-13 – GH-02/GH-03 Fortsetzungsauftrag (vor Ausführung)
 
 **Auftrag:** „Okay, dann fahre damit fort.“ Nach belegtem GH-01 (privates `janjrre/orgavela-backups`) werden als nächste sichere Schritte CircleCI-Context-/Branch-Sicherheitsvorbereitung und synthetische, schlüssellose Verschlüsselungsvorprüfung bearbeitet. Keine realen Backups/Secrets, keine bezahlten Dienste, kein Merge/Deployment, kein Dreamloud. Die CircleCI-Adminoberfläche ist nicht als Connector verfügbar; unprüfbare Schutz- und Credit-Einstellungen werden ausdrücklich nicht als bestanden behauptet. Ausgangsbasis: Masterplan v2.11, O03 partial, CircleCI-Pilot #2 success, privates Repo geprüft.
+
+
+## 2026-10-13 – GH-02: CircleCI-Context laut Betreiber angelegt
+
+**Auftrag/Rückmeldung:** Betreiber hat nach Auffinden der Organisationseinstellungen den CircleCI-Context `orgavela-backup-releases` selbst erstellt. **Dies ist eine Betreiberbestätigung**, keine durch CircleCI-API unabhängig überprüfte Project-/Expression-/Security-Group-Restriction. Keine Tokens, IONOS-Credentials oder privaten Schlüssel in den Context eingetragen; kein Workflow, kein Upload und kein Restore ausgelöst.
+
+**Sicherer nächster Schritt:** Context unter Organization Settings → Contexts → `orgavela-backup-releases` öffnen und die tatsächlich verfügbaren **Project Restrictions** (nur `janjrre/Projekt-Wordpress-Plugin`) sowie **Expression Restrictions** (nur geschützter freigegebener Branch; keine PR-/Fork-/untrusted Ausführung) prüfen. Screenshot der Restriction-Ansicht **ohne Secretwerte** genügt. Bis zur bestätigten Einschränkung GH-02 weiter offen; GH-03 Betreiber-age-Key und GH-04 GitHub-Release-Canary noch offen. Keine Änderung an V1-Zählern; Masterplan 2.11, O03 partial, 62/71, 0/8, P4 0/4, Release 0/18, PR-Merges 0.
