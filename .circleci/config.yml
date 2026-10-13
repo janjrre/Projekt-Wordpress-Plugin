@@ -35,35 +35,7 @@ jobs:
             for file in scripts/ci/*.sh; do
               bash -n "$file"
             done
-            python - <<'PY'
-            import json
-            from pathlib import Path
-
-            root = Path.cwd()
-            required = [
-                "AGENTS.md",
-                "docs/operations/V1_ACCEPTANCE_PLAN.md",
-                "docs/operations/V1_PROGRESS.json",
-                "docs/operations/W0_O03_CIRCLECI_GITHUB_BACKUP_ASSESSMENT_2026-10-13.md",
-                "scripts/ci/orgavela-readonly-audit.sh",
-                "scripts/ci/orgavela-synthetic-restore.sh",
-            ]
-            assert all((root / name).is_file() for name in required)
-            state = json.loads((root / "docs/operations/V1_PROGRESS.json").read_text())
-            counts = state["measurements"]
-            assert counts["milestone_count"] == 8
-            assert counts["reported_implemented_packages"] <= counts["normative_packages"]
-            assert counts["milestones_formally_v1_accepted"] <= counts["milestone_count"]
-            assert counts["release_gates_formally_green"] <= counts["release_gates_total"]
-            assert not counts["v1_release_accepted"]
-            o03 = next(item for item in state["ops"] if item["id"] == "O03")
-            assert o03["status"] != "completed"
-            assert not o03["formal_accepted"]
-            assert o03["actual_isolated_restoration"] == "not performed"
-            print("ORGAVELA_CIRCLECI_OFFLINE_SMOKE=success")
-            print("ORGAVELA_CIRCLECI_LIVE_BACKUP_USED=no")
-            print("ORGAVELA_CIRCLECI_LIVE_RESTORE=no")
-            PY
+            python scripts/ci/orgavela-circleci-offline-smoke.py
 
 workflows:
   connection-pilot-only:
