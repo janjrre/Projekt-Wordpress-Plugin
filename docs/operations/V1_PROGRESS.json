@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-13 operator screenshot CircleCI pipeline #8/#9 shows could-not-fetch-configuration and no workflows; GitHub API confirms .circleci/config.yml absent on main and present on pilot branch. Branch cause plausible; actual trigger config-branch needs UI readback. No CI success, no live backup.",
+  "snapshot_basis": "2026-10-13: operator screenshot CircleCI pipeline #16 on correct UOP pilot branch found configuration but hit unclosed '<<' YAML parser error. Pure offline Python assertions were extracted into script, YAML fixed. For corrected SHA c478b4c9, GitHub official commit status verified external ci/circleci: offline-connection-smoke=success (CircleCI build #2). No CircleCI Contexts, backup or real restore.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -168,12 +168,14 @@
       "google_drive_ci_crypto_selftest_result": "success",
       "google_drive_ci_oauth_upload_workflow": ".github/workflows/orgavela-google-drive-connection.yml",
       "google_drive_operator_setup_guide": "docs/operations/ORGAVELA_GOOGLE_DRIVE_BACKUP_SETUP.md",
-      "runner_alternative": "CircleCI Free as separate UOP project, connection operator-reported but no executed UOP CI status yet",
-      "runner_alternative_status": "CircleCI project receives pipeline triggers, but currently fails to fetch configuration on #8/#9; .circleci/config.yml missing on main and present in pilot branch",
+      "runner_alternative": "CircleCI Free independent UOP project, green external offline provider status verified",
+      "runner_alternative_status": "O03-CI-01 pilot SUCCESS (provider status) on c478b4c9, build #2; no backed-up real WordPress data",
       "circleci_draft_pr": 17,
-      "circleci_pilot_run": "not successful/verified (owner screenshot pipeline #8/#9 could not fetch configuration)",
-      "circleci_config_diagnosis": "Trigger likely requests a branch without .circleci/config.yml; full CircleCI error and config source branch hidden/truncated in screenshot, verify via UI",
-      "circleci_resolution": "Manually trigger only on config source branch ci/circleci-free-pilot-o03 with matching checkout; keep Draft PR #17 unmerged; inspect full error and CircleCI project setup if still failing"
+      "circleci_pilot_run": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/2",
+      "circleci_config_diagnosis": "Pipeline #16 YAML parser failed on Python heredoc `<<`; removed and external provider now reports successful offline job",
+      "circleci_resolution": "Corrected branch-only YAML references external Python script, green commit; PR #17 remains draft and unmerged",
+      "circleci_pilot_commit": "c478b4c9e74fa8bc73db16945ff9cb2a4270d2da",
+      "circleci_pilot_provider_success": true
     },
     {
       "id": "O04",
@@ -393,17 +395,23 @@
     "google_drive_backup_synthetic_encryption_selftest_run": 38294515636,
     "google_drive_backup_encrypted_canary_uploaded": false,
     "circleci_uop_project_owner_reported_connected": true,
-    "circleci_uop_project_verified": false,
+    "circleci_uop_project_verified": true,
     "circleci_uop_pilot_branch": "ci/circleci-free-pilot-o03",
-    "circleci_uop_pilot_sha": "d14069c8302da177ee93458950ecd82ed7726655",
+    "circleci_uop_pilot_sha": "c478b4c9e74fa8bc73db16945ff9cb2a4270d2da",
     "circleci_uop_pilot_draft_pr": 17,
-    "circleci_uop_pilot_status": "No verified successful provider job; pipeline #8/#9 configuration fetch errors before workflow startup.",
+    "circleci_uop_pilot_status": "provider success: ci/circleci: offline-connection-smoke on c478b4c9; CircleCI build #2",
     "circleci_uop_credentials_configured": false,
     "circleci_uop_live_backup_executed": false,
     "circleci_uop_pipeline_ui_evidence": "Operator screenshot shows CircleCI pipelines #8 and #9 exist, both with truncated 'Could not fetch configuration: No co...' errors and no workflows.",
     "circleci_uop_default_branch_config_exists": false,
     "circleci_uop_pilot_branch_config_exists": true,
-    "circleci_uop_trigger_config_branch_verified": false
+    "circleci_uop_trigger_config_branch_verified": false,
+    "circleci_uop_pilot_build_url": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/2",
+    "circleci_uop_pilot_provider_success_verified": true,
+    "circleci_uop_pilot_original_parser_blocker": "Pipeline #16 found pilot branch YAML, failed on unclosed '<<' Python heredoc; corrected",
+    "circleci_uop_provider_step_logs_reviewed": false,
+    "circleci_uop_free_credits_verified": false,
+    "circleci_uop_pipeline_ci01_verified": true
   },
   "integration": {
     "main_contains_merged_feature_stack": false,
@@ -544,15 +552,16 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "Open CircleCI Pipelines #9, inspect complete 'Could not fetch configuration' error and config/checkout source branch; main lacks .circleci/config.yml, pilot branch has it",
-    "Manually run one secret-free CircleCI pipeline with config source branch ci/circleci-free-pilot-o03 and same checkout branch, provided CircleCI Free credits available; no forced merge of Draft PR #17",
-    "Verify provider success for offline-connection-smoke using actual CircleCI job/run ID; do not treat pipeline creation or GitHub checks without jobs as CI success",
-    "Only after successful pilot, plan restricted UOP-only CircleCI Context and synthetic encrypted Google Drive canary, then actual independent DB+files backup and offline isolated restore before O03/B04/R03 acceptance"
+    "Verify CircleCI Free plan remaining credits, UOP project write permissions and branch-restricted Context protections (no Dreamloud secrets), while preserving green CI pilot and Draft PR #17 unmerged",
+    "Operator creates and securely retains offline private age decryption key; configure ONLY public age recipient and explicitly authorized restricted Google OAuth secret in separate UOP-only CircleCI context",
+    "First synthetic-only fully encrypted Google Drive upload, complete remote redownload, SHA-256 and private decryption proof; no OrgaVela data in test",
+    "After successful protected cloud canary and review: real complete OrgaVela WordPress file+MariaDB read-only encrypted offsite backup, independently verified",
+    "Restore exactly that private real snapshot to network-isolated private WordPress/MariaDB instance with cron/mail/webhooks disabled; only then consider O03/B04/R03 acceptance and further V1 release gates"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.9",
+  "masterplan_version": "2.10",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
