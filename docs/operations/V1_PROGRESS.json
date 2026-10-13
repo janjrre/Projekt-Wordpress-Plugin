@@ -199,10 +199,13 @@
       "circleci_context_project_restriction": "Screenshot-verified: Projekt-Wordpress-Plugin only (2026-10-13)",
       "circleci_context_expression_restriction": "Operator reports saved: pipeline.git.branch == \"main\" and not job.ssh.enabled and not (pipeline.config_source starts-with \"api\"); not independently verified",
       "circleci_context_expression_verified": false,
-      "source_github_main_branch_protected": false,
-      "source_github_main_branch_protection_probe": "GitHub GET /branches/main protected=false; GET /rulesets [] on 2026-10-13. /branches/main/protection requires inaccessible admin permission (403).",
+      "source_github_main_branch_protected": true,
+      "source_github_main_branch_protection_probe": "Verified 2026-10-13 GET /repos/janjrre/Projekt-Wordpress-Plugin/branches/main: protected=true, protection.enabled=true, HEAD 0adacb427bd95dd87594e358ec9c6f2f5b38aae8; required_status_checks enforcement_level=off. GET /branches/main/protection 403 inaccessible to connector; require-PR/no-bypass/force-push/deletion rules not independently verified.",
       "source_github_branch_ruleset_count": 0,
-      "github_backup_secret_storage_authorized": false
+      "github_backup_secret_storage_authorized": false,
+      "source_github_main_branch_protection_detail_verified": false,
+      "source_github_main_branch_protection_api_access": "403 integration lacks permission",
+      "age_setup_instructions": "docs/operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md#8-gh-02-neuer-sicherheitsnachweis-und-gh-03-betreiber-schlüsseltest-13102026"
     },
     {
       "id": "O04",
@@ -587,12 +590,10 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "SECURITY BLOCKER: operator must protect `main` of PUBLIC `janjrre/Projekt-Wordpress-Plugin` using GitHub Settings > Branches > classic protection (require PR, no admin bypass, force pushes and deletion disallowed); GitHub API currently reports protected=false and zero rulesets",
-    "Reverify public source repo main branch protected=true, verify who can push/merge and PR/fork CircleCI context-exposure risk; operator-reported expression restriction is not independent CircleCI UI/API proof",
-    "Confirm CircleCI Free usage and effective Context project/expression restrictions; no tokens/secrets until these are verified",
-    "Operator creates securely retained offline private age decryption key, two independent secure recovery copies, and supplies ONLY public age recipient",
-    "Then restrict expiring fine-grained PAT to private janjrre/orgavela-backups Contents read/write, store only in properly protected CircleCI Context, test encrypted synthetic release with full redownload/hash/local decryption",
-    "Only after synthetic success create real consistent encrypted OrgaVela WP file+MariaDB backup, verify full redownload and isolated no-egress restore, then schedule backups and consider O03/B04 gates"
+    "Source GitHub main branch protected=true verified. GH-02 still partial: verify effective required Pull Request, no-bypass, disable force-push/deletion via GitHub Settings UI (detail API 403), plus effective CircleCI Expression and Free usage (CircleCI UI/operator evidence); no tokens until then",
+    "Operator on trusted Windows PC install age (winget id FiloSottile.age), generate independent age private key in non-synced encrypted offline storage, copy to separate encrypted offline medium, run local synthetic encrypt/decrypt+SHA256, provide ONLY public age1... recipient or confirmation",
+    "Only after GH-02/GH-03 complete store expiring fine-grained GitHub PAT for private janjrre/orgavela-backups in project/branch-restricted CircleCI context; test fully encrypted synthetic Release with remote redownload/hash/decrypt",
+    "Then real consistent read-only OrgaVela files + MariaDB snapshot into encrypted private GitHub Release Assets; independently download/verify and restore in isolated no-egress private clone; inspect actual IONOS provider snapshot inventory before O03/B04 acceptance"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
