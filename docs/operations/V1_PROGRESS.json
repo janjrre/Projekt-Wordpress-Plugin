@@ -189,7 +189,13 @@
       "github_backup_operator_setup_guide": "docs/operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md",
       "ionos_provider_backup_inventory_confirmed": false,
       "github_backup_repository_default_branch": "main",
-      "github_backup_gh01_verified": true
+      "github_backup_gh01_verified": true,
+      "circleci_context_security_verified": false,
+      "circleci_free_credits_verified": false,
+      "age_operator_private_key_verified": false,
+      "github_backup_gh02_verified": false,
+      "github_backup_gh03_verified": false,
+      "github_backup_gh02_gh03_operator_guide": "docs/operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md#6-gh-02gh-03-vorbereitung-nach-erfolgreicher-repo-erstellung-13102026"
     },
     {
       "id": "O04",
