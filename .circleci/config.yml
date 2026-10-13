@@ -1,0 +1,47 @@
+# OrgaVela W0/O03: CircleCI Free connection pilot.
+# ONLY this dedicated branch. NO secrets, Drive, IONOS, deployments,
+# production data, schedules, caches or artifacts.
+version: 2.1
+
+jobs:
+  offline-connection-smoke:
+    docker:
+      - image: cimg/python:3.12
+    resource_class: small
+    working_directory: ~/project
+    steps:
+      - checkout
+      - run:
+          name: Verify OrgaVela repo identity, documentation and local shell syntax only
+          command: |
+            set -euo pipefail
+            umask 077
+            [[ "${CIRCLE_PROJECT_USERNAME:-}" == "janjrre" ]]
+            [[ "${CIRCLE_PROJECT_REPONAME:-}" == "Projekt-Wordpress-Plugin" ]]
+            [[ "${CIRCLE_BRANCH:-}" == "ci/circleci-free-pilot-o03" ]]
+
+            # A first-run smoke job must never receive any production credentials.
+            for secret_name in \
+              IONOS_SSH_HOST IONOS_SSH_USER IONOS_SSH_PASSWORD \
+              SFTP_HOST SFTP_PASSWORD GOOGLE_DRIVE_TOKEN_JSON \
+              ORGAVELA_RCLONE_CONFIG DUPLICATI_GOOGLE_DRIVE_AUTH_ID \
+              ORGAVELA_BACKUP_PRIVATE_KEY; do
+              [[ -z "${!secret_name:-}" ]] || {
+                echo "ERROR: unexpected secret injected into the offline pilot" >&2
+                exit 1
+              }
+            done
+
+            for file in scripts/ci/*.sh; do
+              bash -n "$file"
+            done
+            python scripts/ci/orgavela-circleci-offline-smoke.py
+
+workflows:
+  connection-pilot-only:
+    jobs:
+      - offline-connection-smoke:
+          filters:
+            branches:
+              only:
+                - ci/circleci-free-pilot-o03
