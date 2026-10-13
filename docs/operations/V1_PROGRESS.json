@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-12 operator explicitly selected Google Drive as long-term encrypted OrgaVela backup target; new owner-only folder created and verified via connected Google Drive; new GitHub synthetic age selftest #38294515636 green. GitHub Actions OAuth upload not yet connected or tested; no live WordPress backup or actual restore.",
+  "snapshot_basis": "2026-10-13 UOP operator reports CircleCI connected; secret-free branch-only pilot committed in Draft PR #17. No CircleCI success check seen for pilot SHA at verification. GitHub Actions budget exhaustion reported; no new hosted run triggered. O03 remains partial: no real encrypted file+DB backup or isolated restore.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -167,7 +167,11 @@
       "google_drive_ci_crypto_selftest_run": 38294515636,
       "google_drive_ci_crypto_selftest_result": "success",
       "google_drive_ci_oauth_upload_workflow": ".github/workflows/orgavela-google-drive-connection.yml",
-      "google_drive_operator_setup_guide": "docs/operations/ORGAVELA_GOOGLE_DRIVE_BACKUP_SETUP.md"
+      "google_drive_operator_setup_guide": "docs/operations/ORGAVELA_GOOGLE_DRIVE_BACKUP_SETUP.md",
+      "runner_alternative": "CircleCI Free as separate UOP project, connection operator-reported but no executed UOP CI status yet",
+      "runner_alternative_status": "pilot in Draft PR #17; provider not yet verified",
+      "circleci_draft_pr": 17,
+      "circleci_pilot_run": "not observed"
     },
     {
       "id": "O04",
@@ -385,7 +389,15 @@
     "google_drive_backup_connection_to_chatgpt": "connected and folder created",
     "google_drive_backup_connection_to_github_actions": "not yet authenticated, no OAuth token configured",
     "google_drive_backup_synthetic_encryption_selftest_run": 38294515636,
-    "google_drive_backup_encrypted_canary_uploaded": false
+    "google_drive_backup_encrypted_canary_uploaded": false,
+    "circleci_uop_project_owner_reported_connected": true,
+    "circleci_uop_project_verified": false,
+    "circleci_uop_pilot_branch": "ci/circleci-free-pilot-o03",
+    "circleci_uop_pilot_sha": "d14069c8302da177ee93458950ecd82ed7726655",
+    "circleci_uop_pilot_draft_pr": 17,
+    "circleci_uop_pilot_status": "pending/no provider statuses at latest verification (not passed)",
+    "circleci_uop_credentials_configured": false,
+    "circleci_uop_live_backup_executed": false
   },
   "integration": {
     "main_contains_merged_feature_stack": false,
@@ -526,16 +538,15 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "Operator creates local private age key, saves recovery copy offline, adds ONLY public recipient as GitHub orgavela-backup-drive Environment variable ORGAVELA_BACKUP_AGE_RECIPIENT",
-    "Operator sets up separate personal Google OAuth Desktop client, rclone remote rooted to their private Google Drive backup folder, and encrypted GitHub Environment Secret ORGAVELA_RCLONE_CONFIG (never paste credentials into public repo/chat)",
-    "With explicit owner-side Google authorization, run GitHub Actions orgavela-google-drive-connection.yml upload-synthetic and verify encrypted synthetic canary in folder",
-    "Only after canary successful and E2E security review, implement real read-only IONOS backup encrypted before Drive upload, scheduled offsite retention and encrypted restore testing",
-    "Restore actual full snapshot only in network-isolated private test host; keep O03/B04/R03 blocked until real proof"
+    "CircleCI UOP project: verify pipeline for isolated branch ci/circleci-free-pilot-o03 and actual provider job/commit check; inspect Free credits and triggers in CircleCI UI if no run",
+    "Keep PR #17 draft/unmerged until operator approval; do not run Google/IONOS secret-bearing jobs",
+    "After CircleCI green: review project/branch-restricted CircleCI context, public encryption recipient and Drive OAuth owned only by UOP",
+    "Prove encrypted synthetic remote canary/readback, then privately encrypted real IONOS file+DB snapshot and isolated restore; O03/B04/R03 remain blocked"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.6",
+  "masterplan_version": "2.8",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
