@@ -178,16 +178,18 @@
       "circleci_pilot_provider_success": true,
       "google_drive_backup_strategy_active": false,
       "google_drive_workflow_removed": true,
-      "github_backup_target_proposed": "janjrre/orgavela-backups (MUST be private; not created/verified; operator action required)",
-      "github_backup_target_private_verified": false,
-      "github_backup_repository_created": false,
+      "github_backup_target_proposed": "janjrre/orgavela-backups (verified private via GitHub get_repo, main, push/admin permission, 2026-10-13)",
+      "github_backup_target_private_verified": true,
+      "github_backup_repository_created": true,
       "github_backup_release_assets_uploaded": false,
       "github_backup_offsite_strategy": "encrypted age release assets; each <2GiB; optional split; private repo; no backup commits",
       "github_backup_api_token_configured": false,
       "github_backup_ciphertext_canary_verified": false,
       "github_backup_real_restore_verified": false,
       "github_backup_operator_setup_guide": "docs/operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md",
-      "ionos_provider_backup_inventory_confirmed": false
+      "ionos_provider_backup_inventory_confirmed": false,
+      "github_backup_repository_default_branch": "main",
+      "github_backup_gh01_verified": true
     },
     {
       "id": "O04",
@@ -426,8 +428,8 @@
     "circleci_uop_pipeline_ci01_verified": true,
     "backup_storage_decision_2026_10_13": "GitHub private release-assets-only, separate repo, plus IONOS provider backups; Drive superseded",
     "github_backup_repository_proposed": "janjrre/orgavela-backups",
-    "github_backup_repository_private_verified": false,
-    "github_backup_repository_created": false,
+    "github_backup_repository_private_verified": true,
+    "github_backup_repository_created": true,
     "github_release_ciphertext_canary_uploaded": false,
     "google_drive_backup_previously_created_folder_unused": true,
     "google_drive_backup_connector_no_longer_part_of_strategy": true,
@@ -572,7 +574,7 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "Operator creates GitHub repository `janjrre/orgavela-backups` with private visibility at github.com/new, no paid add-ons; assistant verifies via GitHub repo API before any upload",
+    "GH-01 DONE: private repository janjrre/orgavela-backups verified via GitHub API (main, push/admin rights); next verify CircleCI Free credit/Context/branch protections",
     "Verify actual IONOS OrgaVela provider backup restore points within account panel (not verifiable from current SSH)",
     "Operator generates independent offline-retained private age decryption key and public recipient, and validates CircleCI Free credits plus project/branch restricted contexts",
     "Create expiring fine-grained GitHub token scoped ONLY to private backup repository with Contents read/write, enter ONLY as restricted CircleCI secret; do not paste token into chat",
