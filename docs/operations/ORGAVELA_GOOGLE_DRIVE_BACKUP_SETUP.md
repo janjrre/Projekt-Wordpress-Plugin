@@ -1,3 +1,7 @@
+> **HISTORISCH / NICHT MEHR AUSFÜHREN – 13.10.2026.** Der Betreiber hat Google Drive als OrgaVela-Backupziel ausdrücklich abgewählt. Verbindlicher neuer Speicherpfad: **IONOS-Vertragsbackups + ausschließlich verschlüsselte GitHub-Release-Assets in einem gesonderten privaten Backup-Repository**. [Aktuelles Runbook](W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md) · [Normativer Masterplan](V1_ACCEPTANCE_PLAN.md). Das nachfolgende OAuth-/rclone-Setup ist nur als früherer dokumentierter Ansatz erhalten und darf **nicht** für neue OrgaVela-Backups eingerichtet oder ausgeführt werden. Der alte Drive-Actions-Workflow wurde aus `main` entfernt. Bereits angelegter privater Drive-Ordner wird nicht mehr verwendet; weder dortige Inhalte noch Ordner werden ohne gesonderten Auftrag gelöscht.
+
+---
+
 # OrgaVela – einmalige Google-Drive-Anbindung für verschlüsselte Backups
 
 **Stand 12.10.2026 | Paket W0/O03 | Status: Zielordner erstellt, lokale Kryptoprüfung grün; CI-OAuth-Verbindung noch NICHT authentifiziert und kein echter Drive-Upload.**
