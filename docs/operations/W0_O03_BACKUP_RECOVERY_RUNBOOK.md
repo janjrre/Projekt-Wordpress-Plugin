@@ -1,3 +1,7 @@
+> **Aktuelle Speicherstrategie seit 13.10.2026:** Aus diesem älteren Backup-/Recovery-Runbook gelten die generellen Restore-/Isolations-/Konsistenzvorgaben weiter, aber **nicht mehr** die Google-Drive- oder Betreiber-PC-/Cloud-Auswahl und deren alte CI-Transportanweisungen. Der Betreiber wünscht **nur IONOS-Vertragssicherungen plus verschlüsselte Release-Assets in einem gesonderten privaten GitHub-Backup-Repository**. Neues verbindliches Setup: [`W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md`](W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md). Die frühere Strategie bleibt unten lediglich als chronologische Entwicklungsdokumentation. **O03 weiter offen bis zur tatsächlichen isolierten Wiederherstellung.**
+
+---
+
 # W0 / O03 – OrgaVela: Backup-Inventar, private Sicherung und isolierter Restore
 
 **Status 12.10.2026: O03 TEILWEISE erfüllt, NICHT abgenommen.** OrgaVela unter `https://orgavela.com`, WordPress mit UOP Core Alpha.2; strikt getrennt von Dreamloud. Dies ist ein Betriebsrunbook und keine Freigabe für produktive Migrationen.
