@@ -883,3 +883,8 @@ Die Ergebniskommunikation an die GitHub-Issues wurde ausgeführt: [W0 #16 Kommen
 **Beleg:** GitHub `get_repo` bestätigt `repository_full_name=janjrre/orgavela-backups`, `visibility=private`, `default_branch=main`, `permissions.admin=true`, `permissions.push=true`, `permissions.pull=true`. **GH-01 Repository-Sichtbarkeit/Zugriff bestanden.** Keine Release-Dateien, Tokens oder WordPress-Daten übertragen; kein Workflow ausgelöst, keine Ausgaben, keine Dreamloud-Aktion.
 
 **Nächste Gates:** GH-02 CircleCI-Context-/Branchschutz und Free-Credits prüfen; GH-03 privaten age-Recovery-Key ausschließlich auf Betreibergerät generieren/zweite Kopie offline verwahren; GH-04 zeitlich begrenzten fine-grained GitHub-Token nur für dieses private Repo direkt in CircleCI-Context hinterlegen, dann synthetischen verschlüsselten Release-Canary mit vollständigem Rückdownload/Hash. Echte Sicherung und isolierter Restore bleiben ausstehend; O03/B04/R03 nicht abgenommen. Status historisch 62/71 Coding, 0/8 M, 0/4 P4, 0/18 Release, 0 PR-Merges, Live 0.1.0-alpha.2.
+
+
+## 2026-10-13 – GH-02/GH-03 Fortsetzungsauftrag (vor Ausführung)
+
+**Auftrag:** „Okay, dann fahre damit fort.“ Nach belegtem GH-01 (privates `janjrre/orgavela-backups`) werden als nächste sichere Schritte CircleCI-Context-/Branch-Sicherheitsvorbereitung und synthetische, schlüssellose Verschlüsselungsvorprüfung bearbeitet. Keine realen Backups/Secrets, keine bezahlten Dienste, kein Merge/Deployment, kein Dreamloud. Die CircleCI-Adminoberfläche ist nicht als Connector verfügbar; unprüfbare Schutz- und Credit-Einstellungen werden ausdrücklich nicht als bestanden behauptet. Ausgangsbasis: Masterplan v2.11, O03 partial, CircleCI-Pilot #2 success, privates Repo geprüft.
