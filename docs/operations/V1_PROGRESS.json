@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-13: operator screenshot CircleCI pipeline #16 on correct UOP pilot branch found configuration but hit unclosed '<<' YAML parser error. Pure offline Python assertions were extracted into script, YAML fixed. For corrected SHA c478b4c9, GitHub official commit status verified external ci/circleci: offline-connection-smoke=success (CircleCI build #2). No CircleCI Contexts, backup or real restore.",
+  "snapshot_basis": "2026-10-13 explicit operator backup strategy switch: no Google Drive, only existing IONOS contract backup plus separate private GitHub repository GitHub Releases ciphertext. Google-Drive workflow removed; existing secure private Google Drive folder unused, not deleted. Desired janjrre/orgavela-backups repository not yet confirmed/created; connection cannot create repositories or secrets. No real backup or isolated restore.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -154,8 +154,8 @@
       "actual_private_full_snapshot": "not yet made/verified",
       "actual_isolated_restoration": "not performed",
       "formal_accepted": false,
-      "planned_backup_delivery": "dedicated reviewed GitHub Actions SSH stream -> operator public-key age encryption on ephemeral runner -> encrypted temporary artifact -> independent operator-owned PC/external SSD or existing private store; no live workflow before key and destination",
-      "operator_storage_choice": "Google Drive: new owner-only encrypted-backups folder created via Google Drive connector",
+      "planned_backup_delivery": "Operator-authorized private GitHub backup repo, encrypted age Release assets uploaded by CircleCI Free; separate existing IONOS provider backup. No Google Drive. No stored plaintext in git/CI artifacts; no private age key on runner.",
+      "operator_storage_choice": "Exclusively private GitHub Releases in a separate backup repository alongside available IONOS provider backups; Google Drive cancelled",
       "recipient_public_key": "not provided/configured",
       "encryption_pipeline_ci_test": "local synthetic age roundtrip passed in GitHub Actions run 38294515636; actual Drive upload pending",
       "real_backup_status": "not attempted",
@@ -175,7 +175,19 @@
       "circleci_config_diagnosis": "Pipeline #16 YAML parser failed on Python heredoc `<<`; removed and external provider now reports successful offline job",
       "circleci_resolution": "Corrected branch-only YAML references external Python script, green commit; PR #17 remains draft and unmerged",
       "circleci_pilot_commit": "c478b4c9e74fa8bc73db16945ff9cb2a4270d2da",
-      "circleci_pilot_provider_success": true
+      "circleci_pilot_provider_success": true,
+      "google_drive_backup_strategy_active": false,
+      "google_drive_workflow_removed": true,
+      "github_backup_target_proposed": "janjrre/orgavela-backups (MUST be private; not created/verified; operator action required)",
+      "github_backup_target_private_verified": false,
+      "github_backup_repository_created": false,
+      "github_backup_release_assets_uploaded": false,
+      "github_backup_offsite_strategy": "encrypted age release assets; each <2GiB; optional split; private repo; no backup commits",
+      "github_backup_api_token_configured": false,
+      "github_backup_ciphertext_canary_verified": false,
+      "github_backup_real_restore_verified": false,
+      "github_backup_operator_setup_guide": "docs/operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md",
+      "ionos_provider_backup_inventory_confirmed": false
     },
     {
       "id": "O04",
@@ -411,7 +423,15 @@
     "circleci_uop_pilot_original_parser_blocker": "Pipeline #16 found pilot branch YAML, failed on unclosed '<<' Python heredoc; corrected",
     "circleci_uop_provider_step_logs_reviewed": false,
     "circleci_uop_free_credits_verified": false,
-    "circleci_uop_pipeline_ci01_verified": true
+    "circleci_uop_pipeline_ci01_verified": true,
+    "backup_storage_decision_2026_10_13": "GitHub private release-assets-only, separate repo, plus IONOS provider backups; Drive superseded",
+    "github_backup_repository_proposed": "janjrre/orgavela-backups",
+    "github_backup_repository_private_verified": false,
+    "github_backup_repository_created": false,
+    "github_release_ciphertext_canary_uploaded": false,
+    "google_drive_backup_previously_created_folder_unused": true,
+    "google_drive_backup_connector_no_longer_part_of_strategy": true,
+    "google_drive_backup_github_workflow_removed": true
   },
   "integration": {
     "main_contains_merged_feature_stack": false,
@@ -552,16 +572,19 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "Verify CircleCI Free plan remaining credits, UOP project write permissions and branch-restricted Context protections (no Dreamloud secrets), while preserving green CI pilot and Draft PR #17 unmerged",
-    "Operator creates and securely retains offline private age decryption key; configure ONLY public age recipient and explicitly authorized restricted Google OAuth secret in separate UOP-only CircleCI context",
-    "First synthetic-only fully encrypted Google Drive upload, complete remote redownload, SHA-256 and private decryption proof; no OrgaVela data in test",
-    "After successful protected cloud canary and review: real complete OrgaVela WordPress file+MariaDB read-only encrypted offsite backup, independently verified",
-    "Restore exactly that private real snapshot to network-isolated private WordPress/MariaDB instance with cron/mail/webhooks disabled; only then consider O03/B04/R03 acceptance and further V1 release gates"
+    "Operator creates GitHub repository `janjrre/orgavela-backups` with private visibility at github.com/new, no paid add-ons; assistant verifies via GitHub repo API before any upload",
+    "Verify actual IONOS OrgaVela provider backup restore points within account panel (not verifiable from current SSH)",
+    "Operator generates independent offline-retained private age decryption key and public recipient, and validates CircleCI Free credits plus project/branch restricted contexts",
+    "Create expiring fine-grained GitHub token scoped ONLY to private backup repository with Contents read/write, enter ONLY as restricted CircleCI secret; do not paste token into chat",
+    "With synthetic-only data, age-encrypt, upload as private GitHub Release asset from CircleCI, redownload entire ciphertext, SHA256 and private decryption check; no WordPress data yet",
+    "After tested safe upload, create real consistent OrgaVela WordPress-files+MariaDB ciphertext-only GitHub Release and complete independent full redownload",
+    "Restore that exact real snapshot in offline/isolated private WordPress+MariaDB clone with all mail/webhooks/cron/internet disabled; then consider O03/B04 acceptance",
+    "Only after full recovery proof enable regular scheduled backups and operational monitoring, without automatic deletion before agreed retention"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.10",
+  "masterplan_version": "2.11",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
