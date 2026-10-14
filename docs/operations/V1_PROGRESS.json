@@ -214,7 +214,19 @@
       "synthetic_release_transport_status": "Proposed only; no OrgaVela E2E upload; Dreamloud separate project synthetic release #78 verified success 2026-10-14",
       "dreamloud_synthetic_reference": "https://github.com/janjrre/dreamloud-backups/releases/tag/backup-dreamloud-synthetic-circleci-78",
       "dreamloud_synthetic_ci_reference": "https://circleci.com/gh/janjrre/dreamloud-portal/78",
-      "operator_permanent_key_needed_for_real_backup": true
+      "operator_permanent_key_needed_for_real_backup": true,
+      "synthetic_ci_draft_pr": 19,
+      "synthetic_ci_draft_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/19",
+      "synthetic_ci_branch": "test/orgavela-github-release-o03",
+      "synthetic_ci_base_branch": "ci/circleci-free-pilot-o03",
+      "synthetic_ci_code_prepared": true,
+      "synthetic_ci_test_branch_protected": false,
+      "synthetic_ci_test_branch_protection_read": "GET /branches/test/orgavela-github-release-o03 protected=false as of 2026-10-14",
+      "synthetic_ci_circleci_context_expression_matches_test_branch": false,
+      "synthetic_ci_manual_parameter": "enable_synthetic_github_release_e2e; default false",
+      "synthetic_ci_target": "janjrre/orgavela-backups; private; no Dreamloud",
+      "synthetic_ci_runner_tested": false,
+      "synthetic_ci_repo_release_tested": false
     },
     {
       "id": "O04",
@@ -599,12 +611,12 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "Keep GH-01 verified and GH-02 pending: confirm CircleCI Context project and expression restrictions, GitHub classic branch rule PR/no-bypass/force-push/deletion details, Free credits; do not place secret into untrusted branch",
-    "Prepare an opt-in synthetic OrgaVela CircleCI GitHub Release transport test on a protected narrowly authorized branch (or approved protected main merge), with temporary disposable age/OpenPGP test-only keypair, no real data",
-    "Owner may create expiring fine-grained GH_TOKEN scoped ONLY to private janjrre/orgavela-backups Contents read/write and set only in verified restricted OrgaVela CircleCI context (not Dreamloud token), after GH-02 security accepted",
-    "Run synthetic encrypted GitHub Release canary, full independent remote readback/hash/immutable check/temporary-key decryption; GH-04 success only from actual provider and GitHub evidence, no PC necessary",
-    "Before any real OrgaVela file/DB backup, operator must hold independently offline retained persistent private recovery key and second secure recovery copy, and prove local decrypt GH-03 (PC or secure mobile method), only public key to CircleCI",
-    "Then consistent OrgaVela MariaDB+WordPress ciphertext-only GitHub Release backup, full readback, private isolated no-egress restore, real IONOS provider snapshot inventory, daily schedule and monitor once formally accepted"
+    "New GH-04 synthetic E2E code exists only in stacked Draft PR #19; DO NOT merge without approval. GitHub GET test/orgavela-github-release-o03 currently protected=false: operator must protect exactly this branch and verify no-bypass/PR restrictions before storing GH_TOKEN in any accessible CircleCI Context",
+    "After new test branch protected, operator replaces OrgaVela CircleCI context expression (currently main-only) to allow ONLY test/orgavela-github-release-o03 and no SSH debug/untrusted configurations; confirm Free-Credits/project restrictions",
+    "After GH-02 accepted, operator creates time-limited repo-scoped fine-grained PAT exclusively for private janjrre/orgavela-backups Contents read/write, enters directly as GH_TOKEN into OrgaVela-only CircleCI context; no sharing or Dreamloud reuse",
+    "Once confirmed safe, operator can manually trigger parameter enable_synthetic_github_release_e2e=true on exact config+checkout test branch; synthetic temporary GPG key will be created in CI, no operator PC; test remote SHA256/immutable release/independent synthetic restore, then revoke test token",
+    "Only for future REAL WP+MariaDB backup: persistent owner-controlled offline recovery private key and independent backup needed first (GH-03); GH-06 data backup and GH-07 real isolated restore still not attempted",
+    "IONOS real backup recovery points and scheduled regular backups must be separately verified after real restore before O03/B04 can pass"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
