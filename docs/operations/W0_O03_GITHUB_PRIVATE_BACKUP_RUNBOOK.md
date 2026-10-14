@@ -131,3 +131,25 @@ Dieser Schritt ist eine **lokale Betreiberaktion**, keine Schlüsselgenerierung 
    Wenn Installation oder Test fehlschlägt, kein produktives Setup, sondern Fehlermeldung **ohne** privaten Schlüsselinhalt dokumentieren.
 
 **Abnahmelogik:** GH-03 erst nach Nutzerbestätigung des echten privaten Offline-Schlüssels, Wiederherstellungszweikopie und erfolgreichem synthetischem lokalen Roundtrip; dabei die privaten Dateien nicht an den Assistenten senden. Nur die öffentliche `age1…`-Adresse ist später für die Verschlüsselungsjobs erforderlich. GH-04 (synthetischer Release-Upload) und GH-06/07 (echte Datensicherung und privater Restore) bleiben separat offen.
+
+
+## 9. GH-03 ohne PC – GitHub-Token ≠ Entschlüsselungsschlüssel (14.10.2026, Beratungsnachtrag)
+
+**Betreiberfrage:** Kein PC verfügbar; kann das verschlüsselte Backup stattdessen nur mit einem GitHub-Token eingerichtet werden?
+
+**Verbindliche Unterscheidung:** Ein GitHub fine-grained PAT mit ausschließlich `Contents: Read and write` auf dem separaten **privaten** `janjrre/orgavela-backups` authentifiziert **Upload/Download von GitHub-Releases**. Es erzeugt **keine eigenständige, offline wiederherstellbare Sicherungsverschlüsselung** und darf **nicht als Encryption Key oder einziges Recovery-Geheimnis** benutzt werden. Repository-`private`-Sichtbarkeit ist Zugriffssteuerung, kein Ersatz für die beschlossene `age`-Verschlüsselung **vor** Upload. Ein nur in GitHub/CircleCI gespeicherter privater Recovery-Key wäre vom gleichen Account-Ausfall betroffen und erfüllt GH-03 nicht.
+
+**Telefon-/iPhone-Option (nur nach Betreiberentscheidung):** Die kostenlose [iSH-Shell für iOS](https://ish.app/) läuft auf dem iPhone mit lokalem Alpine-Linux-Terminal. Offizielle [`age`-Installationsanleitung](https://github.com/FiloSottile/age#installation) nennt `apk add age` für Alpine. In iSH könnte man zunächst **ohne echte Secrets** die Verfügbarkeit testen:
+
+```sh
+apk update
+apk add age
+age --version
+age-keygen --version
+```
+
+Dies ist noch **kein nachgewiesener iSH/age-Lauf** und kann je nach App-/Alpine-Paketstand scheitern. Erst nach erfolgreicher Installation lokal in einer sicheren App-Umgebung `age-keygen -o orgavela-private-age-key.txt` und `age-keygen -y orgavela-private-age-key.txt` verwenden. Den privaten Schlüssel **nicht** in GitHub, Chat, CircleCI, iCloud Drive oder einem sonstigen Cloud-/App-Sync-Ordner speichern. Eine nur in der iSH-App verbleibende Datei kann bei App-Löschung/Telefonverlust verloren gehen; der Schutz durch iPhone-Sperrcode alleine ersetzt keine **zweite getrennte, verifizierte Offline-Recovery-Kopie**. Diese zweite Kopie kann ggf. erst bei Zugriff auf ein gesichertes physisches Medium erstellt werden. **Bis dahin nur unverbindliche synthetische Kryptoexperimente, keine echten WordPress-/DB-Backups oder automatisierten CI-Secrets aktivieren.** Auf mobilen Geräten besondere Vorsicht bei Copy/Paste, Screenshots und Debug-Logs mit privaten Identitäten.
+
+**Sichere Zwischenlösung ohne Betreiber-PC:** Assistent kann ohne Secrets/Kosten einen **rein synthetischen CI-Test mit temporärem Wegwerf-age-Schlüsselpaar** vorbereiten, der keinerlei echte WordPress-/DB-Daten sichert und dessen temporären Schlüssel ausschließlich zur Verifikation einer **nichtproduktiven** Verschlüsselungsfunktion verwendet. Ein echter GitHub-Release-Canary mit Fine-grained PAT bleibt weiterhin bis zu GH-02-Context-/Branch-Detailprüfung und GH-03 echtem sicher verwahrten Besitzer-Recovery-Key gesperrt. Empfehlung: für sofortige Fortschritte **nur Vorbereitung**, bei länger fehlendem PC optional lokales age-Setup auf dem iPhone, ansonsten lieber warten.
+
+**Status:** Keine GitHub-PATs angelegt oder gepostet, kein iSH installiert/getestet, kein age-Schlüsselpaar auf Betreibergerät generiert, kein CircleCI-Upload, keine echten Backupdaten. GH-01 bestanden; GH-02 teils nachgewiesen (Branch `main` API `protected:true`, Details unbestätigt); GH-03 offen, GH-04..08 offen; keine Abnahmen/Zähleränderungen.
