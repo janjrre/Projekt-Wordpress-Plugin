@@ -205,7 +205,16 @@
       "github_backup_secret_storage_authorized": false,
       "source_github_main_branch_protection_detail_verified": false,
       "source_github_main_branch_protection_api_access": "403 integration lacks permission",
-      "age_setup_instructions": "docs/operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md#8-gh-02-neuer-sicherheitsnachweis-und-gh-03-betreiber-schlüsseltest-13102026"
+      "age_setup_instructions": "docs/operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md#8-gh-02-neuer-sicherheitsnachweis-und-gh-03-betreiber-schlüsseltest-13102026",
+      "synthetic_release_test_key_mode": "Ephemeral disposable keypair generated inside isolated opt-in CircleCI synthetic-only job (Dreamloud parity, no operator device needed); never used for real backups",
+      "synthetic_release_test_requires_operator_private_key": false,
+      "synthetic_release_test_requires_token": true,
+      "synthetic_release_test_requires_context_protection": true,
+      "synthetic_release_test_requires_protected_branch": true,
+      "synthetic_release_transport_status": "Proposed only; no OrgaVela E2E upload; Dreamloud separate project synthetic release #78 verified success 2026-10-14",
+      "dreamloud_synthetic_reference": "https://github.com/janjrre/dreamloud-backups/releases/tag/backup-dreamloud-synthetic-circleci-78",
+      "dreamloud_synthetic_ci_reference": "https://circleci.com/gh/janjrre/dreamloud-portal/78",
+      "operator_permanent_key_needed_for_real_backup": true
     },
     {
       "id": "O04",
@@ -590,15 +599,17 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "Source GitHub main branch protected=true verified. GH-02 still partial: verify effective required Pull Request, no-bypass, disable force-push/deletion via GitHub Settings UI (detail API 403), plus effective CircleCI Expression and Free usage (CircleCI UI/operator evidence); no tokens until then",
-    "Operator on trusted Windows PC install age (winget id FiloSottile.age), generate independent age private key in non-synced encrypted offline storage, copy to separate encrypted offline medium, run local synthetic encrypt/decrypt+SHA256, provide ONLY public age1... recipient or confirmation",
-    "Only after GH-02/GH-03 complete store expiring fine-grained GitHub PAT for private janjrre/orgavela-backups in project/branch-restricted CircleCI context; test fully encrypted synthetic Release with remote redownload/hash/decrypt",
-    "Then real consistent read-only OrgaVela files + MariaDB snapshot into encrypted private GitHub Release Assets; independently download/verify and restore in isolated no-egress private clone; inspect actual IONOS provider snapshot inventory before O03/B04 acceptance"
+    "Keep GH-01 verified and GH-02 pending: confirm CircleCI Context project and expression restrictions, GitHub classic branch rule PR/no-bypass/force-push/deletion details, Free credits; do not place secret into untrusted branch",
+    "Prepare an opt-in synthetic OrgaVela CircleCI GitHub Release transport test on a protected narrowly authorized branch (or approved protected main merge), with temporary disposable age/OpenPGP test-only keypair, no real data",
+    "Owner may create expiring fine-grained GH_TOKEN scoped ONLY to private janjrre/orgavela-backups Contents read/write and set only in verified restricted OrgaVela CircleCI context (not Dreamloud token), after GH-02 security accepted",
+    "Run synthetic encrypted GitHub Release canary, full independent remote readback/hash/immutable check/temporary-key decryption; GH-04 success only from actual provider and GitHub evidence, no PC necessary",
+    "Before any real OrgaVela file/DB backup, operator must hold independently offline retained persistent private recovery key and second secure recovery copy, and prove local decrypt GH-03 (PC or secure mobile method), only public key to CircleCI",
+    "Then consistent OrgaVela MariaDB+WordPress ciphertext-only GitHub Release backup, full readback, private isolated no-egress restore, real IONOS provider snapshot inventory, daily schedule and monitor once formally accepted"
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.11",
+  "masterplan_version": "2.12",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
