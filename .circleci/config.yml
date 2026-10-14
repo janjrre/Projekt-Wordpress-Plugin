@@ -1,6 +1,8 @@
-# OrgaVela W0/O03: CircleCI Free connection pilot.
-# ONLY this dedicated branch. NO secrets, Drive, IONOS, deployments,
-# production data, schedules, caches or artifacts.
+# OrgaVela W0/O03: original secret-free CircleCI offline connection pilot,
+# plus an opt-in synthetic-only GitHub Releases upload/restore experiment.
+# No production data, IONOS access, deploys, schedules, caches or artifacts.
+# Only the manually approved isolated canary job can reference the restricted GH_TOKEN,
+# and ONLY after branch protection and effective Context restrictions are verified.
 version: 2.1
 
 # Manual operator-only synthetic test. Default false: no secret-backed job on push/PR.
