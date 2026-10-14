@@ -1,0 +1,27 @@
+# OrgaVela – W0/O03 GH-04: synthetischer GitHub-Release-E2E (nur Entwurf)
+
+**Stand 14.10.2026.** Eigenständige sichere Adaption der **synthetischen** Dreamloud-Testmethode in der OrgaVela-Codebasis; **kein produktives Backup**, keine Übernahme von Dreamloud-Zugangsdaten oder -Backupdateien. In diesem Branch existieren noch **keine Live-Test- oder Release-Ergebnisse**.
+
+## Funktionsweise
+
+- `.circleci/config.yml` enthält `enable_synthetic_github_release_e2e` als **Boolean mit `default:false`**. Ein normaler Push/PR kann den geheimnistragenden Workflow nicht auslösen.
+- Der einzige angegebene Branch für den *manuell aktivierten* E2E-Job ist `test/orgavela-github-release-o03`; der einzige Context heißt `orgavela-backup-releases`. Das Skript kontrolliert CircleCI Owner, Projektnamen und Branch zusätzlich zur YAML-Branchliste.
+- `scripts/ci/orgavela-github-release-remote-e2e.sh` erzeugt **nur künstlichen Text** und ein **temporäres OpenPGP/GPG-Keypair in einem temporären Runner-Verzeichnis**. Kein realer OrgaVela-/IONOS-Zugriff, keine reale Datenbank, keine Personen- oder Minderjährigendaten.
+- `scripts/ci/orgavela-upload-github-release-synthetic.sh` akzeptiert ausschließlich `janjrre/orgavela-backups` und `orgavela-synthetic-...`, prüft `private`/nicht archiviert, echte OpenPGP-Pakete, SHA256, GitHub-Assetgröße unter 2 GiB, neue eindeutige Tag-ID und keine Overwrites. Über `gh release create --draft` mit drei Assets (verschlüsseltes TAR, SHA256, Manifest) werden die Dreamloud-V3-GitHub-Draft-Tag-Fehler vermieden: Draft/Assets per numerischer REST-ID abfragen, **alle** Bytes vor/nach dem Publish vollständig herunterladen und Hash prüfen; erst dann per numerischer ID publish.
+- Das Hauptskript verlangt nach Veröffentlichung `immutable=true`, lädt die drei Assets **separat** erneut über den veröffentlichten Tag herunter und prüft synthetische Entschlüsselung, Manifest und Checksums. Der temporäre private Testschlüssel wird **nicht** in GitHub/Context/Artifacts/Logs abgelegt und bei Jobende aus dem temporären Dateisystem entfernt.
+
+## Ausdrückliche Vorbedingungen vor echtem Live-Test mit GitHub-Token
+
+1. **GitHub-Branchschutz:** `test/orgavela-github-release-o03` ist **neu** und braucht einen tatsächlichen GitHub-Branchschutz mit no-bypass/keine untrusted Pushes/Force-Push/Löschen; Branch und HEAD danach per GitHub GET `/branches/{branch}` `protected=true` prüfen. Ohne diese unabhängige Bestätigung **kein** Token in erreichbaren CircleCI-Context und kein Test.
+2. **CircleCI Context:** Existing `orgavela-backup-releases` muss Project Restriction **nur** auf `janjrre/Projekt-Wordpress-Plugin` behalten, und die **einzige aktive Expression** auf den **neu geschützten Testbranch** begrenzen, beispielsweise `pipeline.git.branch == "test/orgavela-github-release-o03" and not job.ssh.enabled and not (pipeline.config_source starts-with "api")`, sofern nach CircleCI-Projektbedingungen getestet. Nicht zusätzlich `main` zulassen und vor Verifikation keine Secret-Nutzung. GitHub-App-/Fork-/PR-/Konfigurationszugriff prüfen, nicht nur Branchfilter.
+3. **CircleCI Free-Kontingent:** Usage/Free-Credits prüfen, keine Kostenfreigabe.
+4. **Eigener GitHub-PAT ausschließlich für OrgaVela:** Ablaufdatum kurzfristig, Resource owner `janjrre`, `Only select repositories` → `orgavela-backups`, `Contents: Read and write`; GitHub-Token **nur** direkt im nun geschützten OrgaVela-CircleCI-Context als **`GH_TOKEN`**. **Nicht** hier, im Repo, Chat oder GitHub-Issues posten; nie Dreamloud-Token wiederverwenden. GitHub-Release-Immutability in der **Backup-Repo-UI aktivieren/verifizieren**; Test schlägt bei `immutable!=true` fehl und lässt Release ggf. als Diagnoseobjekt zurück.
+5. **Einmaliger manueller Start:** CircleCI → Projekt `Projekt-Wordpress-Plugin` → Trigger Pipeline, Configuration **und** Checkout Branch exakt `test/orgavela-github-release-o03`, Parameter `enable_synthetic_github_release_e2e=true`. **Noch nicht ausführen**, solange die oben genannten Anforderungen fehlen. Jeder Live-Test kann ein eigenes neues synthetisches GitHub Release erzeugen und etwas CircleCI-Free-Credits verbrauchen; keine automatische Retention/Löschung.
+
+## Abnahmekriterien und offener Stand
+
+Aus CircleCI nur exakt geprüften Job/Commit-Status übernehmen, GitHub-Release-REST-API unabhängig auf **`private`, `draft=false`, `immutable=true`, drei `state=uploaded`-Assets** prüfen, synthetische Remote-SHA256 und unabhängigen Restore beweisen. Nach Erfolg den temporären Test-PAT widerrufen/löschen und CircleCI Context Secret entfernen. **Das sind GH-04a-Testbelege, keine echten GH-03-/GH-06-/GH-07-Nachweise.** Für echte WordPress-Dateien/MariaDB darf der **flüchtige Testschlüssel niemals** benutzt werden: vorher dauerhaften Betreiber-Recovery-Key außerhalb GitHub/CircleCI anlegen, zweite Offlinekopie und lokale Restoreprobe.
+
+**Stopp und Rollback:** Bei Sicherheitslücken, 401/403, öffentlichen Zielrepos, falschem Branch, fehlendem Ciphertext, Hashfehler, ungeschütztem Release oder Quota/Creditproblemen sofort abbrechen. Niemals bestehende Releases automatisiert löschen. Keine produktiven Daten oder IONOS-Änderungen.
+
+[Normativer Masterplan – Änderung v2.12 im separaten Draft PR #18](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/18) · [Basis-CircleCI-Pilot Draft PR #17](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/17). **Dieser Codebranch ist bis zur separaten Betreiber-Mergefreigabe ebenfalls ungemergt.**
