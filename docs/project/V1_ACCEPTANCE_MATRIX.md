@@ -158,3 +158,16 @@ Bewusst **nicht** B04/R03 als grün zählen. [Operatives O03-Runbook](../operati
 | IONOS-OrgaVela-Vertragsbackups und konkrete Restorepunkte im Hosting-Konto überprüft | **Offen**, allgemeine Anbieterangaben genügen nicht |
 
 Abnahme nur bei belegtem GH-01…GH-07 und tatsächlichem IONOS-Recoveryinventar. [Masterplan v2.11](../operations/V1_ACCEPTANCE_PLAN.md) · [Maschinenstatus v2.11](../operations/V1_PROGRESS.json); Release-Gates (darunter R03 und R15) bleiben ausdrücklich offen. Keine Datensicherungs- oder Löschaktivität in diesem Matrix-Nachtrag.
+
+
+### 14.10.2026 – GH-03/GH-04 Reihenfolge für rein synthetischen GitHub-Release-Test korrigiert (Masterplan v2.12)
+
+| Teilgate | Evidenz/Anforderung | Stand |
+|---|---|---|
+| Externes Referenzverfahren Dreamloud (nicht auf OrgaVela anrechenbar) | [Echtes privates synthetisches `immutable=true` Release #78](https://github.com/janjrre/dreamloud-backups/releases/tag/backup-dreamloud-synthetic-circleci-78), [CircleCI #78 success](https://circleci.com/gh/janjrre/dreamloud-portal/78); temporär erzeugtes CI-GPG-Keypair mit ausschließlich künstlichen Daten, `GH_TOKEN` nur Upload-Berechtigung | **Referenz nachgewiesen, kein OrgaVela-Gate** |
+| OrgaVela GH-02 (geschützter Quellbranch+Context+Free-Credits) | Projekt-Context und `main protected=true` teilweise belegt; Restriktions-/PR-/No-Bypass-/Fork-Details nicht vollständig geprüft, testbranch-/Context-Abgleich offen | **Weiter offen vor Secret-Nutzung** |
+| OrgaVela GH-04a synthetischer verschlüsselter Remote-Release-Canary | Darf mit **nur temporärem CI-Test-Schlüsselpaar**, eigenem eingeschränktem `GH_TOKEN` auf dem privaten `janjrre/orgavela-backups`, manuellem Opt-in, vollständigem Readback/SHA/Immutable-Release/Restore getestet werden – **kein** Betreiber-PC nötig | **Noch nicht ausgeführt; GH-02 Voraussetzung, permanenter GH-03-Key keine Voraussetzung** |
+| OrgaVela GH-03 dauerhafter Betreiber-Recovery-Key | Echter privater Schlüssel muss **vor GH-06** außerhalb CI/GitHub erstellt, mit zweiter getrennter Offline-Kopie/Entschlüsselungsprobe gesichert werden; niemals temporärer CI-Key für reale Daten | **Offen; zwingend vor echtem Backup** |
+| OrgaVela GH-06/GH-07 (echte WordPress-Dateien+MariaDB und isolierter Restore) | Nur mit dauerhaftem Betreiber-Empfänger, echter isolierter Wiederherstellung und real geprüftem IONOS-Backupinventar abnahmefähig | **Offen; B04/R03 weiter gesperrt** |
+
+Diese Änderung lockert **ausschließlich** die Test-Voraussetzung für künstliche Daten, nicht die Verschlüsselungs-, Restore- oder Datenschutzpflichten bei Produktivdaten. Kein Merge und keine formale Abnahme ausgelöst.
