@@ -3,6 +3,12 @@
 # production data, schedules, caches or artifacts.
 version: 2.1
 
+# Manual operator-only synthetic test. Default false: no secret-backed job on push/PR.
+parameters:
+  enable_synthetic_github_release_e2e:
+    type: boolean
+    default: false
+
 jobs:
   offline-connection-smoke:
     docker:
@@ -37,6 +43,36 @@ jobs:
             done
             python scripts/ci/orgavela-circleci-offline-smoke.py
 
+
+  # NEVER a production job. Requires a separately protected test branch,
+  # restricted CircleCI context and explicit manual boolean pipeline parameter.
+  synthetic-github-release-e2e:
+    docker:
+      - image: cimg/python:3.12
+    resource_class: small
+    working_directory: ~/project
+    steps:
+      - checkout
+      - run:
+          name: Synthetic encrypted archive to private GitHub Release with full readback
+          no_output_timeout: 5m
+          command: |
+            set +x
+            set -euo pipefail
+            umask 077
+            [[ "${CIRCLE_PROJECT_USERNAME:-}" == "janjrre" ]]
+            [[ "${CIRCLE_PROJECT_REPONAME:-}" == "Projekt-Wordpress-Plugin" ]]
+            [[ "${CIRCLE_BRANCH:-}" == "test/orgavela-github-release-o03" ]]
+            [[ -n "${GH_TOKEN:-}" ]] || { echo 'Restricted test token missing' >&2; exit 1; }
+            # The test context must never carry IONOS or recovery secrets.
+            for secret_name in IONOS_SSH_HOST IONOS_SSH_USER IONOS_SSH_PASSWORD SFTP_HOST SFTP_PASSWORD SFTP_USER SSH_PRIVATE_KEY ORGAVELA_BACKUP_PRIVATE_KEY ORGAVELA_AGE_PRIVATE_KEY GOOGLE_DRIVE_TOKEN_JSON; do
+              [[ -z "${!secret_name:-}" ]] || { echo 'Production/Cloud/Key secret unexpectedly present' >&2; exit 1; }
+            done
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends gh gnupg jq
+            export ORGAVELA_GITHUB_RELEASE_E2E_APPROVED=YES
+            bash scripts/ci/orgavela-github-release-remote-e2e.sh
+
 workflows:
   connection-pilot-only:
     jobs:
@@ -45,3 +81,15 @@ workflows:
             branches:
               only:
                 - ci/circleci-free-pilot-o03
+
+  # Never auto-run: requires explicit manual CircleCI pipeline parameter true.
+  synthetic-github-releases-e2e-manual:
+    when: << pipeline.parameters.enable_synthetic_github_release_e2e >>
+    jobs:
+      - synthetic-github-release-e2e:
+          context:
+            - orgavela-backup-releases
+          filters:
+            branches:
+              only:
+                - test/orgavela-github-release-o03
