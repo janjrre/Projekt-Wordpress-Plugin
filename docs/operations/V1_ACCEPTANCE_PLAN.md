@@ -1,6 +1,6 @@
 # OrgaVela / UOP Core – Verbindlicher Masterplan bis zur V1-Abnahme
 
-**Version:** 2.15 | **Bestandsaufnahme:** 12.10.2026 | **Status:** aktiv; V1 **nicht** abgenommen  
+**Version:** 2.16 | **Bestandsaufnahme:** 12.10.2026 | **Status:** aktiv; V1 **nicht** abgenommen  
 **Aktuelle W0/O03-Testreihenfolge (Abgleich Dreamloud 14.10.2026):** Synthetischer CI-GitHub-Release-Test darf nach bestätigtem Context-/Branchschutz mit **ephemerem CI-Testschlüssel und eigenem repo-beschränktem GH_TOKEN** ohne Betreiber-PC laufen; dauerhafter Besitzer-Recovery-Key ist erst vor **echten** OrgaVela-Backups zwingend. [Nachtrag v2.12](#w0o03-gleiches-synthetisches-github-token-verfahren-wie-bei-dreamloud-masterplan-v212-14102026).  
 **Aktuell geltendes O03-Backupziel (Betreiberentscheid 13.10.2026):** nur **IONOS-Sicherungen** plus **separates privates GitHub-Repository mit vorverschlüsselten Release-Assets**. Die frühere Google-Drive-Entscheidung in historischen Nachträgen ist **widerrufen**; Details: [O03 GitHub-Backup-Runbook](W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md).  
 **Quellenhierarchie:** Phase 3 Specification Freeze > Phase 2 V1-Spezifikation > Phase 1 Produktstrategie; neuere freigegebene ADRs ergänzen den Freeze, ersetzen ihn nicht stillschweigend.  
@@ -623,3 +623,31 @@ Der aktuelle Draft-[PR #11](https://github.com/janjrre/Projekt-Wordpress-Plugin/
 **Formale Abnahmeentscheidung:** Sicherheits-Konfigurationsschritte GH-02a–c dokumentiert als erfolgreich bzw. vom Betreiber bestätigt, **GH-02 insgesamt weiter `partial`/nicht formal `accepted`**, weil GH-02d offen. **Bis zur ausdrücklichen Free-/Fork-Bestätigung keinen `GH_TOKEN` eintragen, keine CircleCI-E2E starten.** Danach kann GH-02 ohne weiteren Code-Merge abgenommen werden. Erst im separaten GH-04 ein kurzlebiges auf `janjrre/orgavela-backups` begrenztes Upload-PAT erstellen, Job manuell mit ausdrücklichem Param starten, künstliche Archivdaten/GPG-Wegwerfidentität, private immutable GitHub Release Assets, Hash-/Remote-Download-/Restore-Beweise und Tokenwiderruf. Das ist weiterhin **kein reales Backup**. Für echte Daten GH-03 (dauerhafter Offline-Recovery-Key/Entscheid age vs OpenPGP) und GH-05–GH-08 separat.
 
 **V1-Zähler bleiben 62/71 implementierte historische Pakete, M0–M7 0/8 abgenommen, P4 0/4, R01–R18 0/18; W0/O03 weiter offen; kein Merge, keine WordPress-/Dreamloud-/Produktionsänderung oder Kosten.** Operative Checkliste: [Runbook GH-02 §11](W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md); Zählwahrheit: [V1_PROGRESS.json](V1_PROGRESS.json); Journal: [ASSISTANT_WORK_LOG.md](ASSISTANT_WORK_LOG.md).
+
+
+## W0/O03 – GH-02 formale Sicherheits- und Kostenabnahme; Übergang zu GH-04 (Masterplan v2.16, 15.10.2026)
+
+**Entscheidung:** **GH-02 ABGENOMMEN (accepted)** nach Abschluss aller sechs dokumentierten Checkpunkte und zusätzlich bestätigtem Fork-PR-Secret-Verbot. Die Abnahme basiert ausdrücklich auf einer **Mischung unabhängiger technischer und authentischer Betreiber-UI-Nachweise**, nicht auf erfundenem CircleCI-Admin-API-Zugriff.
+
+| GH-02-Kontrolle | Ergebnis | Tatsächliche Belegart |
+|---|---|---|
+| GitHub-Testbranch exakt `test/orgavela-github-release-o03` geschützt | **BESTANDEN** | Unabhängiger GitHub-Branch-GET: `protected=true`, `protection.enabled=true`, SHA `a03b0e079ad0f8bd782574abd5b0ed581bf3c12a` unverändert |
+| GitHub `Require PR`, `No bypass`, Force Push/Delete aus | **BESTANDEN** | Betreiber hat konkrete GitHub-Einzelregeln im UI kontrolliert; Detail-GET für GitHub App weiterhin 403 |
+| CircleCI-Context `orgavela-backup-releases` nur OrgaVela-Projekt | **BESTANDEN** | Betreiber bestätigt Project Restriction im CircleCI-UI |
+| CircleCI-Expression exakt Testbranch, `not job.ssh.enabled`, `not (... config_source starts-with "api")`, alte `main`-Freigabe ersetzt | **BESTANDEN** | Betreiber hat neue Expression gespeichert und die zuvor beschriebene sichere Umstellung bestätigt; keine selbständige CircleCI-Admin-API-Lesung |
+| CircleCI `Plan=Free` | **BESTANDEN** | Betreiber bestätigt ausdrücklich den Free-Tarif. Die verbleibenden Linux-Open-Source-Extra-Credits sind im Anbieter-UI nicht einsehbar; keine feste Kontingentzahl behaupten |
+| Fork-PR `Pass secrets to builds from forked pull requests` deaktiviert | **BESTANDEN** | Betreiber bestätigt ausdrücklich `disabled` im Projekt |
+| Synthetischer Workflow nur nach explizitem Parameter, Default aus, auf exakt den geschützten Branch beschränkt | **BESTANDEN** | Unabhängig gelesene `.circleci/config.yml` auf aktuellem unverändertem Testbranch |
+
+**GH-02 ist damit ein Vorbereitungs-/Sicherheits-Gate, nicht die Abnahme eines Backups oder irgendeines Release-Gates R01–R18.** Bei jeder Änderung an Branchschutz, Context, Free-Tarif, Fork-Secret-Option oder geschütztem Job erneut **fail-closed** kontrollieren. Die Einzeleinstellungen können technisch nicht live von der GitHub-App ausgelesen werden; daher Betreiberbestätigung ausdrücklich an die jeweilige UI-Konfiguration binden.
+
+**Exakt nächster Schritt: GH-04 synthetischer verschlüsselter GitHub-Releases-Canary.** Die Implementierung liegt vorbereitet, aber ungetestet in [Draft PR #19](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/19), ohne Merge und ohne Secrets. Vorbereitung gemäß [Backup-Runbook](W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md):
+1. Vor einer einzigen Cloud-Ausführung aktuelle Sicherheitsregeln, Quell-HEAD, private Zielrepo-URL und noch freie **kostenlose** Ausführungsmöglichkeit prüfen.
+2. Betreiber legt neuen **ablaufenden** GitHub Fine-grained PAT mit Ziel **ausschließlich `janjrre/orgavela-backups`**, Berechtigung **Contents: Read and write** an und speichert ihn **nur** als `GH_TOKEN` im eingeschränkten CircleCI-Context `orgavela-backup-releases`. Niemals hier, im Repository oder in Logs senden. Kein Wiederverwenden von Dreamloud-Credentials. Eine neue Tokenanlage ist **noch nicht erfolgt**.
+3. Danach ausdrücklich manuell den CircleCI-Job auf **`test/orgavela-github-release-o03`** mit `enable_synthetic_github_release_e2e=true` auslösen. Keine Änderung am Default, kein automatisches Scheduled Run.
+4. End-to-End: künstliche Dateien und ephemeres OpenPGP-Testschlüsselpaar; verschlüsseln, privates GitHub Release als Draft/Assets hochladen, SHA256- und API-Readback/Restore verifizieren, final auf `immutable=true` prüfen und alle synthetischen Restore-Daten getrennt testen. Nur belegter kompletter Erfolg gilt als GH-04-Abnahme.
+5. Token anschließend widerrufen und `GH_TOKEN` aus CircleCI Context entfernen; bei Fehler keine ungeprüften Draft-Releases als Erfolg bewerten, keine Rechte erweitern. **Keine WordPress-, DB-, IONOS-, Minderjährigen- oder anderen Echtdateien.**
+
+**Danach nicht überspringen:** GH-03 produktiver langlebiger Owner-Recovery-Key mit zwei unabhängigen Offline-Kopien und verbindlicher Kryptoformatentscheidung (synthetisches OpenPGP darf nicht als Eigentümer-Key gelten); GH-05 echte konsistente Capture-Architektur; GH-06 echter vorverschlüsselter Offsite-Snapshot; GH-07 unabhängiger isolierter Full-Restore; GH-08 erst danach Überwachung/Retention/Schedule. IONOS-Backups separat.
+
+**Unveränderter V1-Zählstand:** 62/71 historische Coding-Pakete implementiert; 0/8 Gesamtmilestones, 0/4 P4, 0/18 Release-Gates angenommen, kein PR-Stack gemergt. W0/O03 und V1 weiter offen. Keine CI-Tests, keine Tokens/Secrets, keine reale Backuperstellung, keine Live-/Dreamloud-Änderung, keine Kosten oder neuen Verträge in dieser GH-02-Abnahmerunde. Belege [V1_PROGRESS.json](V1_PROGRESS.json), [V1_STATUS.md](../project/V1_STATUS.md), [GH-02-Checkliste](W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md), [Arbeitsjournal](ASSISTANT_WORK_LOG.md).
