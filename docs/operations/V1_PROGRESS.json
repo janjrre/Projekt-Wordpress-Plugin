@@ -722,6 +722,20 @@
     "dreamloud_production_conversion_draft_pr": 450,
     "synthetic_encryption_method": "ephemeral OpenPGP/GPG",
     "planned_real_recovery_encryption_format": "pending documented choice: age or OpenPGP",
-    "data_written_or_backup_executed_in_audit": false
+    "data_written_or_backup_executed_in_audit": false,
+    "pr11_current_head": "a34f4195371f9edf1fa24ea4abdef1fd479f2c19",
+    "pr11_current_head_workflow_runs": [
+      {
+        "id": 38253835618,
+        "name": "Foundation and persistence",
+        "conclusion": "success"
+      },
+      {
+        "id": 38253835549,
+        "name": "M6-10 disposable HTTPS and Mailpit E2E",
+        "conclusion": "success"
+      }
+    ],
+    "pr11_gate_note": "Those two CI workflows green at exact PR #11 HEAD; PR #11 still Draft, not merged or formal V1/R03 release acceptance."
   }
 }
