@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-15",
-  "snapshot_basis": "2026-10-15 GH-02 accepted on explicitly mixed evidence: directly verified protected=true on test/orgavela-github-release-o03 HEAD a03b0e079ad0f8bd782574abd5b0ed581bf3c12a and static CircleCI synthetic opt-in default false; operator attested all GitHub individual protection rules, CircleCI project-only Context and test-branch/no-SSH/no-API expression, Free plan, and forked-PR secrets disabled. Admin detail APIs not available, actual CircleCI OSS credits remaining not observable. GH-04 remains unrun, private backup repository releases=[]; no real backups, tokens, WordPress or restore actions. Acceptance is GH-02 preflight only, not O03/Release gate.",
+  "snapshot_basis": "2026-10-15 GH-04 started after GH-02 accepted. Direct GET: protected synthetic test branch at a03b0e079ad0f8bd782574abd5b0ed581bf3c12a; PR #19 still Draft, janjrre/orgavela-backups private and zero releases. In isolated ephemeral local runtime performed artificial 2-line TAR OpenPGP encryption/decryption in separate GPG keyrings, sha256, byte-exact archive and data extraction recovery: PASS. Not the full PR #19 CI script, no GitHub Release upload, token, CI run or production capture. GH-04 pending token/operator-only CircleCI context and manual opt-in run. GH-03 and real backup/restore gates still open.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -251,7 +251,20 @@
       "gh02_fork_pr_secrets_disabled_operator_confirmed": true,
       "circleci_free_credits_verification_note": "CircleCI OSS additional credits remaining are not shown in user UI. Operator confirms CircleCI Free plan. Not evidence of specific remaining credit balance or execution entitlement.",
       "circleci_context_verification_note": "Operator UI attestation, no CircleCI Admin/API read. GH-02 accepted on explicitly mixed evidence; never claim independently verified.",
-      "gh02_formal_signoff": "2026-10-15 operator confirmed all admin UI/Free/fork settings; GH-02 security prerequisites met for GH-04 synthetic-only canary."
+      "gh02_formal_signoff": "2026-10-15 operator confirmed all admin UI/Free/fork settings; GH-02 security prerequisites met for GH-04 synthetic-only canary.",
+      "gh04_started": true,
+      "gh04_started_at": "2026-10-15",
+      "gh04_local_crypto_roundtrip_status": "passed",
+      "gh04_local_crypto_roundtrip_data": "synthetic-only fixed harmless two-line text archive; no WordPress/MariaDB data",
+      "gh04_local_crypto_roundtrip_evidence": "Ephemeral GPG RSA2048 public-key encrypt TAR, duplicate ciphertext SHA256, separate GNUPGHOME private synthetic key import/decrypt, byte-for-byte tar cmp, extracted file cmp, all passed; ciphertext 537 bytes SHA256 0018ecaa027d88a4e45760fac2149707233b1d6bafe78b1c0a5ad3392fc3db0d. Temporary keys/data removed; no real cloud upload; NOT a PR #19 full-script test.",
+      "gh04_actual_circleci_run_id": null,
+      "gh04_actual_github_release_url": null,
+      "gh04_cloud_transport_verified": false,
+      "gh04_remote_only_restore_verified": false,
+      "gh04_immutable_release_verified": false,
+      "gh04_formal_accepted": false,
+      "gh04_blocker": "Requires brand-new short-lived GitHub fine-grained PAT scoped only to private janjrre/orgavela-backups, Contents: Read and write, entered directly into restricted CircleCI orgavela-backup-releases Context; then manual operator-only test branch pipeline enable_synthetic_github_release_e2e=true. ChatGPT GitHub connector cannot create/store PAT or run CircleCI provider pipeline. No production data.",
+      "gh04_next": "Operator sets GH_TOKEN in CircleCI protected context via GitHub token with expiration; confirm only this repo and no other secrets; launch manual pipeline parameter on test/orgavela-github-release-o03; then assistant reads CircleCI run/proof + private Github synthetic immutable release, revokes credentials as possible."
     },
     {
       "id": "O04",
@@ -636,7 +649,7 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "GH-04 (after GH-02 accepted): operator creates expiring fine-grained GitHub PAT scoped exclusively to private janjrre/orgavela-backups, Contents R/W, enters GH_TOKEN only inside restricted orgavela-backup-releases CircleCI Context. Review untrusted triggers and job, then manual opt-in test on protected test/orgavela-github-release-o03 with parameter enable_synthetic_github_release_e2e=true. Verify immutable private synthetic release asset readback/hashes and simulated decrypt/restore; revoke PAT after. No real WP/MariaDB data.",
+    "GH-04 Cloud E2E BLOCKED on operator-only token: local isolated synthetic encrypted TAR/restore PASSED, no release/circleci run. Create short-lived fine-grained PAT on private janjrre/orgavela-backups with Contents R/W; save only as GH_TOKEN in restricted CircleCI orgavela-backup-releases. Manually run pipeline on protected test/orgavela-github-release-o03 parameter enable_synthetic_github_release_e2e=true, then verify immutable private release ID/sha256/readback/independent recovery. Revoke PAT after. No real backups.",
     "New GH-04 synthetic E2E code exists only in stacked Draft PR #19; DO NOT merge without approval. GitHub GET test/orgavela-github-release-o03 currently protected=false: operator must protect exactly this branch and verify no-bypass/PR restrictions before storing GH_TOKEN in any accessible CircleCI Context",
     "After new test branch protected, operator replaces OrgaVela CircleCI context expression (currently main-only) to allow ONLY test/orgavela-github-release-o03 and no SSH debug/untrusted configurations; confirm Free-Credits/project restrictions",
     "After GH-02 accepted, operator creates time-limited repo-scoped fine-grained PAT exclusively for private janjrre/orgavela-backups Contents read/write, enters directly as GH_TOKEN into OrgaVela-only CircleCI context; no sharing or Dreamloud reuse",
@@ -647,7 +660,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.16",
+  "masterplan_version": "2.17",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
@@ -777,6 +790,8 @@
     "gh02_free_plan_operator_attested": true,
     "gh02_fork_secrets_disabled_operator_attested": true,
     "gh02_gh04_automatically_authorized": false,
-    "gh04_actual_synthetic_release_uploaded": false
+    "gh04_actual_synthetic_release_uploaded": false,
+    "gh04_local_crypto_roundtrip_verified": true,
+    "gh04_next_requires_operator_token": true
   }
 }
