@@ -1,8 +1,8 @@
 {
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
-  "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-13 explicit operator backup strategy switch: no Google Drive, only existing IONOS contract backup plus separate private GitHub repository GitHub Releases ciphertext. Google-Drive workflow removed; existing secure private Google Drive folder unused, not deleted. Desired janjrre/orgavela-backups repository not yet confirmed/created; connection cannot create repositories or secrets. No real backup or isolated restore.",
+  "snapshot_date": "2026-10-15",
+  "snapshot_basis": "2026-10-15 read-only GitHub re-audit: private orgavela-backups created and verified (no releases); main protected=true; synthetic PR #19 test branch still unprotected, 0 commit statuses; PR #17 offline CircleCI green; normative main plan remains v2.11 while updates through v2.13 are only on unmerged Draft PR #18. Dreamloud has historic real Actions OpenPGP/S3 backup capture and successful synthetic CircleCI GitHub release #78, but no verified daily real CircleCI-to-GitHub Releases production backup. No new WordPress live probe, real OrgaVela backup or isolated restore in this audit.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -178,11 +178,11 @@
       "circleci_pilot_provider_success": true,
       "google_drive_backup_strategy_active": false,
       "google_drive_workflow_removed": true,
-      "github_backup_target_proposed": "janjrre/orgavela-backups (verified private via GitHub get_repo, main, push/admin permission, 2026-10-13)",
+      "github_backup_target_proposed": "janjrre/orgavela-backups (verified private, main, 2026-10-15)",
       "github_backup_target_private_verified": true,
       "github_backup_repository_created": true,
       "github_backup_release_assets_uploaded": false,
-      "github_backup_offsite_strategy": "encrypted age release assets; each <2GiB; optional split; private repo; no backup commits",
+      "github_backup_offsite_strategy": "private encrypted GitHub Release assets, not git history. Synthetic PR #19 uses ephemeral OpenPGP; production age/OpenPGP is not yet decided.",
       "github_backup_api_token_configured": false,
       "github_backup_ciphertext_canary_verified": false,
       "github_backup_real_restore_verified": false,
@@ -221,12 +221,16 @@
       "synthetic_ci_base_branch": "ci/circleci-free-pilot-o03",
       "synthetic_ci_code_prepared": true,
       "synthetic_ci_test_branch_protected": false,
-      "synthetic_ci_test_branch_protection_read": "GET /branches/test/orgavela-github-release-o03 protected=false as of 2026-10-14",
+      "synthetic_ci_test_branch_protection_read": "GET /branches/test/orgavela-github-release-o03 protected=false 2026-10-15, HEAD a03b0e079ad0f8bd782574abd5b0ed581bf3c12a",
       "synthetic_ci_circleci_context_expression_matches_test_branch": false,
       "synthetic_ci_manual_parameter": "enable_synthetic_github_release_e2e; default false",
       "synthetic_ci_target": "janjrre/orgavela-backups; private; no Dreamloud",
       "synthetic_ci_runner_tested": false,
-      "synthetic_ci_repo_release_tested": false
+      "synthetic_ci_repo_release_tested": false,
+      "gh05_capture_writer_production_ready": false,
+      "openpgp_or_age_real_format_decision": "pending documented ADR; GPG only ephemeral synthetic test",
+      "github_release_inventory_checked_at": "2026-10-15",
+      "github_backup_release_count": 0
     },
     {
       "id": "O04",
@@ -621,7 +625,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.12",
+  "masterplan_version": "2.13",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
@@ -678,5 +682,46 @@
       ]
     }
   },
-  "audit_evidence_path": "docs/operations/W0_ORGAVELA_READ_ONLY_AUDIT_2026-10-12.md"
+  "audit_evidence_path": "docs/operations/W0_O03_GITHUB_DREAMLOUD_AUDIT_2026-10-15.md",
+  "current_github_audit": {
+    "date": "2026-10-15",
+    "source_main_sha": "0adacb427bd95dd87594e358ec9c6f2f5b38aae8",
+    "source_main_protected": true,
+    "source_main_branch_protection_details_independently_verified": false,
+    "main_normative_plan_version": "2.11",
+    "documentation_pr": 18,
+    "documentation_branch_plan_version": "2.13",
+    "documentation_pr_merged": false,
+    "open_pr_numbers": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      11,
+      17,
+      18,
+      19
+    ],
+    "merged_pr_count": 0,
+    "synthetic_test_pr": 19,
+    "synthetic_test_sha": "a03b0e079ad0f8bd782574abd5b0ed581bf3c12a",
+    "synthetic_test_branch_protected": false,
+    "synthetic_test_commit_statuses_count": 0,
+    "synthetic_test_completed": false,
+    "backup_repository": "janjrre/orgavela-backups",
+    "backup_repository_private": true,
+    "backup_release_count": 0,
+    "backup_real_restore_tested": false,
+    "confirmed_ionos_backup_points": false,
+    "dreamloud_real_actions_capture_historical": true,
+    "dreamloud_real_circleci_github_release_backup_proven": false,
+    "dreamloud_synthetic_circleci_build_url": "https://circleci.com/gh/janjrre/dreamloud-portal/78",
+    "dreamloud_synthetic_release_url": "https://github.com/janjrre/dreamloud-backups/releases/tag/backup-dreamloud-synthetic-circleci-78",
+    "dreamloud_production_conversion_draft_pr": 450,
+    "synthetic_encryption_method": "ephemeral OpenPGP/GPG",
+    "planned_real_recovery_encryption_format": "pending documented choice: age or OpenPGP",
+    "data_written_or_backup_executed_in_audit": false
+  }
 }
