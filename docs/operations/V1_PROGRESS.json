@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-15",
-  "snapshot_basis": "2026-10-15 latest GH-02 review after operator confirmation: GitHub branch test/orgavela-github-release-o03 protected=true and unchanged SHA a03b0e079ad0f8bd782574abd5b0ed581bf3c12a independently verified. Operator reports having saved new CircleCI Context test-branch expression, checked project-only restriction and GitHub individual branch protection options. GitHub protection detail API 403 and CircleCI admin settings cannot independently be read. Free tariff/account credit eligibility and fork-PR secret exposure not freshly checked. GH-02 formal approval pending no-cost provider plan confirmation; synthetic release test, real backups and full restore still NOT done; masterplan v2.15 only in draft PR #18.",
+  "snapshot_basis": "2026-10-15 GH-02 accepted on explicitly mixed evidence: directly verified protected=true on test/orgavela-github-release-o03 HEAD a03b0e079ad0f8bd782574abd5b0ed581bf3c12a and static CircleCI synthetic opt-in default false; operator attested all GitHub individual protection rules, CircleCI project-only Context and test-branch/no-SSH/no-API expression, Free plan, and forked-PR secrets disabled. Admin detail APIs not available, actual CircleCI OSS credits remaining not observable. GH-04 remains unrun, private backup repository releases=[]; no real backups, tokens, WordPress or restore actions. Acceptance is GH-02 preflight only, not O03/Release gate.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -193,7 +193,7 @@
       "circleci_context_security_verified": false,
       "circleci_free_credits_verified": false,
       "age_operator_private_key_verified": false,
-      "github_backup_gh02_verified": false,
+      "github_backup_gh02_verified": true,
       "github_backup_gh03_verified": false,
       "github_backup_gh02_gh03_operator_guide": "docs/operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md#6-gh-02gh-03-vorbereitung-nach-erfolgreicher-repo-erstellung-13102026",
       "circleci_context_project_restriction": "Screenshot-verified: Projekt-Wordpress-Plugin only (2026-10-13)",
@@ -231,18 +231,27 @@
       "openpgp_or_age_real_format_decision": "pending documented ADR; GPG only ephemeral synthetic test",
       "github_release_inventory_checked_at": "2026-10-15",
       "github_backup_release_count": 0,
-      "gh02_latest_review": "2026-10-15 23:09 Europe/Berlin: GitHub protected=true independently PASS, unchanged source SHA; individual branch protection and CircleCI project+expression restrictions OPERATOR-ATTESTED, not independently readable. Free plan eligibility/remaining open-source allotment (CircleCI states OSS quota not UI visible) and forked-PR secrets disabled not evidenced. GH-02 remains formal PARTIAL pending account no-cost verification plus fork-setting check. No tokens permitted.",
+      "gh02_latest_review": "2026-10-15 after user follow-up: GH-02 ACCEPTED based on direct GitHub protected=true on unchanged synthetic testbranch + CI source opt-in default false + operator-confirmed GitHub detailed rules, CircleCI project/expression, CircleCI Free plan, forked-PR secret transfer disabled. No direct API verification of Context or individual protection rules; actual Free OSS remaining credits not visible. Stop immediately if setting changes; GH-04 not run.",
       "gh02_operator_runbook_path": "docs/operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md#11-gh-02--exakte-betreiber-einstellungen-und-abnahmeprotokoll-15102026",
       "gh02_github_branch_boolean_gate_passed": true,
       "gh02_github_branch_boolean_gate_checked_at": "2026-10-15",
       "gh02_github_individual_rules_confirmed": true,
       "gh02_circleci_context_confirmed": true,
-      "gh02_operator_next": "CircleCI Plan > Plan Overview: confirm org is on Free plan (not paid/shared paid plan), no paid transfer/upgrade. Public OSS Linux free credits according to CircleCI policy; current OSS balance not shown in UI. Project Settings: ensure passing secrets to forked pull request builds is disabled. Then mark GH-02 accepted based on operator attestation + GitHub API evidence; no token before that.",
+      "gh02_operator_next": "GH-02 completed; next GH-04 synthetic-only CircleCI GitHub Release canary. Token must be new short-lived fine-grained PAT, repository janjrre/orgavela-backups only, Contents: Read and write, inserted directly into protected orgavela-backup-releases Context by operator and revoked after test. Explicit manual pipeline parameter; no real data or permanent private key. Token/API trigger must never bypass security and cannot be used before operator setup.",
       "gh02_github_individual_rules_evidence": "Operator-attested 2026-10-15: individual classic branch protection rules checked as instructed. Direct GitHub branch protection details GET 403; independent verification impossible through current GitHub integration.",
       "gh02_circleci_context_evidence": "Operator-attested 2026-10-15: orgavela-backup-releases Context new test-branch expression saved; project restriction checked. No direct CircleCI admin/API read.",
       "gh02_security_config_operator_attested": true,
       "gh02_security_config_operator_attested_at": "2026-10-15",
-      "gh02_fork_pr_secrets_disabled_verified": false
+      "gh02_fork_pr_secrets_disabled_verified": true,
+      "github_backup_gh02_status": "accepted",
+      "github_backup_gh02_acceptance_date": "2026-10-15",
+      "github_backup_gh02_acceptance_basis": "GitHub protected=true & CI opt-in source independently verified; GitHub detailed classic protections/CircleCI project restriction and expression/Free plan/fork secrets disabled operator-attested. Mixed evidence; details APIs unavailable. No token, no build, no release, no real backup.",
+      "circleci_free_plan_operator_confirmed": true,
+      "circleci_free_plan_operator_confirmed_at": "2026-10-15",
+      "gh02_fork_pr_secrets_disabled_operator_confirmed": true,
+      "circleci_free_credits_verification_note": "CircleCI OSS additional credits remaining are not shown in user UI. Operator confirms CircleCI Free plan. Not evidence of specific remaining credit balance or execution entitlement.",
+      "circleci_context_verification_note": "Operator UI attestation, no CircleCI Admin/API read. GH-02 accepted on explicitly mixed evidence; never claim independently verified.",
+      "gh02_formal_signoff": "2026-10-15 operator confirmed all admin UI/Free/fork settings; GH-02 security prerequisites met for GH-04 synthetic-only canary."
     },
     {
       "id": "O04",
@@ -627,7 +636,7 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "GH-02 final no-cost/fork preflight: GitHub branch protected=true independently verified, individual GitHub rules and CircleCI context project/new expression operator-attested. Confirm CircleCI Plan Overview Free with no paid/shared billing and Project Settings fork-PR secrets disabled. Then accept GH-02, before GH-04 token or job. Public open-source Free Linux credits up to 400,000/month per CircleCI docs, remaining OSS credits not visible in UI.",
+    "GH-04 (after GH-02 accepted): operator creates expiring fine-grained GitHub PAT scoped exclusively to private janjrre/orgavela-backups, Contents R/W, enters GH_TOKEN only inside restricted orgavela-backup-releases CircleCI Context. Review untrusted triggers and job, then manual opt-in test on protected test/orgavela-github-release-o03 with parameter enable_synthetic_github_release_e2e=true. Verify immutable private synthetic release asset readback/hashes and simulated decrypt/restore; revoke PAT after. No real WP/MariaDB data.",
     "New GH-04 synthetic E2E code exists only in stacked Draft PR #19; DO NOT merge without approval. GitHub GET test/orgavela-github-release-o03 currently protected=false: operator must protect exactly this branch and verify no-bypass/PR restrictions before storing GH_TOKEN in any accessible CircleCI Context",
     "After new test branch protected, operator replaces OrgaVela CircleCI context expression (currently main-only) to allow ONLY test/orgavela-github-release-o03 and no SSH debug/untrusted configurations; confirm Free-Credits/project restrictions",
     "After GH-02 accepted, operator creates time-limited repo-scoped fine-grained PAT exclusively for private janjrre/orgavela-backups Contents read/write, enters directly as GH_TOKEN into OrgaVela-only CircleCI context; no sharing or Dreamloud reuse",
@@ -638,7 +647,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.15",
+  "masterplan_version": "2.16",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
@@ -750,8 +759,8 @@
       }
     ],
     "pr11_gate_note": "Those two CI workflows green at exact PR #11 HEAD; PR #11 still Draft, not merged or formal V1/R03 release acceptance.",
-    "gh02_review_at": "2026-10-15T23:09:00+02:00",
-    "gh02_formally_accepted": false,
+    "gh02_review_at": "2026-10-15",
+    "gh02_formally_accepted": true,
     "gh02_admin_actions_performed": true,
     "gh02_operator_required": true,
     "gh02_individual_github_protection_rules_verified": false,
@@ -762,6 +771,12 @@
     "gh02_circleci_context_operator_attested": true,
     "gh02_context_expression_testbranch_operator_attested": true,
     "gh02_free_plan_verified": false,
-    "gh02_fork_secrets_disabled_verified": false
+    "gh02_fork_secrets_disabled_verified": false,
+    "gh02_accepted_at": "2026-10-15",
+    "gh02_accepted_evidence": "Direct GitHub branch GET and repo workflow source; operator-confirmed GitHub detailed safeguards, CircleCI Context expression/project restriction, Free plan, forked-PR secrets off. Not independently readable by integration.",
+    "gh02_free_plan_operator_attested": true,
+    "gh02_fork_secrets_disabled_operator_attested": true,
+    "gh02_gh04_automatically_authorized": false,
+    "gh04_actual_synthetic_release_uploaded": false
   }
 }
