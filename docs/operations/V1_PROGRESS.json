@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-15",
-  "snapshot_basis": "2026-10-15 refreshed GitHub GET after operator saved classic rule: synthetic CI test branch test/orgavela-github-release-o03 now protected=true, protection.enabled=true and HEAD unchanged a03b0e079ad0f8bd782574abd5b0ed581bf3c12a. Detailed protection rules GET 403, rulesets=[]; CircleCI effective context restriction, fork/SSH/API security and free credits unverified. GH-02 partial, not formally accepted. PR #19 remains Draft; no token, real backups or live CircleCI synthetic run. Earlier base audit and Dreamloud synthetic #78 remain separate historical findings.",
+  "snapshot_basis": "2026-10-15 latest GH-02 review after operator confirmation: GitHub branch test/orgavela-github-release-o03 protected=true and unchanged SHA a03b0e079ad0f8bd782574abd5b0ed581bf3c12a independently verified. Operator reports having saved new CircleCI Context test-branch expression, checked project-only restriction and GitHub individual branch protection options. GitHub protection detail API 403 and CircleCI admin settings cannot independently be read. Free tariff/account credit eligibility and fork-PR secret exposure not freshly checked. GH-02 formal approval pending no-cost provider plan confirmation; synthetic release test, real backups and full restore still NOT done; masterplan v2.15 only in draft PR #18.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -197,7 +197,7 @@
       "github_backup_gh03_verified": false,
       "github_backup_gh02_gh03_operator_guide": "docs/operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md#6-gh-02gh-03-vorbereitung-nach-erfolgreicher-repo-erstellung-13102026",
       "circleci_context_project_restriction": "Screenshot-verified: Projekt-Wordpress-Plugin only (2026-10-13)",
-      "circleci_context_expression_restriction": "Operator reports saved: pipeline.git.branch == \"main\" and not job.ssh.enabled and not (pipeline.config_source starts-with \"api\"); not independently verified",
+      "circleci_context_expression_restriction": "Operator reports new test-branch expression saved 2026-10-15: pipeline.git.branch == \"test/orgavela-github-release-o03\" and not job.ssh.enabled and not (pipeline.config_source starts-with \"api\"). Prior main-only restriction supposed to be replaced; not independently verified.",
       "circleci_context_expression_verified": false,
       "source_github_main_branch_protected": true,
       "source_github_main_branch_protection_probe": "Verified 2026-10-13 GET /repos/janjrre/Projekt-Wordpress-Plugin/branches/main: protected=true, protection.enabled=true, HEAD 0adacb427bd95dd87594e358ec9c6f2f5b38aae8; required_status_checks enforcement_level=off. GET /branches/main/protection 403 inaccessible to connector; require-PR/no-bypass/force-push/deletion rules not independently verified.",
@@ -222,7 +222,7 @@
       "synthetic_ci_code_prepared": true,
       "synthetic_ci_test_branch_protected": true,
       "synthetic_ci_test_branch_protection_read": "2026-10-15 new direct GET after operator saved branch rule: test/orgavela-github-release-o03 HEAD a03b0e079ad0f8bd782574abd5b0ed581bf3c12a; protected=true, protection.enabled=true; rulesets=[]; /protection details 403 (integration permission); individual Require PR/No Bypass/No Force Push/No Delete unverified.",
-      "synthetic_ci_circleci_context_expression_matches_test_branch": false,
+      "synthetic_ci_circleci_context_expression_matches_test_branch": true,
       "synthetic_ci_manual_parameter": "enable_synthetic_github_release_e2e; default false",
       "synthetic_ci_target": "janjrre/orgavela-backups; private; no Dreamloud",
       "synthetic_ci_runner_tested": false,
@@ -231,13 +231,18 @@
       "openpgp_or_age_real_format_decision": "pending documented ADR; GPG only ephemeral synthetic test",
       "github_release_inventory_checked_at": "2026-10-15",
       "github_backup_release_count": 0,
-      "gh02_latest_review": "2026-10-15: test branch protection flag now independently verified true, unmodified HEAD. Detailed classic branch protection rules 403 so individual require-PR/no-bypass/force-push/deletion checks remain operator-UI dependent; CircleCI Context effective expression/project/security/Free Credits not newly verified. GitHub branch flag sub-gate passed, GH-02 as a whole BLOCKED/PARTIAL. No GH_TOKEN before completion.",
+      "gh02_latest_review": "2026-10-15 23:09 Europe/Berlin: GitHub protected=true independently PASS, unchanged source SHA; individual branch protection and CircleCI project+expression restrictions OPERATOR-ATTESTED, not independently readable. Free plan eligibility/remaining open-source allotment (CircleCI states OSS quota not UI visible) and forked-PR secrets disabled not evidenced. GH-02 remains formal PARTIAL pending account no-cost verification plus fork-setting check. No tokens permitted.",
       "gh02_operator_runbook_path": "docs/operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md#11-gh-02--exakte-betreiber-einstellungen-und-abnahmeprotokoll-15102026",
       "gh02_github_branch_boolean_gate_passed": true,
       "gh02_github_branch_boolean_gate_checked_at": "2026-10-15",
-      "gh02_github_individual_rules_confirmed": false,
-      "gh02_circleci_context_confirmed": false,
-      "gh02_operator_next": "Confirm individual GitHub branch protections; in CircleCI Context orgavela-backup-releases verify OrgaVela-only project and replace main expression with pipeline.git.branch == \"test/orgavela-github-release-o03\" and not job.ssh.enabled and not (pipeline.config_source starts-with \"api\"); verify forks/PR and free credits, no GH_TOKEN yet."
+      "gh02_github_individual_rules_confirmed": true,
+      "gh02_circleci_context_confirmed": true,
+      "gh02_operator_next": "CircleCI Plan > Plan Overview: confirm org is on Free plan (not paid/shared paid plan), no paid transfer/upgrade. Public OSS Linux free credits according to CircleCI policy; current OSS balance not shown in UI. Project Settings: ensure passing secrets to forked pull request builds is disabled. Then mark GH-02 accepted based on operator attestation + GitHub API evidence; no token before that.",
+      "gh02_github_individual_rules_evidence": "Operator-attested 2026-10-15: individual classic branch protection rules checked as instructed. Direct GitHub branch protection details GET 403; independent verification impossible through current GitHub integration.",
+      "gh02_circleci_context_evidence": "Operator-attested 2026-10-15: orgavela-backup-releases Context new test-branch expression saved; project restriction checked. No direct CircleCI admin/API read.",
+      "gh02_security_config_operator_attested": true,
+      "gh02_security_config_operator_attested_at": "2026-10-15",
+      "gh02_fork_pr_secrets_disabled_verified": false
     },
     {
       "id": "O04",
@@ -622,7 +627,7 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "GH-02: GitHub test branch protected=true now independently verified, detail rules 403; operator must verify four classic branch protection options and replace CircleCI restricted context expression from main to test/orgavela-github-release-o03, confirm project/forks/SSH/API and Free Credits; no token until then.",
+    "GH-02 final no-cost/fork preflight: GitHub branch protected=true independently verified, individual GitHub rules and CircleCI context project/new expression operator-attested. Confirm CircleCI Plan Overview Free with no paid/shared billing and Project Settings fork-PR secrets disabled. Then accept GH-02, before GH-04 token or job. Public open-source Free Linux credits up to 400,000/month per CircleCI docs, remaining OSS credits not visible in UI.",
     "New GH-04 synthetic E2E code exists only in stacked Draft PR #19; DO NOT merge without approval. GitHub GET test/orgavela-github-release-o03 currently protected=false: operator must protect exactly this branch and verify no-bypass/PR restrictions before storing GH_TOKEN in any accessible CircleCI Context",
     "After new test branch protected, operator replaces OrgaVela CircleCI context expression (currently main-only) to allow ONLY test/orgavela-github-release-o03 and no SSH debug/untrusted configurations; confirm Free-Credits/project restrictions",
     "After GH-02 accepted, operator creates time-limited repo-scoped fine-grained PAT exclusively for private janjrre/orgavela-backups Contents read/write, enters directly as GH_TOKEN into OrgaVela-only CircleCI context; no sharing or Dreamloud reuse",
@@ -633,7 +638,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.14",
+  "masterplan_version": "2.15",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
@@ -745,13 +750,18 @@
       }
     ],
     "pr11_gate_note": "Those two CI workflows green at exact PR #11 HEAD; PR #11 still Draft, not merged or formal V1/R03 release acceptance.",
-    "gh02_review_at": "2026-10-15",
+    "gh02_review_at": "2026-10-15T23:09:00+02:00",
     "gh02_formally_accepted": false,
     "gh02_admin_actions_performed": true,
     "gh02_operator_required": true,
     "gh02_individual_github_protection_rules_verified": false,
     "gh02_github_protection_detail_http_status": 403,
     "gh02_ci_context_expression_verified": false,
-    "gh02_circleci_free_credits_verified": false
+    "gh02_circleci_free_credits_verified": false,
+    "gh02_github_individual_rules_operator_attested": true,
+    "gh02_circleci_context_operator_attested": true,
+    "gh02_context_expression_testbranch_operator_attested": true,
+    "gh02_free_plan_verified": false,
+    "gh02_fork_secrets_disabled_verified": false
   }
 }
