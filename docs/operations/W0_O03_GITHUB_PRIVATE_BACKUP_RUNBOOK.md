@@ -219,11 +219,11 @@ Dies ist noch **kein nachgewiesener iSH/age-Lauf** und kann je nach App-/Alpine-
 ### C. GH-02-Abnahme
 
 - [x] GitHub-Zweig `test/orgavela-github-release-o03` **protected=true** auf geprüftem HEAD. **Am 15.10.2026 unabhängig per GitHub GET bestätigt**, unveränderter HEAD `a03b0e079ad0f8bd782574abd5b0ed581bf3c12a`.
-- [ ] GitHub **Require PR, No Admin Bypass, No Force Push, No Deletion** anhand UI/Admin-Read einzeln nachgewiesen.
-- [ ] CircleCI-Context **Project Restriction nur OrgaVela-Quellprojekt**, keine Freigabe für Dreamloud/Forks/untrusted Projekte.
-- [ ] CircleCI **eine effektive** zum exakten Testbranch passende Expression, SSH-Reruns und API-Unversioned-Config ausgeschlossen; `main` nicht mehr zugelassen.
+- [x] GitHub **Require PR, No Admin Bypass, No Force Push, No Deletion** laut Betreiber-UI-Prüfung am 15.10.2026 bestätigt; GitHub-Connector kann Einzeleinstellungen weiterhin nicht selbst auslesen (Details GET 403).
+- [x] CircleCI-Context **Project Restriction nur OrgaVela-Quellprojekt** laut Betreiber-UI-Prüfung am 15.10.2026 bestätigt, nicht direkt ausgelesen. **Separate Fork-PR-Secretweitergabe** weiterhin sicherheitshalber in Projekteinstellungen prüfen (siehe GH-02d).
+- [x] CircleCI-Context **neue Expression für exakt den Testbranch mit SSH-/API-Schutz** laut Betreiber am 15.10.2026 gespeichert; der Betreiber war zuvor angewiesen, die alte `main`-Expression zu ersetzen. **Wirksamer Context-Inhalt nicht unabhängig per CircleCI-API gelesen.**
 - [ ] CircleCI Free-Kontingent und nicht kostenpflichtige Nutzung nachgewiesen.
-- [ ] Testworkflow enthält weiterhin `enable_synthetic_github_release_e2e=false` standardmäßig, und keine IONOS-/Private-Key-Secrets werden eingespeist.
+- [x] Source-Testworkflow auf unverändertem GitHub-Testbranch erneut gelesen: `enable_synthetic_github_release_e2e=false` als Default, nur manueller Synthetik-Job mit Context und exaktem Branchfilter, explizite Laufzeit-Verweigerung bekannter IONOS-/Private-Key-Secrets. **Einen tatsächlichen CI-Run oder den Inhalt des Contexts haben wir nicht geprüft.**
 
 **GH-02 erst nach Abschluss der gesamten Checkliste als `accepted` markieren.** *GH-02 erlaubt danach höchstens die gesonderte Freigabe eines synthetischen GH-04-Canary; es ist weder GH-04-Abnahme noch eine Erlaubnis für produktive Backups.* Betreiber braucht **keine** Token, private Schlüssel oder Passwörter im Chat mitzuteilen. Bei nicht unabhängiger CircleCI-Sichtbarkeit: UI-Bestätigung durch den Betreiber, keine freie Erfindung von API-Nachweisen. Keine PR-Merges, keine kostenpflichtigen Verträge.
 
@@ -231,3 +231,14 @@ Dies ist noch **kein nachgewiesener iSH/age-Lauf** und kann je nach App-/Alpine-
 ### Nachprüfung 15.10.2026 – GH-02a bestanden, GH-02-Gesamt noch offen
 
 Nach Betreiber-Änderung liefert der **direkte GitHub-API-Zweigabruf** erstmals `protected=true`, `protection.enabled=true` für exakt `test/orgavela-github-release-o03` (SHA unverändert `a03b0e079ad0f8bd782574abd5b0ed581bf3c12a`). Die **erste** Checkbox in obigem §11C ist deshalb tatsächlich abgehakt. `GET .../protection` liefert **403** (App ohne Admin-Leserecht); vier Einzeloptionen kann der Betreiber nur in der GitHub-UI nachsehen. CircleCI wurde nicht geändert oder abgefragt; die übrigen fünf Checkboxen bleiben offen. Für neue Context-Expression die bisherige `main`-Freigabe **ersetzen**. CircleCI verknüpft mehrere Expression Restrictions mit AND, eine parallele zweite abweichende Branch-Expression würde beide Branches sperren. Ohne bestätigte effektive Context-Projekt- und Expression-Restriktionen sowie Free-Kontingent keinen `GH_TOKEN` anlegen und kein GH-04 auslösen. Grundlage: [CircleCI Using Contexts](https://circleci.com/docs/guides/security/contexts/).
+
+
+### GH-02d – Betreiberbestätigung vom 15.10.2026 und letzter No-Cost-/Fork-Check
+
+**Nach aktuellen Betreiberangaben erledigt:** Exakte GitHub-Einzelregeln wurden im UI geprüft; CircleCI-Context `orgavela-backup-releases` enthält laut Betreiber die neu gespeicherte Testbranch-Expression, und die Context-Project-Restriction wurde geprüft. Die unabhängige GitHub-Abfrage bestätigt `protected=true` und unveränderten Branch-HEAD. **Geprüft durch den Betreiber ≠ Admin-API-Einzeldaten von uns gelesen**; die GitHub-Detail-API bleibt wegen Berechtigung 403 und es gibt in der verwendeten Verbindung keine CircleCI-Context-Admin-API.
+
+**Zwei verbleibende Sicherheits-/Kostenpunkte vor der formalen GH-02-Gesamtabnahme:**
+1. **CircleCI → Plan → Plan Overview**: Free-Tarif für die Organisation und keine bezahlte, mit anderer Organisation geteilte Abrechnung/kein Upgrade bestätigen. Laut [CircleCI Credits-Dokumentation](https://circleci.com/docs/guides/plans-pricing/credits/) sind im Free-Plan bis 400.000 kostenlose Credits pro Monat für öffentliche Open-Source-Linux-Builds verfügbar, deren **Reststand ausdrücklich nicht im UI angezeigt wird**. Daher darf die Checkliste keinen dort nicht existierenden Restcredit-Wert verlangen. Auf tatsächliche Free-Plan-Zugehörigkeit, keinen kostenpflichtigen Upgrade/Share und keine neuen Zahlungsverpflichtungen kommt es an.
+2. **CircleCI → Projekt `Projekt-Wordpress-Plugin` → Project Settings → Advanced/Fork-PR-Einstellungen**: `Pass secrets to builds from forked pull requests` **disabled/off**. Default laut offizieller [CircleCI-Sicherheitsdokumentation](https://circleci.com/docs/guides/security/security-overview/) aus; die konkrete OrgaVela-Projekteinstellung dennoch prüfen. Alle neuen unbekannten Fork-/PR- oder SSH-/API-Trigger weiterhin fail-closed behandeln.
+
+**Aktueller Stand:** Die 1., 2., 3., 4. und 6. §11C-Checkbox sind je entsprechendem unabhängigem GitHub-/Source-Beleg oder Betreiber-UI-Nachweis erledigt; die 5. bleibt offen und Fork-Einstellung bleibt als separater expliziter Preflight offen. Vor Bestätigung **GH-02 formal nicht `accepted`**, `GH_TOKEN` nicht eintragen, kein GH-04 Cloudtest. Danach GH-02 positiv festhalten; GH-04-Test separat mit kurzlebigem OrgaVela-only PAT und vollständigem synthetischem Restore prüfen.
