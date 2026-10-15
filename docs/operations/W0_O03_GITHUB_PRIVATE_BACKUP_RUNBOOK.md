@@ -253,3 +253,31 @@ Nach Betreiber-Änderung liefert der **direkte GitHub-API-Zweigabruf** erstmals 
 **GH-04–GH-08 weiterhin offen:** Ohne Token kein Upload; bis jetzt keine OrgaVela-Assets im privaten Backup-Repository. Ein neuer kurzlebiger GH_TOKEN darf **erst im separaten GH-04-Vorgang** vom Betreiber direkt in den eingeschränkten Context gesetzt werden und muss nach Test wieder widerrufen/entfernt werden. GitHub-Target repo-only janjrre/orgavela-backups, Contents: Read and write, ausschließlich künstliche Daten/temporärer Test-Schlüssel, manueller Bool enable_synthetic_github_release_e2e=true. Sollten GH-02-Sicherheitsbedingungen geändert werden, Stop/erneut prüfen; Free-Limitüberschreitung führt zum Abbruch ohne kostenpflichtiges Upgrade. Die produktive Besitzer-Key-/Restore-Recovery ist separat GH-03 und GH-05–08.
 
 **Statusauswirkung:** GH-02 angenommen; O03/W0 und V1 **noch nicht** angenommen. Kein Token, keine CI-Pipeline, keine Produktionssicherung, keine Backuptests, keine Merges/Kosten in dieser Sitzung.
+
+
+## GH-04 – manueller PC-freier synthetischer GitHub-Backup-Test (15.10.2026)
+
+**Abnahmevorbedingung:** GH-02 ist accepted mit GitHub-API-Branch-`protected=true` und explizit Betreiber-bestätigtem CircleCI-Context/Free/Fork-Secret-Schutz. Das ist kein Beleg, dass `GH_TOKEN` schon vorhanden ist. **Der künstliche Verschlüsselungstest wurde isoliert lokal ausgeführt und bestanden:** temporäres OpenPGP-Testschlüsselpaar, TAR mit festem Testtext, Kopie des verschlüsselten Archivs mit SHA256, Import in getrenntes Keyring, bytegenaue Entschlüsselung und Extraktion PASS (537 Bytes, SHA256 `0018ecaa027d88a4e45760fac2149707233b1d6bafe78b1c0a5ad3392fc3db0d`); Testmaterial inklusive Wegwerf-Key gelöscht. **Das ist kein Cloud-Backup und keine GH-04-E2E-Abnahme.**
+
+### Einmalig: GitHub-PAT sicher direkt am Anbieter erstellen
+
+1. Im **eigenen authentifizierten GitHub-Konto** [Fine-grained tokens → Generate new token](https://github.com/settings/personal-access-tokens/new) öffnen; Einstellungen ggf. trotz vorbelegtem Formular prüfen.
+2. Name `orgavela-synthetic-transport-once`, **kurze Expiration** (z. B. 7 Tage oder kürzer, wenn verfügbar), **Resource owner `janjrre`**.
+3. **Repository access → Only select repositories → `orgavela-backups`** und **Repository permissions → Contents → Read and write**. Keine All-repos-Auswahl, keine Administration-, Secrets- oder Workflow-Write-Berechtigung. GitHub `Metadata: Read` kann automatisch gesetzt sein. Änderungen an Dreamloud verboten.
+4. Token **einmalig auf der GitHub-Seite kopieren und direkt im CircleCI-Context** einsetzen, niemals hier im Chat, auf dem Telefon in unsicheren Notizen, in Issues/PRs/Logs oder im öffentlichen Quellrepository hinterlegen. Nur nach GH-02-Check und falls der Free-Plan weiter besteht.
+
+### Einmalig: CircleCI-Context-Secret speichern
+
+1. [CircleCI Organization Settings](https://app.circleci.com/settings/organization) → **Contexts** → `orgavela-backup-releases` → **Environment Variables** → **Add Environment Variable**.
+2. **Name `GH_TOKEN`**, Wert das neue kurzlebige, ausschließlich private OrgaVela-Backup-Repositories autorisierende Token. Project Restriction muss **nur** `janjrre/Projekt-Wordpress-Plugin` erlauben. Expression Restriction muss **nur** den Branch `test/orgavela-github-release-o03` mit `not job.ssh.enabled` und Ausschluss der API-Konfigquelle zulassen. Fork-PR-Passing weiterhin aus.
+3. **Hier enden alle Token-Aufgaben des Betreibers, ohne den Wert preiszugeben.** Noch keine produktive Serververbindung, kein privater Besitzer-Key und keine echten WordPress-/MariaDB-Daten.
+
+### Manuelle CircleCI-Pipeline und sichere Abnahmelogik
+
+1. Erst nachdem `GH_TOKEN` im beschränkten Context gespeichert wurde, die [OrgaVela-CircleCI-Pipelines](https://app.circleci.com/pipelines/github/janjrre/Projekt-Wordpress-Plugin) öffnen. Falls CircleCI den Button **Trigger Pipeline** / **Run Pipeline** anbietet: **Branch `test/orgavela-github-release-o03`**, Pipeline-Parameter **`enable_synthetic_github_release_e2e` als Boolean `true`**. Der Default bleibt **`false`**. Nur manuell, niemals Schedule/Auto-Deploy.
+2. Job `synthetic-github-release-e2e` prüfen. Er muss die **synthetischen** Dateien mit ephemerem OpenPGP-Key erzeugen, als private GitHub Release Draft mit **genau drei Assets** hochladen und den binären SHA256-Readback vor/nach Publish prüfen. Erst nach Publish können `immutable=true`, unabhängiger erneuter Download und GPG-Restore bestanden sein. Fehler/fehlende Assets/403 sind **kein** Backup-Beleg.
+3. Run-ID und Status sowie Release-Tag/ID aus der Pipeline **ohne Tokens/Secrets** dokumentieren, mit CircleCI-/GitHub-Connector anschließend GitHub-Release-Zustand und gegebenenfalls Build-Log nachprüfen. Nur bei eindeutig bestandenem Gesamt-E2E **GH-04 `accepted`** setzen.
+4. **Nach dem einen synthetischen Versuch** – erfolgreich oder nicht – GitHub-Token **widerrufen** und den CircleCI-Context `GH_TOKEN`-Eintrag **entfernen**. Keine Tokens im GitHub-Journal. Kein ungeprüftes Aufräumen immutabler Releases.
+5. GH-03 und GH-05–08 bleiben ausdrücklich separate Anforderungen vor einem einzigen echten WordPress-/DB-Backup bzw. Schedule. Beim Überschreiten von Free-Kontingent, geänderter Branch-Sicherheit oder Secret-Injektion: **sofort stoppen, kein kostenpflichtiges Upgrade**, keine Sicherheitsregeln lockern.
+
+**Technischer Stand bei Erstellung dieser Anleitung:** `test/orgavela-github-release-o03 protected=true` auf `a03b0e079ad0f8bd782574abd5b0ed581bf3c12a`, PR #19 weiterhin Draft, privates `orgavela-backups` 0 Releases, GitHub-PAT und manuelle Pipeline **nicht** ausgeführt. Offizielle GitHub-PAT-Dokumentation: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
