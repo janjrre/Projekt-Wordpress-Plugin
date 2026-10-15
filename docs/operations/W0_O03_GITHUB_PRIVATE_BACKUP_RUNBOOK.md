@@ -218,7 +218,7 @@ Dies ist noch **kein nachgewiesener iSH/age-Lauf** und kann je nach App-/Alpine-
 
 ### C. GH-02-Abnahme
 
-- [ ] GitHub-Zweig `test/orgavela-github-release-o03` **protected=true** auf geprüftem HEAD.
+- [x] GitHub-Zweig `test/orgavela-github-release-o03` **protected=true** auf geprüftem HEAD. **Am 15.10.2026 unabhängig per GitHub GET bestätigt**, unveränderter HEAD `a03b0e079ad0f8bd782574abd5b0ed581bf3c12a`.
 - [ ] GitHub **Require PR, No Admin Bypass, No Force Push, No Deletion** anhand UI/Admin-Read einzeln nachgewiesen.
 - [ ] CircleCI-Context **Project Restriction nur OrgaVela-Quellprojekt**, keine Freigabe für Dreamloud/Forks/untrusted Projekte.
 - [ ] CircleCI **eine effektive** zum exakten Testbranch passende Expression, SSH-Reruns und API-Unversioned-Config ausgeschlossen; `main` nicht mehr zugelassen.
@@ -226,3 +226,8 @@ Dies ist noch **kein nachgewiesener iSH/age-Lauf** und kann je nach App-/Alpine-
 - [ ] Testworkflow enthält weiterhin `enable_synthetic_github_release_e2e=false` standardmäßig, und keine IONOS-/Private-Key-Secrets werden eingespeist.
 
 **GH-02 erst nach Abschluss der gesamten Checkliste als `accepted` markieren.** *GH-02 erlaubt danach höchstens die gesonderte Freigabe eines synthetischen GH-04-Canary; es ist weder GH-04-Abnahme noch eine Erlaubnis für produktive Backups.* Betreiber braucht **keine** Token, private Schlüssel oder Passwörter im Chat mitzuteilen. Bei nicht unabhängiger CircleCI-Sichtbarkeit: UI-Bestätigung durch den Betreiber, keine freie Erfindung von API-Nachweisen. Keine PR-Merges, keine kostenpflichtigen Verträge.
+
+
+### Nachprüfung 15.10.2026 – GH-02a bestanden, GH-02-Gesamt noch offen
+
+Nach Betreiber-Änderung liefert der **direkte GitHub-API-Zweigabruf** erstmals `protected=true`, `protection.enabled=true` für exakt `test/orgavela-github-release-o03` (SHA unverändert `a03b0e079ad0f8bd782574abd5b0ed581bf3c12a`). Die **erste** Checkbox in obigem §11C ist deshalb tatsächlich abgehakt. `GET .../protection` liefert **403** (App ohne Admin-Leserecht); vier Einzeloptionen kann der Betreiber nur in der GitHub-UI nachsehen. CircleCI wurde nicht geändert oder abgefragt; die übrigen fünf Checkboxen bleiben offen. Für neue Context-Expression die bisherige `main`-Freigabe **ersetzen**. CircleCI verknüpft mehrere Expression Restrictions mit AND, eine parallele zweite abweichende Branch-Expression würde beide Branches sperren. Ohne bestätigte effektive Context-Projekt- und Expression-Restriktionen sowie Free-Kontingent keinen `GH_TOKEN` anlegen und kein GH-04 auslösen. Grundlage: [CircleCI Using Contexts](https://circleci.com/docs/guides/security/contexts/).
