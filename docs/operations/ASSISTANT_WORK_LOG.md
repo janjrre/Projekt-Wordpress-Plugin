@@ -1122,3 +1122,20 @@ Diese Änderungen sind als **neue ungemergte [Draft PR #19](https://github.com/j
 **Risiko- und Stop-Gates für GH-04:** Keine automatische Pipeline, kein Token, kein live Release in dieser GH-02-Runde. Vor jedem späteren synthetischen Test ausschließlich kurzlebiges repo-spezifisches GitHub PAT (`janjrre/orgavela-backups` `Contents: Read and write`) durch Betreiber **direkt** im eingeschränkten CircleCI-Context, niemals im Chat oder öffentlichen Repo; Job ausschließlich opt-in manuell mit künstlichen Daten und ephemerem GPG-Testschlüssel. Sofort stoppen, wenn Branchschutz, Context-Restriktion, Fork-Secret-Schutz, Free-Plan oder Repo-Ziel abweicht. Produktive Daten bleiben bis zu eigenem Offline-Recovery-Key (GH-03), konsistentem Capture (GH-05/06), unabhängig isoliertem Full-Restore (GH-07) und Scheduling-Prüfung (GH-08) gesperrt.
 
 **Projektfolgen:** GH-02 von `partial` auf `accepted` umstellen, GH-04 als **nächste** konkrete Phase vorbereiten. W0/O03 insgesamt weiter **offen**, V1-Zähler weiterhin 62/71 historisch implementiert, M0–M7 **0/8**, P4 **0/4**, R01–R18 **0/18**, keine PR-Integrationen/Produktivmaßnahmen. Dokumentationsupdates auf bestehendem Draft-PR #18, niemals stillschweigend nach `main`. Commits und Verifikationen werden im anschließenden protokollierten Abschluss ergänzt.
+
+
+### GH-02-Abnahmerunde – tatsächlich durchgeführte Änderungen und Abschluss (15.10.2026)
+
+**Neue Bestätigung durch Betreiber:** CircleCI **Free**; Fork-PR-Builds erhalten **keine** Secrets (Option deaktiviert). Damit nach GitHub-API-Recheck und bereits erfolgter Betreiber-UI-Bestätigung von GitHub-Detailregeln, Context-Project und Context-Expression sämtliche GH-02-Sicherheits-/No-Cost-Vorbedingungen **abgenommen**, mit offengelegtem Evidenzmix. Nicht als unabhängig ausgelesene CircleCI-Admin-Konfiguration ausgeben.
+
+**Auf bestehendem ungemergtem Draft PR #18 tatsächlich in GitHub committet:**
+- **f24350264651db26dfc61d47cc2ad2a436566050**: dieses GH-02-Auftrags-/Abnahmeprotokoll als append-only Anfangseintrag.
+- **67a5de5812bc9696de42335c22cae1ff6c582cdc**: V1_PROGRESS.json, GH-02 `accepted` und Betreiber-/API-Evidenz getrennt, nächster Schritt GH-04; reale Offsite-/Restore- und Release-Gates unverändert.
+- **20ce661b54ab0832c2bda4979ee65ba10eddc790**: allein normativer V1_ACCEPTANCE_PLAN.md auf **v2.16**, neue GH-02-Abnahmematrix/GH-04-Stop-Gates; `main` unverändert v2.11.
+- **251f5008ada9ca2ba7f010e1705c50d179754cd3**: Runbook GH-02 §11, sechstes/letztes Kontrollkästchen nach Free-Bestätigung abgehakt, separates Fork-Secret-Gate bestätigt und evidenzqualifizierter Abschlussnachtrag angefügt.
+- **7bf5a0537e61bb84bd720c424f1fd0ad260aa28e**: V1_STATUS.md, GH-02 ACCEPTED sowie GH-04 synthetischer Next Step, V1-Metriken unverändert.
+- Dieser finale append-only Journal-Commit sowie PR-#18-Diskussionsbeleg und API-Nachprüfung folgen separat.
+
+**Nicht ausgeführt:** Keine CircleCI-Admin-Mutation, kein Testjob, kein GH_TOKEN/fine-grained PAT, kein privater Encryption-/Recovery-Key, kein GitHub-Release/Asset, keine tatsächliche OrgaVela-WordPress-/MariaDB-Datei gelesen/gesichert, kein isolierter Restore, keine IONOS-/Dreamloud-Arbeit, kein PR-Merge und keine Kosten. Ein erster lokaler JavaScript-Dokumentations-Aufruf zum Runbook wurde wegen String-Begrenzungs-Syntaxfehler abgebrochen, **ohne GitHub-Änderung**; in korrigiertem Aufruf wurde das Runbook erfolgreich als Commit geschrieben.
+
+**Abnahmegrenzen und Zukunft:** GH-02 ist **nur** Sicherheits-/Betriebskosten-Preflight. GH-04 erfordert später separat neuen kurzen repo-begrenzten Token und bewusst manuell gestarteten ausschließlich synthetischen GitHub-Release-E2E. GH-03 dauerhafter Offline-Schlüssel, GH-05 echte konsistente Quellgewinnung, GH-06 verschlüsseltes reales Backup, GH-07 vollständiger Remote-only Restore, GH-08 laufender Betrieb bleiben offen. W0 und V1 bleiben entsprechend offen (62/71 historische Code-Pakete, M 0/8, P4 0/4, R 0/18; keine Feature-/Release-Integration).
