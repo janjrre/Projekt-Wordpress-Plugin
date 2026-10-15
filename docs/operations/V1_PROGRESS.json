@@ -221,7 +221,7 @@
       "synthetic_ci_base_branch": "ci/circleci-free-pilot-o03",
       "synthetic_ci_code_prepared": true,
       "synthetic_ci_test_branch_protected": false,
-      "synthetic_ci_test_branch_protection_read": "GET /branches/test/orgavela-github-release-o03 protected=false 2026-10-15, HEAD a03b0e079ad0f8bd782574abd5b0ed581bf3c12a",
+      "synthetic_ci_test_branch_protection_read": "2026-10-15 direct GitHub GET: test/orgavela-github-release-o03 HEAD a03b0e079ad0f8bd782574abd5b0ed581bf3c12a, protected=false, protection.enabled=false; rulesets=[]",
       "synthetic_ci_circleci_context_expression_matches_test_branch": false,
       "synthetic_ci_manual_parameter": "enable_synthetic_github_release_e2e; default false",
       "synthetic_ci_target": "janjrre/orgavela-backups; private; no Dreamloud",
@@ -230,7 +230,9 @@
       "gh05_capture_writer_production_ready": false,
       "openpgp_or_age_real_format_decision": "pending documented ADR; GPG only ephemeral synthetic test",
       "github_release_inventory_checked_at": "2026-10-15",
-      "github_backup_release_count": 0
+      "github_backup_release_count": 0,
+      "gh02_latest_review": "2026-10-15: GH-02 remains BLOCKED. Connected GitHub tool has no branch-protection write action; authorized PC offline; no no-cost authenticated CircleCI admin operation available. Zero metered browser actions. Operator must protect test branch, verify individual no-bypass/PR/no-force/no-delete rules, update single active project-/branch-/ssh-/API-limited CircleCI Context expression and confirm Free credits before GH_TOKEN.",
+      "gh02_operator_runbook_path": "docs/operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md#11-gh-02--exakte-betreiber-einstellungen-und-abnahmeprotokoll-15102026"
     },
     {
       "id": "O04",
@@ -736,6 +738,10 @@
         "conclusion": "success"
       }
     ],
-    "pr11_gate_note": "Those two CI workflows green at exact PR #11 HEAD; PR #11 still Draft, not merged or formal V1/R03 release acceptance."
+    "pr11_gate_note": "Those two CI workflows green at exact PR #11 HEAD; PR #11 still Draft, not merged or formal V1/R03 release acceptance.",
+    "gh02_review_at": "2026-10-15T21:37:00+02:00",
+    "gh02_formally_accepted": false,
+    "gh02_admin_actions_performed": false,
+    "gh02_operator_required": true
   }
 }
