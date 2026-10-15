@@ -187,3 +187,42 @@ Dies ist noch **kein nachgewiesener iSH/age-Lauf** und kann je nach App-/Alpine-
 **GH-02-Abhängigkeit bleibt bestehen:** Die OrgaVela-CircleCI-Expression war bislang **auf `main`** gerichtet, der frühere CircleCI-Pilot liegt aber auf dem ungemergten separaten CI-Branch; ein neuer Testbranch muss daher **vor** Token-Nutzung selbst schreibgeschützt sein und die einzig zugelassene Expression muss genau ihn treffen (oder ein gesondert freigegebener Merge integriert den Test in geschütztes `main`). Die **effektiven** Context-/Bypass-/PR-/Fork-Berechtigungen und CircleCI-Free-Credits bleiben vor produktiver Secret-Nutzung zu bestätigen. Ein bloßer GitHub-Token ohne diese Sicherheitsvorkehrungen ist nicht zulässig. Kein Merge ohne explizite Freigabe.
 
 **Ergebnis/Status:** Für OrgaVela wurde **nur die Testreihenfolge korrigiert und dokumentiert**, nicht behauptet, dass ein OrgaVela-GitHub-Test schon gelaufen ist: GH-01 erledigt, GH-02 teilweise, GH-04 synthetischer Live-E2E und GH-03 echter Schlüssel offen, GH-06+07 echter Snapshot/Restore offen. Die V1-Abnahmen bleiben unverändert. Siehe [normativer Masterplan v2.12](V1_ACCEPTANCE_PLAN.md), [JSON](V1_PROGRESS.json).
+
+
+## 11. GH-02 – Exakte Betreiber-Einstellungen und Abnahmeprotokoll (15.10.2026)
+
+**GH-02 ist bis zur tatsächlich überprüften Konfiguration NICHT bestanden.** GitHub-GET am 15.10.2026: `main protected=true`, aber **`test/orgavela-github-release-o03 protected=false`**, SHA `a03b0e079ad0f8bd782574abd5b0ed581bf3c12a`. `GET /rulesets` = `[]` (Classic Protection erscheint hier nicht). Die GitHub-Integration kann Regeln lesen, besitzt aber keine Branch-Protection-Schreibaktion. Kein GitHub-Backup-Token erzeugt/verwendet; kein CI-Run ausgelöst.
+
+### A. GitHub: neuen Testbranch schützen
+
+1. Auf [Repository → Settings → Branches](https://github.com/janjrre/Projekt-Wordpress-Plugin/settings/branches) → **Add classic branch protection rule** klicken. **Exaktes Branch name pattern**: `test/orgavela-github-release-o03`. Keine pauschale Wildcard, keine Änderung der bestehenden `main`-Regel.
+2. **Require a pull request before merging** aktivieren; optional **Require conversation resolution before merging**. Keine Mindestzahl unabhängiger Approvals erzwingen, wenn tatsächlich kein zweiter freigabeberechtigter Reviewer existiert. Keine noch nicht vorhandenen Pflichtchecks auswählen.
+3. **Do not allow bypassing the above settings** aktivieren. **Allow force pushes** **nicht** aktivieren. **Allow deletions** **nicht** aktivieren. Kein Push-/Fork-Ausnahme- oder Admin-Bypass. Bei verfügbarem `Lock branch` würde das spätere Änderungen zusätzlich sperren; nur bewusst nutzen, nicht aus Versehen als einzige PR-Schutzmaßnahme.
+4. **Create/Save**; danach GitHub GET `/repos/janjrre/Projekt-Wordpress-Plugin/branches/test/orgavela-github-release-o03` auf **`protected=true`** und exakt **denselben HEAD** nachprüfen. Die API-Flag-Bestätigung allein weist die Einzelregeln nicht nach: der Betreiber muss diese in der GitHub-UI kontrollieren bzw. die Detail-API mit geeigneter eigener Adminberechtigung auslesen.
+
+**Achtung GitHub-Free-Funktionsgrenzen:** Die UI zeigt manche Push-Einschränkungen nur auf bestimmten Organisations-/Tarifmodellen. `Require a pull request` plus **No Bypass** und weder Force Push noch Delete müssen auf dieser tatsächlich vorhandenen öffentlichen Repositoryregel anwendbar und bestätigt sein. Falls nicht, GH-02 als blockiert belassen und keine Secrets aktivieren.
+
+### B. CircleCI: exakt passenden Context begrenzen
+
+1. In CircleCI über **Organization Settings → Contexts** bestehenden `orgavela-backup-releases` öffnen.
+2. **Project Restriction** weiterhin *nur* für das Projekt `janjrre/Projekt-Wordpress-Plugin` (nicht Dreamloud, nicht alle Projekte). Falls CircleCI das Owner-/Projektformat anders darstellt, die eindeutig selbe Repo-Zuordnung prüfen.
+3. Bei **Expression Restrictions** die bisherige auf `main` bezogene Expression **ersetzen**, nicht eine weitere zulässige Regel ergänzen und nicht per `or` beide Branches öffnen. Gewünschter exakter Ausdruck:
+
+   ```text
+   pipeline.git.branch == "test/orgavela-github-release-o03" and not job.ssh.enabled and not (pipeline.config_source starts-with "api")
+   ```
+
+   CircleCI dokumentiert diese Branch-/SSH-/API-Vorbehalte offiziell: https://circleci.com/docs/guides/security/contexts/ . Keine untrusted Fork-PRs, PR-Branch-/Config-Source-Varianten oder GitHub-App-Konfigurationspfade mit Schreibzugriff auf diesen eingeschränkten Context zulassen; Trigger- und tatsächliche Job-Semantik vor Tokengebrauch kontrollieren. YAML-Branchfilter alleine **schützt keinen Secret-Context**.
+4. Noch **kein** `GH_TOKEN` eintragen. Nach dem Speichern effektive, sichtbare Expression erneut lesen und Projekt-/Context-Restriktionen dokumentieren, ohne Secret-Werte oder unbereinigte Screenshots in das **öffentliche** Repository zu veröffentlichen. Nur ein einziger aktiv zulässiger Testbranch.
+5. Unter **Plan / Plan Usage** Free-Tarif, Restkontingent und kein kostenpflichtiges Upgrade/Billing-Transfer prüfen: https://circleci.com/docs/guides/plans-pricing/credits/ . Ein kostenloser Anbieterplan ist nicht automatisch ein verifiziert verfügbares Freikontingent für genau diesen Job.
+
+### C. GH-02-Abnahme
+
+- [ ] GitHub-Zweig `test/orgavela-github-release-o03` **protected=true** auf geprüftem HEAD.
+- [ ] GitHub **Require PR, No Admin Bypass, No Force Push, No Deletion** anhand UI/Admin-Read einzeln nachgewiesen.
+- [ ] CircleCI-Context **Project Restriction nur OrgaVela-Quellprojekt**, keine Freigabe für Dreamloud/Forks/untrusted Projekte.
+- [ ] CircleCI **eine effektive** zum exakten Testbranch passende Expression, SSH-Reruns und API-Unversioned-Config ausgeschlossen; `main` nicht mehr zugelassen.
+- [ ] CircleCI Free-Kontingent und nicht kostenpflichtige Nutzung nachgewiesen.
+- [ ] Testworkflow enthält weiterhin `enable_synthetic_github_release_e2e=false` standardmäßig, und keine IONOS-/Private-Key-Secrets werden eingespeist.
+
+**GH-02 erst nach Abschluss der gesamten Checkliste als `accepted` markieren.** *GH-02 erlaubt danach höchstens die gesonderte Freigabe eines synthetischen GH-04-Canary; es ist weder GH-04-Abnahme noch eine Erlaubnis für produktive Backups.* Betreiber braucht **keine** Token, private Schlüssel oder Passwörter im Chat mitzuteilen. Bei nicht unabhängiger CircleCI-Sichtbarkeit: UI-Bestätigung durch den Betreiber, keine freie Erfindung von API-Nachweisen. Keine PR-Merges, keine kostenpflichtigen Verträge.
