@@ -1,6 +1,6 @@
 # OrgaVela / UOP Core – Verbindlicher Masterplan bis zur V1-Abnahme
 
-**Version:** 2.13 | **Bestandsaufnahme:** 12.10.2026 | **Status:** aktiv; V1 **nicht** abgenommen  
+**Version:** 2.14 | **Bestandsaufnahme:** 12.10.2026 | **Status:** aktiv; V1 **nicht** abgenommen  
 **Aktuelle W0/O03-Testreihenfolge (Abgleich Dreamloud 14.10.2026):** Synthetischer CI-GitHub-Release-Test darf nach bestätigtem Context-/Branchschutz mit **ephemerem CI-Testschlüssel und eigenem repo-beschränktem GH_TOKEN** ohne Betreiber-PC laufen; dauerhafter Besitzer-Recovery-Key ist erst vor **echten** OrgaVela-Backups zwingend. [Nachtrag v2.12](#w0o03-gleiches-synthetisches-github-token-verfahren-wie-bei-dreamloud-masterplan-v212-14102026).  
 **Aktuell geltendes O03-Backupziel (Betreiberentscheid 13.10.2026):** nur **IONOS-Sicherungen** plus **separates privates GitHub-Repository mit vorverschlüsselten Release-Assets**. Die frühere Google-Drive-Entscheidung in historischen Nachträgen ist **widerrufen**; Details: [O03 GitHub-Backup-Runbook](W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md).  
 **Quellenhierarchie:** Phase 3 Specification Freeze > Phase 2 V1-Spezifikation > Phase 1 Produktstrategie; neuere freigegebene ADRs ergänzen den Freeze, ersetzen ihn nicht stillschweigend.  
@@ -586,3 +586,21 @@ Der aktuelle Draft-[PR #11](https://github.com/janjrre/Projekt-Wordpress-Plugin/
 6. **Nach W0 weiter W1→W7:** O04/O05/O08 (Cron/Mail/Überwachung) → O09/aktuelle CI und geordnete M0–M6-Reviews → P4-01…04 aus Issues #7–#10 → M6-10 P1–P6 und O07 echte Nutzerabläufe → kontrollierte PR-Ketten-Integration mit separater Mergefreigabe und O10 Upgrade/Rollback → M7 Hardening/UAT → R01–R18 RC/Stable-Entscheidung. W0 und alle V1-Zähler **unverändert** (62/71 historisch implementiert, 0/8 Meilensteine, P4 0/4, Release 0/18).
 
 **Keine Ausführung in dieser Audit-Runde:** keine CircleCI-Pipeline, kein PAT/Secret/Recovery-Key, keine GitHub-Release-/Backup-Erstellung, kein Restore, kein Merge oder WordPress-/Dreamloud-Eingriff. Keine neuen Kosten. Verbindliche Dokumentation in [Arbeitslog](ASSISTANT_WORK_LOG.md), [Status](../project/V1_STATUS.md) und [Fortschrittsdaten](V1_PROGRESS.json).
+
+
+## Nachtrag W0/O03 – GH-02-Testbranch jetzt nachweislich geschützt (Masterplan v2.14, 15.10.2026)
+
+**Neuer, tatsächlich bestandener Teilnachweis:** Der Betreiber hat die GitHub-Schutzregel gespeichert; die anschließende unabhängige GitHub-API-Abfrage zu `test/orgavela-github-release-o03` meldet **`protected=true`, `protection.enabled=true`**, bei **unverändertem HEAD `a03b0e079ad0f8bd782574abd5b0ed581bf3c12a`**. Die ältere Statusmeldung `protected=false` galt **vor** dieser Betreiberaktion. Kein Code-PR wurde hierfür gemergt. PR #19 bleibt Draft und der einzige opt-in-Job mit `enable_synthetic_github_release_e2e` default `false` enthält weiterhin nur synthetische Artefakte.
+
+**Nicht aus dem Boolean ableitbar:** Der separate GitHub-Schutzdetail-GET antwortet **403**, weshalb `Require a pull request before merging`, `Do not allow bypassing`, Force Push = aus und Delete = aus **nicht einzeln durch die verbundene GitHub-App bestätigt** sind. `GET /rulesets=[]` ist mit vorhandenen Classic-Regeln vereinbar. Der Betreiber prüft diese vier Optionen in der [GitHub-Adminoberfläche](https://github.com/janjrre/Projekt-Wordpress-Plugin/settings/branches). Ein bestätigter Teilnachweis ersetzt nicht die GH-02-Komplettabnahme.
+
+**CircleCI – derzeit noch offene eigentliche Sicherheitsgrenze:** Kontext `orgavela-backup-releases`: Project Restriction ausschließlich OrgaVela-Quellprojekt; wirksame **einzige passende** Expression muss von `main` auf `pipeline.git.branch == "test/orgavela-github-release-o03" and not job.ssh.enabled and not (pipeline.config_source starts-with "api")` umgestellt und im Context-UI überprüft werden. CircleCI-Security-Dokumentation bestätigt diese Syntax und die **AND-Verknüpfung** von Projekt-/Gruppen-/Expressionsregeln (https://circleci.com/docs/guides/security/contexts/). Daher dürfen alte `main`-Expression und neue Testbranch-Expression **nicht als zwei AND-Bedingungen stehenbleiben**, denn das sperrt den Testbranch; sie sind zu *ersetzen*, ohne die Freigabe durch ein `or` auf andere Branches zu erweitern. Fork-/PR-Secret-Verfügbarkeit, SSH-Reruns, API/Unversioned-Config und CircleCI Free-Restkontingent müssen vor Tokenbenutzung bestätigt werden. CircleCI-Admin-Zugriff war in dieser Runde nicht verfügbar; keine eigene Context-Änderung behaupten.
+
+**Neu präzisierter Sequenzplan und Gate-Status:**
+1. **GH-02a GitHub-Testbranch `protected=true` – jetzt bestanden** (API/HEAD-Beleg).
+2. **GH-02b GitHub-Einzelregeln – ausstehender Betreiber-UI-Nachweis** (Detail-API 403).
+3. **GH-02c CircleCI-Einschränkung und Free Credits – ausstehender Betreiber-UI-Nachweis**, erst dann GH-02 insgesamt `accepted`.
+4. **GH-04 erst nach GH-02**: optional manueller ausschließlich synthetischer E2E-GitHub-Release mit kurzlebigem isoliertem OrgaVela-PAT. Keine Nutzung vorhandener Dreamloud-Credentials; keine Produktionsdaten.
+5. **GH-03 vor jedem echten Backup**: dauerhaft offline kontrollierter privater Wiederherstellungsschlüssel mit redundanter Recovery-Kopie und verbindlicher Formatentscheidung. GH-05–GH-08 unverändert danach, echter Restore vor Schedule.
+
+**V1-Fortschritt:** W0/O03 weiter `partial`, GH-02 als Ganzes **offen**, 62/71 historisch implementierte Codepakete, M0–M7 0/8 formal abgenommen, P4 0/4, R 0/18, alle PR-Integrationen ungemergt. Keine CircleCI-Pipeline, kein `GH_TOKEN`, keine private Release-Assets, kein IONOS-/Dreamloud-Eingriff, keine Vertrags-/Kostenaktion. Genaue Checkliste in [GH-02 Runbook §11](W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md); maschinenlesbare Wahrheit in [V1_PROGRESS.json](V1_PROGRESS.json); alle Schritte im [append-only Arbeitsjournal](ASSISTANT_WORK_LOG.md).
