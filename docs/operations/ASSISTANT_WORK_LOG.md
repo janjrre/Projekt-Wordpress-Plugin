@@ -1171,3 +1171,16 @@ Diese Änderungen sind als **neue ungemergte [Draft PR #19](https://github.com/j
 **Blocker/Risiko:** Der GH-04-Cloudtest benötigt ein **vom Betreiber erzeugtes** kurzlebiges PAT für ausschließlich `janjrre/orgavela-backups` mit `Contents: Read and write` und dessen Speicherung als `GH_TOKEN` im vorher bestätigten geschützten CircleCI-Context. GitHub-App verfügt nicht über Zugriff auf GitHub-Token-/CircleCI-Context-Write oder Pipeline-Trigger; `PCjan` offline; keine bezahlten Browser-Tools ohne Freigabe. Bitte **nur Erfolg der Token-Einrichtung** bestätigen, Token niemals in Chat/öffentliches Repository senden. Danach manueller geschützter Testbranch-/Parameter-Job, Prüfung echter privater Release-Asset-IDs, Immutable-Flag, Remote-Prüfsummen und unabhängiger Decrypt/Restore sowie Tokendeaktivierung.
 
 **Ergebnis dieses Auftrags:** Lokaler synthetischer Verschlüsselungs-/Restore-Test **erfolgreich**; GH-04 als Ganzes **OFFEN (Cloudteil nicht durchgeführt)**; echtes OrgaVela-Backup **NICHT** erstellt. GH-02 accepted, private Backup Releases 0, W0/O03 partial, V1 weiter offen. 62/71 historisch implementiert, Milestones 0/8, P4 0/4, Release-Gates 0/18, kein PR-Merge/Live-Eingriff/Vertrag/Kosten.
+
+
+## 2026-10-16 – GH-04: Name des einmaligen GitHub-Test-Tokens geklärt
+
+**Arbeitsauftrag:** Betreiber fragt im Zuge des geplanten ausschließlich synthetischen GH-04-Release-Tests: „wie soll der token heißen?“. Kein Auftrag, das Geheimnis im Chat anzunehmen oder den Token selbst zu erstellen.
+
+**GitHub-Abgleich vor Antwort:** Dokumentations-Draft PR #18 auf HEAD `c40fda192eba32191a9eeb0bb618796edbc60e85` bei Leseprüfung, nicht gemergt; normativer Dokumentationsbranch-Masterplan **v2.17**; maschinenlesbare GH-02-Sicherheitsfreigabe `accepted`, GH-04 Remote-E2E formal offen. Vorangegangene GH-04-Dokumentation/Runbook sieht den GitHub-Anzeigenamen `orgavela-synthetic-transport-once` und den davon zu unterscheidenden CircleCI-Context-Variablennamen `GH_TOKEN` vor.
+
+**Antwort/Entscheidung:** Klar kommuniziert, dass der GitHub-PAT frei wählbar **`orgavela-synthetic-transport-once`** heißen darf, in CircleCI aber die Umgebungsvariable **exakt `GH_TOKEN`** heißen muss. Die Berechtigung auf privates `janjrre/orgavela-backups` begrenzen (**Contents: Read and write**), kurze Laufzeit (z. B. sieben Tage). Tokenwert weder in Chat noch in das öffentliche Repository posten.
+
+**Tatsächliche Aktion:** Nur Beratung und dieser append-only-Journal-Commit auf bestehender Dokumentations-Draft-PR #18. Keine Berechtigungs-/CircleCI-/Secret-/Token-Änderung ausgeführt, kein Pipeline-Start, kein Cloud-Backup, kein Merge oder kostenpflichtiger Vertrag. Keine Änderungen am V1-Plan, da nur bereits festgelegte GH-04-Benennung wiederholt wurde.
+
+**Status:** GH-02 `accepted`; GH-04 lokale synthetische Krypto-Probe bestanden, Cloud-E2E ausstehend. V1 weiter offen: 62/71 historisch implementierte Code-Pakete, M0–M7 formell 0/8, P4 0/4, Release-Gates 0/18. Nächster Schritt: Betreiber erzeugt Token und hinterlegt ihn **nur** direkt als `GH_TOKEN` im geschützten `orgavela-backup-releases`-Context; danach manuellen Test nur mit synthetischen Daten vorbereiten, unabhängig prüfen und Zugang widerrufen.
