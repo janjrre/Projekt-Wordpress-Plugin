@@ -281,3 +281,22 @@ Nach Betreiber-Änderung liefert der **direkte GitHub-API-Zweigabruf** erstmals 
 5. GH-03 und GH-05–08 bleiben ausdrücklich separate Anforderungen vor einem einzigen echten WordPress-/DB-Backup bzw. Schedule. Beim Überschreiten von Free-Kontingent, geänderter Branch-Sicherheit oder Secret-Injektion: **sofort stoppen, kein kostenpflichtiges Upgrade**, keine Sicherheitsregeln lockern.
 
 **Technischer Stand bei Erstellung dieser Anleitung:** `test/orgavela-github-release-o03 protected=true` auf `a03b0e079ad0f8bd782574abd5b0ed581bf3c12a`, PR #19 weiterhin Draft, privates `orgavela-backups` 0 Releases, GitHub-PAT und manuelle Pipeline **nicht** ausgeführt. Offizielle GitHub-PAT-Dokumentation: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
+
+
+## 16.10.2026 – GH-04 Status nach Tokenanlage, letzter GitHub-/CircleCI-UI-Vorbereitungsschritt
+
+**Betreiber bestätigt:** Neues kurzlebiges Fine-grained GitHub PAT ausschließlich für privates `janjrre/orgavela-backups` ist als `GH_TOKEN` im geschützten CircleCI-Context `orgavela-backup-releases` hinterlegt. Kein geheimer Tokenwert wird übertragen, niemand soll ihn hier einfügen. **Tool-Zugriff zeigt nicht**, ob der Context ihn zur Joblaufzeit erfolgreich bereitstellt. GH-04 ist noch nicht ausgeführt: `janjrre/orgavela-backups` hat **0 Releases**, keine CircleCI-Run-ID.
+
+**Vor dem ersten GH-04-Test: EINE ZUSÄTZLICHE GITHUB-EINSTELLUNG UNBEDINGT PRÜFEN.** Öffne [orgavela-backups → Settings](https://github.com/janjrre/orgavela-backups/settings) → **General → Releases**. Kontrolliere, dass **Enable release immutability** aktiviert ist; falls nicht, **aktivieren**, **bevor** irgendein Release erstellt wird. Die aktuelle GitHub-Anleitung https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/establish-provenance-and-integrity/prevent-release-changes erläutert: Der Schutz gilt erst für danach erstellte Releases. Die einzelne Einstellung kann das angeschlossene GitHub-Lesetool **nicht** direkt lesen (`GET .../immutable-releases` verlangt Admin Read; App-Allowlist lehnt diese URL ab). `Contents: Read and write` des neuen Testtokens ist richtig; keine höheren Tokenrechte nötig.
+
+**Wenn Release Immutability aktiviert und der Free-/Context-/Fork-Schutz weiter unverändert sind**, im eigenen CircleCI-Webinterface [OrgaVela Pipelines](https://app.circleci.com/pipelines/github/janjrre/Projekt-Wordpress-Plugin) → **Trigger Pipeline** (oder **Run Pipeline**, UI kann variieren):
+- Richtige Pipeline/Projekt: **`janjrre/Projekt-Wordpress-Plugin`**.
+- Bei getrennter Auswahl **Config Source** und **Checkout Source** jeweils **dieses Repository** und **`test/orgavela-github-release-o03`** (nicht `main`).
+- **Add Parameters → Boolean:** **Name `enable_synthetic_github_release_e2e`**, **Value `true`**. Exakt ein Bool, kein Textstring; die Datei definiert `default:false`.
+- Genau einmal starten. Erwarteter Workflow **`synthetic-github-releases-e2e-manual`**, Job **`synthetic-github-release-e2e`** mit synthetischem Text, temporärem GPG-Testkey, Upload in privates Backuptarget, drei vorverschlüsselten Release-Assets, binären Remote-SHA-Vergleichen, `immutable=true` und unabhängigem Remote-only TAR-Wiederherstellungstest.
+- Bei Problemen kein `or` in den Context-Restriktionen, kein Admin-Token, kein Fork-Secret-Passing, keine Push-/Schedule-/API-Trigger-Umgehung oder kostenpflichtiges Upgrade. Stattdessen **Run-URL und den fehlerhaften Steptext ohne Secret** mitteilen. Über den Job-Status lässt sich klären, ob die Triggeroberfläche/Branch-Parameter/Token überhaupt wirksam sind.
+- Nach dem Versuch **PAT in GitHub widerrufen** und **`GH_TOKEN` im CircleCI-Context entfernen**, bevor echte Daten-/Restore-Themen beginnen.
+
+**Abnahmeschwelle:** `GH-04 accepted` **ausschließlich** nach echtem Anbieter-Run `success` und per REST/Logs belegtem privaten unveränderlichen veröffentlichten synthetischen Release samt SHA-Readback und getrenntem vollständigem Remote-Recovery. Bisher **kein Upload/Restore**, keine CI-Run-ID. Alle V1-Abnahme-Gates bleiben davon getrennt.
+
+**Offizielle Provider-Bedienung:** https://circleci.com/docs/guides/orchestrate/triggers-overview/ (getrennte Source-Auswahl für GitHub-App-Projekte), https://circleci.com/docs/guides/orchestrate/pipeline-variables/ (Add Parameters / Boolean).
