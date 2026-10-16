@@ -300,3 +300,21 @@ Nach Betreiber-Änderung liefert der **direkte GitHub-API-Zweigabruf** erstmals 
 **Abnahmeschwelle:** `GH-04 accepted` **ausschließlich** nach echtem Anbieter-Run `success` und per REST/Logs belegtem privaten unveränderlichen veröffentlichten synthetischen Release samt SHA-Readback und getrenntem vollständigem Remote-Recovery. Bisher **kein Upload/Restore**, keine CI-Run-ID. Alle V1-Abnahme-Gates bleiben davon getrennt.
 
 **Offizielle Provider-Bedienung:** https://circleci.com/docs/guides/orchestrate/triggers-overview/ (getrennte Source-Auswahl für GitHub-App-Projekte), https://circleci.com/docs/guides/orchestrate/pipeline-variables/ (Add Parameters / Boolean).
+
+
+## GH-04 – erfolgreicher synthetischer immutable GitHub Release nach CircleCI-Job-SUCCESS (16.10.2026)
+
+**Technischer Nachweis, unabhängig in GitHub gelesen:** Betreiber meldet CircleCI-`d70d145b-b76b-47f4-854c-838d7ad227ed` `success`. Das private Ziel `janjrre/orgavela-backups` enthält inzwischen ein **veröffentlichtes immutable Release** [`backup-orgavela-synthetic-circleci-3`](https://github.com/janjrre/orgavela-backups/releases/tag/backup-orgavela-synthetic-circleci-3) mit numerischer ID `414750281`, `draft=false`, `immutable=true`, `published_at=2026-10-16T09:06:20Z`, genau **drei** Assets:
+- `646772868`, `orgavela-synthetic-circleci-3.tar.gpg`, 549 Bytes, `sha256:0fbb3b4077b7b360f76ec9d105772936f48b76f9c531e3c490804267eda4e70a`.
+- `646772871`, `manifest.json`, 331 Bytes, `sha256:adbb788993ba9cf8be0ebc48ba9291ede912f16b1e112d53467326e6de213800`.
+- `646772865`, `orgavela-synthetic-circleci-3.tar.gpg.sha256`, 104 Bytes, `sha256:b20ba2dc4b6576a373dfd94df684b06a3e873849121265d59142c38b44cf658a`.
+
+Die Metadaten der drei Assets wurden jeweils separat via GitHub REST GET mit `state=uploaded` bestätigt. Alle Payloads sind **ausschließlich synthetisch**; Quell-Testbranch `test/orgavela-github-release-o03 protected=true`, HEAD `a03b0e079ad0f8bd782574abd5b0ed581bf3c12a`. Die `immutable=true`-Release-Flag ist nun **direkt belegter konkreter Releasezustand** (anders als zuvor unbekannte Admin-Einstellung). Die unveränderten GH-04-Skripte erzwingen in einem erfolgreich beendeten Job den Remote-Hash-Readback vor und nach Publish sowie unabhängiges synthetisches Restore per eigenem GPG-Keyring; wegen nicht verfügbarem CircleCI-Admin-/Log-Read ist diese Restore-Aussage **vom gemeldeten Job-SUCCESS plus Source-Kontrollfluss abgeleitet**, nicht unabhängig aus Provider-Step-Logs/Asset-Bytes wiederholt.
+
+**GH-04 technischer Test: PASS. GH-04 formale Sicherheitsabnahme bis auf Token-Revoke noch offen.** Die bei GH-04 angelegten Secrets dürfen **nicht** dauerhaft bestehen bleiben:
+
+- [ ] **GitHub-PAT widerrufen:** https://github.com/settings/personal-access-tokens → unter Fine-grained Tokens genau das für diesen Test angelegte Token `orgavela-synthetic-transport-once` **Revoke**. Nicht neu erzeugen, keine Secrets übertragen.
+- [ ] **CircleCI `GH_TOKEN` löschen:** https://app.circleci.com/settings/organization → Context `orgavela-backup-releases` → Environment Variables → **`GH_TOKEN` entfernen**.
+- [ ] **Nach Betreiberbestätigung GH-04 akzeptieren und abschließen:** kein weiterer Cloud-Run nötig; Private-Release-Assets als synthetische Nachweisdokumentation beibehalten. GH-03/05–08 offen, echte Daten erst nach Offline-Owner-Key und isoliertem vollständigem Restore.
+
+**GH-04-Ergebnis darf niemals als produktives WordPress-Backup umgedeutet werden.** 549-Byte-GPG-Archiv ist nur eine harmlose fixe Textfixture; die separate reale Recovery-Sicherung steht erst in GH-03–GH-07 an.
