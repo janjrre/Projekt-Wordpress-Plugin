@@ -1,8 +1,8 @@
 {
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
-  "snapshot_date": "2026-10-15",
-  "snapshot_basis": "2026-10-15 GH-04 started after GH-02 accepted. Direct GET: protected synthetic test branch at a03b0e079ad0f8bd782574abd5b0ed581bf3c12a; PR #19 still Draft, janjrre/orgavela-backups private and zero releases. In isolated ephemeral local runtime performed artificial 2-line TAR OpenPGP encryption/decryption in separate GPG keyrings, sha256, byte-exact archive and data extraction recovery: PASS. Not the full PR #19 CI script, no GitHub Release upload, token, CI run or production capture. GH-04 pending token/operator-only CircleCI context and manual opt-in run. GH-03 and real backup/restore gates still open.",
+  "snapshot_date": "2026-10-16",
+  "snapshot_basis": "2026-10-16 GH-04 operator confirms short-lived fine-grained PAT restricted to private janjrre/orgavela-backups stored as GH_TOKEN in protected orgavela-backup-releases CircleCI context. This is operator-attested, not independently read/tested. GitHub test branch protected=true unchanged SHA a03b0e079ad0f8bd782574abd5b0ed581bf3c12a, PR #19 Draft, backup repo private and releases still empty. A new unverified precondition: GitHub release immutability MUST be enabled in backup repository General > Releases before first synthetic published release; GitHub admin REST read denied by connector allowlist and requires Admin: Read. CircleCI provider not directly connected, authorized PC offline; no cost-approved browser execution. GH-04 remains pending operator immutability verification and manual UI pipeline with boolean true; no CI run, releases or real backups. GH-02 accepted, W0/O03/V1 still open.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -183,7 +183,7 @@
       "github_backup_repository_created": true,
       "github_backup_release_assets_uploaded": false,
       "github_backup_offsite_strategy": "private encrypted GitHub Release assets, not git history. Synthetic PR #19 uses ephemeral OpenPGP; production age/OpenPGP is not yet decided.",
-      "github_backup_api_token_configured": false,
+      "github_backup_api_token_configured": true,
       "github_backup_ciphertext_canary_verified": false,
       "github_backup_real_restore_verified": false,
       "github_backup_operator_setup_guide": "docs/operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md",
@@ -263,8 +263,14 @@
       "gh04_remote_only_restore_verified": false,
       "gh04_immutable_release_verified": false,
       "gh04_formal_accepted": false,
-      "gh04_blocker": "Requires brand-new short-lived GitHub fine-grained PAT scoped only to private janjrre/orgavela-backups, Contents: Read and write, entered directly into restricted CircleCI orgavela-backup-releases Context; then manual operator-only test branch pipeline enable_synthetic_github_release_e2e=true. ChatGPT GitHub connector cannot create/store PAT or run CircleCI provider pipeline. No production data.",
-      "gh04_next": "Operator sets GH_TOKEN in CircleCI protected context via GitHub token with expiration; confirm only this repo and no other secrets; launch manual pipeline parameter on test/orgavela-github-release-o03; then assistant reads CircleCI run/proof + private Github synthetic immutable release, revokes credentials as possible."
+      "gh04_blocker": "GitHub backup repository release immutability not yet operator-confirmed, and no direct CircleCI trigger/admin provider tool or online authorized PC. Operator should verify/enable immutability BEFORE first Release, then use CircleCI UI Trigger Pipeline on same protected test config+checkout branch and boolean enable_synthetic_github_release_e2e=true; verify job/release then revoke token.",
+      "gh04_next": "Operator opens https://github.com/janjrre/orgavela-backups/settings and confirms Enable release immutability is on; then in https://app.circleci.com/pipelines/github/janjrre/Projekt-Wordpress-Plugin selects project/config+checkout branch test/orgavela-github-release-o03, Add Parameters Boolean enable_synthetic_github_release_e2e=true, Run Pipeline once. Send only pipeline URL/status (no token), assistant checks private GitHub release and job evidence, then operator revokes token+Context GH_TOKEN.",
+      "github_backup_api_token_configured_evidence": "Operator-reported 2026-10-16 fine-grained PAT only for janjrre/orgavela-backups placed into CircleCI orgavela-backup-releases Context GH_TOKEN. Value never seen or verified by assistant.",
+      "gh04_token_operator_attested": true,
+      "gh04_token_scope_operator_attested": "janjrre/orgavela-backups only, short lived; previous instructions Contents Read and write",
+      "gh04_immutability_precondition_verified": false,
+      "gh04_immutability_precondition_evidence": "Requires operator GitHub private target repo Settings -> General -> Releases -> Enable release immutability; GitHub admin REST check GET /repos/janjrre/orgavela-backups/immutable-releases requires Admin Read; connected GitHub fetch rejects this endpoint (400 allowlist).",
+      "gh04_cloud_launch_authorized_by_current_safety_gates": false
     },
     {
       "id": "O04",
@@ -649,7 +655,7 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "GH-04 Cloud E2E BLOCKED on operator-only token: local isolated synthetic encrypted TAR/restore PASSED, no release/circleci run. Create short-lived fine-grained PAT on private janjrre/orgavela-backups with Contents R/W; save only as GH_TOKEN in restricted CircleCI orgavela-backup-releases. Manually run pipeline on protected test/orgavela-github-release-o03 parameter enable_synthetic_github_release_e2e=true, then verify immutable private release ID/sha256/readback/independent recovery. Revoke PAT after. No real backups.",
+    "GH-04 token operator-attested set. FIRST operator verifies/activates GitHub immutable releases in private janjrre/orgavela-backups Settings > General > Releases; THEN explicitly manually trigger CircleCI on protected test/orgavela-github-release-o03 config and checkout branch, boolean enable_synthetic_github_release_e2e=true. No direct provider action, job not run, no releases yet. Check full remote E2E/immutable and independent restore then revoke GH_TOKEN.",
     "New GH-04 synthetic E2E code exists only in stacked Draft PR #19; DO NOT merge without approval. GitHub GET test/orgavela-github-release-o03 currently protected=false: operator must protect exactly this branch and verify no-bypass/PR restrictions before storing GH_TOKEN in any accessible CircleCI Context",
     "After new test branch protected, operator replaces OrgaVela CircleCI context expression (currently main-only) to allow ONLY test/orgavela-github-release-o03 and no SSH debug/untrusted configurations; confirm Free-Credits/project restrictions",
     "After GH-02 accepted, operator creates time-limited repo-scoped fine-grained PAT exclusively for private janjrre/orgavela-backups Contents read/write, enters directly as GH_TOKEN into OrgaVela-only CircleCI context; no sharing or Dreamloud reuse",
@@ -660,7 +666,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.17",
+  "masterplan_version": "2.18",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
@@ -792,6 +798,11 @@
     "gh02_gh04_automatically_authorized": false,
     "gh04_actual_synthetic_release_uploaded": false,
     "gh04_local_crypto_roundtrip_verified": true,
-    "gh04_next_requires_operator_token": true
+    "gh04_next_requires_operator_token": true,
+    "gh04_token_operator_attested": true,
+    "gh04_immutable_releases_admin_read_available": false,
+    "gh04_immutable_releases_operator_confirmed": false,
+    "gh04_actual_circleci_run_id": null,
+    "gh04_review_at": "2026-10-16"
   }
 }
