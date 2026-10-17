@@ -174,3 +174,24 @@ Diese Änderung lockert **ausschließlich** die Test-Voraussetzung für künstli
 
 
 **GH-04 Code-/Sicherheitsnachtrag 14.10.2026:** [Draft PR #19](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/19) enthält einen **synthetischen** OrgaVela-GitHub-Releases-Transporttest mit ephemerem Runner-GPG-Testkey, festen Repo-/Branch-/Context-Grenzen, nur manuell aktivierbarem Parameter (Default `false`) und geplanter voller Remote-Asset-/Hash-/Immutable-/Restoreprüfung. **Bisher nur vorbereitet und statisch gelesen**, nicht auf CircleCI ausgeführt. Der neue Branch [`test/orgavela-github-release-o03`](https://github.com/janjrre/Projekt-Wordpress-Plugin/tree/test/orgavela-github-release-o03) ist laut GitHub **`protected=false`**; die Betreiber-Expression für den OrgaVela-Context ist noch main-only. Bis beide behoben sind **kein GH_TOKEN und kein Live-E2E**; GH-02 nicht bestanden. GH-04/GH-03/GH-06/GH-07 bleiben offen, formale B04/R03 nicht abgenommen.
+
+
+## Ergänzender W0/O03-Betriebsnachweis: GH-04 Synthetik-Canary (17.10.2026)
+
+**Einordnung:** Dies ist eine **Operations-Vorprüfung GH-04** und **keine** Erfüllung oder Teilfreigabe von R01–R18. Die R01–R18-Abnahmematrix und deren formale Zähler bleiben unverändert. **GH-04 `accepted` bezieht sich ausschließlich auf einen künstlichen GitHub Releases End-to-End-Test.**
+
+| Prüfschritt / Evidenz | Ergebnis und Nachweistyp |
+|---|---|
+| GH-02-Sicherheitsvorprüfung | Accepted auf Github-API-Beleg plus expliziter Betreiberbestätigung der GitHub-/CircleCI-Admin-Einstellungen |
+| Unveränderliche Quellimplementierung | Protected Branch `test/orgavela-github-release-o03`, geprüfter HEAD `a03b0e079ad0f8bd782574abd5b0ed581bf3c12a`, Skripte verweigern echte Daten und erfordern manuelle Pipeline-Freigabe |
+| Erfolgreicher CircleCI-Canary | Betreiber bestätigt `success` für Workflow/Job `d70d145b-b76b-47f4-854c-838d7ad227ed`; keine unabhängige CircleCI-Step-Log-Sicht |
+| Privates unveränderliches GitHub-Testrelease | **GitHub REST unabhängig bestätigt**: `janjrre/orgavela-backups`, Release-ID `414750281`, Tag `backup-orgavela-synthetic-circleci-3`, `draft=false`, `immutable=true`, Published `2026-10-16T09:06:20Z` |
+| Verschlüsseltes künstliches Archiv | GitHub Asset `646772868`, `orgavela-synthetic-circleci-3.tar.gpg`, 549 Bytes, `uploaded`, GitHub digest `sha256:0fbb3b4077b7b360f76ec9d105772936f48b76f9c531e3c490804267eda4e70a` |
+| Nachweis-Assets | `manifest.json` Asset `646772871`; `.tar.gpg.sha256` Asset `646772865`; beide in privaten Release-Metadaten als `uploaded` bestätigt |
+| Remote-HASH/Decrypt/Restore | Aus dem unveränderten fail-closed Job-Skript und Betreiber-`success` abgeleiteter Test-PASS; **binäre Asset-Bytes/CI-Einzellogs nicht unabhängig vom Assistenten nachgelesen** |
+| Tokenbereinigung | Betreiber bestätigt 17.10.2026: GitHub-Test-PAT **widerrufen** und CircleCI `orgavela-backup-releases` `GH_TOKEN` **gelöscht**; keine unabhängige Secret-API-Lesung |
+| Gesamtentscheidung | **GH-04 `accepted` (synthetic only)** bei gemischten Nachweisen; **GH-03 und GH-05–08 offen**, echter Snapshot/Full-Restore/Schedule **nicht** bestanden |
+
+**Stop-Gates für reale OrgaVela-Sicherungen:** Besitzer kontrolliert dauerhaften privaten Offline-Recovery-Key mit zwei separat gesicherten Kopien, dessen kryptografisches Format mit der zukünftigen Writer-/Restore-Architektur übereinstimmt, unabhängige Decryption-Recovery-Probe. Erst nach GH-03 Owner-Abnahme weitere GH-05/06-Runs für echte WP-/MariaDB-Daten und vollständiger isolierter GH-07-Real-Restore. Die synthetische Cloudfreigabe hebt **kein** R01–R18-Releasestor auf.
+
+**Belegort:** [GitHub synthetisches privates Backuprelease](https://github.com/janjrre/orgavela-backups/releases/tag/backup-orgavela-synthetic-circleci-3), [GH-04-Runbook](../operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md), [append-only Arbeitsjournal](../operations/ASSISTANT_WORK_LOG.md), [kanonischer V1-Masterplan v2.20](../operations/V1_ACCEPTANCE_PLAN.md).
