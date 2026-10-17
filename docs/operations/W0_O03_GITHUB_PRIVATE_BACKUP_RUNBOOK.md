@@ -313,8 +313,17 @@ Die Metadaten der drei Assets wurden jeweils separat via GitHub REST GET mit `st
 
 **GH-04 technischer Test: PASS. GH-04 formale Sicherheitsabnahme bis auf Token-Revoke noch offen.** Die bei GH-04 angelegten Secrets dürfen **nicht** dauerhaft bestehen bleiben:
 
-- [ ] **GitHub-PAT widerrufen:** https://github.com/settings/personal-access-tokens → unter Fine-grained Tokens genau das für diesen Test angelegte Token `orgavela-synthetic-transport-once` **Revoke**. Nicht neu erzeugen, keine Secrets übertragen.
-- [ ] **CircleCI `GH_TOKEN` löschen:** https://app.circleci.com/settings/organization → Context `orgavela-backup-releases` → Environment Variables → **`GH_TOKEN` entfernen**.
-- [ ] **Nach Betreiberbestätigung GH-04 akzeptieren und abschließen:** kein weiterer Cloud-Run nötig; Private-Release-Assets als synthetische Nachweisdokumentation beibehalten. GH-03/05–08 offen, echte Daten erst nach Offline-Owner-Key und isoliertem vollständigem Restore.
+- [x] **GitHub-PAT widerrufen:** https://github.com/settings/personal-access-tokens → unter Fine-grained Tokens genau das für diesen Test angelegte Token `orgavela-synthetic-transport-once` **Revoke**. Nicht neu erzeugen, keine Secrets übertragen.
+- [x] **CircleCI `GH_TOKEN` löschen:** https://app.circleci.com/settings/organization → Context `orgavela-backup-releases` → Environment Variables → **`GH_TOKEN` entfernen**.
+- [x] **Nach Betreiberbestätigung GH-04 akzeptieren und abschließen:** kein weiterer Cloud-Run nötig; Private-Release-Assets als synthetische Nachweisdokumentation beibehalten. GH-03/05–08 offen, echte Daten erst nach Offline-Owner-Key und isoliertem vollständigem Restore.
 
 **GH-04-Ergebnis darf niemals als produktives WordPress-Backup umgedeutet werden.** 549-Byte-GPG-Archiv ist nur eine harmlose fixe Textfixture; die separate reale Recovery-Sicherung steht erst in GH-03–GH-07 an.
+
+
+### GH-04 Abschlussbestätigung am 17.10.2026 – keine weitere Testtoken-Verwendung
+
+**Operator-Nachweis:** Betreiber bestätigt ausdrücklich, dass das **einmalige** GitHub-Fine-grained-PAT **widerrufen** und der CircleCI-Context-Eintrag **`GH_TOKEN` gelöscht** wurde. Die zwei Checkboxen wurden daher **auf Grundlage der Betreiber-UI-Bestätigung** abgehakt. Es gab keine heimliche Admin-Read-Verifikation, da GitHub-Tokenverwaltung und CircleCI-Secrets mit der verwendeten Integration nicht lesbar sind. Kein neues PAT generieren, keinen weiteren synthetischen oder produktiven Test mit diesem Secret starten; die Context-Projekt-/Expression-Sicherheitsregeln unverändert belassen.
+
+**Bestehender privater Nachweis bei unabhängiger GitHub-REST-Nachprüfung erhalten:** Release `414750281`, `backup-orgavela-synthetic-circleci-3`, `draft=false`, `immutable=true`, drei hochgeladene Assets samt GitHub-SHA256. CircleCI-Job-/Workflow-ID `d70d145b-b76b-47f4-854c-838d7ad227ed` und `success` vom Betreiber gemeldet; Programmfluss erzwingt vor erfolgreichem Ende künstliche unabhängige Wiederherstellung. Der CircleCI-Run-Log und binäre Remote-Nachdownload sind **nicht** unabhängig über diese Verbindung überprüft. Nach Evidenzmix aus technischer Release-Prüfung, geprüfter fehlerabbrechender Quelllogik und Betreiber-Success **GH-04 SYNTHETIC ONLY = ACCEPTED**. Dies ist keine reale WordPress-/Datenbank-Sicherung und kein V1-Release-Gate.
+
+**GH-03 ist jetzt der operative nächste Schritt:** Kryptoformat **age oder OpenPGP** als ADR entscheiden; eine **neue dauerhafte private Recovery-Identität** darf ausschließlich auf dem kontrollierten Betreibergerät erzeugt und an mindestens zwei getrennten sicheren **Offline-Orten** gespeichert werden, **nie** in Chat, GitHub, CircleCI, E-Mail oder auf dem Produktionsserver. Erst nach Überprüfung der Kopien, einem unabhängigen Wiederherstellungstest und dokumentierter Verlust-/Rotationsstrategie GH-03 abnehmen. CI bekommt für echte Backups **nur den öffentlichen Empfänger/Schlüssel**, nie Private-Key-Material. GH-05/06/07/08 müssen danach getrennt technisch und fachlich abgenommen werden; bis dahin keine echten Daten hochladen, keine Cron-Jobs/Schedules aktivieren. Das unveränderliche künstliche Testrelease als Auditbeleg erhalten.
