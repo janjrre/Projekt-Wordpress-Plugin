@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-17",
-  "snapshot_basis": "2026-10-17 GH-04 formal accepted after user explicitly confirms revoking short-lived repo-only PAT and deleting GH_TOKEN from restricted CircleCI context. This cleanup is OPERATOR-ATTESTED, not independently readable from GitHub/CircleCI secret APIs. Read-only GitHub REST re-confirmed private published immutable synthetic Release id 414750281, three uploaded SHA256-digested assets, testbranch protected=true on unchanged a03b0e079ad0f8bd782574abd5b0ed581bf3c12a. Previously operator reports CircleCI workflow/job d70d145b-b76b-47f4-854c-838d7ad227ed SUCCESS; source script enforces independent synthetic remote SHA and decrypt/restore before 0 exit; CI individual step logs and binary readback NOT independently inspectable. GH-04 only synthetic technical/credential gate accepted; GH-03 owner offline key, GH-05/06 actual backup, GH-07 real restore, GH-08 scheduling pending; W0/O03 and V1 still partial/unaccepted. 62/71 historic code, milestone 0/8, P4 0/4, release 0/18 unchanged.",
+  "snapshot_basis": "2026-10-17 GH-03 actively prepared after GH-04 accepted_synthetic_only: reviewed prior age operator key instructions; production encryption choice formally DECIDED age, ADR docs/operations/W0_O03_GH03_ENCRYPTION_RECOVERY_ADR.md and owner-only Windows/two independently protected physical offline USB recovery test runbook docs/operations/W0_O03_GH03_OWNER_OFFLINE_KEY_RUNBOOK.md committed on Draft PR #18. NO real age owner key generated or verified, no independent two offline key copies, no real recovered ciphertext, no production WordPress/DB backup. GH-03 remains unaccepted. PCjan offline. GH-04 token remains revoked/removed according to operator, independent admin read unavailable. V1 historical code and formal milestones/release counts unchanged.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -228,7 +228,7 @@
       "synthetic_ci_runner_tested": true,
       "synthetic_ci_repo_release_tested": true,
       "gh05_capture_writer_production_ready": false,
-      "openpgp_or_age_real_format_decision": "pending documented ADR; GPG only ephemeral synthetic test",
+      "openpgp_or_age_real_format_decision": "age native recipient + owner private identity exclusively offline; GH-04 GPG only synthetic. Formal decision documented 2026-10-17 in W0_O03_GH03_ENCRYPTION_RECOVERY_ADR.md; age producer and real restore not implemented.",
       "github_release_inventory_checked_at": "2026-10-16",
       "github_backup_release_count": 1,
       "gh02_latest_review": "2026-10-15 after user follow-up: GH-02 ACCEPTED based on direct GitHub protected=true on unchanged synthetic testbranch + CI source opt-in default false + operator-confirmed GitHub detailed rules, CircleCI project/expression, CircleCI Free plan, forked-PR secret transfer disabled. No direct API verification of Context or individual protection rules; actual Free OSS remaining credits not visible. Stop immediately if setting changes; GH-04 not run.",
@@ -312,7 +312,21 @@
       "gh04_credential_cleanup_evidence": "Operator explicitly confirmed both 2026-10-17: PAT revoked and CircleCI GH_TOKEN deleted. Admin APIs not available; not independently verified.",
       "gh04_acceptance_date": "2026-10-17",
       "gh04_formal_acceptance_evidence": "2026-10-16 operator-reported CircleCI d70d145b-b76b-47f4-854c-838d7ad227ed SUCCESS; independently verified private published immutable Release 414750281 with 3 uploaded assets/digests, scripts fail closed for readback/decrypt/restore; 2026-10-17 operator-confirmed PAT revoked and Context GH_TOKEN removed. CircleCI steps/secret deletions not independently visible.",
-      "github_backup_gh04_verified": true
+      "github_backup_gh04_verified": true,
+      "gh03_status": "in_progress_owner_offline_setup_pending",
+      "gh03_architecture_decided": true,
+      "gh03_architecture_decided_at": "2026-10-17",
+      "gh03_production_encryption_format": "age",
+      "gh03_decision_record": "docs/operations/W0_O03_GH03_ENCRYPTION_RECOVERY_ADR.md",
+      "gh03_owner_runbook": "docs/operations/W0_O03_GH03_OWNER_OFFLINE_KEY_RUNBOOK.md",
+      "gh03_owner_private_key_generated_operator_attested": false,
+      "gh03_offline_copy1_attested": false,
+      "gh03_offline_copy2_attested": false,
+      "gh03_copy2_synthetic_decryption_passed_operator_attested": false,
+      "gh03_loss_rotation_plan_accepted": false,
+      "gh03_formal_accepted": false,
+      "gh03_current_blocker": "Owner must run age keygen locally on offline trusted device, make 2 independently protected offline copies, compare public recipients and conduct synthetic SHA256-identical decrypt from second offline key copy. No secret/private key in chat, GitHub, CircleCI or backup runner.",
+      "gh03_next": "Owner uses Windows age keygen offline on first encrypted USB, copies to independently encrypted second offline USB, compares age1 recipients/private-file SHA256 locally and performs artificial sample decrypt from copy2. Confirms only success (and optionally age1 public recipient). GH-03 remains open until this operator proof; then evaluate GH-05 writer age compatibility before any real capture."
     },
     {
       "id": "O04",
@@ -697,7 +711,7 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "GH-03 NEXT: operator-owned durable offline recovery private key, two separated copies, record the approved age or OpenPGP format in an ADR, import ONLY public recipient material to CI later, independent local recovery rehearsal, plan key rotation and lost-key fallback. GH-04 accepted based on independently immutable synthetic Release 414750281 and operator-confirmed CI success + PAT/context cleanup; no real backups or schedules until GH-03/05–07 verified.",
+    "GH-03 format age DECIDED in operations ADR and Windows two-encrypted-USB offline recovery guide committed, but owner key NOT YET generated or safely copied/tested. Owner to run on trusted disconnected Windows PC, verify two separately protected offline private-key copies via same public age recipient/hash, artificial age encrypted/decrypted fixture using copy2. ONLY success/public age1 recipient to assistant. No production OrgaVela WP/MariaDB backup or schedule until GH-03 + GH-05/06/07 completed.",
     "New GH-04 synthetic E2E code exists only in stacked Draft PR #19; DO NOT merge without approval. GitHub GET test/orgavela-github-release-o03 currently protected=false: operator must protect exactly this branch and verify no-bypass/PR restrictions before storing GH_TOKEN in any accessible CircleCI Context",
     "After new test branch protected, operator replaces OrgaVela CircleCI context expression (currently main-only) to allow ONLY test/orgavela-github-release-o03 and no SSH debug/untrusted configurations; confirm Free-Credits/project restrictions",
     "After GH-02 accepted, operator creates time-limited repo-scoped fine-grained PAT exclusively for private janjrre/orgavela-backups Contents read/write, enters directly as GH_TOKEN into OrgaVela-only CircleCI context; no sharing or Dreamloud reuse",
@@ -708,7 +722,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.20",
+  "masterplan_version": "2.21",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
@@ -773,7 +787,7 @@
     "source_main_branch_protection_details_independently_verified": false,
     "main_normative_plan_version": "2.11",
     "documentation_pr": 18,
-    "documentation_branch_plan_version": "2.20",
+    "documentation_branch_plan_version": "2.21",
     "documentation_pr_merged": false,
     "open_pr_numbers": [
       1,
@@ -859,6 +873,13 @@
     "gh04_credential_cleanup_directly_verified": false,
     "gh04_formally_accepted": true,
     "gh04_accepted_at": "2026-10-17",
-    "gh04_accepted_scope": "synthetic-only immutable GitHub Release E2E, not real backup"
+    "gh04_accepted_scope": "synthetic-only immutable GitHub Release E2E, not real backup",
+    "gh03_format_decided": "age",
+    "gh03_architecture_decision_doc": "docs/operations/W0_O03_GH03_ENCRYPTION_RECOVERY_ADR.md",
+    "gh03_owner_runbook": "docs/operations/W0_O03_GH03_OWNER_OFFLINE_KEY_RUNBOOK.md",
+    "gh03_owner_private_key_confirmed": false,
+    "gh03_two_offline_copies_confirmed": false,
+    "gh03_independent_synthetic_restore_confirmed": false,
+    "gh03_formally_accepted": false
   }
 }
