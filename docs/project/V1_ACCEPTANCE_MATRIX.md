@@ -195,3 +195,19 @@ Diese Änderung lockert **ausschließlich** die Test-Voraussetzung für künstli
 **Stop-Gates für reale OrgaVela-Sicherungen:** Besitzer kontrolliert dauerhaften privaten Offline-Recovery-Key mit zwei separat gesicherten Kopien, dessen kryptografisches Format mit der zukünftigen Writer-/Restore-Architektur übereinstimmt, unabhängige Decryption-Recovery-Probe. Erst nach GH-03 Owner-Abnahme weitere GH-05/06-Runs für echte WP-/MariaDB-Daten und vollständiger isolierter GH-07-Real-Restore. Die synthetische Cloudfreigabe hebt **kein** R01–R18-Releasestor auf.
 
 **Belegort:** [GitHub synthetisches privates Backuprelease](https://github.com/janjrre/orgavela-backups/releases/tag/backup-orgavela-synthetic-circleci-3), [GH-04-Runbook](../operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md), [append-only Arbeitsjournal](../operations/ASSISTANT_WORK_LOG.md), [kanonischer V1-Masterplan v2.20](../operations/V1_ACCEPTANCE_PLAN.md).
+
+
+## Ergänzender Operations-Gate GH-03: Private age-Recovery vollständig unabhängig vom Cloud-Provider (17.10.2026)
+
+**Abnahmeart:** W0/O03-/GH-03-Betriebs-Gate, **kein** R01–R18-Release-Gate und keine Änderung der formalen Release-Zähler.
+
+| Test-ID | Konkreter Abnahmetest | Aktueller Status/Nachweis |
+|---|---|---|
+| GH03-A | Produktives Verschlüsselungsformat gegenüber GPG-Synthetik eindeutig festlegen | **PASS Architektur**: `age` gewählt, [GH-03-ADR](../operations/W0_O03_GH03_ENCRYPTION_RECOVERY_ADR.md) committed |
+| GH03-B | Privater Owner-Identity-Key nur lokal auf vertrauenswürdigem Gerät erzeugt; niemals GitHub/CircleCI/IONOS/ChatGPT | **OPEN**, kein Betreiber-Key erstellt/bestätigt |
+| GH03-C | Zwei getrennte, geschützte physische Offline-Recovery-Kopien mit identischer Public-Recipient-Identität und bytegleichem Key; getrennte Aufbewahrung | **OPEN**, keine Besitzerbestätigung |
+| GH03-D | Kunsttext mit eigenem `age1…`-Recipient verschlüsseln und aus Offline-Kopie 2 wieder entschlüsseln; SHA256 der Klartextdateien gleich; Testartefakte bereinigen | **OPEN**, kein Owner-Run/Hashresultat |
+| GH03-E | Wiederherstellung ohne Original-PC aus getrenntem Medium praktisch möglich; Verlust-/Kompromittierungs-/Rotationsverfahren dokumentiert und vom Betreiber angenommen | **OPEN**, Anleitung verfügbar, kein Eigentümer-Test |
+| GH03-F | Nur Public Recipient im künftigen Writer; echte Writer-/Restore-Implementierung später separat mit einem einheitlichen `.tar.age`-Format getestet | **GEPLANT GH-05–GH-07**, noch kein Runtime-/CI-Einsatz und kein reales Backup |
+
+**GH-03 formale Abnahme:** nur bei **GH03-A bis E vollständig** und belegter Owner-Bestätigung ohne private Schlüsselübermittlung. GH03-F ist nachgelagertes Schutzgate für den echten Workflow. `age1…`-Recipient darf später als nicht geheimes Konfigurationsdatum eingebracht werden, dessen Zuordnung zum Besitzerkey muss vor jeder echten Verschlüsselung verifiziert werden. Der synthetische GH-04 GPG-Canary genügt nicht für GH-03. [Offline-Anleitung](../operations/W0_O03_GH03_OWNER_OFFLINE_KEY_RUNBOOK.md). **M0–M7 0/8, P4 0/4, R01–18 0/18 weiterhin unverändert.**
