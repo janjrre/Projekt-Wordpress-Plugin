@@ -3,6 +3,16 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 20.10.2026 – Dreamloud-Produktions-Backupverfahren als OrgaVela-Synthetik-Pipeline adaptiert
+
+**Dreamloud-Quelle read-only unabhängig geprüft:** Branch `backup/production-circleci` bei `da44f1a6d76ac25bce5cfed3122224c82c5da2fa` verwendet getrennte kontrollierte Capture- und verschlüsselte immutable-GitHub-Release-Writer-Jobs. Production-Backup (#348) und isolierter Restore (#353) sind im Dreamloud-Handoff belegt; täglicher realer Zeitplan ist davon unabhängig und noch nicht nachgewiesen.
+
+**OrgaVela Draft PR [#20](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/20):** neue `scripts/ci/orgavela_backup_parity.py` für ausnahmslos künstliche age-X25519-Dateien und ein streng nur Ciphertext/Manifest/Hash akzeptierender Writer; 13 separat **definierte** Python-Sicherheits- und negative Tests; Default-False-Parameter `enable_gh05_synthetic_parity` mit zwei getrennten branchgebundenen CircleCI-Jobs ohne Secret-Contexts. [Entscheidung und Abgrenzung](../operations/W0_O03_DREAMLOUD_PARITY_ADR_2026-10-20.md).
+
+**Wichtig:** Alle fünf neu/erweiterten Dateien wurden über GitHub lesenachgeprüft; **kein** tatsächlicher neuer Age-Crypto-CLI-/CircleCI-Run und **kein** Test-PASS für die 13 neuen Fälle bislang. Vor CircleCI-Integration ist die Konfiguration mit dem noch offenen **Draft PR #17** abzugleichen; niemals ein anderes CI-Pilotverfahren ersetzen. Keine realen Daten, kein Backup-Upload, keine Kosten, keine Dreamloud-Änderung und keine tägliche Automatik ausgelöst.
+
+**GH-03 weiter blockiert:** Betreiber AgePony-Identity und lokale PDF reichen nicht für unabhängig geschützte Offline-Wiederherstellung. GH-05 real capture, GH-06, GH-07 und GH-08 weiterhin nicht abgenommen. V1 unverändert **62/71 historische Coding-Pakete**, formal **0/8 M0–M7**, **P4 0/4**, **R01–R18 0/18**, PR-Integration offen.
+
 ## Update 20.10.2026 – GH-05 age-CLI-Test wegen fehlendem offiziellen Binary blockiert
 
 - GH-05 Draft PR [#20](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/20): **8 Python-Tests lokal bestanden, 1 echter `age`-CLI-Test weiterhin SKIP**, weil die isolierte Laufzeit weder age noch age-keygen enthält und die offiziellen GitHub-/Spiegel-Downloads nicht möglich waren. Direkter künstlicher CLI-Runner verweigert zu Recht Erfolg mit **Exit 1**.
