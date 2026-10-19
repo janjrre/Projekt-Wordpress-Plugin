@@ -3,6 +3,15 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 19.10.2026 – GH-05 synthetische Archiv- und age-Testvorbereitung
+
+- **Draft PR [#20](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/20)** (gestapelt auf Draft PR #18) erstellt. Drei neue Dateien: ausschließlich synthetischer TAR/age-Tester, Python-negative Unittests, [GH-05-Prüfanleitung](../operations/W0_O03_GH05_SYNTHETIC_PREPARATION.md).
+- **Lokal geprüfter Teilbereich:** Im isolierten Assistenz-Container bestanden 8 Python-Unit-/Sicherheitsprüfungen; 1 echter age-CLI-Test wurde **SKIP**, weil official age/age-keygen dort nicht installiert sind. Tests wurden mit dem äquivalenten vorher lokal aufgebauten Quellstand durchgeführt; kein grüner provider-/PR-HEAD-Nachweis.
+- **Wichtige Grenze:** Kein echter age-CLI-Krypto-PASS, kein MariaDB-/WordPress-Capture, keine Cloud-Uploads oder Releases, keine CircleCI-/GitHub-Actions-Runs, keine Kosten, keine Secrets. Das ist **GH-05-VORBEREITUNG**, keine produktive GH-05-Abnahme.
+- **GH-03 weiterhin blockierend:** Betreiber meldet erfolgreichen lokalen AgePony-Notiz-Roundtrip und PDF nur auf dem Originalgerät; kein unabhängiger Wiederherstellungsbeweis mit Kopie 2. GH-05 echte Captures, GH-06, GH-07 und GH-08 bleiben gesperrt.
+- **Nächster Beleg:** Committed Code statisch gegen Quell-/Secret-/Upload-Schranken prüfen; denselben künstlichen Ciphertext-Test mit installierter offizieller age-CLI separat durchführen. Keine automatische Freigabe für echte Daten oder Schedules.
+- **Formale Zahlen unverändert:** 62/71 historische Coding-Pakete, 0/8 M0–M7-Abnahmen, 0/4 P4, 0/18 Release-Gates, V1 noch offen, PR-Integration ausstehend.
+
 ## Update 19.10.2026 – GH-03: AgePony-Notiz lokal erfolgreich entschlüsselt
 
 - **Operator-Nachweis:** AgePony-Screenshot zeigt eine native `age X25519`-Identität „OrgaVela Recovery v1“. Betreiber meldet eine passphrasegeschützte Paper-Backup-PDF unter iOS/iPadOS `Auf meinem iPhone/iPad` und erfolgreiche lokale Ver- und Entschlüsselung einer ausschließlich künstlichen Testnotiz.
