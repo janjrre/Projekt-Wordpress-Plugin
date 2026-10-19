@@ -1,8 +1,8 @@
 {
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
-  "snapshot_date": "2026-10-19",
-  "snapshot_basis": "2026-10-19 GH-05 synthetic-only preparation on Draft PR #20 stacked on GH-03 Draft PR #18: 3 new files (artificial TAR/age harness, negative unittest suite, operator test guide). Isolated staged local Python unittest: 8 pass, 1 skip because official age/age-keygen unavailable. No CLI encryption success claimed, no CircleCI/GitHub Actions run, no live WordPress/DB capture, no release upload, no schedule, no costs. GH-03 owner AgePony local note roundtrip passed per operator but independent offline recovery is still missing. V1 normative 62/71 coding and formal gates remain unchanged.",
+  "snapshot_date": "2026-10-20",
+  "snapshot_basis": "2026-10-20 user-approved GH-05 native age synthetic integration rerun attempted: official FiloSottile age v1.3.2 release SHA256 known from publisher, but download of official GitHub asset and SourceForge mirror blocked by isolated runner environment and no age binary preinstalled. PCjan device offline. 9 local staged-source tests rerun: 8 PASS / 1 SKIP for actual age CLI; direct runner correctly exits 1 fail closed without age. No provider CI, real encryption, site/database access, secrets, cloud upload, payment or workflow triggered. PR #20 Draft updated documentation only; GH-03 independent owner recovery OPEN, GH-05 real capture not accepted; original V1 coding/formal gate counts unchanged.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -339,11 +339,15 @@
       "gh05_synthetic_preparation_branch": "feat/gh05-synthetic-age-20261019",
       "gh05_synthetic_preparation_source": "scripts/ci/orgavela_gh05_synthetic_age.py",
       "gh05_synthetic_preparation_tests": "scripts/ci/test_orgavela_gh05_synthetic_age.py",
-      "gh05_synthetic_preparation_local_validation": "2026-10-19 assistant disposable container: 8 Python unittest PASS, 1 SKIP (official age CLI absent); staged equivalent local files, not CI for committed SHA",
+      "gh05_synthetic_preparation_local_validation": "2026-10-20 assistant isolated local staged-source rerun: 9 unittest cases, 8 PASS / 1 SKIP for absent official age; runner synthetic-only exit 1 fail closed. Committed GitHub source separately inspected; no PR-HEAD-provider-CI or age binary success.",
       "gh05_real_age_cli_encryption_e2e_verified": false,
       "gh05_live_database_snapshot_verified": false,
       "gh05_real_backup_approved": false,
-      "gh05_current_blocker": "GH-03 owner-independent recovery not proven; real GH-05 capture forbidden. Native age CLI synthetic integration not run in local environment; offline test runner skipped it. No production writer, no IONOS access, no deployment or schedule."
+      "gh05_current_blocker": "GH-03 owner-independent recovery not proven; real GH-05 capture forbidden. Native age CLI synthetic integration not run in local environment; offline test runner skipped it. No production writer, no IONOS access, no deployment or schedule.",
+      "gh05_age_cli_integration_status": "blocked_official_binary_unavailable_isolated_runtime",
+      "gh05_age_release_attempt": "age v1.3.2 linux-amd64 official asset SHA256 cbe24006683f8eb669266162894b9a522a1af52f2665fbc63a4bb032ed26ac10; fetched bytes unavailable, checksum not locally verified; GitHub/SourceForge download failed",
+      "gh05_local_rerun": "9 tests: 8 pass, 1 skip (native age); direct synthetic CLI 1 fail closed",
+      "gh05_next": "Run same synthetic GH-05 suite in a genuinely isolated runtime with official SHA-verified age+age-keygen, no real key or data. If unable, leave GH05-SYN-D blocked; never claim local AgePony note test proves CLI interoperability."
     },
     {
       "id": "O04",
@@ -729,7 +733,7 @@
   },
   "immediate_next": [
     "GH-03: owner confirms native AgePony age X25519 identity, local iOS paper PDF and SUCCESS of same-device artificial note encrypt/decrypt on 2026-10-19. This is NOT independent offline recovery. No USB media available, owner chooses temporary local-only storage; risk of device loss remains. Keep GH-03 OPEN until two separately secured offline recovery copies and copy-2 synthetic restore are proven. Never transmit private PDF/key/QR/passphrase.",
-    "GH-05 SYNTHETIC ONLY: review Draft PR #20, verify committed source and local negative tests, then execute artificial age encryption/decryption/tamper test in an isolated environment with official age installed; do not trigger paid CI or use secrets. No real OrgaVela/MariaDB source capture or release until GH-03 independent recovery and subsequent GH-05/GH-06/GH-07 gates passed.",
+    "GH-05 synthetic CLI blocked as of 2026-10-20: official age v1.3.2 binary inaccessible via isolated runner's GitHub/SourceForge downloads, and PCjan offline. 8 local staged-source tests PASS, 1 native age integration SKIP; fail-closed runner exit 1. When an isolated environment with official SHA-verified age is available, rerun PR #20 synthetic-only suite and capture a real age encrypt/decrypt/tamper PASS. No real backup, cloud run, tokens or schedule before GH-03 and GH-05/06/07 gates.",
     "GH-08 only after GH-07 full actual restore: check IONOS provider recovery points, Free-plan credit availability, secure scheduling, retention and alerting. No automatic backup or pruning approved yet."
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
