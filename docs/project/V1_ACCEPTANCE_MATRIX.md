@@ -158,3 +158,56 @@ Bewusst **nicht** B04/R03 als grün zählen. [Operatives O03-Runbook](../operati
 | IONOS-OrgaVela-Vertragsbackups und konkrete Restorepunkte im Hosting-Konto überprüft | **Offen**, allgemeine Anbieterangaben genügen nicht |
 
 Abnahme nur bei belegtem GH-01…GH-07 und tatsächlichem IONOS-Recoveryinventar. [Masterplan v2.11](../operations/V1_ACCEPTANCE_PLAN.md) · [Maschinenstatus v2.11](../operations/V1_PROGRESS.json); Release-Gates (darunter R03 und R15) bleiben ausdrücklich offen. Keine Datensicherungs- oder Löschaktivität in diesem Matrix-Nachtrag.
+
+
+### 14.10.2026 – GH-03/GH-04 Reihenfolge für rein synthetischen GitHub-Release-Test korrigiert (Masterplan v2.12)
+
+| Teilgate | Evidenz/Anforderung | Stand |
+|---|---|---|
+| Externes Referenzverfahren Dreamloud (nicht auf OrgaVela anrechenbar) | [Echtes privates synthetisches `immutable=true` Release #78](https://github.com/janjrre/dreamloud-backups/releases/tag/backup-dreamloud-synthetic-circleci-78), [CircleCI #78 success](https://circleci.com/gh/janjrre/dreamloud-portal/78); temporär erzeugtes CI-GPG-Keypair mit ausschließlich künstlichen Daten, `GH_TOKEN` nur Upload-Berechtigung | **Referenz nachgewiesen, kein OrgaVela-Gate** |
+| OrgaVela GH-02 (geschützter Quellbranch+Context+Free-Credits) | Projekt-Context und `main protected=true` teilweise belegt; Restriktions-/PR-/No-Bypass-/Fork-Details nicht vollständig geprüft, testbranch-/Context-Abgleich offen | **Weiter offen vor Secret-Nutzung** |
+| OrgaVela GH-04a synthetischer verschlüsselter Remote-Release-Canary | Darf mit **nur temporärem CI-Test-Schlüsselpaar**, eigenem eingeschränktem `GH_TOKEN` auf dem privaten `janjrre/orgavela-backups`, manuellem Opt-in, vollständigem Readback/SHA/Immutable-Release/Restore getestet werden – **kein** Betreiber-PC nötig | **Noch nicht ausgeführt; GH-02 Voraussetzung, permanenter GH-03-Key keine Voraussetzung** |
+| OrgaVela GH-03 dauerhafter Betreiber-Recovery-Key | Echter privater Schlüssel muss **vor GH-06** außerhalb CI/GitHub erstellt, mit zweiter getrennter Offline-Kopie/Entschlüsselungsprobe gesichert werden; niemals temporärer CI-Key für reale Daten | **Offen; zwingend vor echtem Backup** |
+| OrgaVela GH-06/GH-07 (echte WordPress-Dateien+MariaDB und isolierter Restore) | Nur mit dauerhaftem Betreiber-Empfänger, echter isolierter Wiederherstellung und real geprüftem IONOS-Backupinventar abnahmefähig | **Offen; B04/R03 weiter gesperrt** |
+
+Diese Änderung lockert **ausschließlich** die Test-Voraussetzung für künstliche Daten, nicht die Verschlüsselungs-, Restore- oder Datenschutzpflichten bei Produktivdaten. Kein Merge und keine formale Abnahme ausgelöst.
+
+
+**GH-04 Code-/Sicherheitsnachtrag 14.10.2026:** [Draft PR #19](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/19) enthält einen **synthetischen** OrgaVela-GitHub-Releases-Transporttest mit ephemerem Runner-GPG-Testkey, festen Repo-/Branch-/Context-Grenzen, nur manuell aktivierbarem Parameter (Default `false`) und geplanter voller Remote-Asset-/Hash-/Immutable-/Restoreprüfung. **Bisher nur vorbereitet und statisch gelesen**, nicht auf CircleCI ausgeführt. Der neue Branch [`test/orgavela-github-release-o03`](https://github.com/janjrre/Projekt-Wordpress-Plugin/tree/test/orgavela-github-release-o03) ist laut GitHub **`protected=false`**; die Betreiber-Expression für den OrgaVela-Context ist noch main-only. Bis beide behoben sind **kein GH_TOKEN und kein Live-E2E**; GH-02 nicht bestanden. GH-04/GH-03/GH-06/GH-07 bleiben offen, formale B04/R03 nicht abgenommen.
+
+
+## Ergänzender W0/O03-Betriebsnachweis: GH-04 Synthetik-Canary (17.10.2026)
+
+**Einordnung:** Dies ist eine **Operations-Vorprüfung GH-04** und **keine** Erfüllung oder Teilfreigabe von R01–R18. Die R01–R18-Abnahmematrix und deren formale Zähler bleiben unverändert. **GH-04 `accepted` bezieht sich ausschließlich auf einen künstlichen GitHub Releases End-to-End-Test.**
+
+| Prüfschritt / Evidenz | Ergebnis und Nachweistyp |
+|---|---|
+| GH-02-Sicherheitsvorprüfung | Accepted auf Github-API-Beleg plus expliziter Betreiberbestätigung der GitHub-/CircleCI-Admin-Einstellungen |
+| Unveränderliche Quellimplementierung | Protected Branch `test/orgavela-github-release-o03`, geprüfter HEAD `a03b0e079ad0f8bd782574abd5b0ed581bf3c12a`, Skripte verweigern echte Daten und erfordern manuelle Pipeline-Freigabe |
+| Erfolgreicher CircleCI-Canary | Betreiber bestätigt `success` für Workflow/Job `d70d145b-b76b-47f4-854c-838d7ad227ed`; keine unabhängige CircleCI-Step-Log-Sicht |
+| Privates unveränderliches GitHub-Testrelease | **GitHub REST unabhängig bestätigt**: `janjrre/orgavela-backups`, Release-ID `414750281`, Tag `backup-orgavela-synthetic-circleci-3`, `draft=false`, `immutable=true`, Published `2026-10-16T09:06:20Z` |
+| Verschlüsseltes künstliches Archiv | GitHub Asset `646772868`, `orgavela-synthetic-circleci-3.tar.gpg`, 549 Bytes, `uploaded`, GitHub digest `sha256:0fbb3b4077b7b360f76ec9d105772936f48b76f9c531e3c490804267eda4e70a` |
+| Nachweis-Assets | `manifest.json` Asset `646772871`; `.tar.gpg.sha256` Asset `646772865`; beide in privaten Release-Metadaten als `uploaded` bestätigt |
+| Remote-HASH/Decrypt/Restore | Aus dem unveränderten fail-closed Job-Skript und Betreiber-`success` abgeleiteter Test-PASS; **binäre Asset-Bytes/CI-Einzellogs nicht unabhängig vom Assistenten nachgelesen** |
+| Tokenbereinigung | Betreiber bestätigt 17.10.2026: GitHub-Test-PAT **widerrufen** und CircleCI `orgavela-backup-releases` `GH_TOKEN` **gelöscht**; keine unabhängige Secret-API-Lesung |
+| Gesamtentscheidung | **GH-04 `accepted` (synthetic only)** bei gemischten Nachweisen; **GH-03 und GH-05–08 offen**, echter Snapshot/Full-Restore/Schedule **nicht** bestanden |
+
+**Stop-Gates für reale OrgaVela-Sicherungen:** Besitzer kontrolliert dauerhaften privaten Offline-Recovery-Key mit zwei separat gesicherten Kopien, dessen kryptografisches Format mit der zukünftigen Writer-/Restore-Architektur übereinstimmt, unabhängige Decryption-Recovery-Probe. Erst nach GH-03 Owner-Abnahme weitere GH-05/06-Runs für echte WP-/MariaDB-Daten und vollständiger isolierter GH-07-Real-Restore. Die synthetische Cloudfreigabe hebt **kein** R01–R18-Releasestor auf.
+
+**Belegort:** [GitHub synthetisches privates Backuprelease](https://github.com/janjrre/orgavela-backups/releases/tag/backup-orgavela-synthetic-circleci-3), [GH-04-Runbook](../operations/W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md), [append-only Arbeitsjournal](../operations/ASSISTANT_WORK_LOG.md), [kanonischer V1-Masterplan v2.20](../operations/V1_ACCEPTANCE_PLAN.md).
+
+
+## Ergänzender Operations-Gate GH-03: Private age-Recovery vollständig unabhängig vom Cloud-Provider (17.10.2026)
+
+**Abnahmeart:** W0/O03-/GH-03-Betriebs-Gate, **kein** R01–R18-Release-Gate und keine Änderung der formalen Release-Zähler.
+
+| Test-ID | Konkreter Abnahmetest | Aktueller Status/Nachweis |
+|---|---|---|
+| GH03-A | Produktives Verschlüsselungsformat gegenüber GPG-Synthetik eindeutig festlegen | **PASS Architektur**: `age` gewählt, [GH-03-ADR](../operations/W0_O03_GH03_ENCRYPTION_RECOVERY_ADR.md) committed |
+| GH03-B | Privater Owner-Identity-Key nur lokal auf vertrauenswürdigem Gerät erzeugt; niemals GitHub/CircleCI/IONOS/ChatGPT | **PARTIAL (19.10.)**: native AgePony-Identity `age X25519` durch Betreiber-Screenshot im lokalen App-Vault bestätigt; passphrasegeschützte Recovery-PDF lokal gemeldet, jedoch keine zwei physisch getrennten Offline-Kopien / noch kein unabhängiger Importbeweis |
+| GH03-C | Zwei getrennte, geschützte physische Offline-Recovery-Kopien mit identischer Public-Recipient-Identität und bytegleichem Key; getrennte Aufbewahrung | **OPEN**, keine Besitzerbestätigung |
+| GH03-D | Kunsttext mit eigenem `age1…`-Recipient verschlüsseln und aus Offline-Kopie 2 wieder entschlüsseln; SHA256 der Klartextdateien gleich; Testartefakte bereinigen | **OPEN (19.10.)**: Betreiber meldet erfolgreiches Verschlüsseln/Entschlüsseln einer künstlichen AgePony-Notiz **nur mit Original-App-Key**. Kein SHA256-Beleg und kein Restore aus Offline-Kopie 2; GH03-D daher nicht bestanden |
+| GH03-E | Wiederherstellung ohne Original-PC aus getrenntem Medium praktisch möglich; Verlust-/Kompromittierungs-/Rotationsverfahren dokumentiert und vom Betreiber angenommen | **OPEN**, Anleitung verfügbar, kein Eigentümer-Test |
+| GH03-F | Nur Public Recipient im künftigen Writer; echte Writer-/Restore-Implementierung später separat mit einem einheitlichen `.tar.age`-Format getestet | **GEPLANT GH-05–GH-07**, noch kein Runtime-/CI-Einsatz und kein reales Backup |
+
+**GH-03 formale Abnahme:** nur bei **GH03-A bis E vollständig** und belegter Owner-Bestätigung ohne private Schlüsselübermittlung. GH03-F ist nachgelagertes Schutzgate für den echten Workflow. `age1…`-Recipient darf später als nicht geheimes Konfigurationsdatum eingebracht werden, dessen Zuordnung zum Besitzerkey muss vor jeder echten Verschlüsselung verifiziert werden. Der synthetische GH-04 GPG-Canary genügt nicht für GH-03. [Offline-Anleitung](../operations/W0_O03_GH03_OWNER_OFFLINE_KEY_RUNBOOK.md). **M0–M7 0/8, P4 0/4, R01–18 0/18 weiterhin unverändert.**
