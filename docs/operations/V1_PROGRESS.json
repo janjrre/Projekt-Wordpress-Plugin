@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-20",
-  "snapshot_basis": "2026-10-20 operator requests clone functioning Dreamloud PC-independent backup method. Dreamloud actual production source read-only verified at backup/production-circleci da44f1a..., production capture+immutable writer evidence CircleCI #348 and isolated restore #353. Dreamloud schedule configured in code but daily clock not verified. OrgaVela Draft PR #20 now includes independent synthetic-only native age source/writer Python module, 13 unittest cases (including optional age integration), branch-restricted default-FALSE two-job CircleCI proposal with no Context/secrets/remote API, and dedicated Dreamloud-parity ADR. Files statically GitHub-readback; not runtime/CI tested, no new provider run, no live capture or release. PR #17 CircleCI config must be merged/reconciled before any integration. GH-03 independent owner-key recovery still open. No CI credits used, no PCjan, no IONOS or Dreamloud changes. V1 coding 62/71 and formal gate counts unchanged.",
+  "snapshot_basis": "2026-10-20 read-only Dreamloud production backup pattern copied to OrgaVela in isolated synthetic-only Draft PR #20, including a two-job age producer/writer, 13 new defined-not-run negative/integration tests, default-false CircleCI flag and branch filters. Separate PR #17 CircleCI offline pilot job now also preserved in the same proposal config without changing PR #17 itself. All code statically GitHub readback; no CircleCI run or official age binary runtime test here, no live data/capture/upload/schedule/cost. GH-03 owner-independent recovery still open; true GH05/06/07/08 gates blocked, V1 figures unchanged.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -357,10 +357,14 @@
       "gh05_parity_test_cases_defined": 13,
       "gh05_parity_tests_ran": false,
       "gh05_parity_age_cli_provider_pass": false,
-      "gh05_parity_circleci_proposal": ".circleci/config.yml default false enable_gh05_synthetic_parity on source/writer jobs only; PR17 config conflict to reconcile",
+      "gh05_parity_circleci_proposal": ".circleci/config.yml combines Draft PR17 offline-connection-smoke branch-only with Draft PR20 default-false manual synthetic age source/writer jobs, no secret contexts or prod access. PR17 actual source/file branch remains separate; ordered integration and actual provider checks pending.",
       "gh05_parity_cloud_or_prod_runs": 0,
       "gh05_parity_encrypted_release_writer_implemented": false,
-      "gh05_parity_design": "Dreamloud-style source encryption and separate ciphertext-only writer: only 3 synthetics assets, fixed age X25519 rather than copying Dreamloud production OpenPGP/keys"
+      "gh05_parity_design": "Dreamloud-style source encryption and separate ciphertext-only writer: only 3 synthetics assets, fixed age X25519 rather than copying Dreamloud production OpenPGP/keys",
+      "gh05_parity_pr17_pilot_semantics_preserved_in_proposal": true,
+      "gh05_parity_provider_ci_runtime_verified": false,
+      "gh05_parity_no_automatic_ci": true,
+      "gh05_parity_no_production_secrets": true
     },
     {
       "id": "O04",
@@ -746,7 +750,7 @@
   },
   "immediate_next": [
     "GH-03: owner confirms native AgePony age X25519 identity, local iOS paper PDF and SUCCESS of same-device artificial note encrypt/decrypt on 2026-10-19. This is NOT independent offline recovery. No USB media available, owner chooses temporary local-only storage; risk of device loss remains. Keep GH-03 OPEN until two separately secured offline recovery copies and copy-2 synthetic restore are proven. Never transmit private PDF/key/QR/passphrase.",
-    "GH-05 synthetic Dreamloud parity: review Draft PR #20, reconcile its default-off .circleci/config.yml with existing Draft PR #17 first, then if operator confirms remaining CircleCI Free credits run a single opt-in synthetic two-job pipeline with enable_gh05_synthetic_parity=true on feat/gh05-synthetic-age-20261019; both jobs must actually succeed. No secret contexts, GitHub upload, IONOS access or real WordPress data. After GH-03 genuine independent offline recovery prove OrgaVela-only real source capture (GH05), age private immutable GitHub writer (GH06), isolated real restore (GH07), then daily scheduling (GH08).",
+    "GH05 SYNTHETIC NEXT: new Draft PR #20 has combined PR17 pilot and manual GH05 age source/writer job definitions, default false. Review static YAML + code, check actual remaining CircleCI Free credits, and only then optionally trigger manual enable_gh05_synthetic_parity=true on exact feature branch to prove both provider jobs with artificial inputs. NEVER count it as live backup. GH03 independent offline recovery still required before real OrgaVela WordPress/MariaDB capture, age GitHub Release writer or schedule.",
     "GH-08 only after GH-07 full actual restore: check IONOS provider recovery points, Free-plan credit availability, secure scheduling, retention and alerting. No automatic backup or pruning approved yet."
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
