@@ -211,3 +211,18 @@ Diese Änderung lockert **ausschließlich** die Test-Voraussetzung für künstli
 | GH03-F | Nur Public Recipient im künftigen Writer; echte Writer-/Restore-Implementierung später separat mit einem einheitlichen `.tar.age`-Format getestet | **GEPLANT GH-05–GH-07**, noch kein Runtime-/CI-Einsatz und kein reales Backup |
 
 **GH-03 formale Abnahme:** nur bei **GH03-A bis E vollständig** und belegter Owner-Bestätigung ohne private Schlüsselübermittlung. GH03-F ist nachgelagertes Schutzgate für den echten Workflow. `age1…`-Recipient darf später als nicht geheimes Konfigurationsdatum eingebracht werden, dessen Zuordnung zum Besitzerkey muss vor jeder echten Verschlüsselung verifiziert werden. Der synthetische GH-04 GPG-Canary genügt nicht für GH-03. [Offline-Anleitung](../operations/W0_O03_GH03_OWNER_OFFLINE_KEY_RUNBOOK.md). **M0–M7 0/8, P4 0/4, R01–18 0/18 weiterhin unverändert.**
+
+
+## GH-05 Synthetik-Vorbereitung (19.10.2026, keine Abnahme)
+
+Diese Fälle sind nur lokale Vorprüfungen für O03/GH-05 und zählen **nicht** zu den finalen V1 R01–R18 Release-Gates. Branch Draft PR [#20](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/20), Basis Draft PR #18.
+
+| Check | Nachweis | Status |
+| --- | --- | --- |
+| GH05-SYN-A | Archiv ausschließlich aus fest codierten künstlichen DB/WP-Dateien; keine externen Eingaben | **PASS lokale Unittests**, 19.10.2026 |
+| GH05-SYN-B | Genaues Inventar, SHA256-Manifest, verweigerte Zusatz-/Doppeldateien, Traverse und Symlinks | **PASS lokale Unittests**, 19.10.2026 |
+| GH05-SYN-C | CLI nur mit --synthetic-only; kein Real-Daten-/Site-Modus | **PASS lokale Unittests**, 19.10.2026 |
+| GH05-SYN-D | Original native age Binary encrypt/decrypt; entschlüsselter TAR bytegleich, manipuliertes Ciphertext abgewiesen | **OPEN**, Test **SKIP**: offizielle age-CLI im lokalen Container nicht vorhanden |
+| GH05-SYN-E | Sicherer, konsistenter echter OrgaVela/MariaDB-Capture, Freigabe GH-03, Upload, echter isolierter Restore | **NICHT GESTARTET / GESPERRT**, kein echter Zugriff |
+
+**Testgrenze:** Insgesamt 8 Unit-Tests PASS, 1 Integration SKIP auf lokalem Stagingcode; keine Aussage über PR-HEAD-CI. GH-03 bleibt offen wegen fehlendem unabhängigem Recovery. Keine GH-05-Freigabe, keine realen Sicherungen oder autom. Backups. Verbindlich [Fortschrittsdaten](../operations/V1_PROGRESS.json) und [GH-05-Runbook](../operations/W0_O03_GH05_SYNTHETIC_PREPARATION.md).
