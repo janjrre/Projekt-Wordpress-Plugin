@@ -1,6 +1,6 @@
 # OrgaVela W0/O03: Dreamloud-style two-job synthetic age pipeline.
-# Isolated proposal on GH-05 Draft PR #20. Integrate with separate PR #17
-# CircleCI pilot before merging. NO real backup, deploy, secret context, GitHub
+# Isolated proposal on Draft PR #20, preserving the independent Draft PR #17
+# no-secret pilot job. Their source branches still require ordered integration. NO real backup, deploy, secret context, GitHub
 # release, schedule, automatic push, or production access.
 version: 2.1
 
@@ -10,6 +10,31 @@ parameters:
     default: false
 
 jobs:
+  # Retain the existing no-secret CircleCI pilot semantics from Draft PR #17.
+  # This pilot executes ONLY on its own ci/circleci-free-pilot-o03 branch.
+  offline-connection-smoke:
+    docker:
+      - image: cimg/python:3.12
+    resource_class: small
+    working_directory: ~/project
+    steps:
+      - checkout
+      - run:
+          name: Verify OrgaVela repo identity, docs and no-source-access syntax
+          command: |
+            set -euo pipefail
+            umask 077
+            test "$CIRCLE_PROJECT_USERNAME" = "janjrre"
+            test "$CIRCLE_PROJECT_REPONAME" = "Projekt-Wordpress-Plugin"
+            test "$CIRCLE_BRANCH" = "ci/circleci-free-pilot-o03"
+            for key in IONOS_SSH_HOST IONOS_SSH_USER IONOS_SSH_PASSWORD SFTP_HOST SFTP_PASSWORD GOOGLE_DRIVE_TOKEN_JSON ORGAVELA_RCLONE_CONFIG DUPLICATI_GOOGLE_DRIVE_AUTH_ID ORGAVELA_BACKUP_PRIVATE_KEY GH_TOKEN; do
+              test -z "$(printenv "$key" || true)" || exit 1
+            done
+            for file in scripts/ci/*.sh; do
+              bash -n "$file"
+            done
+            python scripts/ci/orgavela-circleci-offline-smoke.py
+
   gh05-synthetic-source:
     docker:
       - image: cimg/python:3.12
@@ -84,6 +109,14 @@ jobs:
             echo 'GH05_PARITY_PRODUCTION_CAPTURE=disabled'
 
 workflows:
+  connection-pilot-only:
+    jobs:
+      - offline-connection-smoke:
+          filters:
+            branches:
+              only:
+                - ci/circleci-free-pilot-o03
+
   gh05-synthetic-parity-manual:
     when: << pipeline.parameters.enable_gh05_synthetic_parity >>
     jobs:
