@@ -3,6 +3,14 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 19.10.2026 – GH-03: AgePony-Notiz lokal erfolgreich entschlüsselt
+
+- **Operator-Nachweis:** AgePony-Screenshot zeigt eine native `age X25519`-Identität „OrgaVela Recovery v1“. Betreiber meldet eine passphrasegeschützte Paper-Backup-PDF unter iOS/iPadOS `Auf meinem iPhone/iPad` und erfolgreiche lokale Ver- und Entschlüsselung einer ausschließlich künstlichen Testnotiz.
+- **Abgrenzung:** Dieser Test ist ein **lokaler Roundtrip mit Original-App-Identität**, kein unabhängiger Restore aus einer zweiten Offline-Kopie und kein Hash-/Rekonstruktionstest der PDF auf einem anderen Gerät. Keine belastbare Redundanz bei Geräteverlust. Lokale Dateien können von Geräte-Backup-Einstellungen betroffen sein; nicht als „nachweislich cloudfrei“ kennzeichnen.
+- **GH-03 bleibt `in_progress` und NICHT abgenommen.** Die vereinbarten zwei getrennt geschützten Offline-Recovery-Kopien und der unabhängige Kopie-2-Restore sind nicht nachgewiesen. Betreiber hat derzeit keine USB-Medien und akzeptiert lediglich eine **vorläufige** lokale Ablage. Keine Absenkung der Produktiv-Freigabe-Gates.
+- **Nächste Arbeit:** GH-05 darf mit synthetischen Fixtures, rein lokalem Design und Tests vorbereitet werden, **ohne** echte WordPress-/MariaDB-Daten, SSH-/API-Produktivzugriff, Cloud-Uploads, Schlüsselgeheimnisse, Secret-Contexts oder automatisierte Backup-Schedules. Erst nach unabhängiger Recovery-/Betriebsabnahme über echte Backups entscheiden.
+- **Zahlen unverändert:** 62/71 technische Coding-Pakete, formal 0/8 Milestones, 0/4 P4, 0/18 R-Gates, V1 offen; Entwicklungs-PR-Integration ausstehend. Verbindliche Datendetails: [V1_PROGRESS.json](../operations/V1_PROGRESS.json).
+
 ## Aktuelle Welle: W0 – Bestands- und Sicherheitsabnahme
 
 **Stand 12.10.2026: IN ARBEIT, noch nicht abgenommen.** [W0-Live-/Restore-Bericht](../operations/W0_BASELINE_AND_RECOVERY.md) · [Issue #16](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/16) · [verbindliche maschinenlesbare Messwerte](../operations/V1_PROGRESS.json).
