@@ -3,6 +3,13 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 20.10.2026 – GH-05 age-CLI-Test wegen fehlendem offiziellen Binary blockiert
+
+- GH-05 Draft PR [#20](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/20): **8 Python-Tests lokal bestanden, 1 echter `age`-CLI-Test weiterhin SKIP**, weil die isolierte Laufzeit weder age noch age-keygen enthält und die offiziellen GitHub-/Spiegel-Downloads nicht möglich waren. Direkter künstlicher CLI-Runner verweigert zu Recht Erfolg mit **Exit 1**.
+- Original-Hersteller v1.3.2 und Linux-amd64 SHA256 sind bekannt, aber **keine heruntergeladene Datei oder Hashverifikation** vorhanden. PCjan derzeit offline. Kein grüner CI-/Provider-Status und kein tatsächlicher Verschlüsselungs-/Tamper-Test mit age behauptet.
+- Kein WordPress, IONOS, MariaDB, Dreamloud, GitHub-Release, Token, CI-Run oder kostenpflichtiger Dienst berührt. [GH-05-Nachweis](../operations/W0_O03_GH05_SYNTHETIC_PREPARATION.md) und [V1_PROGRESS.json](../operations/V1_PROGRESS.json) entsprechend fortgeschrieben.
+- **Fortsetzung:** synthetischen Test auf einer isolierten Umgebung mit geprüften age+age-keygen-Binaries ausführen; erst danach GH05-SYN-D beurteilen. Unabhängige GH-03-Recovery, echter Capture/Upload/Restore/Schedule bleiben offen. Historische V1-Zahlen **62/71 Coding**, **0/8 Meilensteine**, **0/4 P4** und **0/18 Release-Gates**, V1 nicht abgenommen.
+
 ## Update 19.10.2026 – GH-05 synthetische Archiv- und age-Testvorbereitung
 
 - **Draft PR [#20](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/20)** (gestapelt auf Draft PR #18) erstellt. Drei neue Dateien: ausschließlich synthetischer TAR/age-Tester, Python-negative Unittests, [GH-05-Prüfanleitung](../operations/W0_O03_GH05_SYNTHETIC_PREPARATION.md).
