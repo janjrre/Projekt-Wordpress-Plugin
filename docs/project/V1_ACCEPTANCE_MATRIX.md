@@ -226,3 +226,16 @@ Diese Fälle sind nur lokale Vorprüfungen für O03/GH-05 und zählen **nicht** 
 | GH05-SYN-E | Sicherer, konsistenter echter OrgaVela/MariaDB-Capture, Freigabe GH-03, Upload, echter isolierter Restore | **NICHT GESTARTET / GESPERRT**, kein echter Zugriff |
 
 **Testgrenze:** Insgesamt 8 Unit-Tests PASS, 1 Integration SKIP auf lokalem Stagingcode; keine Aussage über PR-HEAD-CI. GH-03 bleibt offen wegen fehlendem unabhängigem Recovery. Keine GH-05-Freigabe, keine realen Sicherungen oder autom. Backups. Verbindlich [Fortschrittsdaten](../operations/V1_PROGRESS.json) und [GH-05-Runbook](../operations/W0_O03_GH05_SYNTHETIC_PREPARATION.md).
+
+
+### 20.10.2026 – Dreamloud-Parität: getrennte age-Producer/Writer-Sicherheits-Gates
+
+| Vorprüfung | Aktueller Nachweis | Status |
+| --- | --- | --- |
+| GH05-DP-01 | GitHub-Source auf Draft PR #20 für synthetic-only age Producer mit ephemerem Testkey und fest codierter Kunst-SQL/WordPress-Fixture zurückgelesen | **CODE VORHANDEN**, noch kein CLI-/CI-PASS |
+| GH05-DP-02 | Separer ciphertext-only Writer akzeptiert exakt 3 Asset-Dateien; keine extrahierbaren Quelldaten oder private Recovery-Schlüssel im Workspace vorgesehen | **CODE VORHANDEN**, keine Jobabnahme |
+| GH05-DP-03 | 13 Unittest-Fälle definiert für Modus-/Secrets-/Metadaten-/Symlink-/Hash-/Producer-Writer-Schranken, einschließlich optionaler age-Integration | **NICHT AUSGEFÜHRT** für diese neue Suite |
+| GH05-DP-04 | CircleCI: zwei Jobs mit `requires`, nur manuelles `enable_gh05_synthetic_parity=true`; Default false, Branchfilter nur Draft PR #20, keine Contexts, Secrets oder Cron | **STATIC REVIEW OK**, kein Anbieter-/Ablauf-PASS; vorher PR #17 Config integrieren |
+| GH05-DP-05 | Kompatibler echter OrgaVela-Snapshot, native age-Offsite-Release-Writer/Immutable-Readbacks, isolierte echte Recovery, freigegebener täglicher Job | **BLOCKED**, GH-03 und reale GH-05/06/07/08 offen |
+
+Die Dreamloud-Produktionsbelege #348/#353 gelten **nur** für Dreamloud (OpenPGP), nicht für OrgaVela (age). Diese Checkliste zählt weder zu 71 normativen Coding-Paketen noch zu finalen R01–R18. [Architektur-ADR](../operations/W0_O03_DREAMLOUD_PARITY_ADR_2026-10-20.md). V1 weiterhin 62/71 historische Codepakete, M0–M7 0/8, P4 0/4, R01–R18 0/18.
