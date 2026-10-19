@@ -41,3 +41,18 @@ Before any real capture, design and review OrgaVela-only source identity and nar
 Main tracking: https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15 and https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/16
 Canonical Masterplan: docs/operations/V1_ACCEPTANCE_PLAN.md
 Progress: docs/operations/V1_PROGRESS.json
+
+
+## 20.10.2026 – versuchter Original-age-CLI-Test: technisch blockiert
+
+**Auftrag:** Die vorher noch ausstehende reale age-CLI-Verschlüsselung innerhalb **rein künstlicher** GH-05-Archivdaten tatsächlich ausführen, ohne CI-Kosten, produktive Credentials oder Serversysteme.
+
+**Quelle für offizielles age Binary:** [FiloSottile/age Releases](https://github.com/FiloSottile/age/releases), Version **v1.3.2** mit Asset `age-v1.3.2-linux-amd64.tar.gz`, öffentlich vom Hersteller ausgewiesene SHA256-Prüfsumme `cbe24006683f8eb669266162894b9a522a1af52f2665fbc63a4bb032ed26ac10`. Eine Abweichung würde Ausführung verhindern. Das Archiv wurde **nicht heruntergeladen**, daher auch kein Hash verifiziert und kein fremdes Binary ausgeführt.
+
+**Tatsächliche Versuche und Ergebnisse:** In der isolierten Assistenzumgebung sind `age` und `age-keygen` nicht vorhanden; `git ls-remote` gegen das öffentliche Quellrepository scheiterte bereits an der Netzwerk-/Namensauflösung. Downloadversuche für das offizielle GitHub-Linux-Release und einen alternativen SourceForge-Spiegel waren über die verfügbare Download-Funktion nicht möglich. Remote Desktop listete `PCjan` als **offline**; es erfolgte kein Zugriff. Ein Ersatzbinary aus unbekannter Quelle wurde nicht akzeptiert.
+
+Die lokal vorhandenen äquivalenten synthetischen Vorbereitungsdateien in einem reinen Testverzeichnis wurden erneut ausgeführt: `python3 -m unittest -v test_orgavela_gh05_synthetic_age.py` → **9 Fälle, 8 PASS, 1 SKIP** (`age`-Integration mangels CLI). Direkter `python3 orgavela_gh05_synthetic_age.py --synthetic-only` → erwartetes **Exit 1 / FAIL CLOSED**, nicht `PASS`, da `age` fehlt. Diese lokale Testkopie ist nicht als byteidentische Ausführung des letzten GitHub-PR-HEAD nachgewiesen; der Committed-Python-Testcode wurde separat per GitHub-Connector lesend inspiziert. Kein GitHub-Actions- oder CircleCI-Run und keine externe Kostenentstehung.
+
+**Abnahmeentscheidung:** `GH05-SYN-D` **BLOCKED (binary unavailable)** und `gh05_real_age_cli_encryption_e2e_verified=false`; nicht `accepted` und auch nicht als echter Provider-CI-PASS markieren. GH03 unabhängiges Offline-Key-Recovery weiterhin offen. GH-05 eigentlicher OrgaVela/MariaDB-Capture, GH-06 echter age-Upload, GH-07 isolierter echter Restore und GH-08 Zeitplanung bleiben vollständig gesperrt.
+
+**Sichere Fortsetzung:** Auf einer zukünftig verfügbaren isolierten Laufzeit oder Betreiber-PC mit offiziellem age/age-keygen v1.3.2 und geprüftem Release-SHA ausschließlich die unveränderten synthetischen Tests aus PR #20 ausführen, nur **temporäre Test-Identity** verwenden, keine AgePony-Identity oder Recovery-PDF, kein GitHub-Release und kein IONOS-Zugriff. Erst dann nach tatsächlichen Ergebnissen die Testmatrix ergänzen.
