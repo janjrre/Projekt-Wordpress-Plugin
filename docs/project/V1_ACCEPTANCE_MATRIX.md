@@ -204,9 +204,9 @@ Diese Änderung lockert **ausschließlich** die Test-Voraussetzung für künstli
 | Test-ID | Konkreter Abnahmetest | Aktueller Status/Nachweis |
 |---|---|---|
 | GH03-A | Produktives Verschlüsselungsformat gegenüber GPG-Synthetik eindeutig festlegen | **PASS Architektur**: `age` gewählt, [GH-03-ADR](../operations/W0_O03_GH03_ENCRYPTION_RECOVERY_ADR.md) committed |
-| GH03-B | Privater Owner-Identity-Key nur lokal auf vertrauenswürdigem Gerät erzeugt; niemals GitHub/CircleCI/IONOS/ChatGPT | **OPEN**, kein Betreiber-Key erstellt/bestätigt |
+| GH03-B | Privater Owner-Identity-Key nur lokal auf vertrauenswürdigem Gerät erzeugt; niemals GitHub/CircleCI/IONOS/ChatGPT | **PARTIAL (19.10.)**: native AgePony-Identity `age X25519` durch Betreiber-Screenshot im lokalen App-Vault bestätigt; passphrasegeschützte Recovery-PDF lokal gemeldet, jedoch keine zwei physisch getrennten Offline-Kopien / noch kein unabhängiger Importbeweis |
 | GH03-C | Zwei getrennte, geschützte physische Offline-Recovery-Kopien mit identischer Public-Recipient-Identität und bytegleichem Key; getrennte Aufbewahrung | **OPEN**, keine Besitzerbestätigung |
-| GH03-D | Kunsttext mit eigenem `age1…`-Recipient verschlüsseln und aus Offline-Kopie 2 wieder entschlüsseln; SHA256 der Klartextdateien gleich; Testartefakte bereinigen | **OPEN**, kein Owner-Run/Hashresultat |
+| GH03-D | Kunsttext mit eigenem `age1…`-Recipient verschlüsseln und aus Offline-Kopie 2 wieder entschlüsseln; SHA256 der Klartextdateien gleich; Testartefakte bereinigen | **OPEN (19.10.)**: Betreiber meldet erfolgreiches Verschlüsseln/Entschlüsseln einer künstlichen AgePony-Notiz **nur mit Original-App-Key**. Kein SHA256-Beleg und kein Restore aus Offline-Kopie 2; GH03-D daher nicht bestanden |
 | GH03-E | Wiederherstellung ohne Original-PC aus getrenntem Medium praktisch möglich; Verlust-/Kompromittierungs-/Rotationsverfahren dokumentiert und vom Betreiber angenommen | **OPEN**, Anleitung verfügbar, kein Eigentümer-Test |
 | GH03-F | Nur Public Recipient im künftigen Writer; echte Writer-/Restore-Implementierung später separat mit einem einheitlichen `.tar.age`-Format getestet | **GEPLANT GH-05–GH-07**, noch kein Runtime-/CI-Einsatz und kein reales Backup |
 
