@@ -222,7 +222,7 @@ Diese Fälle sind nur lokale Vorprüfungen für O03/GH-05 und zählen **nicht** 
 | GH05-SYN-A | Archiv ausschließlich aus fest codierten künstlichen DB/WP-Dateien; keine externen Eingaben | **PASS lokale Unittests**, 19.10.2026 |
 | GH05-SYN-B | Genaues Inventar, SHA256-Manifest, verweigerte Zusatz-/Doppeldateien, Traverse und Symlinks | **PASS lokale Unittests**, 19.10.2026 |
 | GH05-SYN-C | CLI nur mit --synthetic-only; kein Real-Daten-/Site-Modus | **PASS lokale Unittests**, 19.10.2026 |
-| GH05-SYN-D | Original native age Binary encrypt/decrypt; entschlüsselter TAR bytegleich, manipuliertes Ciphertext abgewiesen | **OPEN**, Test **SKIP**: offizielle age-CLI im lokalen Container nicht vorhanden |
+| GH05-SYN-D | Original native age Binary encrypt/decrypt; entschlüsselter TAR bytegleich, manipuliertes Ciphertext abgewiesen | **BLOCKED (20.10.)**: 8 lokale Tests PASS, native age-CLI-Test weiterhin SKIP. Offizieller age-v1.3.2-Binary-Download von GitHub/SourceForge im isolierten Runner gescheitert, kein nachgewiesener Binary-Hash oder encrypt/decrypt/tamper-PASS; direkter Runner fail-closed (Exit 1) |
 | GH05-SYN-E | Sicherer, konsistenter echter OrgaVela/MariaDB-Capture, Freigabe GH-03, Upload, echter isolierter Restore | **NICHT GESTARTET / GESPERRT**, kein echter Zugriff |
 
 **Testgrenze:** Insgesamt 8 Unit-Tests PASS, 1 Integration SKIP auf lokalem Stagingcode; keine Aussage über PR-HEAD-CI. GH-03 bleibt offen wegen fehlendem unabhängigem Recovery. Keine GH-05-Freigabe, keine realen Sicherungen oder autom. Backups. Verbindlich [Fortschrittsdaten](../operations/V1_PROGRESS.json) und [GH-05-Runbook](../operations/W0_O03_GH05_SYNTHETIC_PREPARATION.md).
