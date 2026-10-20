@@ -3,6 +3,14 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 20.10.2026 – GH06 branch rule Save bestätigt; Context-Autorisierungstest Draft PR #22
+
+- Betreiber bestätigt ausdrücklich **Save changes** für die auf Screenshots kontrollierte GitHub-Testbranchschutzregel `test/orgavela-age-release-o03`. GitHub-API `protected=true`, Detail-API 403, keine unabhängige Detailverifikation; **PR required/an**, **bypass verboten/an**, **force-push/aus**, **deletion/aus** gemäß Betreiber-Screenshots. Required Status Checks und Approvals weiterhin **aus**.
+- Neuer Default-off-no-secret Test `gh06-age-context-smoke` auf GH06-Featurebranch, nur zum Nachweis, dass der geschützt freigegebene Branch den leeren CircleCI Context `orgavela-age-release-tests` verwenden darf. [Draft PR #22](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/22) zur geschützten Branch-Integration vorbereitet, **noch nicht gemergt oder in CircleCI ausgeführt**. Kontext besitzt keine PATs/Owner age Keys; keine externen GitHub API Calls im Job.
+- **Nächster Gate:** Zunächst PR #22 reviewen; nur über geschützten Pull Request zusammenführen. Danach genau einen manuellen no-secret Context Smoke via `enable_gh06_age_context_smoke=true` auf dem Testbranch starten, alle anderen Flags false; Anbieter-Job/SHA verifizieren. Kein Token, kein synthetischer age-GitHub-Release und keinesfalls echtes Backup vor weiteren Gates.
+- **Fortschritt unverändert:** GH05 künstlicher age-Ciphertext-Producer/Writer CircleCI #188 grün; GH06 13/13 offline Fake-gh QA CircleCI #209 grün. Historische Coding-Implementierung 62/71, formale Meilensteine M0–M7 0/8, P4 0/4, Release-R01–R18 0/18, V1 offen, PR-Integration ausstehend; GH03 Owner Offline Recovery fehlt und sperrt echte GH05–GH08.
+
+
 ## Update 20.10.2026 – GH06 klassische Branchregel anhand 3 Screenshots geprüft
 
 - Der Betreiber zeigt die klassische GitHub-Branchregel für exakt `test/orgavela-age-release-o03` (Applies to 1 branch): **Require PR=an**, **Do not allow bypassing=an**, **Allow force pushes=aus**, **Allow deletions=aus**. GitHub-Branch-API bestätigt `protected=true`; Detail-API liefert 403, daher Checkboxes sind **Screenshotbeleg**, nicht unabhängig aus Backend gelesen.
