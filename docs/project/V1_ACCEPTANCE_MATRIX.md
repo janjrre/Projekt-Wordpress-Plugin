@@ -419,3 +419,21 @@ Kein Provider-PASS wird durch lokale grüne Tests ersetzt.
 | Owner Private-Key Copy 2 / GH03 / reale GH05–08 | **BLOCKIERT** | Noch kein unabhängig geprüfter Backup-Restore |
 
 **Gezielt bekannte Fehlerstelle entfernt; erneuter Provider-PASS darf nicht vor tatsächlichem Lauf behauptet werden.**
+
+## 20.10.2026 – Dritter PGPony/OpenPGP-CircleCI-Offline-Run grün
+
+| Prüffall | Ergebnis | Belastbare Beobachtung |
+| --- | --- | --- |
+| Manueller CircleCI `pgpony-openpgp-offline-qa` auf Quellcommit `50509600f5e3df842e8f320bcf5160726072a374` | **PASS** | Betreiber-Screenshots ~17:48 Uhr, grüner Workflow und Job, ~14 Sekunden |
+| GnuPG auf CircleCI-Runner | **PASS** | `gpg (GnuPG) 2.2.19`, nicht lokale GnuPG-2.4.7-Version |
+| Öffentlicher PGPony-Schlüssel, Fingerprints, CV25519-Unterschlüssel, gültige Selbstsignatur, synthetische Verschlüsselung | **PASS** | Sichtbare `PGPONY_QA_STAGE=public_key_preflight` und positive Public-Key-Testausgabe; Private-Key beim Provider nicht vorhanden |
+| Isoliertes synthetisches Backup, OpenPGP, SHA-256 und Restore | **PASS** | `PGPONY_QA_STAGE=synthetic_openpgp_roundtrip`, `PASS: OpenPGP public-key encrypted backup package and SHA-256 sidecar generated` |
+| Acht Ablehnungstests für unsichere Eingaben | **8/8 PASS** | `PASS: isolated OpenPGP synthetic pack, SHA256, recovery and 8 negative checks` |
+| Abschließender CI-Marker | **PASS** | `PGPONY_OFFLINE_QA=PASS` |
+| Erstes und zweites manuelles CI-Experiment | **historisch FAIL** | Präzise im Log erhalten; nicht rückwirkend umetikettiert |
+| Vollständige Job-ID und tatsächliche CircleCI-Abrechnung | **nicht unabhängig geprüft** | Nur sichtbare Betreiber-Screenshots; kein autorisierter providerseitiger Log-/Billing-Zugriff |
+| Owner-iPad-Schlüsselkopie, zwei physisch unabhängige geschützte Offline-Exporte, zweites unabhängiges Recovery | **OFFEN** | Noch keine Bestätigung des Import-/Restores |
+| Reales Source-Capture, private unveränderliche GitHub Releases, produktive GH05–GH08 | **BLOCKIERT** | CI-Job ist synthetisch und arbeitet ohne Secrets/Produktivdaten |
+| Formale GH03/M0–M7/P4/R01–R18-Abnahmen | **NICHT bestanden** | Kein V1-Release- oder Meilenstein-Signoff durch diesen Teiltest |
+
+**Dieser PASS ist ausschließlich die technische, synthetische CI-Prüfung auf benanntem GitHub-SHA.**
