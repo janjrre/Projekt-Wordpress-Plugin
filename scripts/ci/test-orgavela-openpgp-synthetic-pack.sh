@@ -2,6 +2,8 @@
 # GH03 PGPony migration: offline synthetic proof ONLY. No owner key, site, or CI token.
 set -euo pipefail
 set +x
+# Print only the failing source line number; no key contents or shell trace.
+trap 'status=$?; printf "PGPONY_DIAGNOSTIC_FAILED script=test-orgavela-openpgp-synthetic-pack.sh line=%s exit=%s\\n" "$LINENO" "$status" >&2' ERR
 umask 077
 for c in gpg jq gzip tar sha256sum mktemp; do command -v "$c" >/dev/null 2>&1 || exit 69; done
 root="$(cd "$(dirname "$0")/../.." && pwd)"
