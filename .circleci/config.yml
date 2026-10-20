@@ -354,11 +354,21 @@ workflows:
             branches:
               only:
                 - security/pgp04-synthetic-release-20261020
+      # The operator must approve in CircleCI AFTER the no-secret producer succeeds.
+      # The approval job has no environment and cannot see the writer Context.
+      - pgp04-owner-approval:
+          type: approval
+          requires:
+            - pgp04-synthetic-source
+          filters:
+            branches:
+              only:
+                - security/pgp04-synthetic-release-20261020
       - pgp04-synthetic-release-writer:
           context:
             - orgavela-pgp04-release-only
           requires:
-            - pgp04-synthetic-source
+            - pgp04-owner-approval
           filters:
             branches:
               only:
