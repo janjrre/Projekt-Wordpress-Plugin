@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-20",
-  "snapshot_basis": "2026-10-20 operator explicitly says GitHub classic branch protection rule Save changes clicked after screenshots (PR required, do not bypass, no force-push or deletion; required status checks and approvals off); GitHub branch API protected=true, granular API still inaccessible (403). Prepared default-false CircleCI context smoke job on GH06 feature branch with project/branch pin, empty-context check and no external API. Opened Draft PR #22 head GH06 feature -> protected test/orgavela-age-release-o03; not merged, no CI run, no secrets, no remote GitHub age release. Existing GH05 synthetic #188 and GH06 offline fakeGH #209 remain green, V1 metrics unchanged.",
+  "snapshot_basis": "2026-10-20 owner set GH06 PR22 ready. GitHub verified PR22 actually 6 changed files/28 commits from stacked GH06 feature branch, broader than intended no-secret context authorization smoke. Created narrow one-file one-commit PR23 from protected test/orgavela-age-release-o03 at initial branch SHA 7add8fb5 with identical default-FALSE smoke job. GitHub confirmed PR23 file .circleci/config.yml only, 1 commit/44 insertions; PR22 closed unmerged as superseded. No PR23 merge/CI job, token, GitHub release, real backup or costs. All normative V1 figures unchanged; GH03 owner key recovery outstanding.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -391,7 +391,7 @@
       "gh06_age_transport_immutable_age_release_verified": false,
       "gh06_age_transport_source": "Based on already accepted GH04 synthetic GPG release/restore transport; adapted to native age X25519 in separate Draft PR #21; GitHub readback of source only",
       "gh06_age_transport_ci_flag": "enable_gh06_age_release_offline (boolean default false), branch feat/gh06-synthetic-age-release-20261020, no secrets or cloud calls; no live GH06 remote job configured",
-      "gh06_age_transport_live_blockers": "Operator confirms Save changes on GitHub GH06 branch rule and screenshots show PR required/no bypass/force+delete forbidden. GitHub protected=true, details API 403, CI-required checks and approvals OFF. Context project/branch/noSSH/noAPI restrictions screenshot confirmed, no token. PR #22 (Draft) proposes default-off no-secret context smoke, NOT yet merged onto test branch; no job run. Before PAT: review/merge PR #22, run manual empty-context authorization smoke and verify SUCCESS at exact SHA; then review token-bearing code and permission/group settings. GH03 independent owner-key recovery still pending.",
+      "gh06_age_transport_live_blockers": "User set PR22 ready for review. Actual PR22 diff had six files and 28 commits, posing accidental broad merge risk. Safely replaced with Draft PR23 branched from protected GH06 test branch; independently checked PR23 has exactly one .circleci/config.yml change and one commit. Closed PR22 unmerged as superseded. Need user review PR23, optionally Ready for Review, protected PR merge and single manual no-secret context smoke. No token/release. GitHub rule saved attested; no approvals or required checks. GH03 independent owner recovery missing.",
       "gh06_age_transport_offline_tests_count_passed": 13,
       "gh06_age_transport_offline_tests_failed": 0,
       "gh06_age_transport_offline_ci_job": "gh06-age-release-offline-qa",
@@ -442,13 +442,15 @@
       "gh06_age_remote_branch_details_api_readable": false,
       "gh06_age_remote_branch_rules_persistence_after_screen_unverified": true,
       "gh06_age_remote_branch_rules_saved_owner_attested": true,
-      "gh06_age_remote_context_smoke_pr": 22,
-      "gh06_age_remote_context_smoke_status": "draft_open_not_merged_or_executed",
-      "gh06_age_remote_context_smoke_source_sha": "831f4d28e943ca38121f75952026a8bbc782df30",
+      "gh06_age_remote_context_smoke_pr": 23,
+      "gh06_age_remote_context_smoke_status": "minimal_draft_pr23_open_one_file_one_commit_not_merged_or_ran",
+      "gh06_age_remote_context_smoke_source_sha": "810954e5d1d5c71dc1e47dbdef137f903633abce",
       "gh06_age_remote_context_smoke_ci_flag": "enable_gh06_age_context_smoke boolean default false",
       "gh06_age_remote_context_smoke_job": "gh06-age-context-smoke",
       "gh06_age_remote_context_smoke_context": "orgavela-age-release-tests",
-      "gh06_age_remote_context_smoke_pass": false
+      "gh06_age_remote_context_smoke_pass": false,
+      "gh06_age_remote_context_smoke_branch": "ci/gh06-context-smoke-isolated-20261020",
+      "gh06_age_remote_context_smoke_previous_pr22": "superseded_closed_not_merged_6_files_28_commits"
     },
     {
       "id": "O04",
@@ -834,7 +836,7 @@
   },
   "immediate_next": [
     "GH-03: owner confirms native AgePony age X25519 identity, local iOS paper PDF and SUCCESS of same-device artificial note encrypt/decrypt on 2026-10-19. This is NOT independent offline recovery. No USB media available, owner chooses temporary local-only storage; risk of device loss remains. Keep GH-03 OPEN until two separately secured offline recovery copies and copy-2 synthetic restore are proven. Never transmit private PDF/key/QR/passphrase.",
-    "GH06 stage B: owner confirmed Save changes. Draft PR #22 proposes no-secret default-off context access smoke to protected GH06 test branch; review PR content and merge through protected PR process only when accepted; no force push or bypass. Then manually run enable_gh06_age_context_smoke=true on exact config & checkout branch test/orgavela-age-release-o03 with all other booleans false; context must remain empty. Confirm provider job success and SHA. No token or age release until smoke + subsequent writer/source separation/security review; GH03 offline recovery still open.",
+    "GH06 Stage B: user should NOT ready stacked PRs #17–#21. PR22 (6 files/28 commits) superseded/closed without merge. Review narrow Draft PR23 (only .circleci/config.yml, 1 commit) and optionally set that one to Ready for Review; then after protected normal merge run one manual no-secret Context smoke with enable_gh06_age_context_smoke=true, all others false on exact test branch. No PAT/Release until provider success and dedicated source/writer security review. GH03 owner independently recoverable key remains open.",
     "GH-08 only after GH-07 full actual restore: check IONOS provider recovery points, Free-plan credit availability, secure scheduling, retention and alerting. No automatic backup or pruning approved yet."
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
