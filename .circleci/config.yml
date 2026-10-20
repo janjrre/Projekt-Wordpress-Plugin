@@ -5,6 +5,10 @@
 version: 2.1
 
 parameters:
+  enable_pgpony_openpgp_offline:
+    type: boolean
+    default: false
+
   enable_gh06_age_context_smoke:
     type: boolean
     default: false
@@ -169,7 +173,65 @@ jobs:
             echo 'GH05_PARITY_RELEASE_UPLOAD=disabled'
             echo 'GH05_PARITY_PRODUCTION_CAPTURE=disabled'
 
+
+  # OpenPGP migration: run only explicitly requested manual synthetic tests.
+  # No private owner key, CircleCI context, WordPress capture or remote release.
+  pgpony-openpgp-offline-qa:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    working_directory: ~/orgavela-pgpony-offline
+    steps:
+      - checkout
+      - run:
+          name: Enforce public-only OpenPGP synthetic testing, no credentials
+          command: |
+            set -euo pipefail
+            test "$CIRCLE_PROJECT_USERNAME" = "janjrre"
+            test "$CIRCLE_PROJECT_REPONAME" = "Projekt-Wordpress-Plugin"
+            test "$CIRCLE_BRANCH" = "feat/o03-pgpony-openpgp-migration-20261020"
+            for key in GH_TOKEN GITHUB_TOKEN BACKUP_GITHUB_TOKEN SFTP_HOST \
+                SFTP_USER SFTP_PASSWORD IONOS_SSH_HOST IONOS_SSH_PASSWORD \
+                SSH_PRIVATE_KEY BACKUP_RECOVERY_PRIVATE_KEY \
+                BACKUP_RECOVERY_PASSPHRASE ORGAVELA_BACKUP_PRIVATE_KEY \
+                AGE_SECRET_KEY GOOGLE_DRIVE_TOKEN_JSON; do
+              test -z "$(printenv "$key" || true)" || {
+                echo "REFUSED: credential detected in PGPony offline QA"
+                exit 1
+              }
+            done
+            echo 'PGPONY_PUBLIC_ONLY=YES'
+            echo 'PGPONY_PRODUCTION_CAPTURE=DISABLED'
+            echo 'PGPONY_RELEASE_UPLOAD=DISABLED'
+      - run:
+          name: Install standard GnuPG and local fixture verification tools
+          command: |
+            set -euo pipefail
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends gnupg jq gzip tar coreutils >/dev/null
+            gpg --version | head -1
+      - run:
+          name: Exercise pinned owner PUBLIC key and synthetic-only roundtrip
+          command: |
+            set -euo pipefail
+            bash -n scripts/ci/orgavela-openpgp-synthetic-pack.sh
+            bash -n scripts/ci/test-orgavela-openpgp-synthetic-pack.sh
+            bash -n scripts/ci/test-orgavela-pgpony-public-key.sh
+            bash scripts/ci/test-orgavela-pgpony-public-key.sh
+            bash scripts/ci/test-orgavela-openpgp-synthetic-pack.sh
+            echo 'PGPONY_OFFLINE_QA=PASS'
+
 workflows:
+
+  pgpony-openpgp-offline-manual:
+    when: << pipeline.parameters.enable_pgpony_openpgp_offline >>
+    jobs:
+      - pgpony-openpgp-offline-qa:
+          filters:
+            branches:
+              only:
+                - feat/o03-pgpony-openpgp-migration-20261020
+
   gh06-age-context-smoke-manual:
     when: << pipeline.parameters.enable_gh06_age_context_smoke >>
     jobs:
