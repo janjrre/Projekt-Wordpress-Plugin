@@ -36,6 +36,7 @@ jq -e --arg id "$id" --arg sha "$sha" --argjson bytes "$bytes" '
   .public_key_fingerprint == "7C9DC60D8E1B293E514696EB333D15A4D8BA625C"
 ' "$work/manifest.json" >/dev/null || fail 'manifest does not attest approved synthetic data'
 # Read-only packet inspection: no decryption key in this job.
+[[ -z "$(gpg --batch --with-colons --list-secret-keys 2>/dev/null | grep '^sec' || true)" ]] || fail 'private key present in writer'
 packets="$(gpg --batch --list-packets "$work/$archive" 2>/dev/null || true)"
 grep -q '^:pubkey enc packet:' <<<"$packets" || fail 'no public-key encryption'
 grep -q '^:encrypted data packet:' <<<"$packets" || fail 'no encrypted payload'
@@ -49,9 +50,15 @@ jq -e '.full_name == "janjrre/orgavela-backups" and .private == true and .archiv
 # client checks cannot replace CircleCI context restriction or GitHub branch rules.
 tag="pgp04-synthetic-${CIRCLE_BUILD_NUM:-}"
 [[ "$tag" =~ ^pgp04-synthetic-[1-9][0-9]*$ ]] || fail 'unique numeric CircleCI build number required'
-if gh api "repos/$GITHUB_BACKUP_REPOSITORY/releases/tags/$tag" >/dev/null 2>&1; then fail 'release tag already exists'; fi
+# Errors other than HTTP 404 MUST fail closed (e.g. 403, 5xx, network failure).
+assert_absent() {
+  local endpoint="$1" status
+  status="$(gh api -i "$endpoint" 2>/dev/null | head -n 1 || true)"
+  [[ "$status" == *" 404 "* ]] || fail "cannot prove release/tag absence; HTTP 404 required"
+}
+assert_absent "repos/$GITHUB_BACKUP_REPOSITORY/releases/tags/$tag"
 # Check tag object independently: releases/tags alone does not detect orphan refs.
-if gh api "repos/$GITHUB_BACKUP_REPOSITORY/git/ref/tags/$tag" >/dev/null 2>&1; then fail 'tag ref already exists'; fi
+assert_absent "repos/$GITHUB_BACKUP_REPOSITORY/git/ref/tags/$tag"
 # Create as draft; upload only the three checked files.
 release="$(gh api -X POST "repos/$GITHUB_BACKUP_REPOSITORY/releases" -f tag_name="$tag" -f name="PGP04 SYNTHETIC OpenPGP ciphertext $tag" -f body="SYNTHETIC TEST ONLY. Never production data. Owner PGPony recovery required." -F draft=true -F prerelease=true)" || fail 'cannot create synthetic draft release'
 release_id="$(jq -er '.id | select(type == "number" and . > 0)' <<<"$release")" || fail 'numeric release ID absent'
