@@ -135,5 +135,5 @@ jq -e --arg tag "$tag" --argjson id "$release_id" \
 verify_download after_publish
 
 jq -n --arg id "$BACKUP_ID" --arg tag "$tag" --arg repo "$GITHUB_BACKUP_REPOSITORY" --arg sha "$EXPECTED_ENCRYPTED_SHA256" --argjson rid "$release_id" \
-  '{schema:"orgavela-github-release-synthetic/v1",backup_id:$id,tag:$tag,repository:$repo,release_id:$rid,provider:"github_releases",synthetic:true,uploaded:true,readback_verified:true,published:true,encrypted_sha256:$sha,immutable_verified:false,independent_restore_tested:false}' > "$status"
+  '{schema:"orgavela-age-github-release-synthetic/v1",backup_id:$id,tag:$tag,repository:$repo,release_id:$rid,provider:"github_releases",synthetic:true,uploaded:true,readback_verified:true,published:true,encrypted_sha256:$sha,immutable_verified:false,independent_restore_tested:false}' > "$status"
 printf 'PASS: synthetic GitHub release ID-based pre/post-publication remote binary SHA-256 readback verified.\n'
