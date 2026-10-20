@@ -3,6 +3,12 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 20.10.2026 – GH06 age Release-Testbranch nach Betreiber-Änderung geschützt
+
+- **GitHub-Sicherheitsstatus bestätigt:** `test/orgavela-age-release-o03` meldet nach Betreiber-Einrichtung per unabhängiger Branch-API `protected=true`. Vorheriger Zustand `false` ist behoben. Die detaillierte Protection-API gibt jedoch `403` zurück – genaue Einzelcheckboxen (PR-Pflicht, Bypass, Force Pushes, Deletion) sind **nicht** vom Assistenten verifiziert. Required-Status-Checks sind derzeit laut Branch-Ansicht nicht erzwungen. Kein vollständiger Sicherheitsgate-PASS für Remote-Tokens.
+- **Nächste Aktion:** Neuer **leerer** CircleCI-Context `orgavela-age-release-tests` unter Organization Settings > Contexts, Project Restriction ausschließlich `Projekt-Wordpress-Plugin` und Expression Restriction `pipeline.git.branch == "test/orgavela-age-release-o03" and not job.ssh.enabled` setzen. **Noch keine Secrets, PATs, SSH-Zugänge, CI-Remote-Jobs oder GitHub-Releases**; Contextrestriktionen erst gesondert gegenprüfen.
+- **Beleggrenze:** GH06 Offline-Sicherheitstests 13/13 Pipeline #209 weiterhin erfolgreich; *kein* natives age GitHub-Release veröffentlicht, kein echter Quell-/Datenbank-Backup und kein Owner-GH03-Restore. V1 weiterhin 62/71 Coding-Pakete, M0–M7 0/8, P4 0/4 und R01–18 0/18 formal abgenommen, PR-Integration offen.
+
 ## Update 20.10.2026 – GH06 geschützter Release-Testbranch noch nicht freigegeben
 
 - GH-06-Synthetik-**Offline-Test #209** bleibt 13/13 grün; genau eine neue Vorbereitungshandlung erfolgte: der separate Testbranch `test/orgavela-age-release-o03` wurde von GH06 Draft PR #21 aus SHA `7add8fb59ecc0de094e41363b637b0a1a764a6e9` angelegt.
