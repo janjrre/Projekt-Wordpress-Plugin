@@ -31,7 +31,7 @@ import pathlib, sys
 p=pathlib.Path(sys.argv[1])
 with p.open('rb') as stream:
     header=stream.read(22)
-if header != b'age-encryption.org/v1\\n':
+if header != b'age-encryption.org/v1\n':
     raise SystemExit('Not a native age v1 ciphertext envelope')
 PY
 # Reject unexpected recovery secrets on the writer boundary.
