@@ -319,3 +319,218 @@ Dies ist ergänzende **synthetische Transport-Sicherheits-Evidenz** unter W0/O03
 | GH03 formell `accepted` / GH05–08 echte Backups | **NEIN / gesperrt** | 1 Kopie ersetzt keine geprüfte Wiederherstellung oder operative Backup-Gates |
 
 **Entscheidung:** `gh03_offline_copy1_attested=true` ausschließlich als durch Betreiber belegter Papier-Druck-/Safe-Verwahrstatus, `gh03_offline_copy2_attested=false`, `gh03_formal_accepted=false`. Keine öffentlichen Secrets, keine neue CircleCI- oder produktive WordPress-Ausführung.
+
+## 20.10.2026 – O03 Wechsel auf OpenPGP/PGPony
+
+| Kontrollpunkt | Beleg / Status |
+| --- | --- |
+| Formatwahl für neue produktive Sicherungen | PGPony/OpenPGP vom Betreiber bestätigt, Masterplan v2.22 |
+| Dreamloud-Architekturprüfung | Read-only Source: OpenPGP public key fingerprint, separated capture/writer, immutable releases, isolated restore; keine geteilten Secrets |
+| Historische GH04 GPG- und GH06 age-Tests | Beide synthetisch bestanden; nicht owner-PGPony-Interoperabilität |
+| PGPony-Owner-Key mit GnuPG kompatibel | OFFEN |
+| Zwei separate geschützte neue OpenPGP-Recovery-Kopien | OFFEN; gedrucktes AgePony-PDF zählt nicht |
+| Decrypt aus unabhängigem PGPony-Private-Key | OFFEN |
+| GnuPG-OpenPGP-Synthetik-Prototyp | Lokal unter isoliertem Einmal-Testschlüssel erfolgreich, noch kein PR-HEAD-Provider-E2E |
+| Produktive GH05–08/Release R01–18 | BLOCKIERT, 0/18 |
+
+Dies ist ein nicht-produktiver O03-Architekturwechsel; er erzeugt **keine** formale V1-Abnahme.
+
+## 20.10.2026 – PGP-02 Synthetik-Vorbereitung, nicht provider-abgenommen
+
+| Bestandteil | Status | Nachweis |
+| --- | --- | --- |
+| Public-only OpenPGP-Packer ohne Produktionsmodus | Code angelegt | `scripts/ci/orgavela-openpgp-synthetic-pack.sh`, Commit `64b0a81` |
+| Synthetischer lokaler GnuPG-Roundtrip mit temporärem Testschlüssel | PASS für lokalen unabhängigen Prototyp | lokales Bash/GPG, kein PGPony-Owner-Key, kein CI-SHA |
+| Testskript im Draft-Branch | Code angelegt, Lauf auf exaktem GitHub-SHA ausstehend | `scripts/ci/test-orgavela-openpgp-synthetic-pack.sh`, Commit `2e13391` |
+| GnuPG gegen PGPony v4/v6 Verschlüsselungs-Key | NICHT AUSGEFÜHRT | noch keine eigene PGPony-Identität für OrgaVela bestätigt |
+| Eigene OpenPGP-Recovery-Kopien + Restore | NICHT AUSGEFÜHRT | GH03 weiter offen |
+| GitHub OpenPGP immutable Release / produktive GH05-08 | NICHT AUSGEFÜHRT | erst nach expliziten Freigaben |
+
+Historische GH04-GPG- und GH06-age-CI-Belege bleiben unabhängig gültig, erfüllen diese neuen Owner-Key- und Produktiv-Gates **nicht**.
+
+## 20.10.2026 – GH03-PGPony Public-Key-Prüfung
+
+| Bedingung | Resultat | Nachweisgrenze |
+| --- | --- | --- |
+| OpenPGP-Public-Key syntaktisch korrekt & signiert | PASS | GnuPG 2.4.7, 2 gute Self-Signatures |
+| Version, Algorithmen, Fingerprints | PASS | v4, Ed25519 `7C9DC60D8E1B293E514696EB333D15A4D8BA625C`, cv25519 `CF5D8A8498F65C6D894ECE2FD9E58CC6484AF1DE` |
+| Temporäre Verschlüsselung nur mit öffentlichem Empfänger | PASS | isolierter GnuPG-Test ohne irgendeinen Secret-Key |
+| Betreiber-PGPony entschlüsselt externes GnuPG-Archiv | **OFFEN** | Ciphertext `orgavela-pgpony-kompatibilitaetstest.gpg`, 288 Bytes, SHA256 `8da079bd89e8048a3238133fb7fe5f5daf6076c6e2d3b3947733dd1522da2be1` für Owner bereitgestellt |
+| 2 unabhängige geschützte Backup-Kopien des NEUEN PGPONY-Private-Key | **OFFEN** | Altes AgePony-Paper zählt nicht |
+| Recovery allein aus unabhängigem Private-Key-Export | **OFFEN** | Keine Kopie-2-Probe ohne Original-iPhone |
+| GitHub Public-Key-Policy | Candidate only | `.github/backup/orgavela-backup-candidate-public.asc`, `.github/backup/orgavela-pgpony-candidate-policy.json`; öffentlich sichtbarer Draft, keine Produktionsfreigabe |
+| GH03/Produktion GH05–08 | **BLOCKIERT** | Kein produktiver Writer/Restore/Schedule |
+
+**Technischer Teilfortschritt, keine formale GH03-, Milestone- oder Release-Gate-Abnahme.**
+
+## 20.10.2026 – PGPony-Entschlüsselung extern erzeugter GnuPG-Datei
+
+| GH03-Test | Status | Abnahmegrenze |
+| --- | --- | --- |
+| GnuPG-Public-Key-Import und künstliche Verschlüsselung | PASS | separater, bereits dokumentierter GnuPG-2.4.7-Test ohne Private-Key |
+| PGPony auf iPhone: externe `.gpg`-Datei mit ursprünglichem Privatkey entschlüsselt | **PASS laut Betreiber** | ausdrückliche Nutzerantwort „ja ich konnte es entschlüsseln“, tatsächliche Klartext-Sollcode-Gleichheit nicht zusätzlich bestätigt |
+| Zwei geschützte physisch getrennte Private-Key-Kopien des neuen PGPony-Schlüssels | **OFFEN** | kein Nachweis |
+| Wiederherstellung allein aus zweiter Kopie ohne ursprünglichen iPhone-Vault | **OFFEN** | kein Nachweis |
+| GH03 endgültig / produktive GH05–08 | **NICHT ABGENOMMEN** | Candidate-Key bleibt produktiv gesperrt |
+
+Dies ist ein Fortschritt für die **Betreibergeräte-Interoperabilität**, nicht für eine nachweisbar vom Smartphone-Verlust unabhängige Recovery oder formale V1-Abnahme.
+
+## 20.10.2026 – OpenPGP-QA im echten, Git-Hash-abgeglichenen Testskript
+
+| Prüffall | Resultat | Belastbarer Nachweis |
+| --- | --- | --- |
+| `scripts/ci/orgavela-openpgp-synthetic-pack.sh` Skriptidentität | PASS | GitHub Blob SHA = lokal `git hash-object` `0bdf88dab604297a0fa21ba5456f346fbc878766` |
+| `scripts/ci/test-orgavela-openpgp-synthetic-pack.sh` Skriptidentität | PASS | Blob `0419da15160e885a83c0042514e4048a29a69a58` |
+| `scripts/ci/test-orgavela-pgpony-public-key.sh` Skriptidentität | PASS | Blob `94727028ad9dc3263c62ce954999967223efd017`; Public .asc Blob ebenfalls Git-hash-abgeglichen |
+| Öffentlicher PGPony-Key, v4 Ed25519/cv25519, Fingerprints, lokale Verschlüsselung | PASS | GnuPG 2.4.7; keine Owner-Private-Daten |
+| Synthetisches PGP-Archiv erzeugen / entschlüsseln / SHA256 | PASS | nur temporärer Testschlüssel und künstliche Dateien |
+| Negativtests falscher Fingerprint, synthetischer Private-Key-Input, Prod-Modus, vorhandene Ausgabe, fiktives `GH_TOKEN`, Opt-in fehlt, ungültige ID, Symlink | **8/8 PASS** | alle fehlertoleranzprüfenden Aufrufe endeten erwartungsgemäß mit Fehlercode |
+| Neuer CircleCI-Parameter `enable_pgpony_openpgp_offline` | Code: Default `false` | Featurebranch-Filter, keine Secret-Contexts, kein CI-Ausführungslauf |
+| CircleCI-PGPony-Job auf exakt diesem PR HEAD | **AUSSTEHEND** | nicht automatisch grün behaupten |
+| iPad-Kopie und unabhängige PGPony-Recovery | **AUSSTEHEND** | Betreiber kündigte Test an; noch kein Ergebnis gemeldet |
+| Echte GH05–08-Backups / R01–18 | **BLOCKIERT** | weiter keine GH03-Recovery-Abnahme |
+
+**Interpretation:** Lokaler Code-QA-PASS ist keine vollständig abgenommene CircleCI-Pipeline, kein aus zweiter Offlinekopie geprüfter PGPony-Owner-Key und keine Produktionsfreigabe.
+
+## 20.10.2026 – PGPony CircleCI Fehlversuch und Diagnose
+
+| Kontrolle | Stand | Beleg/Abgrenzung |
+| --- | --- | --- |
+| Manueller CircleCI `pgpony-openpgp-offline-qa` | **FAIL** | Source SHA `76d8ebd...`, GnuPG-Installation PASS, Synthetic-QA-Step Exit 1 |
+| Konkrete Fehlursache | **OFFEN** | Screenshot zeigt nur Exit 1, keinen vollständigen Teiltest-Log |
+| Diagnostische Nachbesserung | **Code aktualisiert** | CircleCI Stage-Marker und sanitized ERR Script-/Zeilenangabe |
+| GnuPG-Signaturprüfung robuster | **lokal PASS** | Temporäres `gpg --check-sigs`-Log vermeidet potenzielles `grep -q`/`pipefail`-Verhalten; ursprüngliche Ursache nicht bewiesen |
+| Exakter neuer Public-Key-Testcode | **lokal PASS** | Blob `3003f07073f8398e986546480c9b38d5a1506b44`, GnuPG 2.4.7 |
+| Exakter neuer Archiv-Testcode | **lokal PASS** | Blob `04802b19a51ca1e68a3d538ad667e81b38d84323`, 8/8 negative Prüfungen |
+| CircleCI-Retest auf neuer HEAD | **AUSSTEHEND** | Neue manuelle Pipeline nach Creditprüfung statt Rerun auf alter Revision |
+| GH03 private Copy-2 Recovery / echte GH05–08 / V1 Gates | **OFFEN/BLOCKIERT** | Keine formale Abnahme |
+
+Kein Provider-PASS wird durch lokale grüne Tests ersetzt.
+
+## 20.10.2026 – Zweiter PGPony-CircleCI-Fehler: genaue Zeile 27, Bitlängenassertion korrigiert
+
+| Prüffall | Ergebnis | Konkreter Beleg |
+| --- | --- | --- |
+| Manueller CircleCI Lauf 2 auf Commit `49ace9d...` | **FAIL** | Step `public_key_preflight`, `test-orgavela-pgpony-public-key.sh` **Zeile 27**, `exit=1` |
+| GnuPG-Colons-Public-Key-Verifikation alt | **zu strikt** | Regex verlangt fest `:255:22:`, obwohl Längenanzeige nicht stabil ist; beobachteter CI-Zeilenfehler eindeutig, genaue CI-GnuPG-Längenanzeige nicht gezeigt |
+| Korrigierter öffentlicher Schlüsseltest | **lokal PASS** | Commit `22952acf...`, GitHub Blob `1f23cbbd625cb60e51b57f4db2643f5fee3ec162`, exakter Datei-Hash lokal bestätigt |
+| Variantenprüfung 255/256 Bit | **lokal PASS** | Primär-Algorithmus 22 und Encryption-Subkey-Algorithmus 18 mit Capability e; Fingerprints weiterhin vollständig angeheftet |
+| CircleCI-Test auf korrigiertem Commit | **AUSSTEHEND** | Kein Run 3, keine Provider-Abnahme |
+| Owner Private-Key Copy 2 / GH03 / reale GH05–08 | **BLOCKIERT** | Noch kein unabhängig geprüfter Backup-Restore |
+
+**Gezielt bekannte Fehlerstelle entfernt; erneuter Provider-PASS darf nicht vor tatsächlichem Lauf behauptet werden.**
+
+## 20.10.2026 – Dritter PGPony/OpenPGP-CircleCI-Offline-Run grün
+
+| Prüffall | Ergebnis | Belastbare Beobachtung |
+| --- | --- | --- |
+| Manueller CircleCI `pgpony-openpgp-offline-qa` auf Quellcommit `50509600f5e3df842e8f320bcf5160726072a374` | **PASS** | Betreiber-Screenshots ~17:48 Uhr, grüner Workflow und Job, ~14 Sekunden |
+| GnuPG auf CircleCI-Runner | **PASS** | `gpg (GnuPG) 2.2.19`, nicht lokale GnuPG-2.4.7-Version |
+| Öffentlicher PGPony-Schlüssel, Fingerprints, CV25519-Unterschlüssel, gültige Selbstsignatur, synthetische Verschlüsselung | **PASS** | Sichtbare `PGPONY_QA_STAGE=public_key_preflight` und positive Public-Key-Testausgabe; Private-Key beim Provider nicht vorhanden |
+| Isoliertes synthetisches Backup, OpenPGP, SHA-256 und Restore | **PASS** | `PGPONY_QA_STAGE=synthetic_openpgp_roundtrip`, `PASS: OpenPGP public-key encrypted backup package and SHA-256 sidecar generated` |
+| Acht Ablehnungstests für unsichere Eingaben | **8/8 PASS** | `PASS: isolated OpenPGP synthetic pack, SHA256, recovery and 8 negative checks` |
+| Abschließender CI-Marker | **PASS** | `PGPONY_OFFLINE_QA=PASS` |
+| Erstes und zweites manuelles CI-Experiment | **historisch FAIL** | Präzise im Log erhalten; nicht rückwirkend umetikettiert |
+| Vollständige Job-ID und tatsächliche CircleCI-Abrechnung | **nicht unabhängig geprüft** | Nur sichtbare Betreiber-Screenshots; kein autorisierter providerseitiger Log-/Billing-Zugriff |
+| Owner-iPad-Schlüsselkopie, zwei physisch unabhängige geschützte Offline-Exporte, zweites unabhängiges Recovery | **OFFEN** | Noch keine Bestätigung des Import-/Restores |
+| Reales Source-Capture, private unveränderliche GitHub Releases, produktive GH05–GH08 | **BLOCKIERT** | CI-Job ist synthetisch und arbeitet ohne Secrets/Produktivdaten |
+| Formale GH03/M0–M7/P4/R01–R18-Abnahmen | **NICHT bestanden** | Kein V1-Release- oder Meilenstein-Signoff durch diesen Teiltest |
+
+**Dieser PASS ist ausschließlich die technische, synthetische CI-Prüfung auf benanntem GitHub-SHA.**
+
+## 20.10.2026 – GH03 Geräteunabhängige Entschlüsselung auf iPad, Offline-Recovery weiter ausstehend
+
+| Nachweis | Status | Bewertungsgrenze |
+| --- | --- | --- |
+| Neues PGPony-Gerät: iPad-Import der OrgaVela-Privatidentität | **PASS laut Betreiber** | „iPad-Import erfolgreich“; Importweg nicht ausdrücklich spezifiziert |
+| Vollständiger Hauptschlüssel-Fingerprint auf iPad stimmt | **PASS laut Betreiber** | Abgleich mit `7C9DC60D8E1B293E514696EB333D15A4D8BA625C` |
+| Externes synthetisches OpenPGP-Testarchiv auf iPad entschlüsselt | **PASS laut Betreiber** | Entschlüsselung als erfolgreich bestätigt; nicht selbst beobachtet, Sollcode nicht erneut wörtlich angegeben |
+| Echte separate, dauerhaft aufbewahrte Offline-Privatkey-Kopie #1 | **OFFEN** | Kein Nachweis über längerfristig gesichertes Medium |
+| Zweite unabhängig geschützte Offline-Kopie #2 / Recovery aus diesem Medium | **OFFEN** | iPad-Geräteimport allein ist nicht der Nachweis zweier physisch und technisch getrennter Datenträger |
+| Unabhängig abrufbare Passphrase | **OFFEN** | Keine Bestätigung, keine Offenlegung von Geheimnissen erwünscht |
+| GH03 formale Abnahme | **BLOCKIERT** | Erst Notfallwiederherstellung aus gesicherter Offlinekopie und getrennte Kopien belegen |
+| Private immutable GitHub-Releases, echte GH05–GH08, V1 R01–18 | **BLOCKIERT** | No-secret CircleCI synthetisch PASS, aber kein Produktiv-/Recovery-Gate freigegeben |
+
+**Operator-Attestation genügt für den Geräte-Funktionstest, nicht für die vollständige GH03-Schlüsselverlustwiederherstellung.**
+
+## 20.10.2026 – GH03: Eine PGPony-Offline-Papierkopie im Safe bestätigt
+
+| GH03-Kriterium | Status | Abgrenzung |
+| --- | --- | --- |
+| Neuer PGPony-Private-Key als Papier-Wiederherstellungskopie geschützt verwahrt | **BETREIBERBESTÄTIGT – 1 Kopie** | Papierausdruck laut Betreiber im eigenen Safe; private Inhalte, Bilder und Orte weder gesehen noch gespeichert |
+| Vollständigkeit / Importfähigkeit der Papierkopie | **OFFEN** | Papier allein ist kein Restorebeweis |
+| Restore ausschließlich aus der **Papierkopie** und synthetisches GPG-Decrypt | **OFFEN** | Bisheriger iPad-Decrypt erfolgte nach AirDrop-Import, nicht belegter Papier-Import |
+| Zweite eigenständig und getrennt geschützte Offline-Privatkopie | **OFFEN** | iPhone/iPad oder ältere AgePony-Papierkopie zählt nicht |
+| Notfallpassphrase getrennt wiederherstellbar | **OFFEN** | Keine Passphrase oder sensible Lageradresse erfragen |
+| GH03 insgesamt | **NICHT FORMAL ABGENOMMEN** | Zuerst Wiederherstellung aus Papier/gesichertem Medium und zwei separate Kopien |
+| Produktive GH05–08, GitHub Backup-Releases, automatische Jobs, V1 R01–18 | **BLOCKIERT** | Kein neuer Datenzugriff oder Release freigegeben |
+
+Diese Papierkopie ist ein **neuer echter Offline-Fortschritt**, aber kein unabhängig beobachteter Restore oder ein zweites geschütztes Ausfallgebiet.
+
+## 20.10.2026 – GH03 PGPony-Papierkopie #1 wiederhergestellt
+
+| Abnahmekriterium | Status | Nachweisgrenze |
+| --- | --- | --- |
+| Neue PGPony-Private-Key-Kopie #1 physisch im Safe | **OWNER-BESTÄTIGT** | Vorherige Aussage über Papierausdruck im Safe |
+| Private Key **direkt aus dem Papierausdruck** rekonstruiert/importiert | **PASS laut Betreiber** | Antwort „Ja habe ich es hat geklappt“ auf eindeutige Papier-Restore-Frage; kein Secret an Chat gesendet |
+| Extern verschlüsselte synthetische OrgaVela-Testdatei mit Papier-Restore-Schlüssel entschlüsselt | **PASS laut Betreiber** | Eigenständige Betreiberbestätigung, nicht vom Assistenten selbst beobachtet |
+| Vollständig isolierter Keyring / erneut identischer FPR beim Papier-Restore | **nicht separat belegt** | Nur früherer iPad-Fingerprint-Abgleich bestätigt |
+| Zweite unabhängig geschützt und anderswo aufbewahrte neue PGPony-Offline-Kopie #2 | **OFFEN** | Erster Safe und Geräte allein decken keinen Verlust des Safes ab |
+| Wiederherstellung aus echter Copy #2 | **OFFEN** | Noch keine Kopie oder Test |
+| Passphrase-Notfallverfügbarkeit getrennt von Schlüsselkopien | **OFFEN** | Kein Zugriff auf Passphrase nötig/erwünscht |
+| Formale GH03-Abnahme / produktive GH05–08 | **BLOCKIERT** | Zuerst Copy #2 und Notfall-Wiederherstellung belegen |
+
+**Evidenzlevel:** Operator-Attestation für Papier-Recovery aus Copy #1, aber noch kein vollständig abgesicherter, kopie-2-unabhängiger Disaster-Recovery-Test. Früherer synthetischer CircleCI-PASS bleibt gültig; V1-Gates nicht neu abgenommen.
+
+## 20.10.2026 – GH03 PGPony owner-controlled key recovery
+
+| Kriterium | Ergebnis | Evidenz |
+| --- | --- | --- |
+| Zweite eigene private PGPony-Offlinepapierkopie an unabhängig geschütztem Ort | **PASS (Owner-Attestation)** | Nutzer bestätigt zusätzliche Kopie und erfolgreiche Wiederherstellung aus dieser |
+| Wiederherstellung aus Papierkopie #1 | **PASS (Owner-Attestation)** | Voriger Test: PGPony-Key direkt aus Papier importiert, synthetisches GPG-Fixture entschlüsselt |
+| Wiederherstellung aus Papierkopie #2 | **PASS (Owner-Attestation)** | Betreiber bestätigt auch beim zweiten Papier wieder erfolgreiche Wiederherstellung |
+| Passphrase im Notfall offline und auf Zweitgerät verfügbar | **PASS (Owner-Attestation)** | Nur erfolgreiche Sicherungsmethode, keine Passphrase empfangen |
+| GH03 Besitzer-Key-Recovery insgesamt | **PASS, owner-attested** | Keine externe physische Auditierung, kein eigens verifizierter Copy2-Paket-SHA/isolierter Keyring |
+| PGP-03 Quell-/Ciphertext-only Writer-Grenze | **NEU VORZUBEREITEN, NICHT ABGENOMMEN** | Default-OFF synthetische Zwei-Job-Pipeline |
+| PGP-04 privater immutable Release und echter GH05–08-Vollrestore | **BLOCKIERT** | Keine Token, keine reale Quelle, keine isolierte reale Wiederherstellung |
+| M0–M7, P4, R01–R18 | **0/8, 0/4, 0/18** | Historische Codingzählung 62/71 bleibt unverändert |
+
+**GH03 ist eine Key-Recovery-Teilabnahme, nicht die O03-Live-Backup- oder V1-Abnahme.**
+
+## 20.10.2026 – GH03 Key-Recovery-Teilabnahme und PGP03 Ciphertext-only Source/Writer-Vorprüfung
+
+| Nachweis | Status | Quelle / Grenze |
+| --- | --- | --- |
+| Zwei getrennt geschützte PGPony-Offlinepapierkopien | **PASS (Betreiberbestätigung)** | Besitzer bestätigt zweite Kopie nach Frage zur getrennten sicheren Verwahrung; genaue Orte nicht gespeichert |
+| Private-Key-Wiederherstellung aus zweiter Papierkopie | **PASS (Betreiberbestätigung)** | Nutzer bestätigt wiederhergestellten Key und erfolgreiche Entschlüsselung auch aus Kopie 2; kein externer Audit |
+| Passphrase offline und auf zweitem Gerät | **PASS (Betreiberbestätigung)** | Keine private Passphrase empfangen |
+| **GH03 OpenPGP Key-Recovery-Teil-Gate** | **PASS, owner-attested** | Öffentlicher PGP-FPR/cv25519 geprüft, iPhone/iPad/Papier 1+2, letzte no-secret CircleCI-QA grün; keine Real-Backup-Abnahme |
+| PGP03 nur künstliche SQL-/WordPress-Daten vor Transport OpenPGP-verschlüsseln | **LOKAL PASS** | `scripts/ci/orgavela-openpgp-synthetic-handoff.sh` SHA `a20169ada8779c4c394b48d26e5ffc93e6756f2f` |
+| Writer erhält ausschließlich Ciphertext, SHA-256-Sidecar und bereinigtes Manifest | **LOKAL PASS** | SHA-256 + Recipient-Key-ID + Manifest + drei-Dateien-Invariante geprüft, ohne Private Key oder Token |
+| PGP03 Negativtests | **9/9 LOKAL PASS** | `scripts/ci/test-orgavela-openpgp-synthetic-handoff.sh` SHA `b23fb8253813ee7a18765e30641eddb64abcfb2d` |
+| PGP03 No-Secret CircleCI Workflow und getrennte Source-/Writer-Jobs | **CODE DA / PROVIDER-RUN OFFEN** | default-off `enable_pgpony_ciphertext_handoff`; kein Context, nur Featurebranch |
+| PGP04 privater synthetischer immutable GitHub Release | **BLOCKIERT** | Separates Token-/Branchschutz-/Releasesicherheits-Gate fehlt |
+| Produktive GH05–08 mit realer DB und echtem unabhängigem Restore | **BLOCKIERT** | GH03 allein genügt ausdrücklich nicht |
+| V1 M0–M7 / P4 / R01–R18 | **0/8 · 0/4 · 0/18** | Historisch 62/71 Coding bleibt unverändert |
+
+**Aussagegrenze:** CI-Proof zu PGP03 ist **noch nicht** bestanden. Frühere grüne CI gehört nur zur älteren Public-Key-/Synthetik-Einzeljob-QA, nicht zum neuen Zwei-Job-Handoff.
+
+## 20.10.2026 – PGP03 tatsächliche No-Secret-CircleCI Zwei-Job-Abnahme (18:57)
+
+| Test/Blocker | Status | Beleg |
+| --- | --- | --- |
+| GitHub Source SHA | **ABGEGLICHEN** | PR #25 Head `4eac786c3868dc4e79f1cf1dd16dc11b93512ff8` entspricht CircleCI-UI `4eac786` |
+| Synthetic Source OpenPGP | **PASS** | `pgpony-handoff-source`, ca. 21 s, `PGPONY_HANDOFF_CI_SOURCE=PASS` |
+| Keine Klartextbestandteile im Handoff | **PASS** | `PGPONY_WORKSPACE_PLAINTEXT=NONE`, nur drei erlaubte Workspace-Dateien laut eingefrorenem CI-Quellcode |
+| CircleCI-Workspace-Übergabe | **PASS** | 1,7 KiB hochgeladen, Writer hat Workspace erfolgreich eingebunden |
+| Synthetic Writer ohne Key/Token | **PASS** | `pgpony-handoff-writer`, ca. 12 s, `PGPONY_HANDOFF_CI_WRITER=PASS` |
+| Integritäts-/Empfänger-/Manifest-Checks und fail-closed | **PASS, 9/9** | `PASS: OpenPGP ciphertext-only producer/writer and 9 fail-closed regressions` |
+| Keine echte GitHub-Release-Veröffentlichung | **bestätigt aus Script/Log** | `PGPONY_RELEASE_UPLOAD=DISABLED` |
+| **PGP03 auf echte CircleCI-Zwei-Job-Grenze** | **PASS** | Zwei grüne Provider-Jobs/Workflow, Betreiber-Screenshots 18:57, ~37 s |
+| GH03 Owner-Key-Recovery | **PASS, Betreiberbestätigung** | Beide PGPony-Papierkopien und Wiederherstellungen, getrennt passphrase-wiederbeschaffbar; keine externe physische Prüfung |
+| PGP04 Secret-/Branchschutz für neuen verschlüsselten Remote-Release | **BLOCKIERT** | Aktueller PR #25 Featurebranch per GitHub API `protected=false`, Branchfilter schützt kein GH_TOKEN |
+| PGP04 neuer PGPony Ciphertext-Release in privatem `janjrre/orgavela-backups` | **NICHT AUSGEFÜHRT** | Nur ältere GH04-GPG- oder GH06-age-Synthetik-Ergebnisse bestehen separat |
+| Reale GH05–08, produktiver isolierter Restore, automatischer Plan | **BLOCKIERT** | Kein echter Capture/Remote Recovery/Release-Gate |
+| M0–M7 / P4 / Release-R01–R18 formal | **0/8 · 0/4 · 0/18** | Codinghistorie 62/71 unverändert |
+
+PGP03-PASS ist kein GH04-PASS, kein produktiver Backup-PASS und keine formale V1-Gesamtabnahme.

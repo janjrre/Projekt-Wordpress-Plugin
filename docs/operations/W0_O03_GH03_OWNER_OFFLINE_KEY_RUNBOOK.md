@@ -1,3 +1,5 @@
+**HISTORICAL age/AgePony guide – not the current OrgaVela backup format as of 20.10.2026.** New operator process: [PGPony/OpenPGP owner guide](W0_O03_PGPONY_OWNER_OFFLINE_KEY_RUNBOOK.md). Preserve existing AgePony identity and printed key as historical materials; they do not recover OpenPGP.
+
 # GH-03 – age-Schlüssel ausschließlich beim OrgaVela-Betreiber erzeugen und Recovery aus zweiter Offline-Kopie prüfen
 
 **Datum:** 17.10.2026 · **Status:** Anleitung vorbereitet, **auf Betreibergerät nicht ausgeführt**, GH-03 nicht abgenommen.  
