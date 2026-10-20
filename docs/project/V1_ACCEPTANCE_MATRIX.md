@@ -452,3 +452,17 @@ Kein Provider-PASS wird durch lokale grüne Tests ersetzt.
 | Private immutable GitHub-Releases, echte GH05–GH08, V1 R01–18 | **BLOCKIERT** | No-secret CircleCI synthetisch PASS, aber kein Produktiv-/Recovery-Gate freigegeben |
 
 **Operator-Attestation genügt für den Geräte-Funktionstest, nicht für die vollständige GH03-Schlüsselverlustwiederherstellung.**
+
+## 20.10.2026 – GH03: Eine PGPony-Offline-Papierkopie im Safe bestätigt
+
+| GH03-Kriterium | Status | Abgrenzung |
+| --- | --- | --- |
+| Neuer PGPony-Private-Key als Papier-Wiederherstellungskopie geschützt verwahrt | **BETREIBERBESTÄTIGT – 1 Kopie** | Papierausdruck laut Betreiber im eigenen Safe; private Inhalte, Bilder und Orte weder gesehen noch gespeichert |
+| Vollständigkeit / Importfähigkeit der Papierkopie | **OFFEN** | Papier allein ist kein Restorebeweis |
+| Restore ausschließlich aus der **Papierkopie** und synthetisches GPG-Decrypt | **OFFEN** | Bisheriger iPad-Decrypt erfolgte nach AirDrop-Import, nicht belegter Papier-Import |
+| Zweite eigenständig und getrennt geschützte Offline-Privatkopie | **OFFEN** | iPhone/iPad oder ältere AgePony-Papierkopie zählt nicht |
+| Notfallpassphrase getrennt wiederherstellbar | **OFFEN** | Keine Passphrase oder sensible Lageradresse erfragen |
+| GH03 insgesamt | **NICHT FORMAL ABGENOMMEN** | Zuerst Wiederherstellung aus Papier/gesichertem Medium und zwei separate Kopien |
+| Produktive GH05–08, GitHub Backup-Releases, automatische Jobs, V1 R01–18 | **BLOCKIERT** | Kein neuer Datenzugriff oder Release freigegeben |
+
+Diese Papierkopie ist ein **neuer echter Offline-Fortschritt**, aber kein unabhängig beobachteter Restore oder ein zweites geschütztes Ausfallgebiet.
