@@ -578,3 +578,18 @@ Keine neue formale V1-Abnahme; M 0/8, P4 0/4, R 0/18.
 | CircleCI Branch-Lock, Runtime-/Token-Permissions- und GitHub-Release-E2E | **OFFEN** | Vor Secret-Nutzung vollständig nachweisen |
 
 Die lokale Fake-GitHub-Testmatrix darf **nicht** als produktiver oder echter GitHub-Release-PASS gewertet werden. M0–M7 0/8, P4 0/4, R01–R18 0/18 unverändert.
+
+## 20.10.2026, 23:02 – PGP04 Branch-Freeze-Nachweis
+
+| Kontrolle | Ergebnis | Abgrenzung |
+|---|---|---|
+| Lock branch eingeschaltet | **UI-Screenshot sichtbar** | Edit-Ansicht; Speicherung nicht bestätigt |
+| Do not allow bypassing | **UI-Screenshot sichtbar** | Aktiv |
+| Allow force pushes | **UI-Screenshot sichtbar** | Deaktiviert |
+| Allow deletions | **Zuletzt deaktiviert; aktuell nicht im Bild** | Nochmals gespeicherte Regel prüfen |
+| Regel gilt für exakt einen benannten PGP04-Branch | **UI-Screenshot sichtbar** | `Applies to 1 branch` |
+| Branch-Code-SHA konstant | **GitHub-Connector geprüft** | `62c9524f09d9f0ad0e4eea0648cb1be14b051f0f`, compare = identical |
+| GitHub `protected=true`, Lock serverseitig wirksam | **NICHT API-BESTÄTIGT** | Kein Branchschutz-Leseendpunkt der GitHub-App; Edit-Screenshot ohne Save-Erfolg |
+| CircleCI-/GitHub-Synthetic-E2E | **OFFEN** | Kein Token oder Provider-Lauf |
+
+Keine Hochstufung der V1-Abnahme. Stand M0–M7 0/8, P4 0/4, R01–R18 0/18.
