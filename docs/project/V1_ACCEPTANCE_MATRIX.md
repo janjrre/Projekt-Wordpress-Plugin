@@ -605,3 +605,17 @@ Keine Hochstufung der V1-Abnahme. Stand M0–M7 0/8, P4 0/4, R01–R18 0/18.
 | PGP04 echter synthetischer GitHub Release / Restore | **OFFEN** | Keine Token und kein CI-Run |
 
 V1-Zähler unverändert: historische Implementierung 62/71, M0–M7 0/8, P4 0/4, R01–R18 0/18.
+
+## 20.10.2026, 23:11 – CircleCI Context SHA und erstmaliger no-token Source-Run
+
+| Prüfung | Stand | Evidenz |
+|---|---|---|
+| `PGP04_APPROVED_SHA` in dediziertem Context vorhanden | **BETREIBER-UI bestätigt** | Screenshot 23:11, Maskierung endet `1f0f`; vollständiger Wert nicht unabhängig lesbar |
+| Im Context kein `GH_TOKEN` | **BETREIBER-UI bestätigt** | einzige Variable `PGP04_APPROVED_SHA` gelistet |
+| Lock-Branch HEAD nachfolgend unverändert | **GitHub-Connector PASS** | `62c9524f09d9f0ad0e4eea0648cb1be14b051f0f`, 0 SHA-Abweichungen |
+| CircleCI PGP04 Source/Approval/Writer-Logik | **CODE STATISCH BESTÄTIGT** | Manuelles `enable_pgp04_synthetic_release=true`, Producer ohne Context, Writer nur nach explizitem Approval |
+| Ausführung `pgp04-synthetic-source` | **NOCH NICHT AUSGEFÜHRT** | Betreiber muss bewusst manuell auslösen und Provider-Logs liefern |
+| Approval-Job / Writer | **NICHT GENEHMIGT** | kein Token; manuellen CircleCI-Hold keinesfalls freigeben |
+| PGP04 Remote Release / Besitzer-iPad-Restore | **NOCH NICHT AUSGEFÜHRT** | weiter strikt getrennte Freigabe-/Secret-Gates |
+
+W0/O03 partial und V1 formale Zahlen unverändert: M0–M7 0/8, P4 0/4, Release R01–18 0/18.
