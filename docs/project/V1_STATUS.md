@@ -742,3 +742,13 @@ V1 unverändert: historische 62/71 Coding-Pakete, formal M0–M7 0/8, P4 0/4, Re
 **PGP04 nächster entscheidender Blocker:** Das Featurebranch `feat/o03-pgpony-openpgp-migration-20261020` ist per GitHub API **`protected=false`**. Branchfilter des CircleCI-Workflows allein ist kein verlässlicher Secretzugriffsschutz. Für den **neuen** PGPony-PUBLIC-Key-basierten remote privaten immutable Release-Test ist daher eine eigene geschützte Testbranch-/CI-Context-Grenze mit PR/no-bypass/no-force/no-delete, Restriktion auf genau diesen Branch und ausschließlich für `janjrre/orgavela-backups` begrenztem kurzlebigem Contents-RW-Token zwingend; zunächst nur Plan/Review, keine Tokenfreigabe. `janjrre/orgavela-backups` wurde als **privat** nachgelesen. Der historische GH04-GPG-Test mit Wegwerf-Key bzw. GH06-age-Synthetikrelease beweist **nicht** die neue PGPony-E2E-Remote-Parität.
 
 **Weiterhin:** PR #25 Draft, ungemergt; echte GH05–08 und V1-Release-Gates gesperrt. V1 historisches Coding **62/71**, M0–M7 formal **0/8**, P4 **0/4**, Release R01–18 **0/18**.
+
+## 20.10.2026 – PGP04 lokaler Offline-Review-Zwischenstand
+
+Der OrgaVela-GitHub-Branchschutz wurde nach Betreiber-Screenshot im korrekten Quellrepo angelegt und traf 1 Branch. Vorbereitender No-Bypass/No-Force/No-Delete-Stand anhand der UI dokumentiert; endgültiges Lock branch weiter OFFEN.
+
+Der Publisher (Git-Blob 5ecb211eb7f856ff1d676201ee2a5ede55d11fe2) wurde exakt reproduziert (lokaler git hash-object identisch), bash -n Exit 0. Synthetische Fake-Datei ausschließlich mit dem verifizierten PGPony PUBLIC-Schlüssel verschlüsselt, nie mit privatem Key. Temporäres Mock-GitHub-API-Skript testete mit einem erkennbar falschen Testtoken den simulierten Release-Erfolgsweg samt binärem Readback und die Sicherheits-Abbrüche. **13/13 Fallausgänge wie erwartet, Python Exit 0, nur lokal.** Die Testdateien konnten aufgrund einer Sicherheitsblockade nicht nach GitHub committed werden und sind noch nicht providerreproduziert.
+
+Statischer Check der echten GitHub-CircleCI-Datei (Blob d430033f001d13bb83bb1b086b336b2dd43c522b): PGP04-Workflow default false, Source ohne Context, Writer mit separat benanntem Context, Source-Abhängigkeit und Branchfilter. **Nicht** als CircleCI-Config-Lint oder Context-Abnahme werten.
+
+**BLOCKER:** finaler Branch-Lock und SHA-Codefreeze, verifizierter eigener CircleCI-Context mit Projekt-/Branchrestriktion, echte GitHub-Releases-Immutability, Besitzer-PGPony-Restore, separate kurzlebige Tokenfreigabe. Kein produktiver OrgaVela-/IONOS-Zugriff, keine neuen CircleCI-Runs, kein kostenpflichtiger Dienst. W0/O03 partial; Codinghistorie 62/71, M0–M7 0/8, P4 0/4, R01–18 0/18. Nächstes Paket: reproduzierbare Providerpreflight-/Code-Review-Gates vor Branch-Lock/Context/Token.
