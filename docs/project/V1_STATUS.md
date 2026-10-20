@@ -3,6 +3,12 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 20.10.2026 – CircleCI Context-Smoke #255 erfolgreich
+
+- **Echter Providerlauf**: CircleCI Pipeline **#255** auf `test/orgavela-age-release-o03` an exakt geschütztem Commit `cb22a2b434ee18ef79811afd3c99f47a7ac36a4b`, ein einziger Job `gh06-age-context-smoke` mit grünem Status. Betreiber-Screenshot zeigt Log-Marker `GH06_CONTEXT_ACCESS=PASS`, `GH06_CONTEXT_SECRETS=NONE`, `GH06_GITHUB_RELEASE_UPLOADED=NO`. GitHub-Commitstatus `ci/circleci: gh06-age-context-smoke=success`, [Provider-Job #7](https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/7), unabhängig verifiziert.
+- **Abnahme ausschließlich no-secret Context Runtime für erlaubten Branch**. Nicht geprüft sind negative Zugriffsversuche von anderen Branches/Projekten, andere willkürliche Env-Variablen, echte `age`-GitHub-Releases oder immutable Downloads. Context war für die geprüften bekannten Secrets leer. Kein tokengetragener GH06-Release-Job läuft.
+- **Nächste Stufe:** minimalen separaten synthetischen `age`-GitHub-Release-Writer über neuen protected-branch PR mit default-false Manual-Gate vorbereiten; Script-/Secret-Sicherheitsreview, geschützter Kontext und minimal berechtigter kurzlebiger PAT vor erstem manuellem Run. GH03 unabhängige Owner-Recovery fehlt weiterhin, daher keine produktive WordPress-/MariaDB-Sicherung und kein Scheduler. V1-Fortschritt 62/71 historisches Coding, M0–M7 0/8, P4 0/4, Release-R 0/18, PR-Integration offen.
+
 ## Update 20.10.2026 – GH06 PR #23 geschützt und isoliert gemergt
 
 - Betreiber stellte [PR #23](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/23) auf Ready for Review. Exakter Patch und GitHub-Metadaten vor Merge geprüft: **1 Datei** `.circleci/config.yml`, **1 Commit**, **44 Ergänzungen, 0 Löschungen**; ausschließlich default-off-Boolean `enable_gh06_age_context_smoke` plus nicht-veröffentlichender Context-Job auf Testbranch. Altes GH05/GH06 CI erhalten.
