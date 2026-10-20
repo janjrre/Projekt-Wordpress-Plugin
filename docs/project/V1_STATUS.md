@@ -3,6 +3,40 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 20.10.2026 – GH-05 synthetische age-Producer/Writer-Pipeline #188 BESTANDEN
+
+- **Echte Anbieter-Ausführung:** CircleCI `Projekt-Wordpress-Plugin #188`, Workflow `gh05-synthetic-parity-manual`, Branch `feat/gh05-synthetic-age-20261019`, **genauer Quell-Commit `590d530686356d641774a27ff4004aa27fd063aa`**. Betreiber-Screenshots zeigen Pipeline **SUCCESS** in 20 s, `gh05-synthetic-source` **SUCCESS (11 s)** und `gh05-synthetic-writer` **SUCCESS (3 s)**. Ein `persist_to_workspace`-Step auf dem Producer zeigt verschlüsselten 11-KiB-Workspace erfolgreich hochgeladen.
+- **Unabhängig via GitHub:** Die Commit-Statuses `ci/circleci: gh05-synthetic-source` und `ci/circleci: gh05-synthetic-writer` stehen beide auf **success**, verlinkt auf [Job #4](https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/4) und [Job #5](https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/5). Die exakte `.circleci/config.yml` bei `590d530` wurde read-only aus GitHub gegen die vorgeschriebenen Installations-, Test-, Cipher- und Writersteps abgeglichen. Alle diese Schritte waren obligatorisch, kein `when` auf Einzelsteps und keine Secrets-/Deployment-/Live-Daten-Jobs.
+- **Teilabnahme:** Der zuvor wegen fehlendem lokalen CLI-Binary übersprungene **synthetische age-Verschlüsselungs-/Entschlüsselungstest** und die Zwei-Job-/Workspace-Parität sind durch den tatsächlich erfolgreichen Provider-Job nachgewiesen. Die einzelnen Stdout-Testzeilen und der konkrete age-Binary-Versionsstring wurden nicht separat abgeholt: keine erfundenen Testfallzahlen oder Versionen.
+- **Weiterhin gesperrt:** GH-03 unabhängiger Recovery-Key bei Geräteverlust (AgePony-PDF derzeit nur auf Original-iOS-Gerät), GH-05 echter konsistenter OrgaVela-/MariaDB-Snapshot, GH-06 private immutable age-GitHub-Release-Uploads und Full-Readbacks, GH-07 isolierter Wiederherstellungstest echter Backups und GH-08 Zeitplanung. **Kein** echtes OrgaVela-Backup, kein Datenzugriff, kein neues GitHub-Release, keine automatische Sicherung durchgeführt.
+- **V1-Zähler unverändert:** technisch historisch **62/71** implementierte Coding-Pakete, M0–M7 formal **0/8**, P4 **0/4**, R01–R18 **0/18**. Draft PR #20 weiterhin offen/ungemergt. [Masterplan](../operations/V1_ACCEPTANCE_PLAN.md), [Progress](../operations/V1_PROGRESS.json), [Abnahmematrix](V1_ACCEPTANCE_MATRIX.md).
+
+## Update 20.10.2026 – Dreamloud-Produktions-Backupverfahren als OrgaVela-Synthetik-Pipeline adaptiert
+
+**Dreamloud-Quelle read-only unabhängig geprüft:** Branch `backup/production-circleci` bei `da44f1a6d76ac25bce5cfed3122224c82c5da2fa` verwendet getrennte kontrollierte Capture- und verschlüsselte immutable-GitHub-Release-Writer-Jobs. Production-Backup (#348) und isolierter Restore (#353) sind im Dreamloud-Handoff belegt; täglicher realer Zeitplan ist davon unabhängig und noch nicht nachgewiesen.
+
+**OrgaVela Draft PR [#20](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/20):** neue `scripts/ci/orgavela_backup_parity.py` für ausnahmslos künstliche age-X25519-Dateien und ein streng nur Ciphertext/Manifest/Hash akzeptierender Writer; 13 separat **definierte** Python-Sicherheits- und negative Tests; Default-False-Parameter `enable_gh05_synthetic_parity` mit zwei getrennten branchgebundenen CircleCI-Jobs ohne Secret-Contexts. [Entscheidung und Abgrenzung](../operations/W0_O03_DREAMLOUD_PARITY_ADR_2026-10-20.md).
+
+**Wichtig:** Alle fünf neu/erweiterten Dateien wurden über GitHub lesenachgeprüft; **kein** tatsächlicher neuer Age-Crypto-CLI-/CircleCI-Run und **kein** Test-PASS für die 13 neuen Fälle bislang. Vor CircleCI-Integration ist die Konfiguration mit dem noch offenen **Draft PR #17** abzugleichen; niemals ein anderes CI-Pilotverfahren ersetzen. Keine realen Daten, kein Backup-Upload, keine Kosten, keine Dreamloud-Änderung und keine tägliche Automatik ausgelöst.
+
+**GH-03 weiter blockiert:** Betreiber AgePony-Identity und lokale PDF reichen nicht für unabhängig geschützte Offline-Wiederherstellung. GH-05 real capture, GH-06, GH-07 und GH-08 weiterhin nicht abgenommen. V1 unverändert **62/71 historische Coding-Pakete**, formal **0/8 M0–M7**, **P4 0/4**, **R01–R18 0/18**, PR-Integration offen.
+
+## Update 20.10.2026 – GH-05 age-CLI-Test wegen fehlendem offiziellen Binary blockiert
+
+- GH-05 Draft PR [#20](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/20): **8 Python-Tests lokal bestanden, 1 echter `age`-CLI-Test weiterhin SKIP**, weil die isolierte Laufzeit weder age noch age-keygen enthält und die offiziellen GitHub-/Spiegel-Downloads nicht möglich waren. Direkter künstlicher CLI-Runner verweigert zu Recht Erfolg mit **Exit 1**.
+- Original-Hersteller v1.3.2 und Linux-amd64 SHA256 sind bekannt, aber **keine heruntergeladene Datei oder Hashverifikation** vorhanden. PCjan derzeit offline. Kein grüner CI-/Provider-Status und kein tatsächlicher Verschlüsselungs-/Tamper-Test mit age behauptet.
+- Kein WordPress, IONOS, MariaDB, Dreamloud, GitHub-Release, Token, CI-Run oder kostenpflichtiger Dienst berührt. [GH-05-Nachweis](../operations/W0_O03_GH05_SYNTHETIC_PREPARATION.md) und [V1_PROGRESS.json](../operations/V1_PROGRESS.json) entsprechend fortgeschrieben.
+- **Fortsetzung:** synthetischen Test auf einer isolierten Umgebung mit geprüften age+age-keygen-Binaries ausführen; erst danach GH05-SYN-D beurteilen. Unabhängige GH-03-Recovery, echter Capture/Upload/Restore/Schedule bleiben offen. Historische V1-Zahlen **62/71 Coding**, **0/8 Meilensteine**, **0/4 P4** und **0/18 Release-Gates**, V1 nicht abgenommen.
+
+## Update 19.10.2026 – GH-05 synthetische Archiv- und age-Testvorbereitung
+
+- **Draft PR [#20](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/20)** (gestapelt auf Draft PR #18) erstellt. Drei neue Dateien: ausschließlich synthetischer TAR/age-Tester, Python-negative Unittests, [GH-05-Prüfanleitung](../operations/W0_O03_GH05_SYNTHETIC_PREPARATION.md).
+- **Lokal geprüfter Teilbereich:** Im isolierten Assistenz-Container bestanden 8 Python-Unit-/Sicherheitsprüfungen; 1 echter age-CLI-Test wurde **SKIP**, weil official age/age-keygen dort nicht installiert sind. Tests wurden mit dem äquivalenten vorher lokal aufgebauten Quellstand durchgeführt; kein grüner provider-/PR-HEAD-Nachweis.
+- **Wichtige Grenze:** Kein echter age-CLI-Krypto-PASS, kein MariaDB-/WordPress-Capture, keine Cloud-Uploads oder Releases, keine CircleCI-/GitHub-Actions-Runs, keine Kosten, keine Secrets. Das ist **GH-05-VORBEREITUNG**, keine produktive GH-05-Abnahme.
+- **GH-03 weiterhin blockierend:** Betreiber meldet erfolgreichen lokalen AgePony-Notiz-Roundtrip und PDF nur auf dem Originalgerät; kein unabhängiger Wiederherstellungsbeweis mit Kopie 2. GH-05 echte Captures, GH-06, GH-07 und GH-08 bleiben gesperrt.
+- **Nächster Beleg:** Committed Code statisch gegen Quell-/Secret-/Upload-Schranken prüfen; denselben künstlichen Ciphertext-Test mit installierter offizieller age-CLI separat durchführen. Keine automatische Freigabe für echte Daten oder Schedules.
+- **Formale Zahlen unverändert:** 62/71 historische Coding-Pakete, 0/8 M0–M7-Abnahmen, 0/4 P4, 0/18 Release-Gates, V1 noch offen, PR-Integration ausstehend.
+
 ## Update 19.10.2026 – GH-03: AgePony-Notiz lokal erfolgreich entschlüsselt
 
 - **Operator-Nachweis:** AgePony-Screenshot zeigt eine native `age X25519`-Identität „OrgaVela Recovery v1“. Betreiber meldet eine passphrasegeschützte Paper-Backup-PDF unter iOS/iPadOS `Auf meinem iPhone/iPad` und erfolgreiche lokale Ver- und Entschlüsselung einer ausschließlich künstlichen Testnotiz.

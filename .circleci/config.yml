@@ -1,0 +1,134 @@
+# OrgaVela W0/O03: Dreamloud-style two-job synthetic age pipeline.
+# Isolated proposal on Draft PR #20, preserving the independent Draft PR #17
+# no-secret pilot job. Their source branches still require ordered integration. NO real backup, deploy, secret context, GitHub
+# release, schedule, automatic push, or production access.
+version: 2.1
+
+parameters:
+  enable_gh05_synthetic_parity:
+    type: boolean
+    default: false
+
+jobs:
+  # Retain the existing no-secret CircleCI pilot semantics from Draft PR #17.
+  # This pilot executes ONLY on its own ci/circleci-free-pilot-o03 branch.
+  offline-connection-smoke:
+    docker:
+      - image: cimg/python:3.12
+    resource_class: small
+    working_directory: ~/project
+    steps:
+      - checkout
+      - run:
+          name: Verify OrgaVela repo identity, docs and no-source-access syntax
+          command: |
+            set -euo pipefail
+            umask 077
+            test "$CIRCLE_PROJECT_USERNAME" = "janjrre"
+            test "$CIRCLE_PROJECT_REPONAME" = "Projekt-Wordpress-Plugin"
+            test "$CIRCLE_BRANCH" = "ci/circleci-free-pilot-o03"
+            for key in IONOS_SSH_HOST IONOS_SSH_USER IONOS_SSH_PASSWORD SFTP_HOST SFTP_PASSWORD GOOGLE_DRIVE_TOKEN_JSON ORGAVELA_RCLONE_CONFIG DUPLICATI_GOOGLE_DRIVE_AUTH_ID ORGAVELA_BACKUP_PRIVATE_KEY GH_TOKEN; do
+              test -z "$(printenv "$key" || true)" || exit 1
+            done
+            for file in scripts/ci/*.sh; do
+              bash -n "$file"
+            done
+            python scripts/ci/orgavela-circleci-offline-smoke.py
+
+  gh05-synthetic-source:
+    docker:
+      - image: cimg/python:3.12
+    resource_class: small
+    working_directory: ~/orgavela-source
+    steps:
+      - checkout
+      - run:
+          name: Verify no remote source or writer credentials are injected
+          command: |
+            set -euo pipefail
+            test "$CIRCLE_PROJECT_USERNAME" = "janjrre"
+            test "$CIRCLE_PROJECT_REPONAME" = "Projekt-Wordpress-Plugin"
+            test "$CIRCLE_BRANCH" = "feat/gh05-synthetic-age-20261019"
+            for key in GH_TOKEN BACKUP_GITHUB_TOKEN IONOS_SSH_PASSWORD SFTP_PASSWORD SFTP_HOST SSH_PRIVATE_KEY AGE_SECRET_KEY BACKUP_RECOVERY_PRIVATE_KEY; do
+              test -z "$(printenv "$key" || true)" || exit 1
+            done
+      - run:
+          name: Install signed distribution age CLI for disposable tests only
+          command: |
+            set -euo pipefail
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends age >/dev/null
+            age --version
+            age-keygen --version
+      - run:
+          name: Verify synthetic fixture and release-envelope guard tests
+          command: |
+            set -euo pipefail
+            python3 -m unittest discover -v -s scripts/ci -p 'test_orgavela_gh05_synthetic_age.py'
+            python3 -m unittest discover -v -s scripts/ci -p 'test_orgavela_backup_parity.py'
+      - run:
+          name: Encrypt exclusively artificial source then drop temporary identity
+          command: |
+            set -euo pipefail
+            umask 077
+            test ! -e /tmp/orgavela-gh05-ciphertext
+            mkdir -m 700 /tmp/orgavela-gh05-ciphertext
+            python3 scripts/ci/orgavela_backup_parity.py producer \
+              --synthetic-only --workspace /tmp/orgavela-gh05-ciphertext
+            test "$(find /tmp/orgavela-gh05-ciphertext -maxdepth 1 -type f | wc -l)" = 3
+      - persist_to_workspace:
+          root: /tmp/orgavela-gh05-ciphertext
+          paths:
+            - "*"
+
+  gh05-synthetic-writer:
+    docker:
+      - image: cimg/python:3.12
+    resource_class: small
+    working_directory: ~/orgavela-writer
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/orgavela-gh05-ciphertext
+      - run:
+          name: Validate ciphertext-only handoff; no GitHub upload or tokens
+          command: |
+            set -euo pipefail
+            umask 077
+            test "$CIRCLE_PROJECT_USERNAME" = "janjrre"
+            test "$CIRCLE_PROJECT_REPONAME" = "Projekt-Wordpress-Plugin"
+            test "$CIRCLE_BRANCH" = "feat/gh05-synthetic-age-20261019"
+            for key in GH_TOKEN BACKUP_GITHUB_TOKEN IONOS_SSH_PASSWORD SFTP_PASSWORD SFTP_HOST SSH_PRIVATE_KEY AGE_SECRET_KEY BACKUP_RECOVERY_PRIVATE_KEY; do
+              test -z "$(printenv "$key" || true)" || exit 1
+            done
+            chmod 700 /tmp/orgavela-gh05-ciphertext
+            chmod 600 /tmp/orgavela-gh05-ciphertext/*
+            python3 scripts/ci/orgavela_backup_parity.py writer \
+              --synthetic-only --workspace /tmp/orgavela-gh05-ciphertext
+            echo 'GH05_PARITY_RELEASE_UPLOAD=disabled'
+            echo 'GH05_PARITY_PRODUCTION_CAPTURE=disabled'
+
+workflows:
+  connection-pilot-only:
+    jobs:
+      - offline-connection-smoke:
+          filters:
+            branches:
+              only:
+                - ci/circleci-free-pilot-o03
+
+  gh05-synthetic-parity-manual:
+    when: << pipeline.parameters.enable_gh05_synthetic_parity >>
+    jobs:
+      - gh05-synthetic-source:
+          filters:
+            branches:
+              only:
+                - feat/gh05-synthetic-age-20261019
+      - gh05-synthetic-writer:
+          requires:
+            - gh05-synthetic-source
+          filters:
+            branches:
+              only:
+                - feat/gh05-synthetic-age-20261019

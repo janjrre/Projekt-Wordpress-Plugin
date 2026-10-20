@@ -211,3 +211,34 @@ Diese Änderung lockert **ausschließlich** die Test-Voraussetzung für künstli
 | GH03-F | Nur Public Recipient im künftigen Writer; echte Writer-/Restore-Implementierung später separat mit einem einheitlichen `.tar.age`-Format getestet | **GEPLANT GH-05–GH-07**, noch kein Runtime-/CI-Einsatz und kein reales Backup |
 
 **GH-03 formale Abnahme:** nur bei **GH03-A bis E vollständig** und belegter Owner-Bestätigung ohne private Schlüsselübermittlung. GH03-F ist nachgelagertes Schutzgate für den echten Workflow. `age1…`-Recipient darf später als nicht geheimes Konfigurationsdatum eingebracht werden, dessen Zuordnung zum Besitzerkey muss vor jeder echten Verschlüsselung verifiziert werden. Der synthetische GH-04 GPG-Canary genügt nicht für GH-03. [Offline-Anleitung](../operations/W0_O03_GH03_OWNER_OFFLINE_KEY_RUNBOOK.md). **M0–M7 0/8, P4 0/4, R01–18 0/18 weiterhin unverändert.**
+
+
+## GH-05 Synthetik-Vorbereitung (19.10.2026, keine Abnahme)
+
+Diese Fälle sind nur lokale Vorprüfungen für O03/GH-05 und zählen **nicht** zu den finalen V1 R01–R18 Release-Gates. Branch Draft PR [#20](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/20), Basis Draft PR #18.
+
+| Check | Nachweis | Status |
+| --- | --- | --- |
+| GH05-SYN-A | Archiv ausschließlich aus fest codierten künstlichen DB/WP-Dateien; keine externen Eingaben | **PASS lokale Unittests**, 19.10.2026 |
+| GH05-SYN-B | Genaues Inventar, SHA256-Manifest, verweigerte Zusatz-/Doppeldateien, Traverse und Symlinks | **PASS lokale Unittests**, 19.10.2026 |
+| GH05-SYN-C | CLI nur mit --synthetic-only; kein Real-Daten-/Site-Modus | **PASS lokale Unittests**, 19.10.2026 |
+| GH05-SYN-D | Original native age Binary encrypt/decrypt; entschlüsselter TAR bytegleich, manipuliertes Ciphertext abgewiesen | **PASS im CircleCI-Source-Job #4 (20.10.2026)**: vorherige lokale Runtime hatte ohne `age` einen SKIP; offizielles Distributionspaket `age` wurde im erfolgreichen Provider-Job mit erforderlicher Installation und künstlicher Encrypt/Decrypt/Tamper-Prüfung ausgeführt. GitHub-Status auf `590d530` = SUCCESS. Exakter age-Versionsstring und Roh-Test-stdout nicht separat gesichert; dies ist ausschließlich synthetisch. |
+| GH05-SYN-E | Sicherer, konsistenter echter OrgaVela/MariaDB-Capture, Freigabe GH-03, Upload, echter isolierter Restore | **NICHT GESTARTET / GESPERRT**, kein echter Zugriff |
+
+**Testgrenze:** Insgesamt 8 Unit-Tests PASS, 1 Integration SKIP auf lokalem Stagingcode; keine Aussage über PR-HEAD-CI. GH-03 bleibt offen wegen fehlendem unabhängigem Recovery. Keine GH-05-Freigabe, keine realen Sicherungen oder autom. Backups. Verbindlich [Fortschrittsdaten](../operations/V1_PROGRESS.json) und [GH-05-Runbook](../operations/W0_O03_GH05_SYNTHETIC_PREPARATION.md).
+
+
+### 20.10.2026 – Dreamloud-Parität: getrennte age-Producer/Writer-Sicherheits-Gates
+
+| Vorprüfung | Aktueller Nachweis | Status |
+| --- | --- | --- |
+| GH05-DP-01 | GitHub-Source auf Draft PR #20 für synthetic-only age Producer mit ephemerem Testkey und fest codierter Kunst-SQL/WordPress-Fixture zurückgelesen | **PASS – CircleCI #188 / Source-Job #4 (20.10.2026)**: synthetische age-Producer-Pipeline auf geprüftem Commit `590d530`, Status unabhängig via GitHub = SUCCESS; keine echten Daten |
+| GH05-DP-02 | Separer ciphertext-only Writer akzeptiert exakt 3 Asset-Dateien; keine extrahierbaren Quelldaten oder private Recovery-Schlüssel im Workspace vorgesehen | **PASS – CircleCI #188 / Writer-Job #5 (20.10.2026)**: abhängiger Job SUCCESS am selben Commit, Ciphertext-only Übergabe und SHA-/Manifest-Guard verpflichtender Bestandteil des getesteten Jobs |
+| GH05-DP-03 | 13 Unittest-Fälle definiert für Modus-/Secrets-/Metadaten-/Symlink-/Hash-/Producer-Writer-Schranken, einschließlich optionaler age-Integration | **PROVIDER-PASS via Source-Job #4**: beide Python-Suiten sind im erfolgreichen CI-Job obligatorisch; 13 neue Fälle definiert, Rohlogs/individuelle Zählwerte nicht unabhängig gelesen, daher keine erfundenen Testzeilenzahlen |
+| GH05-DP-04 | CircleCI: zwei Jobs mit `requires`, nur manuelles `enable_gh05_synthetic_parity=true`; Default false, Branchfilter nur Draft PR #20, keine Contexts, Secrets oder Cron | **PASS als isolierte GH-05-Synthetik-Pipeline #188**: `enable_gh05_synthetic_parity=true` manuell; CI-Jobstatus #4/#5 am `590d530` beide SUCCESS. Kein Cron/Secret-Context/Upload. PR #17+PR #20 weiterhin nur im Draft, spätere Integration separat |
+| GH05-DP-05 | Kompatibler echter OrgaVela-Snapshot, native age-Offsite-Release-Writer/Immutable-Readbacks, isolierte echte Recovery, freigegebener täglicher Job | **BLOCKED**, GH-03 und reale GH-05/06/07/08 offen |
+
+Die Dreamloud-Produktionsbelege #348/#353 gelten **nur** für Dreamloud (OpenPGP), nicht für OrgaVela (age). Diese Checkliste zählt weder zu 71 normativen Coding-Paketen noch zu finalen R01–R18. [Architektur-ADR](../operations/W0_O03_DREAMLOUD_PARITY_ADR_2026-10-20.md). V1 weiterhin 62/71 historische Codepakete, M0–M7 0/8, P4 0/4, R01–R18 0/18.
+
+
+**Nachweis-Nachtrag 20.10.2026 – tatsächlich ausgeführte CircleCI-Pipeline #188:** [Producer-Job #4](https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/4) und [Writer-Job #5](https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/5) von GitHub auf Commit `590d530686356d641774a27ff4004aa27fd063aa` unabhängig als **SUCCESS** verifiziert; Betreiber-Screenshots: kompletter 20-s-Workflow, source 11 s, writer 3 s, verschlüsselter Workspace-Transfer 11 KiB. Alle Test-/Key-/Writer-Schritte im geprüften CI-Skript sind zwingend; Roh-stdout nicht separat überprüft. **Formal weiterhin KEIN GH-03**, kein produktives GH-05, kein GH-06-Release, GH-07-Restore oder GH-08-Zeitplan; keine Erhöhung von M0–M7-, P4-, R-Gates oder historischen Coding-Paket-Zählern. 
