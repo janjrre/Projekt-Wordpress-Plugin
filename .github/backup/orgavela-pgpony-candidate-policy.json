@@ -1,0 +1,35 @@
+{
+  "schema": "orgavela-openpgp-public-candidate/v1",
+  "project": "OrgaVela / UOP Core",
+  "usage": "synthetic-only-until-gh03-owner-independent-recovery-accepted",
+  "state": "candidate-not-production-approved",
+  "source": "Owner-provided PGPony PUBLIC key block, verified via GnuPG 2.4.7 on 2026-10-20",
+  "public_key_file": ".github/backup/orgavela-backup-candidate-public.asc",
+  "user_id": "OrgaVela Backup 2026",
+  "openpgp_version": 4,
+  "public_key_fingerprint": "7C9DC60D8E1B293E514696EB333D15A4D8BA625C",
+  "primary_algorithm": "Ed25519",
+  "primary_capabilities": [
+    "sign",
+    "certify"
+  ],
+  "encryption_subkey_fingerprint": "CF5D8A8498F65C6D894ECE2FD9E58CC6484AF1DE",
+  "encryption_subkey_algorithm": "Curve25519 / cv25519",
+  "encryption_subkey_capabilities": [
+    "encrypt"
+  ],
+  "created_on": "2026-10-20",
+  "key_expires_on": null,
+  "self_signatures_verified": 2,
+  "public_only_gnupg_import_passed": true,
+  "public_only_gnupg_synthetic_encrypt_passed": true,
+  "no_private_key_present_in_test": true,
+  "device_pgpony_decrypt_of_external_gpg_ciphertext_passed": false,
+  "independent_owner_key_recovery_from_second_copy_verified": false,
+  "two_physical_backup_copies_verified": false,
+  "production_backup_enabled": false,
+  "remote_github_release_enabled": false,
+  "automatic_schedule_enabled": false,
+  "previous_age_owner_paper_backup_reused": false,
+  "notes": "Candidate pin only; do not use for real backups until PGPony decrypt and copy-2 independent restore, production GH05–08 review. No private key or passphrase ever stored in repo or CI."
+}
