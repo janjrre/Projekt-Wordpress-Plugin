@@ -5,6 +5,10 @@
 version: 2.1
 
 parameters:
+  enable_pgpony_ciphertext_handoff:
+    type: boolean
+    default: false
+
   enable_pgpony_openpgp_offline:
     type: boolean
     default: false
@@ -224,7 +228,84 @@ jobs:
             bash scripts/ci/test-orgavela-openpgp-synthetic-pack.sh
             echo 'PGPONY_OFFLINE_QA=PASS'
 
+
+  # PGP-03 source: synthetically manufacture fake test components, encrypt
+  # with PINNED PUBLIC key and persist only ciphertext, SHA256 and manifest.
+  # No IONOS context, no real WordPress capture, no GitHub release API.
+  pgpony-handoff-source:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    working_directory: ~/orgavela-pgpony-handoff
+    steps:
+      - checkout
+      - run:
+          name: Verify branch / install only public crypto verification tools
+          command: |
+            set -euo pipefail
+            test "$CIRCLE_PROJECT_USERNAME" = "janjrre"
+            test "$CIRCLE_PROJECT_REPONAME" = "Projekt-Wordpress-Plugin"
+            test "$CIRCLE_BRANCH" = "feat/o03-pgpony-openpgp-migration-20261020"
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends gnupg jq gzip tar coreutils >/dev/null
+      - run:
+          name: Synthetic-only producer and all nine negative security checks
+          command: |
+            set -euo pipefail
+            export ORGAVELA_PGP_SYNTHETIC_ONLY=YES
+            bash -n scripts/ci/orgavela-openpgp-synthetic-handoff.sh
+            bash -n scripts/ci/test-orgavela-openpgp-synthetic-handoff.sh
+            bash scripts/ci/test-orgavela-openpgp-synthetic-handoff.sh
+            bash scripts/ci/orgavela-openpgp-synthetic-handoff.sh producer /tmp/orgavela-pgpony-handoff
+            echo 'PGPONY_HANDOFF_CI_SOURCE=PASS'
+      - persist_to_workspace:
+          root: /tmp/orgavela-pgpony-handoff
+          paths:
+            - orgavela-synthetic-pgpony-handoff-001.tar.gpg
+            - orgavela-synthetic-pgpony-handoff-001.tar.gpg.sha256
+            - manifest.json
+
+  # PGP-03 writer: has NO decrypt/private key, NO GH_TOKEN and NO release API.
+  pgpony-handoff-writer:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    working_directory: ~/orgavela-pgpony-handoff-writer
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/orgavela-pgpony-handoff
+      - run:
+          name: Ciphertext-only writer verifies encrypted handoff without secrets
+          command: |
+            set -euo pipefail
+            test "$CIRCLE_PROJECT_USERNAME" = "janjrre"
+            test "$CIRCLE_PROJECT_REPONAME" = "Projekt-Wordpress-Plugin"
+            test "$CIRCLE_BRANCH" = "feat/o03-pgpony-openpgp-migration-20261020"
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends gnupg jq coreutils >/dev/null
+            export ORGAVELA_PGP_SYNTHETIC_ONLY=YES
+            bash scripts/ci/orgavela-openpgp-synthetic-handoff.sh writer /tmp/orgavela-pgpony-handoff
+            echo 'PGPONY_HANDOFF_CI_WRITER=PASS'
+
 workflows:
+
+  pgpony-ciphertext-handoff-manual:
+    when: << pipeline.parameters.enable_pgpony_ciphertext_handoff >>
+    jobs:
+      - pgpony-handoff-source:
+          filters:
+            branches:
+              only:
+                - feat/o03-pgpony-openpgp-migration-20261020
+      - pgpony-handoff-writer:
+          requires:
+            - pgpony-handoff-source
+          filters:
+            branches:
+              only:
+                - feat/o03-pgpony-openpgp-migration-20261020
+
 
   pgpony-openpgp-offline-manual:
     when: << pipeline.parameters.enable_pgpony_openpgp_offline >>
