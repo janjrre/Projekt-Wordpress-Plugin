@@ -1,3 +1,5 @@
+**AKTUELLER BELEGSTAND (20.10.2026):** Der Betreiber bestätigt inzwischen zwei getrennt verwahrte PGPony/OpenPGP-Papier-Wiederherstellungskopien, erfolgreiche Wiederherstellung aus beiden und einen offline sowie auf einem zweiten Gerät wiederbeschaffbaren Passwortschutz. Der öffentliche Fingerprint und der PGPony-GnuPG-iPhone-/iPad-Test sind ebenfalls bestätigt; no-secret CircleCI-QA bestand. **GH03 Owner-Key-Recovery: aufgrund dieser Betreiber-Nachweise als erfüllt eingetragen.** Der frühere Status „Instructions only / no key generated“ im historischen Anleitungstext weiter unten ist überholt. Keine Geheimnisse im GitHub gespeichert. **Keine** daraus abgeleitete Freigabe realer OrgaVela-Backups oder V1-Meilensteinabnahme.
+
 # GH-03 – PGPony/OpenPGP: owner-only setup and independent recovery
 
 **Status: instructions only. No new PGPony key, recovery copy, or GnuPG interoperability has been verified.** The owner selected PGPony/OpenPGP for future OrgaVela backups. Existing AgePony private identity and paper backup in the safe remain historical; they cannot decrypt new OpenPGP ciphertext.
