@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-20",
-  "snapshot_basis": "2026-10-20 GH06 protected-branch empty restricted Context smoke CircleCI pipeline #255 green (one job gh06-age-context-smoke), operator log displays GH06_CONTEXT_ACCESS=PASS, GH06_CONTEXT_SECRETS=NONE, GH06_GITHUB_RELEASE_UPLOADED=NO. Independently checked GitHub commit status 'ci/circleci: gh06-age-context-smoke' success on actual merge SHA cb22a2b434ee18ef79811afd3c99f47a7ac36a4b, job #7. Context access verified for permitted branch, NOT negative access attempts or all arbitrary variables. GH06 production/Synthetic GitHub age release not tested, PAT still absent, no WordPress/IONOS data, backup nor Cron. Prior GH05 #188 success and GH06 fake-gh offline 13/13 #209 success. V1 coding 62/71, formal milestone 0/8, P4 0/4, R 0/18 unchanged; GH03 owner independent recovery still blocked.",
+  "snapshot_basis": "2026-10-20 GH06 restricted Context smoke CircleCI #255 on protected branch commit cb22a2b confirmed GitHub success job #7 and operator log GH06_CONTEXT_ACCESS=PASS/SECRETS=NONE/GITHUB_RELEASE_UPLOADED=NO. New minimal draft PR #24 from protected branch, one file .circleci/config.yml, one commit +68/0 lines, boolean default=false enable_gh06_age_release_remote, restricted Context and extra manual approval job. The pre-existing native age E2E and writer scripts on protected branch are identical to GH06 development blobs; scripts have not yet been executed against GitHub API. No secret/token, network release, real data, costs, scheduler, merges for PR24. GH03 owner private key independent recovery missing. V1 coded 62/71, formal 0/8 M, 0/4 P4, 0/18 Release unchanged.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -391,7 +391,7 @@
       "gh06_age_transport_immutable_age_release_verified": false,
       "gh06_age_transport_source": "Based on already accepted GH04 synthetic GPG release/restore transport; adapted to native age X25519 in separate Draft PR #21; GitHub readback of source only",
       "gh06_age_transport_ci_flag": "enable_gh06_age_release_offline (boolean default false), branch feat/gh06-synthetic-age-release-20261020, no secrets or cloud calls; no live GH06 remote job configured",
-      "gh06_age_transport_live_blockers": "Stage B no-secret Context authorization smoke CircleCI #255 success, GH06 context only expected variables absent at test time, branch protected=true. Need code and least-privilege review for real synthetic GH06 native-age GitHub Release test; separately create minimal branch/PR for producer/publisher scripts & default-OFF token job, verify branch protection and repo immutability before injecting only repo-scoped short-lived PAT. Existing Context group 'All members' remains broad within allowed project and branch; assess least-privilege controls. Real GitHub Release not uploaded; GH03 owner private key independent recovery still missing and blocks real backups.",
+      "gh06_age_transport_live_blockers": "No-secret context smoke #255 and GH06 fake gh offline tests #209 passed. One-file Draft PR24 now proposes default-off protected-branch synthetic native age GitHub Release E2E with additional manual approval hold and existing pinned scripts; unmerged, no token, no runtime run, no actual Release. Before credential: review code/branch protection, Context group All members, repo immutable settings and Free quota. GH03 private Owner offline recovery still absent; real GH05/06/07/08 blocked.",
       "gh06_age_transport_offline_tests_count_passed": 13,
       "gh06_age_transport_offline_tests_failed": 0,
       "gh06_age_transport_offline_ci_job": "gh06-age-release-offline-qa",
@@ -458,7 +458,13 @@
       "gh06_age_remote_context_smoke_ci_job_status": "success",
       "gh06_age_remote_context_smoke_ci_verified_sha": "cb22a2b434ee18ef79811afd3c99f47a7ac36a4b",
       "gh06_age_remote_context_smoke_log_evidence": "Operator screenshot CircleCI pipeline Projekt-Wordpress-Plugin #255, gh06-age-context-smoke success, green restricted-context job, log GH06_CONTEXT_ACCESS=PASS, GH06_CONTEXT_SECRETS=NONE, GH06_GITHUB_RELEASE_UPLOADED=NO. Independently verified GitHub status ci/circleci: gh06-age-context-smoke=success at exact protected branch SHA cb22a2b..., URL .../7; screenshots do not prove negative restriction tests or exhaustive variable inspection.",
-      "gh06_age_remote_context_access_provider_verified": true
+      "gh06_age_remote_context_access_provider_verified": true,
+      "gh06_age_remote_synthetic_e2e_pr": 24,
+      "gh06_age_remote_synthetic_e2e_pr_status": "draft_only_unmerged_manual_remote_not_run",
+      "gh06_age_remote_synthetic_e2e_branch": "ci/gh06-age-release-synthetic-isolated-20261020",
+      "gh06_age_remote_synthetic_e2e_sha": "3823e84efc9a420cf8ec16b1b0c17207d1e6504b",
+      "gh06_age_remote_synthetic_e2e_diff": "one .circleci/config.yml file, one commit, 68 added lines, zero deletions, GitHub PR24 diff verified",
+      "gh06_age_remote_synthetic_e2e_flag": "enable_gh06_age_release_remote boolean default=false; branch test/orgavela-age-release-o03; separate CircleCI approval job before writer context"
     },
     {
       "id": "O04",
@@ -844,7 +850,7 @@
   },
   "immediate_next": [
     "GH-03: owner confirms native AgePony age X25519 identity, local iOS paper PDF and SUCCESS of same-device artificial note encrypt/decrypt on 2026-10-19. This is NOT independent offline recovery. No USB media available, owner chooses temporary local-only storage; risk of device loss remains. Keep GH-03 OPEN until two separately secured offline recovery copies and copy-2 synthetic restore are proven. Never transmit private PDF/key/QR/passphrase.",
-    "GH06 Stage B restricted empty-context success CircleCI #255 job #7 on cb22a2b; no rerun needed. Next prepare minimal separated PR from protected test/orgavela-age-release-o03 for *synthetic only* native age GitHub Release E2E publisher from GH06 draft PR21 scripts and a branch-filtered, default-FALSE remote job; review immutable mode, token scope, owner key separation, release readback, and stop rules. Only after protected PR merge, project+branch-restricted Context reviewed and Free quota/short-lived single-repo PAT approved may one manual synthetic remote run be authorized. No actual Release or real backup yet. GH03 independent recovery still blocked.",
+    "GH06 Stage B Context authorized via CI #255 (GH06 13/13 fake offline QA #209 remains PASS). Minimal new PR24 Draft, one file, adds default-off GH06 synthetic remote E2E workflow + manual approval hold on protected test branch; MUST NOT Ready/merge/start yet before review of token-bearing existing shell code, backed repo immutable setting, Free quota and CircleCI Context permissions. Never put owner's age key, PDF, real WordPress data or IONOS secrets in CI. Then operator creates separate short-lived fine-grained PAT only for private orgavela-backups and stores directly as GH_TOKEN inside restricted Context, executes single synthetic run with both boolean trigger and CircleCI approval after readiness. Nothing approved or run yet. GH03 offline recoverability still blocks production.",
     "GH-08 only after GH-07 full actual restore: check IONOS provider recovery points, Free-plan credit availability, secure scheduling, retention and alerting. No automatic backup or pruning approved yet."
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
