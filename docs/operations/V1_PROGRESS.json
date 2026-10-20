@@ -719,7 +719,7 @@
       "pgp04_v1_release_upload_api_host_defect": "gh api --hostname uploads.github.com may target api.uploads.github.com; unsafe/unverified remote upload; detected before any token",
       "pgp04_v2_branch": "security/pgp04-synthetic-release-v2-20261020",
       "pgp04_v2_last_reviewed_sha": "bead6a3386958bfc3f1bbc4c13b925506777ef5e",
-      "pgp04_v2_branch_protection_operator_verified": false,
+      "pgp04_v2_branch_protection_operator_verified": true,
       "pgp04_v2_ci_context_restricted_to_branch": false,
       "pgp04_v2_approved_sha_variable_updated": false,
       "pgp04_v2_upload_protocol": "Official uploads.github.com REST release upload_url, stdin-only curl -H @-, no redirects, HTTP201 JSON validation; untested against provider",
@@ -736,8 +736,11 @@
       "pgp04_v2_local_mock_total_target_cases": 13,
       "pgp04_v2_local_mock_note": "Exact GitHub v2 writer reconstructed by Git blob hash; syntax PASS. With real public GnuPG fixture and fake gh/curl, success, public_repo, auth403, http500, duplicate_release, duplicate_tag, missing_asset, corrupt_readback PASS. Runtime timed out before remainder; later fast mock attempt completed only first 7 before timeout. No blanket 13/13 for v2.",
       "pgp04_v2_branch_sha_verified": "bead6a3386958bfc3f1bbc4c13b925506777ef5e",
-      "pgp04_v2_branch_lock_operator_attested": false,
-      "pgp04_v2_ci_source_provider_pass": false
+      "pgp04_v2_branch_lock_operator_attested": true,
+      "pgp04_v2_ci_source_provider_pass": false,
+      "pgp04_v2_branch_lock_evidence": "2026-10-21 00:06-00:07 operator screenshots: exact v2 branch name; lock branch checked, no bypass checked, force/deletion unchecked; GitHub 'Branch protection rule created' banner, list has additional rule applying to one branch.",
+      "pgp04_v2_branch_protection_effective_api_verified": false,
+      "pgp04_v2_branch_sha_verified_after_rule_create": true
     },
     {
       "id": "O04",
