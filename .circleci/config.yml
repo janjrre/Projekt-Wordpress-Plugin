@@ -292,6 +292,28 @@ jobs:
             bash scripts/ci/orgavela-openpgp-synthetic-handoff.sh writer /tmp/orgavela-pgpony-handoff
             echo 'PGPONY_HANDOFF_CI_WRITER=PASS'
 
+  # V2: verify restricted context and approved SHA WITHOUT any token.
+  # Runs before manual hold, refuses unexpected credentials.
+  pgp04-context-no-secret-smoke:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - checkout
+      - run:
+          name: Verify restricted context grants only reviewed SHA, no tokens
+          command: |
+            set -euo pipefail
+            test "$CIRCLE_PROJECT_USERNAME" = janjrre
+            test "$CIRCLE_PROJECT_REPONAME" = Projekt-Wordpress-Plugin
+            test "$CIRCLE_BRANCH" = security/pgp04-synthetic-release-v2-20261020
+            test "$(printenv PGP04_APPROVED_SHA || true)" = "$CIRCLE_SHA1"
+            for key in GH_TOKEN GITHUB_TOKEN BACKUP_GITHUB_TOKEN SFTP_PASSWORD IONOS_SSH_PASSWORD SFTP_HOST AGE_SECRET_KEY BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE; do
+              test -z "$(printenv "$key" || true)"
+            done
+            echo PGP04_CONTEXT_ACCESS=PASS
+            echo PGP04_CONTEXT_TOKEN=NONE
+
   # PGP04: owner PGPony key PUBLIC-only producer. Never receives Context or GitHub token.
   pgp04-synthetic-source:
     docker:
@@ -360,12 +382,21 @@ workflows:
             branches:
               only:
                 - security/pgp04-synthetic-release-v2-20261020
-      # The operator must approve in CircleCI AFTER the no-secret producer succeeds.
-      # The approval job has no environment and cannot see the writer Context.
+      # Prove context authorization and exact SHA WITHOUT secrets first.
+      - pgp04-context-no-secret-smoke:
+          context:
+            - orgavela-pgp04-release-only
+          requires:
+            - pgp04-synthetic-source
+          filters:
+            branches:
+              only:
+                - security/pgp04-synthetic-release-v2-20261020
+      # Manual release approval only after both no-secret gates pass.
       - pgp04-owner-approval:
           type: approval
           requires:
-            - pgp04-synthetic-source
+            - pgp04-context-no-secret-smoke
           filters:
             branches:
               only:
