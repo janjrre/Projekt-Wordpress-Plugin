@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-20",
-  "snapshot_basis": "2026-10-20 owner reports All members only selectable CircleCI group and only owner has org access, future intent to remain sole member (self-attested; not API audited). Restore All members to remove concrete CircleCI 'currently unusable' warning; group access still conjunctively gated by only Projekt-Wordpress-Plugin and exact test branch, no SSH, no unversioned API config. Await screenshot plus new no-secret positive context smoke before PAT. GitHub immutable release setting checked by screenshot, Draft PR24 unmerged, no age Release; GH03 offline recoverability unproven. V1 coding and formal counters unchanged.",
+  "snapshot_basis": "Operator screenshot CircleCI Contexts overview now shows 'orgavela-age-release-tests' Security 'All members' (restored after unusable empty group warning). GitHub protected GH06 branch test/orgavela-age-release-o03 still SHA cb22a2b434ee18ef79811afd3c99f47a7ac36a4b, protected=true and default-FALSE empty Context smoke present; Draft PR24 not merged. The previous CircleCI #255 success occurred BEFORE group removal/re-add, so must rerun once with context STILL SECRET-FREE. No secrets, token, age release, prod data or cost initiated; owner self-reports solo CircleCI org; V1 counters unchanged.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -391,7 +391,7 @@
       "gh06_age_transport_immutable_age_release_verified": false,
       "gh06_age_transport_source": "Based on already accepted GH04 synthetic GPG release/restore transport; adapted to native age X25519 in separate Draft PR #21; GitHub readback of source only",
       "gh06_age_transport_ci_flag": "enable_gh06_age_release_offline (boolean default false), branch feat/gh06-synthetic-age-release-20261020, no secrets or cloud calls; no live GH06 remote job configured",
-      "gh06_age_transport_live_blockers": "GitHub repo future release immutability UI CHECKED; GH06 Context security group currently EMPTY and CircleCI warns context UNUSABLE, so cannot enter PAT/start remote job. Need owner to click Add group restriction, review available groups; prefer restricted authorized group. If only All members available, review whether CircleCI org has multiple members and ensure project + both expression restrictions before restoring; no PAT prior to positive no-secret context smoke rerun after group fix. PR24 remains Draft. GH03 owner offline independent key recovery unverified and production backups blocked.",
+      "gh06_age_transport_live_blockers": "All members group back on orgavela-age-release-tests (operator screenshot), single CircleCI org member self-attested, existing project+2 context expressions previously screenshot verified. Fresh no-secret Context smoke after group modification NOT YET RUN, so no new provider pass. Run only approved branch+exact default-off flag with Free allowance, then review before GH06 PR24 readiness. PAT nonexistent, PR24 draft, age release not run; GH03 independent offline key recovery missing.",
       "gh06_age_transport_offline_tests_count_passed": 13,
       "gh06_age_transport_offline_tests_failed": 0,
       "gh06_age_transport_offline_ci_job": "gh06-age-release-offline-qa",
@@ -443,12 +443,12 @@
       "gh06_age_remote_branch_rules_persistence_after_screen_unverified": true,
       "gh06_age_remote_branch_rules_saved_owner_attested": true,
       "gh06_age_remote_context_smoke_pr": 23,
-      "gh06_age_remote_context_smoke_status": "provider_ci_255_success_no_secret_context_runtime_verified",
+      "gh06_age_remote_context_smoke_status": "historical_ci_255_pass_before_group_change_new_proof_pending",
       "gh06_age_remote_context_smoke_source_sha": "810954e5d1d5c71dc1e47dbdef137f903633abce",
       "gh06_age_remote_context_smoke_ci_flag": "enable_gh06_age_context_smoke (boolean, default=false)",
       "gh06_age_remote_context_smoke_job": "gh06-age-context-smoke",
       "gh06_age_remote_context_smoke_context": "orgavela-age-release-tests",
-      "gh06_age_remote_context_smoke_pass": true,
+      "gh06_age_remote_context_smoke_pass": false,
       "gh06_age_remote_context_smoke_branch": "ci/gh06-context-smoke-isolated-20261020",
       "gh06_age_remote_context_smoke_previous_pr22": "superseded_closed_not_merged_6_files_28_commits",
       "gh06_age_remote_context_smoke_merged": true,
@@ -468,19 +468,20 @@
       "gh06_age_synthetic_repo_audit": "2026-10-20 GitHub GET janjrre/orgavela-backups confirmed private=true archived=false; historical artificial OpenPGP immutable GitHub Release 414750281 has immutable=true, 3 assets; no native age GH06 Release yet.",
       "gh06_age_immutable_current_setting_verified": true,
       "gh06_age_immutable_current_setting_blocker": "GitHub GET /repos/janjrre/orgavela-backups/immutable-releases was unsupported by connected GitHub fetch allowlist (400); official API endpoint needs repository Administration(read), which must NOT be added to short-lived Contents(write)-only GH06 writer token merely for preflight. Owner should visually verify GitHub Settings > General > Releases > Enable release immutability for future releases. Existing older immutable OpenPGP Release is not proof current repo toggle.",
-      "gh06_age_remote_context_group_review": "Owner states only one CircleCI organization member, and only All members group available. Readding All members is reasonable under existing project and two AND expression restrictions. On any future new organization members, re-review before permitting token-backed jobs. No direct CircleCI membership API verification. Await operator screenshot of group readded, usability warning cleared, existing restrictions unchanged, then rerun one no-secret context smoke before token.",
+      "gh06_age_remote_context_group_review": "Owner states they are sole CircleCI org member; only All members selectable; latest Context list confirms All members restored for orgavela-age-release-tests. Earlier screenshot verified only Projekt-Wordpress-Plugin project and both ANDed expressions, but not redisplayed now. Need new allowed-branch smoke to confirm after restoration and before PAT. Re-review if organization membership changes.",
       "gh06_age_synthetic_writer_static_review": "Synthetic GH06 age writer pinned to private janjrre/orgavela-backups, rejects absent approval/unknown sources/owner age secret variables, verifies SHA and age v1 header, checks drafts and tag, 3 assets, full binary readback SHA before/after numeric-ID publish; E2E local disposable age encrypt/decrypt plus independent post-publish tag download and immutable=true metadata check. Scripts unexecuted against GitHub API; lack of full pagination of historical drafts, and same-job temporary synthetic private key and GH_TOKEN are acceptable solely for disposable fake data, NOT production. Runtime and repo setting gate missing.",
       "gh06_synthetic_least_privilege_token_policy": "Only after all security gates, personal fine-grained PAT restricted exclusively janjrre/orgavela-backups; Repository Contents read/write, Metadata read automatic, no Workflows/Admin or orgavela source repo, short expiry; direct user entry into restricted CircleCI Context only; revoke after one GH06 synthetic test. Do NOT create yet.",
       "gh06_age_remote_context_group_hardened": false,
       "gh06_age_immutable_current_setting_evidence": "2026-10-20 operator screenshot github.com/janjrre/orgavela-backups Settings > General > Releases shows Enable release immutability CHECKED. This is positive current UI evidence for future releases, not an actual GH06 age publication.",
-      "gh06_age_remote_context_group_current": "No group currently: CircleCI UI shows unusable until operator restores All members. Owner reports sole CircleCI organization member and only All members available.",
-      "gh06_age_remote_context_access_status": "BLOCKED_PENDING_OPERATOR_ALL_MEMBERS_RESTORE_AND_NO_SECRET_RETEST",
+      "gh06_age_remote_context_group_current": "All members (operator screenshot Contexts table 2026-10-20)",
+      "gh06_age_remote_context_access_status": "RESTORED_GROUP_IN_UI_PENDING_FRESH_NO_SECRET_PROVIDER_SMOKE",
       "gh06_age_remote_context_group_available": [
         "All members"
       ],
       "gh06_age_remote_context_org_member_count_owner_reported": 1,
       "gh06_age_remote_context_group_readd_approved_for_operator": true,
-      "gh06_age_remote_context_group_readded_verified": false
+      "gh06_age_remote_context_group_readded_verified": true,
+      "gh06_age_remote_context_group_readd_evidence": "Owner screenshot CircleCI organization Contexts list, orgavela-age-release-tests row Security='All members' after change; confirms group restored in list. Does not show detailed Context page, Project/Expression restrictions or 'currently unusable' warning absence; rely on earlier screenshots and new no-secret runtime smoke."
     },
     {
       "id": "O04",
@@ -866,7 +867,7 @@
   },
   "immediate_next": [
     "GH-03: owner confirms native AgePony age X25519 identity, local iOS paper PDF and SUCCESS of same-device artificial note encrypt/decrypt on 2026-10-19. This is NOT independent offline recovery. No USB media available, owner chooses temporary local-only storage; risk of device loss remains. Keep GH-03 OPEN until two separately secured offline recovery copies and copy-2 synthetic restore are proven. Never transmit private PDF/key/QR/passphrase.",
-    "Owner restore CircleCI orgavela-age-release-tests Group restriction All members because sole-org-member and only available option, retaining Project Projekt-Wordpress-Plugin and both AND Expressions. Verify warning clears via screenshot. Then rerun single no-secret Context Smoke on test/orgavela-age-release-o03 (config+checkout same branch) enable_gh06_age_context_smoke=true all other flags false to prove positive access after change, with free quota verified. No PAT, do not merge Draft PR24 or launch GH06 age Release until success and explicit later approval. GH03 still blocks real backups.",
+    "Owner has restored All members to context orgavela-age-release-tests. Run exactly one new no-secret Context smoke in CircleCI project Projekt-Wordpress-Plugin with Config Source Branch AND Checkout Branch test/orgavela-age-release-o03, only enable_gh06_age_context_smoke=true (all other flags false), no GH_TOKEN and no extra context variables. Confirm only gh06-age-context-smoke, messages GH06_CONTEXT_ACCESS=PASS, GH06_CONTEXT_SECRETS=NONE, GH06_GITHUB_RELEASE_UPLOADED=NO; collect screenshot and independently verify CI status on current pinned SHA. PR24 still Draft, no token or synthetic age GitHub release until further review. GH03 owner independent offline recovery blocks production.",
     "GH-08 only after GH-07 full actual restore: check IONOS provider recovery points, Free-plan credit availability, secure scheduling, retention and alerting. No automatic backup or pruning approved yet."
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
