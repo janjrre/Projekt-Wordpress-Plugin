@@ -51,7 +51,7 @@ tag="backup-${BACKUP_ID}"
 dir="$(mktemp -d "$BACKUP_WORK/github-release-test.XXXXXXXX")"
 trap 'rm -rf -- "$dir"' EXIT
 archive_name="$(basename "$ENCRYPTED_BACKUP_FILE")"
-[[ "$archive_name" =~ ^[A-Za-z0-9_.-]+\.tar\.gpg$ ]] || fail 'invalid archive name'
+[[ "$archive_name" =~ ^[A-Za-z0-9_.-]+\.tar\.age$ ]] || fail 'invalid archive name'
 status="$BACKUP_WORK/github-release-transport-status.json"
 jq -n --arg id "$BACKUP_ID" '{schema:"orgavela-age-github-release-synthetic/v1",backup_id:$id,provider:"github_releases",synthetic:true,uploaded:false,readback_verified:false,published:false,immutable_verified:false,independent_restore_tested:false}' > "$status"
 
