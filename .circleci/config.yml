@@ -5,6 +5,10 @@
 version: 2.1
 
 parameters:
+  enable_gh06_age_context_smoke:
+    type: boolean
+    default: false
+
   enable_gh06_age_release_offline:
     type: boolean
     default: false
@@ -14,6 +18,35 @@ parameters:
     default: false
 
 jobs:
+  # Stage-B PRE-SECRET proof: verify protected branch may use the empty restricted
+  # CircleCI context. No GitHub token, no remote release, no WordPress access.
+  gh06-age-context-smoke:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - checkout
+      - run:
+          name: Verify restricted GH06 context without secrets or remote API
+          command: |
+            set -euo pipefail
+            test "$CIRCLE_PROJECT_USERNAME" = "janjrre"
+            test "$CIRCLE_PROJECT_REPONAME" = "Projekt-Wordpress-Plugin"
+            test "$CIRCLE_BRANCH" = "test/orgavela-age-release-o03"
+            # Empty context is an absolute prerequisite for this smoke job.
+            for key in GH_TOKEN BACKUP_GITHUB_TOKEN GITHUB_TOKEN AGE_SECRET_KEY \
+                BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE \
+                IONOS_SSH_PASSWORD SFTP_HOST SFTP_PASSWORD SSH_PRIVATE_KEY \
+                GOOGLE_DRIVE_TOKEN_JSON; do
+              if test -n "$(printenv "$key" || true)"; then
+                echo "REFUSED: GH06 context must remain empty of credentials"
+                exit 1
+              fi
+            done
+            echo 'GH06_CONTEXT_ACCESS=PASS'
+            echo 'GH06_CONTEXT_SECRETS=NONE'
+            echo 'GH06_GITHUB_RELEASE_UPLOADED=NO'
+
   # No secrets, no GitHub API, no source access: offline fake-provider gates.
   gh06-age-release-offline-qa:
     docker:
@@ -137,6 +170,17 @@ jobs:
             echo 'GH05_PARITY_PRODUCTION_CAPTURE=disabled'
 
 workflows:
+  gh06-age-context-smoke-manual:
+    when: << pipeline.parameters.enable_gh06_age_context_smoke >>
+    jobs:
+      - gh06-age-context-smoke:
+          context:
+            - orgavela-age-release-tests
+          filters:
+            branches:
+              only:
+                - test/orgavela-age-release-o03
+
   gh06-age-release-offline-manual:
     when: << pipeline.parameters.enable_gh06_age_release_offline >>
     jobs:
