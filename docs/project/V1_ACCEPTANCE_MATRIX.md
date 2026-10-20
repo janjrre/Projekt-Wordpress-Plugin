@@ -634,3 +634,18 @@ W0/O03 partial und V1 formale Zahlen unverändert: M0–M7 0/8, P4 0/4, Release 
 | Produktive OrgaVela-Sicherung | **GESPERRT** | Vor echten Backups weiterhin vollständiger GH05–08 Nachweis nötig |
 
 Keine formalen V1-Gates dadurch bestanden: M 0/8, P4 0/4, R 0/18.
+
+## 20.10.2026 – V1-Cancel und V2-Code-QA Evidenz
+
+| Nachweis | Status | Evidenzgrenze |
+|---|---|---|
+| Alten V1 Approval-Job canceln | **BETREIBER BESTÄTIGT** | Nachricht `Abgebrochen`; kein CircleCI-API-Runtime-Readback |
+| V1 Branch SHA unverändert | **GitHub PASS** | `62c9524f09d9f0ad0e4eea0648cb1be14b051f0f`, 0 Diff |
+| V2 Branch SHA unverändert | **GitHub PASS** | `bead6a3386958bfc3f1bbc4c13b925506777ef5e`, 0 Diff |
+| V2 Writer mit GitHub-Blob identisch; `bash -n` | **LOKAL PASS** | Blob `0e5f2292aeb484ab443c5a566767809f356de2ab` |
+| curl stdin Header + Binary POST + HTTP 201 | **LOKAL PASS** | isolierter HTTP-Server, synthetische Daten, kein GitHub |
+| V2 Fake-GitHub-API-Regressionslauf | **8 Einzelfälle wie erwartet, Gesamtprüfung UNVOLLSTÄNDIG** | Timeout vor 13/13; zweite Wiederholung ebenfalls Timeout; kein voller PASS |
+| V2 Branch Lock / CircleCI Context-Branch / SHA | **OFFEN** | Vor jedem V2-Provider-/Token-Lauf nachweisen |
+| V2 Remote-Release / PGPony-iPad Restore | **NICHT AUSGEFÜHRT** | kein GitHub Token, kein Remote Release |
+
+Formale Abnahmezahlen unverändert: M0–M7 0/8, P4 0/4, R01–18 0/18; Codinghistorie 62/71.
