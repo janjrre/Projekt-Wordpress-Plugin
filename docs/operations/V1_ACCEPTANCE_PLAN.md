@@ -1,6 +1,6 @@
 # OrgaVela / UOP Core – Verbindlicher Masterplan bis zur V1-Abnahme
 
-**Version:** 2.25 | **Bestandsaufnahme:** 12.10.2026 | **Status:** aktiv; V1 **nicht** abgenommen  
+**Version:** 2.26 | **Bestandsaufnahme:** 12.10.2026 | **Status:** aktiv; V1 **nicht** abgenommen  
 **Aktuelle W0/O03-Testreihenfolge (Abgleich Dreamloud 14.10.2026):** Synthetischer CI-GitHub-Release-Test darf nach bestätigtem Context-/Branchschutz mit **ephemerem CI-Testschlüssel und eigenem repo-beschränktem GH_TOKEN** ohne Betreiber-PC laufen; dauerhafter Besitzer-Recovery-Key ist erst vor **echten** OrgaVela-Backups zwingend. [Nachtrag v2.12](#w0o03-gleiches-synthetisches-github-token-verfahren-wie-bei-dreamloud-masterplan-v212-14102026).  
 **Aktuell geltendes O03-Backupziel (Betreiberentscheid 13.10.2026):** nur **IONOS-Sicherungen** plus **separates privates GitHub-Repository mit vorverschlüsselten Release-Assets**. Die frühere Google-Drive-Entscheidung in historischen Nachträgen ist **widerrufen**; Details: [O03 GitHub-Backup-Runbook](W0_O03_GITHUB_PRIVATE_BACKUP_RUNBOOK.md).  
 **Quellenhierarchie:** Phase 3 Specification Freeze > Phase 2 V1-Spezifikation > Phase 1 Produktstrategie; neuere freigegebene ADRs ergänzen den Freeze, ersetzen ihn nicht stillschweigend.  
@@ -793,3 +793,14 @@ Der Code in `scripts/ci/orgavela-pgpony-synthetic-release-writer.sh` ist mit Com
 
 **Projektstatus unverändert:** W0/O03 partial, PGP02/PGP03 PASS, V1 Source-PGP04 PASS, V2 nicht getestet, PGP04 Remote-E2E OPEN, formale M0–M7 0/8, P4 0/4, R01–18 0/18; Codinghistorie 62/71.
 
+## 20.10.2026 – PGP04 V2 Code-Freeze und Schutzregel, nach V1-Cancel (v2.26)
+
+**GATE 1: V1 stoppen.** Betreiber bestätigte `Abgebrochen` für alten V1-Approval-Hold. Keine Freigabe des V1-Writers und kein neues Token; CircleCI-Lauf-Abbruch ist aktuell Betreiberbestätigung, nicht unabhängig via Provider-API gelesen.
+
+**GATE 2: V2 exakt auf Source-SHA.** Neuer isolierter Branch `security/pgp04-synthetic-release-v2-20261020` wurde per GitHub `compare_commits` auf `bead6a3386958bfc3f1bbc4c13b925506777ef5e` bestätigt, keine Abweichung. Writer Git-Blob `0e5f2292aeb484ab443c5a566767809f356de2ab` lokal bytegenau rekonstruiert und `bash -n` PASSED. `curl --header @-` mit synthetischem Header und Body am lokalen HTTP-Server protokolliert: korrekte Header, Binärdaten, HTTP 201. V2 Fake-API-Gesamtmatrix **nicht abgeschlossen**: 8 Einzelfälle erwartungsgemäß, zweifacher Timeout. Keine volle V2 13/13- oder Provider-Abnahme behaupten.
+
+**GATE 3: Branch jetzt durch Betreiber wirksam schützen.** Im **Quellrepo** `janjrre/Projekt-Wordpress-Plugin` unter Settings → Branches eine neue Branch protection rule für den **exakten V2-Namen** anlegen; `Lock branch` und `Do not allow bypassing` **aktivieren**, `Allow force pushes` und `Allow deletions` **nicht aktivieren**. Das Ziel ist `Applies to 1 branch` und nach Save ein sichtbar gespeicherter Zustand. Die alte V1-Regel niemals ersetzen. Keinen Schreibversuch gegen gesperrten Branch durchführen. Verifizierten V2-HEAD danach nochmals abgleichen.
+
+**GATE 4: Context später umstellen, keine Secrets jetzt.** Erst nach V2-Schutzbeweis bestehenden CircleCI Context `orgavela-pgp04-release-only` **nur** hinsichtlich seiner Branch-Expression und der nicht geheimen `PGP04_APPROVED_SHA` auf V2 umstellen; Projekt `Projekt-Wordpress-Plugin`, Eigentümer `janjrre`, No-SSH, No-API-Configsource beibehalten. Token weiterhin NICHT eintragen. Nach manueller Freigabe genau **einen** no-secret CircleCI V2-Source plus Context-Access-Test. `pgp04-owner-approval` muss warten und Writer NOT RUN bleiben.
+
+**GATE 5:** Unabhängiger Remote-Release- und Restore-Test nur nach dokumentierter gesonderter Besitzerfreigabe und Fine-Grained PAT ausschließlich für das private Backup-Zielrepo. V1 wird nicht wieder aktiviert. Keine echten WP-/MariaDB-Daten, keine neuen Verträge, keine Automatismen oder PR-Merges. M0–M7 0/8, P4 0/4, R01–18 0/18 und 62/71 historische Codingpakete unverändert.
