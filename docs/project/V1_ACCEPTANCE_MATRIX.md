@@ -619,3 +619,18 @@ V1-Zähler unverändert: historische Implementierung 62/71, M0–M7 0/8, P4 0/4,
 | PGP04 Remote Release / Besitzer-iPad-Restore | **NOCH NICHT AUSGEFÜHRT** | weiter strikt getrennte Freigabe-/Secret-Gates |
 
 W0/O03 partial und V1 formale Zahlen unverändert: M0–M7 0/8, P4 0/4, Release R01–18 0/18.
+
+## 20.10.2026, 23:17 – PGP04 No-Secret Provider Source und V2-Remote-Upload-Prüfgrenzen
+
+| Nachweis | Ergebnis | Evidenz / Einschränkung |
+|---|---|---|
+| V1 `pgp04-synthetic-source` auf SHA 62c9524… | **CIRCLECI PASS** | Betreiber-Joblog SUCCESS ~15s; Producer PASS, Workspace Plaintext NONE, Source Ciphertext-only PASS |
+| V1 Persisting to workspace | **CIRCLECI PASS** | 1.7 KiB Upload, kein privater Key belegt; nur künstliche Daten |
+| V1 `pgp04-owner-approval` | **ON HOLD** | Freigabe strikt verboten; v1-Writer wegen Hostname-Problematik nicht weiterverwenden |
+| V1 `pgp04-synthetic-release-writer` | **NOT RUN** | Kein Token und kein GitHub-Release, GitHub-Remote-API E2E weiter offen |
+| Reales `gh api --hostname uploads.github.com` Hostname-Risiko | **BELEGTES KOMPATIBILITÄTSRISIKO** | CLI-host mapping auf `api.uploads.github.com` möglich; frühere Fake-API konnte es nicht entdecken |
+| V2 separater Code-Fix, Source/Context/Approval/Writer-Gates | **CODE STAGED, STATISCH GESICHTET** | Neuer Branch `security/pgp04-synthetic-release-v2-20261020`, HEAD `bead6a3386958bfc3f1bbc4c13b925506777ef5e`; 3 Dateien zum Ursprung verändert |
+| V2 Shell-/CircleCI Runtime, echter GitHub Upload, SHA und PGPony Recovery | **NICHT AUSGEFÜHRT** | Kein V2-Token, kein V2-Branchschutz, kein V2-Synthetiklauf |
+| Produktive OrgaVela-Sicherung | **GESPERRT** | Vor echten Backups weiterhin vollständiger GH05–08 Nachweis nötig |
+
+Keine formalen V1-Gates dadurch bestanden: M 0/8, P4 0/4, R 0/18.
