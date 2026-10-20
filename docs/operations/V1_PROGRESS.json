@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-20",
-  "snapshot_basis": "User attested GitHub fine-grained GH_TOKEN placed directly in CircleCI orgavela-age-release-tests. Protected test branch still eba067913eb0290b2a95e40029f77e3b803ed924, PR24 merged, CircleCI GH06 synthetic age Release E2E workflow default FALSE and manual approval required. GH06 after-group Context #283 success and backup repository release immutability owner UI checked. No secret value inspected, token scope/expiry and free quota not independently checked; no new CircleCI job/release triggered, age remote immutable and recovery E2E still untested. User must check free quota and get job into hold only, NO Approve until review. GH03 owner offline independent recovery and productive GH05–08 blocked; coding 62/71, milestones 0/8, P4 0/4, R01-18 0/18.",
+  "snapshot_basis": "CircleCI user screenshots: GH06 synthetic native-age GitHub release E2E pipeline #298 writer SUCCESS including remote SHA256 pre/post publication and independent decrypted restore; #299 held at manual approval with writer not started. GitHub independent read: protected source test branch eba0679, private backup repo GitHub Release 418380590 immutable=true, exactly three age/manifest/hash assets. This is synthetic only, not a real WordPress/MariaDB snapshot, and not evidence of owner GH03 second offline recovery copy. Operator PAT revocation and removal of GH_TOKEN from CircleCI orgavela-age-release-tests still unconfirmed. V1 coding 62/71, milestones 0/8, P4 0/4, release gates 0/18 unchanged; no auto jobs triggered here.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -376,7 +376,7 @@
       "gh05_parity_source_pipeline_duration_seconds": 20,
       "gh05_parity_test_count_raw_stdout_verified": false,
       "gh05_parity_real_data_captured": false,
-      "gh06_age_transport_draft_status": "offline_fake_gh_ci_pass_verified_remote_release_not_run",
+      "gh06_age_transport_draft_status": "synthetic_native_age_remote_release_and_restore_provider_passed_credential_cleanup_pending",
       "gh06_age_transport_pr": 21,
       "gh06_age_transport_branch": "feat/gh06-synthetic-age-release-20261020",
       "gh06_age_transport_scripts": [
@@ -387,11 +387,11 @@
       "gh06_age_transport_offline_tests_defined": 13,
       "gh06_age_transport_offline_tests_passed": true,
       "gh06_age_transport_offline_ci_run": 209,
-      "gh06_age_transport_actual_release_uploaded": false,
-      "gh06_age_transport_immutable_age_release_verified": false,
+      "gh06_age_transport_actual_release_uploaded": true,
+      "gh06_age_transport_immutable_age_release_verified": true,
       "gh06_age_transport_source": "Based on already accepted GH04 synthetic GPG release/restore transport; adapted to native age X25519 in separate Draft PR #21; GitHub readback of source only",
       "gh06_age_transport_ci_flag": "enable_gh06_age_release_offline (boolean default false), branch feat/gh06-synthetic-age-release-20261020, no secrets or cloud calls; no live GH06 remote job configured",
-      "gh06_age_transport_live_blockers": "Owner attests GH_TOKEN inserted in restricted CircleCI Context. No direct provider verification of token validity/scope/expiry, and free CircleCI quota not checked for this proposed run. New workflow default=false, manual approval gate exists and protected branch SHA eba067913eb0290b2a95e40029f77e3b803ed924 verified. Before any writer execution: operator checks remaining free credits, triggers ONLY enable_gh06_age_release_remote=true on Config Source AND Checkout test/orgavela-age-release-o03, all other booleans false; pauses at gh06-age-release-manual-approval HOLD and shares screenshot prior to clicking Approve. No real age Release provider run yet; post-run revoke fine-grained PAT and delete Context GH_TOKEN. GH03 independent owner recovery still missing, live backups blocked.",
+      "gh06_age_transport_live_blockers": "GH06 only synthetic test PASS: CircleCI #298 manually approved, writer success + on-screen pre/post remote SHA256 and independent synthetic decryption PASS; GitHub private immutable Release ID 418380590 verified. Separate CircleCI #299 shows manual approval HOLD with writer not started. Test credential cleanup NOT yet owner attested: revoke GH06 fine-grained PAT and delete GH_TOKEN from orgavela-age-release-tests before next secret-backed operation. Do not confuse synthetic temporary CI test age key with owner GH03 durable age key. GH03 independent second protected/offline copy not verified, no real backup or schedule.",
       "gh06_age_transport_offline_tests_count_passed": 13,
       "gh06_age_transport_offline_tests_failed": 0,
       "gh06_age_transport_offline_ci_job": "gh06-age-release-offline-qa",
@@ -407,7 +407,7 @@
       "gh06_age_remote_context_configured": true,
       "gh06_age_remote_token_configured": true,
       "gh06_age_remote_ci_job_configured": true,
-      "gh06_age_remote_run_authorized": false,
+      "gh06_age_remote_run_authorized": true,
       "gh06_age_remote_test_branch_protection_evidence": "2026-10-20 after operator says Branchschutz gespeichert, independent GitHub GET /repos/janjrre/Projekt-Wordpress-Plugin/branches/test/orgavela-age-release-o03 => protected=true, protection.enabled=true; required_status_checks enforcement_level=off (not proof of any CI requirement). Branch protection detail GET returned 403 Resource not accessible by integration, so exact PR/no-bypass/force-push/deletion settings remain owner confirmation pending.",
       "gh06_age_remote_branch_detail_readable": false,
       "gh06_age_remote_branch_detail_owner_confirmation_pending": false,
@@ -460,12 +460,12 @@
       "gh06_age_remote_context_smoke_log_evidence": "2026-10-20 owner screenshot of CircleCI pipeline #283, sole gh06-age-context-smoke job green, same protected branch test/orgavela-age-release-o03 and sha cb22a2b, logs GH06_CONTEXT_ACCESS=PASS; GH06_CONTEXT_SECRETS=NONE; GH06_GITHUB_RELEASE_UPLOADED=NO. Independently GitHub combined commit status ci/circleci: gh06-age-context-smoke success, target job #8. Previous #255 also success but before group change.",
       "gh06_age_remote_context_access_provider_verified": true,
       "gh06_age_remote_synthetic_e2e_pr": 24,
-      "gh06_age_remote_synthetic_e2e_pr_status": "merged_protected_branch_not_run",
+      "gh06_age_remote_synthetic_e2e_pr_status": "merged_protected_branch_synthetic_provider_passed_cleanup_pending",
       "gh06_age_remote_synthetic_e2e_branch": "ci/gh06-age-release-synthetic-isolated-20261020",
       "gh06_age_remote_synthetic_e2e_sha": "3823e84efc9a420cf8ec16b1b0c17207d1e6504b",
       "gh06_age_remote_synthetic_e2e_diff": "one .circleci/config.yml file, one commit, 68 added lines, zero deletions, GitHub PR24 diff verified",
       "gh06_age_remote_synthetic_e2e_flag": "enable_gh06_age_release_remote boolean default=false; branch test/orgavela-age-release-o03; separate CircleCI approval job before writer context",
-      "gh06_age_synthetic_repo_audit": "2026-10-20 GitHub GET janjrre/orgavela-backups confirmed private=true archived=false; historical artificial OpenPGP immutable GitHub Release 414750281 has immutable=true, 3 assets; no native age GH06 Release yet.",
+      "gh06_age_synthetic_repo_audit": "2026-10-20 GitHub independent GET: private janjrre/orgavela-backups, native age synthetic immutable GitHub Release 418380590 (tag backup-orgavela-age-synthetic-ci-10), draft=false immutable=true, 3 assets with SHA256 digests; earlier OpenPGP synthetic Release 414750281 also retained.",
       "gh06_age_immutable_current_setting_verified": true,
       "gh06_age_immutable_current_setting_blocker": "GitHub GET /repos/janjrre/orgavela-backups/immutable-releases was unsupported by connected GitHub fetch allowlist (400); official API endpoint needs repository Administration(read), which must NOT be added to short-lived Contents(write)-only GH06 writer token merely for preflight. Owner should visually verify GitHub Settings > General > Releases > Enable release immutability for future releases. Existing older immutable OpenPGP Release is not proof current repo toggle.",
       "gh06_age_remote_context_group_review": "Owner states they are sole CircleCI org member; only All members selectable; latest Context list confirms All members restored for orgavela-age-release-tests. Earlier screenshot verified only Projekt-Wordpress-Plugin project and both ANDed expressions, but not redisplayed now. Need new allowed-branch smoke to confirm after restoration and before PAT. Re-review if organization membership changes.",
@@ -490,7 +490,35 @@
       "gh06_age_remote_manual_approval_required": true,
       "gh06_age_remote_token_owner_attested": true,
       "gh06_age_remote_token_provider_verified": false,
-      "gh06_age_remote_token_evidence": "2026-10-20 operator says GH_TOKEN hinterlegt after instructed direct insertion into CircleCI Context orgavela-age-release-tests. No secret value ever read or copied, no CircleCI Context variable API inspection. Repo scope, contents permission and actual expiry remain owner-only not independently verifiable."
+      "gh06_age_remote_token_evidence": "2026-10-20 operator says GH_TOKEN hinterlegt after instructed direct insertion into CircleCI Context orgavela-age-release-tests. No secret value ever read or copied, no CircleCI Context variable API inspection. Repo scope, contents permission and actual expiry remain owner-only not independently verifiable.",
+      "gh06_age_remote_provider_pipeline_pass": 298,
+      "gh06_age_remote_provider_pipeline_source_sha": "eba067913eb0290b2a95e40029f77e3b803ed924",
+      "gh06_age_remote_provider_job": "gh06-age-release-synthetic-e2e",
+      "gh06_age_remote_provider_status": "success (operator CircleCI job screenshot; logs PASS for remote readback and independent synthetic decrypted restore)",
+      "gh06_age_remote_github_release_id": 418380590,
+      "gh06_age_remote_github_release_tag": "backup-orgavela-age-synthetic-ci-10",
+      "gh06_age_remote_release_immutable_provider_verified": true,
+      "gh06_age_remote_release_asset_count": 3,
+      "gh06_age_remote_github_release_assets": [
+        {
+          "name": "manifest.json",
+          "sha256": "4233d509b51989b6e89b1b8b79f50b75a5137492bf2dab590c81badac7160aa2"
+        },
+        {
+          "name": "orgavela-age-synthetic-ci-10.tar.age",
+          "sha256": "421e4c539fd9b3ce18aac7ca68dee662bfef60309f4be920c369c72eb8d4d302"
+        },
+        {
+          "name": "orgavela-age-synthetic-ci-10.tar.age.sha256",
+          "sha256": "80e49f882053c812f2d6363fe61855f0ab21bd22a17b7001258cd7e5da250946"
+        }
+      ],
+      "gh06_age_remote_manual_hold_pipeline": 299,
+      "gh06_age_remote_manual_hold_evidence": "Operator screenshot #299: manual approval job ON HOLD with Approve/Cancel available and writer gh06-age-release-synthetic-e2e not started. Operator advised to cancel #299; actual cancellation not verified.",
+      "gh06_age_test_pat_revoked_owner_attested": false,
+      "gh06_age_test_context_token_removed_owner_attested": false,
+      "gh06_age_synthetic_e2e_runtime_test_accepted": true,
+      "gh06_age_synthetic_e2e_admin_final_close": false
     },
     {
       "id": "O04",
