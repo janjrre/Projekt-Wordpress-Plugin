@@ -5,6 +5,10 @@
 version: 2.1
 
 parameters:
+  enable_pgp04_synthetic_release:
+    type: boolean
+    default: false
+
   enable_pgpony_ciphertext_handoff:
     type: boolean
     default: false
@@ -288,7 +292,77 @@ jobs:
             bash scripts/ci/orgavela-openpgp-synthetic-handoff.sh writer /tmp/orgavela-pgpony-handoff
             echo 'PGPONY_HANDOFF_CI_WRITER=PASS'
 
+  # PGP04: owner PGPony key PUBLIC-only producer. Never receives Context or GitHub token.
+  pgp04-synthetic-source:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - checkout
+      - run:
+          name: PGP04 fake source only and public OpenPGP encryption
+          command: |
+            set -euo pipefail
+            test "$CIRCLE_PROJECT_USERNAME" = janjrre
+            test "$CIRCLE_PROJECT_REPONAME" = Projekt-Wordpress-Plugin
+            test "$CIRCLE_BRANCH" = security/pgp04-synthetic-release-20261020
+            for key in GH_TOKEN GITHUB_TOKEN BACKUP_GITHUB_TOKEN SFTP_HOST SFTP_PASSWORD IONOS_SSH_HOST IONOS_SSH_PASSWORD BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE AGE_SECRET_KEY; do
+              test -z "$(printenv "$key" || true)"
+            done
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends gnupg jq gzip tar coreutils >/dev/null
+            export ORGAVELA_PGP_SYNTHETIC_ONLY=YES
+            bash scripts/ci/orgavela-openpgp-synthetic-handoff.sh producer /tmp/orgavela-pgp04-handoff
+            echo PGP04_SOURCE_CIPHERTEXT_ONLY=PASS
+      - persist_to_workspace:
+          root: /tmp/orgavela-pgp04-handoff
+          paths:
+            - orgavela-synthetic-pgpony-handoff-001.tar.gpg
+            - orgavela-synthetic-pgpony-handoff-001.tar.gpg.sha256
+            - manifest.json
+
+  # PGP04 isolated token-bearing writer: only on locked reviewed SHA and restricted Context.
+  pgp04-synthetic-release-writer:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/orgavela-pgp04-handoff
+      - run:
+          name: One-time synthetic ciphertext Release with immutable verification
+          command: |
+            set -euo pipefail
+            test "$CIRCLE_PROJECT_USERNAME" = janjrre
+            test "$CIRCLE_PROJECT_REPONAME" = Projekt-Wordpress-Plugin
+            test "$CIRCLE_BRANCH" = security/pgp04-synthetic-release-20261020
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends gnupg jq gh coreutils >/dev/null
+            export ORGAVELA_PGP_SYNTHETIC_ONLY=YES
+            export PGP04_OPERATOR_APPROVED=YES
+            export GITHUB_BACKUP_REPOSITORY=janjrre/orgavela-backups
+            bash scripts/ci/orgavela-pgpony-synthetic-release-writer.sh /tmp/orgavela-pgp04-handoff
+
 workflows:
+
+  pgp04-synthetic-release-manual:
+    when: << pipeline.parameters.enable_pgp04_synthetic_release >>
+    jobs:
+      - pgp04-synthetic-source:
+          filters:
+            branches:
+              only:
+                - security/pgp04-synthetic-release-20261020
+      - pgp04-synthetic-release-writer:
+          context:
+            - orgavela-pgp04-release-only
+          requires:
+            - pgp04-synthetic-source
+          filters:
+            branches:
+              only:
+                - security/pgp04-synthetic-release-20261020
 
   pgpony-ciphertext-handoff-manual:
     when: << pipeline.parameters.enable_pgpony_ciphertext_handoff >>
