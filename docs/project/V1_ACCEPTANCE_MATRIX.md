@@ -347,3 +347,18 @@ Dies ist ein nicht-produktiver O03-Architekturwechsel; er erzeugt **keine** form
 | GitHub OpenPGP immutable Release / produktive GH05-08 | NICHT AUSGEFÜHRT | erst nach expliziten Freigaben |
 
 Historische GH04-GPG- und GH06-age-CI-Belege bleiben unabhängig gültig, erfüllen diese neuen Owner-Key- und Produktiv-Gates **nicht**.
+
+## 20.10.2026 – GH03-PGPony Public-Key-Prüfung
+
+| Bedingung | Resultat | Nachweisgrenze |
+| --- | --- | --- |
+| OpenPGP-Public-Key syntaktisch korrekt & signiert | PASS | GnuPG 2.4.7, 2 gute Self-Signatures |
+| Version, Algorithmen, Fingerprints | PASS | v4, Ed25519 `7C9DC60D8E1B293E514696EB333D15A4D8BA625C`, cv25519 `CF5D8A8498F65C6D894ECE2FD9E58CC6484AF1DE` |
+| Temporäre Verschlüsselung nur mit öffentlichem Empfänger | PASS | isolierter GnuPG-Test ohne irgendeinen Secret-Key |
+| Betreiber-PGPony entschlüsselt externes GnuPG-Archiv | **OFFEN** | Ciphertext `orgavela-pgpony-kompatibilitaetstest.gpg`, 288 Bytes, SHA256 `8da079bd89e8048a3238133fb7fe5f5daf6076c6e2d3b3947733dd1522da2be1` für Owner bereitgestellt |
+| 2 unabhängige geschützte Backup-Kopien des NEUEN PGPONY-Private-Key | **OFFEN** | Altes AgePony-Paper zählt nicht |
+| Recovery allein aus unabhängigem Private-Key-Export | **OFFEN** | Keine Kopie-2-Probe ohne Original-iPhone |
+| GitHub Public-Key-Policy | Candidate only | `.github/backup/orgavela-backup-candidate-public.asc`, `.github/backup/orgavela-pgpony-candidate-policy.json`; öffentlich sichtbarer Draft, keine Produktionsfreigabe |
+| GH03/Produktion GH05–08 | **BLOCKIERT** | Kein produktiver Writer/Restore/Schedule |
+
+**Technischer Teilfortschritt, keine formale GH03-, Milestone- oder Release-Gate-Abnahme.**
