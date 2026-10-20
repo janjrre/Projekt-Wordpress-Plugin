@@ -534,3 +534,21 @@ Diese Papierkopie ist ein **neuer echter Offline-Fortschritt**, aber kein unabh�
 | M0–M7 / P4 / Release-R01–R18 formal | **0/8 · 0/4 · 0/18** | Codinghistorie 62/71 unverändert |
 
 PGP03-PASS ist kein GH04-PASS, kein produktiver Backup-PASS und keine formale V1-Gesamtabnahme.
+
+## 20.10.2026 – PGP04 lokale Fake-GitHub-API-Testmatrix (KEINE Remote-Abnahme)
+
+| Prüfung | Status | Evidenzgrenze |
+|---|---|---|
+| GitHub-Schutzregel für PGP04, im richtigen Quellrepository, trifft 1 Branch | BETREIBER-UI BESTÄTIGT | Screenshot 21:32; endgültiger Branch-Lock noch AUS |
+| Exakt mit GitHub-Blob identischer Writer, Shell-Syntax | LOKAL PASS | git hash-object = 5ecb211eb7f856ff1d676201ee2a5ede55d11fe2; bash -n Exit 0 |
+| Nur synthetische künstliche Datei mit PGPony PUBLIC-Key GnuPG-verschlüsselt | LOKAL PASS | temporäres GnuPG-Homedir; kein privater Owner-Key |
+| Fake-API: Draft erstellen, drei Assets übertragen/lesen, immutable=true | LOKAL PASS | Nur simulierter GitHub-Endpunkt, kein echter Release |
+| Fake-API: öffentliches Repo, 403/500, doppeltes Release/Tag | LOKAL PASS | jeweils fail-closed |
+| Fake-API: Asset fehlt, Readback beschädigt, immutable=false | LOKAL PASS | jeweils fail-closed |
+| Fehlende Freigabe, falscher SHA, falscher Branch, fehlender Fake-Token | LOKAL PASS | jeweils vor Remote-Aufruf abgewiesen |
+| Lokale Mock-Tests | 13/13 erwartete Ergebnisse | Python Exit 0; Test-Harness lokal, NICHT in GitHub/CI committed oder ausgeführt |
+| CircleCI Default-OFF, Source ohne Context, Writer-Context und Branchfilter | STATISCH GESICHTET | GitHub Blob d430033f001d13bb83bb1b086b336b2dd43c522b, noch kein CircleCI-Config-Lint |
+| Remote-PGPony-GitHub-Release und Besitzer-Restore | NICHT AUSGEFÜHRT | Kein Token, kein echter Upload |
+| Finaler Branch-Lock, SHA-Attestierung, restriktiver CircleCI Context | BLOCKIERT | Vor Secretzugriff nachweisen |
+
+**Grenze:** Lokale 13/13-Mock-QA ist nicht PGP04-E2E-Release-Abnahme. Versuchte GitHub-Erstellung einer versionierten Fake-API-Testdatei wurde durch Sicherheitskontrolle blockiert; deshalb Reproduzierbarkeit im Repository noch nicht belegt. Historisches PGP03 bleibt PASS, M0–M7 0/8, P4 0/4 und R01–18 0/18 unverändert.
