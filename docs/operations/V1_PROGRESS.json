@@ -695,7 +695,14 @@
       "pgp04_context_group_access_note": "All members shown; only user has access per previous operator statement, not independently enumerated",
       "pgp04_context_runtime_access_verified": false,
       "pgp04_context_screenshot_timestamp": "2026-10-20 22:48 local operator screenshot",
-      "pgp04_publisher_security_commit": "71c0d6cc3dc9ec619b13096b350d1670bee7ef46"
+      "pgp04_publisher_security_commit": "71c0d6cc3dc9ec619b13096b350d1670bee7ef46",
+      "pgp04_lock_checkbox_operator_screenshot": true,
+      "pgp04_no_bypass_checkbox_operator_screenshot": true,
+      "pgp04_no_force_push_checkbox_operator_screenshot": true,
+      "pgp04_lock_rule_applies_to_one_branch_operator_screenshot": true,
+      "pgp04_lock_save_confirmed": false,
+      "pgp04_lock_effective_api_verified": false,
+      "pgp04_exact_sha_verified_on_2026_10_20": "62c9524f09d9f0ad0e4eea0648cb1be14b051f0f"
     },
     {
       "id": "O04",
