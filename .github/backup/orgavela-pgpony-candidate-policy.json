@@ -24,12 +24,14 @@
   "public_only_gnupg_import_passed": true,
   "public_only_gnupg_synthetic_encrypt_passed": true,
   "no_private_key_present_in_test": true,
-  "device_pgpony_decrypt_of_external_gpg_ciphertext_passed": false,
+  "device_pgpony_decrypt_of_external_gpg_ciphertext_passed": true,
   "independent_owner_key_recovery_from_second_copy_verified": false,
   "two_physical_backup_copies_verified": false,
   "production_backup_enabled": false,
   "remote_github_release_enabled": false,
   "automatic_schedule_enabled": false,
   "previous_age_owner_paper_backup_reused": false,
-  "notes": "Candidate pin only; do not use for real backups until PGPony decrypt and copy-2 independent restore, production GH05–08 review. No private key or passphrase ever stored in repo or CI."
+  "notes": "No productive release or backend activation. Owner's PGPony iPhone decrypt of external GnuPG synthetic ciphertext passed by owner statement; separate private-key offline custody and independent recovery from copy 2 not verified. Exact code not separately attested; public key only in this repository.",
+  "device_pgpony_decrypt_verification_level": "Owner-attested: user confirms PGPony on original iPhone decrypted GnuPG-produced synthetic file; exact code equality not explicitly confirmed. Not an independent restored-key test.",
+  "device_pgpony_expected_plaintext_code_owner_confirmed": false
 }
