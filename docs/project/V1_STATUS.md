@@ -3,6 +3,12 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 20.10.2026 – GH06 Context All members nach Sperre wiederhergestellt
+
+- **CircleCI UI-Evidenz:** In der Organisations-Contexts-Liste steht `orgavela-age-release-tests` wieder mit `Security: All members`. Betreiber berichtet Solo-Mitgliedschaft der CircleCI-Organisation. Der zuvor gemeldete `currently unusable`-Zustand war auf die leere Gruppenzuweisung zurückzuführen; der nun erneut verfügbare positive Runtime-Zugriff ist **noch durch einen neuen no-secret Test nachzuweisen**, bevor man sicher von funktionsfähiger Context-Autorisierung spricht.
+- Geschützter GH06-Testbranch `test/orgavela-age-release-o03` GitHub `protected=true`, SHA `cb22a2b`, CI-Context-Smoke default FALSE nach Provider-Readback unverändert. Historisch grüner Context-Run #255 bezog sich auf den **vorherigen Gruppenzustand**. [Draft PR #24](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/24) offen/unmerged; kein Token und kein age-GitHub Release.
+- **Jetzt:** genau einen neuen manuellen no-secret `gh06-age-context-smoke` mit nur `enable_gh06_age_context_smoke=true` auf Config- und Checkout-Branch `test/orgavela-age-release-o03` bei Free-Kontingent ausführen. Nach Providerbeleg Status fortschreiben. Github zukünftige Release-Immutability bereits im UI bestätigt. GH03 getrennte Eigentümer-Recovery und echte GH05–GH08 weiterhin gesperrt. V1 historisch Coding 62/71, formal 0/8 Meilensteine, P4 0/4, Release R01–18 0/18, PR-Integration offen.
+
 ## Update 20.10.2026 – GitHub immutable aktiviert, CircleCI-Context nach Gruppenentfernung gesperrt
 
 - Betreiber-Screenshot **GitHub** `janjrre/orgavela-backups` > Settings > General > Releases zeigt **Enable release immutability = aktiviert**. Das ist der gültige Nachweis der aktuell für künftige Releases aktivierten Einstellung. Noch kein tatsächlicher age Test-GitHub-Release.
