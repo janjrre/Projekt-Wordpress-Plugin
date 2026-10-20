@@ -720,8 +720,8 @@
       "pgp04_v2_branch": "security/pgp04-synthetic-release-v2-20261020",
       "pgp04_v2_last_reviewed_sha": "bead6a3386958bfc3f1bbc4c13b925506777ef5e",
       "pgp04_v2_branch_protection_operator_verified": true,
-      "pgp04_v2_ci_context_restricted_to_branch": false,
-      "pgp04_v2_approved_sha_variable_updated": false,
+      "pgp04_v2_ci_context_restricted_to_branch": true,
+      "pgp04_v2_approved_sha_variable_updated": true,
       "pgp04_v2_upload_protocol": "Official uploads.github.com REST release upload_url, stdin-only curl -H @-, no redirects, HTTP201 JSON validation; untested against provider",
       "pgp04_v2_restricted_context_no_secret_smoke_code_present": true,
       "pgp04_v2_no_secret_source_test_executed": false,
@@ -740,7 +740,16 @@
       "pgp04_v2_ci_source_provider_pass": false,
       "pgp04_v2_branch_lock_evidence": "2026-10-21 00:06-00:07 operator screenshots: exact v2 branch name; lock branch checked, no bypass checked, force/deletion unchecked; GitHub 'Branch protection rule created' banner, list has additional rule applying to one branch.",
       "pgp04_v2_branch_protection_effective_api_verified": false,
-      "pgp04_v2_branch_sha_verified_after_rule_create": true
+      "pgp04_v2_branch_sha_verified_after_rule_create": true,
+      "pgp04_v2_ci_context_operator_ui_verified": true,
+      "pgp04_v2_ci_context_restriction_evidence": "2026-10-21 00:14 operator screenshots, saved CircleCI Context orgavela-pgp04-release-only; Project restriction only Projekt-Wordpress-Plugin; one expression restricts v2 branch and repo_name/owner, no SSH, config_source not API.",
+      "pgp04_v2_approved_sha_variable_masked_suffix": "ef5e",
+      "pgp04_v2_approved_sha_variable_full_value_independently_verified": false,
+      "pgp04_v2_ci_context_gh_token_present_operator_ui": false,
+      "pgp04_v2_ci_context_group_restriction": "All members, previously shown, organization member count not independently checked",
+      "pgp04_v2_context_runtime_verified": false,
+      "pgp04_v2_branch_sha_after_context_update": "bead6a3386958bfc3f1bbc4c13b925506777ef5e",
+      "pgp04_v2_branch_sha_compare_after_context_update": "identical, ahead_by=0, behind_by=0"
     },
     {
       "id": "O04",
