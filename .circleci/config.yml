@@ -312,6 +312,12 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y --no-install-recommends gnupg jq gzip tar coreutils >/dev/null
             export ORGAVELA_PGP_SYNTHETIC_ONLY=YES
+            # The source job has NO Context or token; vet the actual v2 writer
+            # and six early rejection tests BEFORE the manual approval gate.
+            bash -n scripts/ci/orgavela-pgpony-synthetic-release-writer.sh
+            bash -n scripts/ci/test-orgavela-pgp04-release-guards.sh
+            bash scripts/ci/test-orgavela-pgp04-release-guards.sh
+            echo PGP04_V2_NO_SECRET_PREFLIGHT=PASS
             bash scripts/ci/orgavela-openpgp-synthetic-handoff.sh producer /tmp/orgavela-pgp04-handoff
             echo PGP04_SOURCE_CIPHERTEXT_ONLY=PASS
       - persist_to_workspace:
