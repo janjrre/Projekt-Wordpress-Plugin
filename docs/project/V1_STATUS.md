@@ -584,3 +584,13 @@ Der [Masterplan v2.11](../operations/V1_ACCEPTANCE_PLAN.md) bleibt normativ unve
 **Vor administrativem GH06-Abschluss zwingend:** GH06-Test-PAT widerrufen und `GH_TOKEN` aus CircleCI Context `orgavela-age-release-tests` löschen; Betreiberbestätigung steht aus. Weitere kosten-/secret-tragende Testläufe zunächst nicht erforderlich. Es gab **kein** OrgaVela-DB-/WordPress-Backup, **keinen** Dauerbetrieb und **keine** Owner-Key-Wiederherstellung aus unabhängig gesicherter Kopie. GH03 Offline-Backup/Recovery und produktive GH05–08 bleiben blockiert; die synthetische GH06-Laufzeitabnahme ist *kein* V1-Release-Gate.
 
 **Fortschritt unverändert:** 62/71 historisch implementierte Codingpakete, M0–M7 formal **0/8**, P4 **0/4**, R01–R18 formal **0/18**, V1 weiterhin **nicht abgenommen**. Detailbelege in `V1_PROGRESS.json`, `W0_O03_GH06_AGE_RELEASE_PREPARATION_2026-10-20.md` und `ASSISTANT_WORK_LOG.md`.
+
+## 20.10.2026 – GH06-Testzugänge laut Betreiber bereinigt, synthetische Testabnahme abgeschlossen
+
+**Betreiberbestätigung:** Auf die drei konkreten letzten Bedienungsschritte (CircleCI #299 HOLD abbrechen, GH06 Fine-grained GitHub-PAT widerrufen, `GH_TOKEN` aus CircleCI Context `orgavela-age-release-tests` entfernen) antwortete der Betreiber ausdrücklich „Erledigt“. Diese Zustände sind **operator-attested**; die GitHub-Integration hat keinen lesenden Zugriff auf die private Tokenverwaltung oder CircleCI Context/Abbruchstatus. Keine Werte/Secrets eingesehen, keine weiteren Jobs ausgelöst.
+
+**GH06 synthetisch vollständig:** #298 Release/Remote-SHA256/Age-Decrypt-Restore PASS laut Betreiber-Joblog; GitHub Release ID 418380590 privat, `immutable=true`, drei Asset-Digests direkt bestätigt; #299 manuelles HOLD vor Writer gezeigt und Abbruch bestätigt. Das Synthetik-Testkonto wird nicht weiter benötigt. Synthetische GH06-Transport-/Approval-/Cleanup-Abnahme **abgeschlossen**. **Nicht** identisch mit GH06-Produktivwriter oder V1-R01–R18-Abnahme; keine echten Dateien oder DB-Daten gespeichert.
+
+**Nächste Sicherheitshürde:** GH03 Owner age-Key wurde mit AgePony auf einem iPhone lokal getestet und ein PDF unter „Auf meinem iPhone/iPad“ angelegt, aber keine unabhängig verwahrte geschützte zweite Offline-Kopie und keine Kopie-2-Wiederherstellung nachgewiesen. Ohne geeignete zweite physische Sicherung noch **kein** realer Backup-Writer/Restore/Schedule. GH05 darf nur synthetisch vorbereitet werden.
+
+**V1 unverändert:** Coding historisch 62/71, M0–M7 0/8 formal, P4-01…04 0/4, Release R01–R18 0/18, PR #21 weiterhin Draft/unmerged und OrgaVela Alpha.2 nicht aus diesem Testbranch aktualisiert.
