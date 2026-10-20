@@ -713,7 +713,19 @@
       "pgp04_approved_sha_context_variable_evidence": "Operator screenshot 2026-10-20 23:11 local time: only variable PGP04_APPROVED_SHA shown in context orgavela-pgp04-release-only, masked value ending 1f0f; full 40-character value cannot be independently read.",
       "pgp04_context_gh_token_present_operator_ui": false,
       "pgp04_no_secret_source_ci_run_executed": false,
-      "pgp04_exact_sha_verified_after_sha_context_screenshot": "62c9524f09d9f0ad0e4eea0648cb1be14b051f0f"
+      "pgp04_exact_sha_verified_after_sha_context_screenshot": "62c9524f09d9f0ad0e4eea0648cb1be14b051f0f",
+      "pgp04_v1_circleci_source_provider_status": "PASS on owner screenshots 2026-10-20 23:17; 15s; SHA 62c9524f09d9f0ad0e4eea0648cb1be14b051f0f; workspace 1.7 KiB ciphertext only; manual hold; writer NOT RUN",
+      "pgp04_v1_approval_state": "ON_HOLD_NOT_APPROVED; cancellation requested; never approve v1",
+      "pgp04_v1_release_upload_api_host_defect": "gh api --hostname uploads.github.com may target api.uploads.github.com; unsafe/unverified remote upload; detected before any token",
+      "pgp04_v2_branch": "security/pgp04-synthetic-release-v2-20261020",
+      "pgp04_v2_last_reviewed_sha": "bead6a3386958bfc3f1bbc4c13b925506777ef5e",
+      "pgp04_v2_branch_protection_operator_verified": false,
+      "pgp04_v2_ci_context_restricted_to_branch": false,
+      "pgp04_v2_approved_sha_variable_updated": false,
+      "pgp04_v2_upload_protocol": "Official uploads.github.com REST release upload_url, stdin-only curl -H @-, no redirects, HTTP201 JSON validation; untested against provider",
+      "pgp04_v2_restricted_context_no_secret_smoke_code_present": true,
+      "pgp04_v2_no_secret_source_test_executed": false,
+      "pgp04_v2_release_writer_executed": false
     },
     {
       "id": "O04",
