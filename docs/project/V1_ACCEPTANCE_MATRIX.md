@@ -496,3 +496,21 @@ Diese Papierkopie ist ein **neuer echter Offline-Fortschritt**, aber kein unabh�
 | M0–M7, P4, R01–R18 | **0/8, 0/4, 0/18** | Historische Codingzählung 62/71 bleibt unverändert |
 
 **GH03 ist eine Key-Recovery-Teilabnahme, nicht die O03-Live-Backup- oder V1-Abnahme.**
+
+## 20.10.2026 – GH03 Key-Recovery-Teilabnahme und PGP03 Ciphertext-only Source/Writer-Vorprüfung
+
+| Nachweis | Status | Quelle / Grenze |
+| --- | --- | --- |
+| Zwei getrennt geschützte PGPony-Offlinepapierkopien | **PASS (Betreiberbestätigung)** | Besitzer bestätigt zweite Kopie nach Frage zur getrennten sicheren Verwahrung; genaue Orte nicht gespeichert |
+| Private-Key-Wiederherstellung aus zweiter Papierkopie | **PASS (Betreiberbestätigung)** | Nutzer bestätigt wiederhergestellten Key und erfolgreiche Entschlüsselung auch aus Kopie 2; kein externer Audit |
+| Passphrase offline und auf zweitem Gerät | **PASS (Betreiberbestätigung)** | Keine private Passphrase empfangen |
+| **GH03 OpenPGP Key-Recovery-Teil-Gate** | **PASS, owner-attested** | Öffentlicher PGP-FPR/cv25519 geprüft, iPhone/iPad/Papier 1+2, letzte no-secret CircleCI-QA grün; keine Real-Backup-Abnahme |
+| PGP03 nur künstliche SQL-/WordPress-Daten vor Transport OpenPGP-verschlüsseln | **LOKAL PASS** | `scripts/ci/orgavela-openpgp-synthetic-handoff.sh` SHA `a20169ada8779c4c394b48d26e5ffc93e6756f2f` |
+| Writer erhält ausschließlich Ciphertext, SHA-256-Sidecar und bereinigtes Manifest | **LOKAL PASS** | SHA-256 + Recipient-Key-ID + Manifest + drei-Dateien-Invariante geprüft, ohne Private Key oder Token |
+| PGP03 Negativtests | **9/9 LOKAL PASS** | `scripts/ci/test-orgavela-openpgp-synthetic-handoff.sh` SHA `b23fb8253813ee7a18765e30641eddb64abcfb2d` |
+| PGP03 No-Secret CircleCI Workflow und getrennte Source-/Writer-Jobs | **CODE DA / PROVIDER-RUN OFFEN** | default-off `enable_pgpony_ciphertext_handoff`; kein Context, nur Featurebranch |
+| PGP04 privater synthetischer immutable GitHub Release | **BLOCKIERT** | Separates Token-/Branchschutz-/Releasesicherheits-Gate fehlt |
+| Produktive GH05–08 mit realer DB und echtem unabhängigem Restore | **BLOCKIERT** | GH03 allein genügt ausdrücklich nicht |
+| V1 M0–M7 / P4 / R01–R18 | **0/8 · 0/4 · 0/18** | Historisch 62/71 Coding bleibt unverändert |
+
+**Aussagegrenze:** CI-Proof zu PGP03 ist **noch nicht** bestanden. Frühere grüne CI gehört nur zur älteren Public-Key-/Synthetik-Einzeljob-QA, nicht zum neuen Zwei-Job-Handoff.
