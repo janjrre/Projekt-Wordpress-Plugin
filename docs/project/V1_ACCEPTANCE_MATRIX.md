@@ -552,3 +552,14 @@ PGP03-PASS ist kein GH04-PASS, kein produktiver Backup-PASS und keine formale V1
 | Finaler Branch-Lock, SHA-Attestierung, restriktiver CircleCI Context | BLOCKIERT | Vor Secretzugriff nachweisen |
 
 **Grenze:** Lokale 13/13-Mock-QA ist nicht PGP04-E2E-Release-Abnahme. Versuchte GitHub-Erstellung einer versionierten Fake-API-Testdatei wurde durch Sicherheitskontrolle blockiert; deshalb Reproduzierbarkeit im Repository noch nicht belegt. Historisches PGP03 bleibt PASS, M0–M7 0/8, P4 0/4 und R01–18 0/18 unverändert.
+
+## 20.10.2026, 22:33 – PGP04 Konfigurations-Teilgate
+
+| Prüfung | Status | Beleg | 
+|---|---|---|
+| Privates GitHub-Zielrepo: Release Immutability in Settings → General | **PASS, Betreiber-Screenshot** | `orgavela-backups`, Checkbox aktiviert; kein neuer PGP04-Release erzeugt |
+| PGP04 CircleCI-Writer erst nach manueller Freigabe | **Code vorhanden, statisch geprüft** | Commit `6c8431fb1dab860ad52c77c1d88ca7eefd23ca64`, Approval-Job vor Writer; Provider-Test noch offen |
+| Reale GitHub-Release-API-Immutability und verschlüsselter Betreiber-Restore | **OFFEN** | Kein PGP04-Runtime-Lauf, kein Token |
+| GitHub finaler Branch-Lock und CircleCI Context-Restriktionen | **OFFEN** | Noch kein Freigabenachweis |
+
+Keine neue formale V1-Abnahme; M 0/8, P4 0/4, R 0/18.
