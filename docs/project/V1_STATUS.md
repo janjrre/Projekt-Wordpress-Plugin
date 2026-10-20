@@ -3,6 +3,13 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 20.10.2026 – GH06 geschützter Release-Testbranch noch nicht freigegeben
+
+- GH-06-Synthetik-**Offline-Test #209** bleibt 13/13 grün; genau eine neue Vorbereitungshandlung erfolgte: der separate Testbranch `test/orgavela-age-release-o03` wurde von GH06 Draft PR #21 aus SHA `7add8fb59ecc0de094e41363b637b0a1a764a6e9` angelegt.
+- **Unabhängige GitHub-Branchprüfung ergab `protected=false`.** Bis die branchspezifische PR-/Non-Bypass-/Non-Force-Push-/Non-Delete-Regel gespeichert und mindestens `protected=true` unabhängig bestätigt ist, **keinen CircleCI-GH06-Token/Context hinterlegen, keinen Remote-GitHub Release-Test starten**.
+- Im sicheren GH06-Pfad existiert weiterhin nur `enable_gh06_age_release_offline` (default false), ein Fake-GitHub-Testjob. Kein neuer produktiver oder tokenbetriebener CircleCI-Job, keine Releases, keine Kosten und keine realen Daten. Nächste direkte Betreiberaktion: [GitHub Branch Rules](https://github.com/janjrre/Projekt-Wordpress-Plugin/settings/branches) für den exakt bezeichneten Branch erstellen. [GH06-Runbook](../operations/W0_O03_GH06_AGE_RELEASE_PREPARATION_2026-10-20.md).
+- Unveränderte V1-Fakten: 62/71 normative Coding-Pakete historisch implementiert, M0–M7 formal 0/8, P4 0/4, Release R01–R18 0/18, V1 offen, gestapelte PRs offen. GH-03 unabhängige Owner-Recovery, GH-05 echte Quelle, GH-06 reale age-Veröffentlichung, GH-07 Restore und GH-08 Scheduler weiter blockiert.
+
 ## Update 20.10.2026 – GH-06 CircleCI Offline-Sicherheitstests 13/13 bestanden
 
 - **Pipeline [#209](https://app.circleci.com/pipelines/github/janjrre/Projekt-Wordpress-Plugin)**: genau der manuelle Job `gh06-age-release-offline-qa` auf Featurebranch `feat/gh06-synthetic-age-release-20261020`, Quellcommit `6f885c585557661e3250fc477e2464779cf01adc`, grün. Der unabhängige GitHub-Commitstatus `ci/circleci: gh06-age-release-offline-qa` bestätigt `success`, [Job #6](https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/6). Betreiber-Screenshot von stdout belegt **13/13 Python-Tests, 0 Fehler, OK** (0.147s).
