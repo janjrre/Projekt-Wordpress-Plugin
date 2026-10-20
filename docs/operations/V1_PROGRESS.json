@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-20",
-  "snapshot_basis": "W0/O03 PGPony OpenPGP work while owner plans an iPad restore (NOT YET COMPLETE): exact GitHub blobs for public-key preflight 94727028ad9dc3263c62ce954999967223efd017, synthetic packer 0bdf88dab604297a0fa21ba5456f346fbc878766 and updated synthetic pack test 0419da15160e885a83c0042514e4048a29a69a58 each verified by local git hash; all three executed in isolated local GnuPG 2.4.7 environment without network/CI tokens. PASS: owner PUBLIC key fingerprint Ed25519/cv25519 encrypt and no-secret import; synthetic disposable RSA key gzip/tar OpenPGP encrypt, decrypt and SHA256; 8/8 negative fail-closed cases including wrong fingerprint, secret input, production, overwrite, token presence, opt-in, unsafe ID, public-key symlink. New CircleCI manual opt-in enable_pgpony_openpgp_offline default FALSE on feature branch only with no secret context; prepared, NOT RUN, no CircleCI credits used. Owner original-iPhone decrypt attested earlier, iPad test only planned. Two offline protected PGPony private copies and independent recovery still missing; GH03/real GH05–08 blocked. V1 62/71 historical coding, formal 0/8 M, 0/4 P4 and 0/18 R unchanged.",
+  "snapshot_basis": "CircleCI manual owner-triggered PGPony/OpenPGP offline QA actually FAILED on source commit 76d8ebdf45a5c9b57c69c63e1212733d7bb9d41c (screenshot 2026-10-20 17:23 local): GnuPG/install PASS; step 'Exercise pinned owner PUBLIC key and synthetic-only roundtrip' returned exit status 1 with no useful diagnostics. Failure cause not established. No automatic re-run. Subsequent diagnostic-only fixes to branch `.circleci/config.yml` add stage messages and public-only tests add sanitized ERR line; GnuPG self-signature output captured to file (avoids potential pipefail). Exact two updated GitHub test blobs 3003f07073f8398e986546480c9b38d5a1506b44 and 04802b19a51ca1e68a3d538ad667e81b38d84323 verified by git hash and executed locally in isolated GnuPG 2.4.7 PASS, synthetic tests 8/8; no new CircleCI run. Owner iPad restore still pending, GH03 not accepted, production/CI secret access remains blocked; historical counts 62/71 coding, 0/8 M, 0/4 P4, 0/18 R unchanged.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -580,9 +580,22 @@
       "openpgp_qa_circleci_no_secret_context": true,
       "openpgp_qa_circleci_job_name": "pgpony-openpgp-offline-qa",
       "openpgp_qa_circleci_manual_runtime_passed": false,
-      "openpgp_qa_circleci_credits_used_by_this_task": false,
+      "openpgp_qa_circleci_credits_used_by_this_task": "unknown_user_triggered_run_observed",
       "openpgp_qa_no_real_backup_or_remote_release": true,
-      "openpgp_qa_status": "exact_blob_local_pass_manual_default_off_circleci_pending"
+      "openpgp_qa_status": "circleci_failed_on_pre_diagnostics_sha_76d8ebd_new_safe_diagnostics_local_pass_wait_new_provider_run",
+      "openpgp_qa_circleci_runs_observed": 1,
+      "openpgp_qa_circleci_last_run_status": "failed",
+      "openpgp_qa_circleci_last_run_source_commit": "76d8ebdf45a5c9b57c69c63e1212733d7bb9d41c",
+      "openpgp_qa_circleci_last_run_observation": "User screenshot: CircleCI job pgpony-openpgp-offline-qa red, install GnuPG and tools green ~6 seconds, synthetic QA step red exit status 1 (0 seconds), no intermediate stdout or identified failing test; workflow ~12 seconds. Exact provider job UUID and full logs not supplied.",
+      "openpgp_qa_circleci_last_run_failure_cause_confirmed": false,
+      "openpgp_qa_circleci_last_run_billable_credits": "unknown_check_plan_usage",
+      "openpgp_qa_last_local_diagnostic_public_key_test_blob_sha": "3003f07073f8398e986546480c9b38d5a1506b44",
+      "openpgp_qa_last_local_diagnostic_synthetic_test_blob_sha": "04802b19a51ca1e68a3d538ad667e81b38d84323",
+      "openpgp_qa_last_local_diagnostic_test_passed": true,
+      "openpgp_qa_last_local_diagnostic_gnupg_version": "2.4.7",
+      "openpgp_qa_last_local_diagnostic_negative_tests_passed": 8,
+      "openpgp_qa_last_local_diagnostic_negative_tests_total": 8,
+      "openpgp_qa_last_github_circleci_staging_blob_sha": "3f18856a0eec382a98e9c45b2b8d9b592ee012d5"
     },
     {
       "id": "O04",
