@@ -437,3 +437,18 @@ Kein Provider-PASS wird durch lokale grüne Tests ersetzt.
 | Formale GH03/M0–M7/P4/R01–R18-Abnahmen | **NICHT bestanden** | Kein V1-Release- oder Meilenstein-Signoff durch diesen Teiltest |
 
 **Dieser PASS ist ausschließlich die technische, synthetische CI-Prüfung auf benanntem GitHub-SHA.**
+
+## 20.10.2026 – GH03 Geräteunabhängige Entschlüsselung auf iPad, Offline-Recovery weiter ausstehend
+
+| Nachweis | Status | Bewertungsgrenze |
+| --- | --- | --- |
+| Neues PGPony-Gerät: iPad-Import der OrgaVela-Privatidentität | **PASS laut Betreiber** | „iPad-Import erfolgreich“; Importweg nicht ausdrücklich spezifiziert |
+| Vollständiger Hauptschlüssel-Fingerprint auf iPad stimmt | **PASS laut Betreiber** | Abgleich mit `7C9DC60D8E1B293E514696EB333D15A4D8BA625C` |
+| Externes synthetisches OpenPGP-Testarchiv auf iPad entschlüsselt | **PASS laut Betreiber** | Entschlüsselung als erfolgreich bestätigt; nicht selbst beobachtet, Sollcode nicht erneut wörtlich angegeben |
+| Echte separate, dauerhaft aufbewahrte Offline-Privatkey-Kopie #1 | **OFFEN** | Kein Nachweis über längerfristig gesichertes Medium |
+| Zweite unabhängig geschützte Offline-Kopie #2 / Recovery aus diesem Medium | **OFFEN** | iPad-Geräteimport allein ist nicht der Nachweis zweier physisch und technisch getrennter Datenträger |
+| Unabhängig abrufbare Passphrase | **OFFEN** | Keine Bestätigung, keine Offenlegung von Geheimnissen erwünscht |
+| GH03 formale Abnahme | **BLOCKIERT** | Erst Notfallwiederherstellung aus gesicherter Offlinekopie und getrennte Kopien belegen |
+| Private immutable GitHub-Releases, echte GH05–GH08, V1 R01–18 | **BLOCKIERT** | No-secret CircleCI synthetisch PASS, aber kein Produktiv-/Recovery-Gate freigegeben |
+
+**Operator-Attestation genügt für den Geräte-Funktionstest, nicht für die vollständige GH03-Schlüsselverlustwiederherstellung.**
