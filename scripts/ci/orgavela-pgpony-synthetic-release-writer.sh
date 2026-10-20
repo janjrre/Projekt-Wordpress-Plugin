@@ -29,6 +29,7 @@ sha="$(sha256sum "$work/$archive" | awk '{print $1}')"
 bytes="$(stat -c %s "$work/$archive")"
 (( bytes > 0 && bytes < 2147483648 )) || fail 'invalid archive size'
 jq -e --arg id "$id" --arg sha "$sha" --argjson bytes "$bytes" '
+  (. | keys | sort) == (["schema","backup_id","synthetic","contains_production_data","archive_sha256","archive_bytes","public_key_fingerprint","encrypted","source_components_encrypted"] | sort) and
   .schema == "orgavela-github-release-backup-public-manifest/v1" and
   .backup_id == $id and .synthetic == true and .contains_production_data == false and
   .encrypted == true and .source_components_encrypted == true and
@@ -74,16 +75,23 @@ for asset in "$archive" "$sidecar" manifest.json; do
 done
 assets="$(gh api "repos/$GITHUB_BACKUP_REPOSITORY/releases/$release_id/assets?per_page=100")" || fail 'asset listing failed'
 jq -e 'type=="array" and length==3 and all(.[]; .state=="uploaded")' <<<"$assets" >/dev/null || fail 'expected exactly three uploaded assets'
-for asset in "$archive" "$sidecar" manifest.json; do
-  aid="$(jq -er --arg n "$asset" '[.[] | select(.name==$n)] | if length==1 then .[0].id else empty end' <<<"$assets")" || fail "missing/duplicate remote asset $asset"
+verify_remote_asset_bytes() {
+  local stage="$1" listing asset aid temp
+  listing="$(gh api "repos/$GITHUB_BACKUP_REPOSITORY/releases/$release_id/assets?per_page=100")" || fail "remote listing unavailable at $stage"
+  jq -e 'type=="array" and length==3 and all(.[]; .state=="uploaded")' <<<"$listing" >/dev/null || fail "incorrect remote asset count at $stage"
+  for asset in "$archive" "$sidecar" manifest.json; do
+    aid="$(jq -er --arg n "$asset" '[.[] | select(.name==$n)] | if length==1 then .[0].id else empty end' <<<"$listing")" || fail "missing/duplicate remote asset $asset"
   temp="$(mktemp)"
   # Ensure raw binary response, not a JSON description mistaken for a download.
   gh api -H 'Accept: application/octet-stream' "repos/$GITHUB_BACKUP_REPOSITORY/releases/assets/$aid" >"$temp" || fail 'remote binary readback failed'
   cmp -s "$work/$asset" "$temp" || fail "remote asset mismatch: $asset"
-  rm -f "$temp"
-done
+    rm -f "$temp"
+  done
+}
+verify_remote_asset_bytes before_publish
 published="$(gh api -X PATCH "repos/$GITHUB_BACKUP_REPOSITORY/releases/$release_id" -F draft=false)" || fail 'could not publish test release'
 jq -e --arg tag "$tag" '.tag_name == $tag and .draft==false and .immutable==true' <<<"$published" >/dev/null || fail 'published release immutability not confirmed'
 confirmed="$(gh api "repos/$GITHUB_BACKUP_REPOSITORY/releases/$release_id")" || fail 'published release readback missing'
-jq -e --arg tag "$tag" '.tag_name==$tag and .immutable==true and .draft==false' <<<"$confirmed" >/dev/null || fail 'final immutable release readback failed'
+jq -e --arg tag "$tag" --argjson rid "$release_id" '.id==$rid and .tag_name==$tag and .immutable==true and .draft==false' <<<"$confirmed" >/dev/null || fail 'final immutable release readback failed'
+verify_remote_asset_bytes after_publish
 printf 'PGP04_SYNTHETIC_RELEASE_METADATA_VERIFIED=PASS\nPGP04_RELEASE_ID=%s\nPGP04_TAG=%s\nPGP04_OPERATOR_RESTORE=PENDING\n' "$release_id" "$tag"
