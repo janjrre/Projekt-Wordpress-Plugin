@@ -305,7 +305,7 @@ jobs:
             set -euo pipefail
             test "$CIRCLE_PROJECT_USERNAME" = janjrre
             test "$CIRCLE_PROJECT_REPONAME" = Projekt-Wordpress-Plugin
-            test "$CIRCLE_BRANCH" = security/pgp04-synthetic-release-20261020
+            test "$CIRCLE_BRANCH" = security/pgp04-synthetic-release-v2-20261020
             for key in GH_TOKEN GITHUB_TOKEN BACKUP_GITHUB_TOKEN SFTP_HOST SFTP_PASSWORD IONOS_SSH_HOST IONOS_SSH_PASSWORD BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE AGE_SECRET_KEY; do
               test -z "$(printenv "$key" || true)"
             done
@@ -336,9 +336,9 @@ jobs:
             set -euo pipefail
             test "$CIRCLE_PROJECT_USERNAME" = janjrre
             test "$CIRCLE_PROJECT_REPONAME" = Projekt-Wordpress-Plugin
-            test "$CIRCLE_BRANCH" = security/pgp04-synthetic-release-20261020
+            test "$CIRCLE_BRANCH" = security/pgp04-synthetic-release-v2-20261020
             sudo apt-get update -qq
-            sudo apt-get install -y --no-install-recommends gnupg jq gh coreutils >/dev/null
+            sudo apt-get install -y --no-install-recommends gnupg jq gh coreutils curl >/dev/null
             export ORGAVELA_PGP_SYNTHETIC_ONLY=YES
             export PGP04_OPERATOR_APPROVED=YES
             export GITHUB_BACKUP_REPOSITORY=janjrre/orgavela-backups
@@ -353,7 +353,7 @@ workflows:
           filters:
             branches:
               only:
-                - security/pgp04-synthetic-release-20261020
+                - security/pgp04-synthetic-release-v2-20261020
       # The operator must approve in CircleCI AFTER the no-secret producer succeeds.
       # The approval job has no environment and cannot see the writer Context.
       - pgp04-owner-approval:
@@ -363,7 +363,7 @@ workflows:
           filters:
             branches:
               only:
-                - security/pgp04-synthetic-release-20261020
+                - security/pgp04-synthetic-release-v2-20261020
       - pgp04-synthetic-release-writer:
           context:
             - orgavela-pgp04-release-only
@@ -372,7 +372,7 @@ workflows:
           filters:
             branches:
               only:
-                - security/pgp04-synthetic-release-20261020
+                - security/pgp04-synthetic-release-v2-20261020
 
   pgpony-ciphertext-handoff-manual:
     when: << pipeline.parameters.enable_pgpony_ciphertext_handoff >>
