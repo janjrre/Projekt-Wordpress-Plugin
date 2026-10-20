@@ -305,3 +305,17 @@ Dies ist ergänzende **synthetische Transport-Sicherheits-Evidenz** unter W0/O03
 | Produktions-GH05/06/07/08 | **OFFEN** | Keine Live-Sicherungen, kein Zeitplan |
 
 **GH06 synthetic E2E + Operator-Cleanup geschlossen**, aber W0/O03-Produktionsbackup sowie sämtliche **R01–R18 formal 0/18** bleiben offen. Diese Zeile ergänzt den vorherigen „cleanup OPEN“-Momentstand chronologisch, ohne historische Belege umzudeuten.
+
+## 20.10.2026 – GH03 Papier-Backup im Safe: neuer Sicherheits-Teilnachweis
+
+| GH03-Recoverykriterium | Ist | Evidenz |
+| --- | --- | --- |
+| Eigentümer besitzt native `age1…`-AgePony-Identität | zuvor lokal getestet | Betreiberangabe und früherer AgePony-Test; Original-iPhone-Vault nicht weitergeben |
+| PDF-Paper-Backup auf **Papier** vorhanden | **1 Kopie bestätigt** | Betreiber: eigener Drucker, ausgedrucktes PDF im Safe |
+| Zweite **physisch/räumlich getrennt geschützte** Offline-Kopie | **offen** | noch nicht bestätigt |
+| Papier-Backup-Passphrase/Notfallzugang | **unbekannt** | nicht nachgefragt, Passphrase niemals teilen |
+| Original-Recipient vs. nur aus Papier wiedergewonnener Recipient | **offen** | noch kein unabhängiger lokaler Test |
+| Nur mit Papier-Recovery-Key synthetische Datei entschlüsselt + SHA-256 bytegleich | **offen** | bisher nur Test im ursprünglichen AgePony-Vault |
+| GH03 formell `accepted` / GH05–08 echte Backups | **NEIN / gesperrt** | 1 Kopie ersetzt keine geprüfte Wiederherstellung oder operative Backup-Gates |
+
+**Entscheidung:** `gh03_offline_copy1_attested=true` ausschließlich als durch Betreiber belegter Papier-Druck-/Safe-Verwahrstatus, `gh03_offline_copy2_attested=false`, `gh03_formal_accepted=false`. Keine öffentlichen Secrets, keine neue CircleCI- oder produktive WordPress-Ausführung.
