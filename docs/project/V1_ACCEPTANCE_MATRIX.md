@@ -593,3 +593,15 @@ Die lokale Fake-GitHub-Testmatrix darf **nicht** als produktiver oder echter Git
 | CircleCI-/GitHub-Synthetic-E2E | **OFFEN** | Kein Token oder Provider-Lauf |
 
 Keine Hochstufung der V1-Abnahme. Stand M0–M7 0/8, P4 0/4, R01–R18 0/18.
+
+## 20.10.2026 – PGP04 Lock Save und SHA-Rückprüfung
+
+| Nachweis | Ergebnis | Einschränkung |
+|---|---|---|
+| GitHub Lock branch und No-Bypass sichtbar + Save changes gedrückt | **Betreiberbestätigt** | Screenshot und anschließende explizite Save-Bestätigung; API-Wirksamkeit nicht selbst überprüft |
+| PGP04-Testbranch-HEAD unverändert | **GitHub-Connector PASS** | `compare_commits` gegen `62c9524f09d9f0ad0e4eea0648cb1be14b051f0f`: identical, 0/0 |
+| PGP04 config/publisher Inhalte unverändert | **GitHub-Connector PASS** | Blobs `3cd7188ef14d7f5ad830b68f1a609251984b1d4e` / `6e207aefa7edcb9e9302efccacd88fa0c633287a` |
+| CircleCI Context SHA-Variable / Runtime-Access | **OFFEN** | Context UI-beschränkt, `PGP04_APPROVED_SHA` noch nicht gesetzt |
+| PGP04 echter synthetischer GitHub Release / Restore | **OFFEN** | Keine Token und kein CI-Run |
+
+V1-Zähler unverändert: historische Implementierung 62/71, M0–M7 0/8, P4 0/4, R01–R18 0/18.
