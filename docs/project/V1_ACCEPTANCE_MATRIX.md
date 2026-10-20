@@ -334,3 +334,16 @@ Dies ist ergänzende **synthetische Transport-Sicherheits-Evidenz** unter W0/O03
 | Produktive GH05–08/Release R01–18 | BLOCKIERT, 0/18 |
 
 Dies ist ein nicht-produktiver O03-Architekturwechsel; er erzeugt **keine** formale V1-Abnahme.
+
+## 20.10.2026 – PGP-02 Synthetik-Vorbereitung, nicht provider-abgenommen
+
+| Bestandteil | Status | Nachweis |
+| --- | --- | --- |
+| Public-only OpenPGP-Packer ohne Produktionsmodus | Code angelegt | `scripts/ci/orgavela-openpgp-synthetic-pack.sh`, Commit `64b0a81` |
+| Synthetischer lokaler GnuPG-Roundtrip mit temporärem Testschlüssel | PASS für lokalen unabhängigen Prototyp | lokales Bash/GPG, kein PGPony-Owner-Key, kein CI-SHA |
+| Testskript im Draft-Branch | Code angelegt, Lauf auf exaktem GitHub-SHA ausstehend | `scripts/ci/test-orgavela-openpgp-synthetic-pack.sh`, Commit `2e13391` |
+| GnuPG gegen PGPony v4/v6 Verschlüsselungs-Key | NICHT AUSGEFÜHRT | noch keine eigene PGPony-Identität für OrgaVela bestätigt |
+| Eigene OpenPGP-Recovery-Kopien + Restore | NICHT AUSGEFÜHRT | GH03 weiter offen |
+| GitHub OpenPGP immutable Release / produktive GH05-08 | NICHT AUSGEFÜHRT | erst nach expliziten Freigaben |
+
+Historische GH04-GPG- und GH06-age-CI-Belege bleiben unabhängig gültig, erfüllen diese neuen Owner-Key- und Produktiv-Gates **nicht**.
