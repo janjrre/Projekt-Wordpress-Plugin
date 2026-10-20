@@ -514,3 +514,23 @@ Diese Papierkopie ist ein **neuer echter Offline-Fortschritt**, aber kein unabh�
 | V1 M0–M7 / P4 / R01–R18 | **0/8 · 0/4 · 0/18** | Historisch 62/71 Coding bleibt unverändert |
 
 **Aussagegrenze:** CI-Proof zu PGP03 ist **noch nicht** bestanden. Frühere grüne CI gehört nur zur älteren Public-Key-/Synthetik-Einzeljob-QA, nicht zum neuen Zwei-Job-Handoff.
+
+## 20.10.2026 – PGP03 tatsächliche No-Secret-CircleCI Zwei-Job-Abnahme (18:57)
+
+| Test/Blocker | Status | Beleg |
+| --- | --- | --- |
+| GitHub Source SHA | **ABGEGLICHEN** | PR #25 Head `4eac786c3868dc4e79f1cf1dd16dc11b93512ff8` entspricht CircleCI-UI `4eac786` |
+| Synthetic Source OpenPGP | **PASS** | `pgpony-handoff-source`, ca. 21 s, `PGPONY_HANDOFF_CI_SOURCE=PASS` |
+| Keine Klartextbestandteile im Handoff | **PASS** | `PGPONY_WORKSPACE_PLAINTEXT=NONE`, nur drei erlaubte Workspace-Dateien laut eingefrorenem CI-Quellcode |
+| CircleCI-Workspace-Übergabe | **PASS** | 1,7 KiB hochgeladen, Writer hat Workspace erfolgreich eingebunden |
+| Synthetic Writer ohne Key/Token | **PASS** | `pgpony-handoff-writer`, ca. 12 s, `PGPONY_HANDOFF_CI_WRITER=PASS` |
+| Integritäts-/Empfänger-/Manifest-Checks und fail-closed | **PASS, 9/9** | `PASS: OpenPGP ciphertext-only producer/writer and 9 fail-closed regressions` |
+| Keine echte GitHub-Release-Veröffentlichung | **bestätigt aus Script/Log** | `PGPONY_RELEASE_UPLOAD=DISABLED` |
+| **PGP03 auf echte CircleCI-Zwei-Job-Grenze** | **PASS** | Zwei grüne Provider-Jobs/Workflow, Betreiber-Screenshots 18:57, ~37 s |
+| GH03 Owner-Key-Recovery | **PASS, Betreiberbestätigung** | Beide PGPony-Papierkopien und Wiederherstellungen, getrennt passphrase-wiederbeschaffbar; keine externe physische Prüfung |
+| PGP04 Secret-/Branchschutz für neuen verschlüsselten Remote-Release | **BLOCKIERT** | Aktueller PR #25 Featurebranch per GitHub API `protected=false`, Branchfilter schützt kein GH_TOKEN |
+| PGP04 neuer PGPony Ciphertext-Release in privatem `janjrre/orgavela-backups` | **NICHT AUSGEFÜHRT** | Nur ältere GH04-GPG- oder GH06-age-Synthetik-Ergebnisse bestehen separat |
+| Reale GH05–08, produktiver isolierter Restore, automatischer Plan | **BLOCKIERT** | Kein echter Capture/Remote Recovery/Release-Gate |
+| M0–M7 / P4 / Release-R01–R18 formal | **0/8 · 0/4 · 0/18** | Codinghistorie 62/71 unverändert |
+
+PGP03-PASS ist kein GH04-PASS, kein produktiver Backup-PASS und keine formale V1-Gesamtabnahme.
