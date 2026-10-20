@@ -664,3 +664,18 @@ Formale Abnahmezahlen unverändert: M0–M7 0/8, P4 0/4, R01–18 0/18; Codinghi
 | V2 tokenloser CI Provider-Run und E2E Release | **NICHT DURCHGEFÜHRT** | Keine Tokens, kein weiterer CircleCI-Run |
 
 Keine formale V1-Abnahme: Codinghistorie 62/71, M0–M7 0/8, P4 0/4, R01–18 0/18.
+
+## 21.10.2026, 00:14 – V2 Context-Umstellung, vor erstem V2-Providerlauf
+
+| Kontrolle | Status | Nachweisgrenze |
+|---|---|---|
+| Dedizierter Context `orgavela-pgp04-release-only` mit V2-only Branch | **BETREIBER-UI PASS** | Screenshot der gespeicherten genau einen Expression Restriction |
+| Nur OrgaVela Projekt/Repo/Owner; No-SSH/No-API-Config | **BETREIBER-UI PASS** | Name, Projektbeschränkung und vollständige Expression sichtbar |
+| Einziger Context-Wert `PGP04_APPROVED_SHA` endet `ef5e` | **BETREIBER-UI PASS, teilmaskiert** | GitHub V2 SHA endet `ef5e`; **voller 40-stelliger Wert nicht aus UI auslesbar** |
+| Kein GH_TOKEN in diesem Context | **BETREIBER-UI bestätigt** | nur eine Variable auf Screenshot sichtbar |
+| GitHub V2 Branch-HEAD stabil | **GITHUB-CONNECTOR PASS** | compare: `bead6a3386958bfc3f1bbc4c13b925506777ef5e` identical 0/0 |
+| CI-Konfiguration manuell default-off, source → tokenloser Context → Approval-HOLD → Writer | **CODE GEPRÜFT, NICHT AUSGEFÜHRT** | Git-Blob `d3170f9a4ecfb6b80ac0422042e94c457df6f77b` |
+| Realer V2 Source- und Context-Smoke | **AUSSTEHEND** | Ohne Token; Betreiber startet bewusst einmal manuell |
+| GitHub V2 Release + SHA256/immutable + PGPony-Restore | **AUSSTEHEND** | kein Token und keine Remote-Releasefreigabe |
+
+V1 formale Zahlen unverändert: M0–M7 0/8, P4 0/4, R01–R18 0/18, historische Codierung 62/71.
