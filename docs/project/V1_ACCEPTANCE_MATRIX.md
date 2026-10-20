@@ -391,3 +391,18 @@ Dies ist ein Fortschritt für die **Betreibergeräte-Interoperabilität**, nicht
 | Echte GH05–08-Backups / R01–18 | **BLOCKIERT** | weiter keine GH03-Recovery-Abnahme |
 
 **Interpretation:** Lokaler Code-QA-PASS ist keine vollständig abgenommene CircleCI-Pipeline, kein aus zweiter Offlinekopie geprüfter PGPony-Owner-Key und keine Produktionsfreigabe.
+
+## 20.10.2026 – PGPony CircleCI Fehlversuch und Diagnose
+
+| Kontrolle | Stand | Beleg/Abgrenzung |
+| --- | --- | --- |
+| Manueller CircleCI `pgpony-openpgp-offline-qa` | **FAIL** | Source SHA `76d8ebd...`, GnuPG-Installation PASS, Synthetic-QA-Step Exit 1 |
+| Konkrete Fehlursache | **OFFEN** | Screenshot zeigt nur Exit 1, keinen vollständigen Teiltest-Log |
+| Diagnostische Nachbesserung | **Code aktualisiert** | CircleCI Stage-Marker und sanitized ERR Script-/Zeilenangabe |
+| GnuPG-Signaturprüfung robuster | **lokal PASS** | Temporäres `gpg --check-sigs`-Log vermeidet potenzielles `grep -q`/`pipefail`-Verhalten; ursprüngliche Ursache nicht bewiesen |
+| Exakter neuer Public-Key-Testcode | **lokal PASS** | Blob `3003f07073f8398e986546480c9b38d5a1506b44`, GnuPG 2.4.7 |
+| Exakter neuer Archiv-Testcode | **lokal PASS** | Blob `04802b19a51ca1e68a3d538ad667e81b38d84323`, 8/8 negative Prüfungen |
+| CircleCI-Retest auf neuer HEAD | **AUSSTEHEND** | Neue manuelle Pipeline nach Creditprüfung statt Rerun auf alter Revision |
+| GH03 private Copy-2 Recovery / echte GH05–08 / V1 Gates | **OFFEN/BLOCKIERT** | Keine formale Abnahme |
+
+Kein Provider-PASS wird durch lokale grüne Tests ersetzt.
