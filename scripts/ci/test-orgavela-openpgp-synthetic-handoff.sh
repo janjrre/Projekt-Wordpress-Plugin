@@ -48,4 +48,4 @@ copy_fixture fingerprint
 jq '.public_key_fingerprint="0000000000000000000000000000000000000000"' "$tmp/fingerprint/manifest.json" > "$tmp/manifest.new"
 mv "$tmp/manifest.new" "$tmp/fingerprint/manifest.json"
 expect_reject 'reject wrong recipient fingerprint metadata' bash "$tool" writer "$tmp/fingerprint"
-echo 'PASS: OpenPGP ciphertext-only producer/writer and 8 fail-closed regressions'
+echo 'PASS: OpenPGP ciphertext-only producer/writer and 9 fail-closed regressions'
