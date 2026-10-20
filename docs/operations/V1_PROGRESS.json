@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-20",
-  "snapshot_basis": "2026-10-20 CircleCI actual manual GH05 synthetic parity pipeline #188 on exact source commit 590d530686356d641774a27ff4004aa27fd063aa: operator screenshots show overall SUCCESS duration 20s, synthetic-source 11s, synthetic-writer 3s, synthetic encrypted workspace uploaded (11 KiB); independent GitHub commit statuses ci/circleci: gh05-synthetic-source success job #4, gh05-synthetic-writer success job #5 with provider URLs. Verified committed CircleCI config has mandatory official age install, two Python test suites, disposable-key synthetic age encrypt/decrypt, writer checks and no-context/default-off branch-only gating. Exact source match verified. Raw stdout test counts/phase JSON not retrieved; do not invent them. This is GH05-DP synthetic producer/writer technical PASS only; no real OrgaVela database/WordPress source captured or uploaded, no GitHub release, no actual isolated full restore, no schedule, and owner GH03 independent recoverability still unproven. All V1 normative coding/formal release counts unchanged; PR #20 still draft/unmerged.",
+  "snapshot_basis": "2026-10-20 GH06 age-only GitHub Release synthetic transport Draft PR #21 stacked on GH05 Draft #20. Adapted GH04 artificial GPG uploader/full numeric-ID asset readbacks before/after publish and independent remote-only restore to native age X25519. Added 13 OFFLINE fake-gh/negative-security tests and default-FALSE no-secret CircleCI GH06 QA job, not yet run. Remote GH06 CircleCI token job deliberately NOT defined, test branch/context not yet approved; no Release, token, CI job, host, paid action or backup executed. GitHub static readback confirms five new/changed files and gates. GH05 CI #188 succeeded at exact older SHA 590d530 with two synthetic jobs; GH03 owner independent offline recovery still unverified. V1 62/71 historical coding and formal acceptances 0/8 M, 0/4 P4, 0/18 R unchanged.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -375,7 +375,23 @@
       "gh05_parity_provider_evidence": "2026-10-20 operator screenshots CircleCI pipeline #188, producer SUCCESS 11s, writer SUCCESS 3s, workspace upload 11 KiB; independently authenticated GitHub statuses both SUCCESS on same full SHA",
       "gh05_parity_source_pipeline_duration_seconds": 20,
       "gh05_parity_test_count_raw_stdout_verified": false,
-      "gh05_parity_real_data_captured": false
+      "gh05_parity_real_data_captured": false,
+      "gh06_age_transport_draft_status": "code_statically_verified_offline_unit_tests_not_run",
+      "gh06_age_transport_pr": 21,
+      "gh06_age_transport_branch": "feat/gh06-synthetic-age-release-20261020",
+      "gh06_age_transport_scripts": [
+        "scripts/ci/orgavela-upload-github-release-age-synthetic.sh",
+        "scripts/ci/orgavela-github-release-age-remote-e2e.sh"
+      ],
+      "gh06_age_transport_tests_file": "scripts/ci/test_orgavela_age_release_offline.py",
+      "gh06_age_transport_offline_tests_defined": 13,
+      "gh06_age_transport_offline_tests_passed": false,
+      "gh06_age_transport_offline_ci_run": null,
+      "gh06_age_transport_actual_release_uploaded": false,
+      "gh06_age_transport_immutable_age_release_verified": false,
+      "gh06_age_transport_source": "Based on already accepted GH04 synthetic GPG release/restore transport; adapted to native age X25519 in separate Draft PR #21; GitHub readback of source only",
+      "gh06_age_transport_ci_flag": "enable_gh06_age_release_offline (boolean default false), branch feat/gh06-synthetic-age-release-20261020, no secrets or cloud calls; no live GH06 remote job configured",
+      "gh06_age_transport_live_blockers": "First perform offline no-secret CircleCI QA at pinned SHA; then protect separate GH06 remote test branch and verify project/branch restricted CircleCI Context, short-lived only orgavela-backups PAT and Free quota for optional synthetic-only immutable release. GH03 independent offline owner recovery remains missing. No production backups/cron."
     },
     {
       "id": "O04",
@@ -761,7 +777,7 @@
   },
   "immediate_next": [
     "GH-03: owner confirms native AgePony age X25519 identity, local iOS paper PDF and SUCCESS of same-device artificial note encrypt/decrypt on 2026-10-19. This is NOT independent offline recovery. No USB media available, owner chooses temporary local-only storage; risk of device loss remains. Keep GH-03 OPEN until two separately secured offline recovery copies and copy-2 synthetic restore are proven. Never transmit private PDF/key/QR/passphrase.",
-    "GH05-DP SYNTHETIC two-job producer/writer: CI pipeline #188 (source job #4 + writer #5) both independently GitHub status SUCCESS on 590d530686356d641774a27ff4004aa27fd063aa; do not rerun. Next: retain PR #20 Draft pending staged PR #17/#18 integration, review full job logs if exact suite count needed, prepare native-age synthetic immutable GitHub Releases writer with separate no-secret and token contexts as a distinct GH06 project step. No real OrgaVela backup/cron before owner GH-03 independently verified recoverability and GH-05/06/07 production gates.",
+    "GH06 Stage A: run one opt-in no-secret/offline CircleCI job gh06-age-release-offline-qa via enable_gh06_age_release_offline=true on exact config and checkout branch feat/gh06-synthetic-age-release-20261020, with GH05 flag false, after Free-credit sanity check. Confirm new tests pass at pinned SHA. No upload or secrets. Subsequent GH06 Stage B synthetic private GitHub age Release requires separate protected branch test/orgavela-age-release-o03 and restricted Context/token setup, no operator private key. GH03 independent recoverability still blocks any real backup.",
     "GH-08 only after GH-07 full actual restore: check IONOS provider recovery points, Free-plan credit availability, secure scheduling, retention and alerting. No automatic backup or pruning approved yet."
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
