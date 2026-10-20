@@ -594,3 +594,11 @@ Der [Masterplan v2.11](../operations/V1_ACCEPTANCE_PLAN.md) bleibt normativ unve
 **Nächste Sicherheitshürde:** GH03 Owner age-Key wurde mit AgePony auf einem iPhone lokal getestet und ein PDF unter „Auf meinem iPhone/iPad“ angelegt, aber keine unabhängig verwahrte geschützte zweite Offline-Kopie und keine Kopie-2-Wiederherstellung nachgewiesen. Ohne geeignete zweite physische Sicherung noch **kein** realer Backup-Writer/Restore/Schedule. GH05 darf nur synthetisch vorbereitet werden.
 
 **V1 unverändert:** Coding historisch 62/71, M0–M7 0/8 formal, P4-01…04 0/4, Release R01–R18 0/18, PR #21 weiterhin Draft/unmerged und OrgaVela Alpha.2 nicht aus diesem Testbranch aktualisiert.
+
+## 20.10.2026 – GH03: AgePony-Paper-Backup auf Papier im Safe (Teilnachweis)
+
+Der Betreiber meldet: eigener Drucker vorhanden, AgePony-Backup-PDF **bereits gedruckt und im Safe verwahrt**. Das hebt den bisherigen Blocker „nur Originalgerät und PDF im selben iPhone/iPad“ teilweise auf: **eine physische Offline-Papierkopie ist laut Betreiber vorhanden**. Weder die Lesbarkeit des Ausdrucks noch seine sichere Passphrasen-Verwahrung noch die rekonstruierbare `age1…`-Identität sind unabhängig geprüft. Eine zweite, getrennt geschützte physische Kopie und ein vollständiger synthetischer Entschlüsselungstest **nur** mit einem aus dem Papierausdruck wiederhergestellten privaten Schlüssel stehen noch aus.
+
+**Sicherer nächster Schritt:** Auf einem separaten vertrauenswürdigen Offlinegerät/testweise isolierten Profil eine **synthetische** age-Datei allein durch aus Papier rekonstruierten Schlüssel entschlüsseln, öffentlichen Empfänger und SHA256 des entschlüsselten Inhalts vergleichen, ohne ursprüngliche iPhone-AgePony-Identität zu ändern. Vorab Passphrase-Schutz ohne Geheimnisoffenlegung klären und zweite physische Kopie an anderem Ausfallort sichern. Keine echten OrgaVela-/MariaDB-Daten oder GH05–GH08-Schedules, bis sämtliche Recovery- und Realbackup-Gates erfüllt sind.
+
+**V1-Status:** W0/O03 weiterhin **partial**, GH03 weiterhin **nicht formal akzeptiert**, synthetischer GH06-Test zuvor abgeschlossen. Historisches Coding 62/71, M0–M7 0/8 formal, P4 0/4, Release R01–18 0/18; keine neue PR-Integration/Live-Änderung.
