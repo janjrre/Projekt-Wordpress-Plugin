@@ -679,3 +679,18 @@ Keine formale V1-Abnahme: Codinghistorie 62/71, M0–M7 0/8, P4 0/4, R01–18 0/
 | GitHub V2 Release + SHA256/immutable + PGPony-Restore | **AUSSTEHEND** | kein Token und keine Remote-Releasefreigabe |
 
 V1 formale Zahlen unverändert: M0–M7 0/8, P4 0/4, R01–R18 0/18, historische Codierung 62/71.
+
+## 21.10.2026, 00:29 – PGP04 V2 no-secret Provider-Evidence
+
+| Kriterium | Ergebnis | Evidenz |
+|---|---|---|
+| V2 Quelle auf genehmigter SHA | PASS | CircleCI Prefix bead6a3, Github Compare kompletter Commit bead6a3386958bfc3f1bbc4c13b925506777ef5e identical 0/0 |
+| No-Token Source inkl. 6 fruehe Negativtests | CIRCLECI PASS | Job ~10s, PGP04_OFFLINE_EARLY_REJECTION_TESTS=6/6 PASS, PGP04_V2_NO_SECRET_PREFLIGHT=PASS |
+| PGPony OpenPGP Ciphertext und Workspace | CIRCLECI PASS | PGPONY_HANDOFF_PRODUCER=PASS, PGPONY_WORKSPACE_PLAINTEXT=NONE, PGP04_SOURCE_CIPHERTEXT_ONLY=PASS, Workspace 1,7 KiB |
+| Context mit voller SHA und ohne Token | CIRCLECI PASS | Job ~4s, PGP04_CONTEXT_ACCESS=PASS, PGP04_CONTEXT_TOKEN=NONE, SHA gleich CIRCLE_SHA1 |
+| Manueller Approval-Hold vor Writer | HOLD | Owner Screenshot, Writer NOT RUN |
+| V2 vollstaendige lokale Mock-API-Matrix | UNVOLLSTAENDIG | 8 Einzelresultate wie erwartet; Gesamtlauf Timeout |
+| Verschluesseltes GitHub-Release, Immutability und Remote SHA-Readback | OFFEN | Kein Token, kein Writer, keine neuen Release-Assets |
+| iPad Besitzer-Restore, Tokenwiderruf | OFFEN | Erst nach gesonderter Freigabe |
+
+V1 formal unveraendert: M 0/8, P4 0/4, R01-18 0/18, historisch 62/71 implementiert.
