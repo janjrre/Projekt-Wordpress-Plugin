@@ -374,3 +374,20 @@ Historische GH04-GPG- und GH06-age-CI-Belege bleiben unabhängig gültig, erfül
 | GH03 endgültig / produktive GH05–08 | **NICHT ABGENOMMEN** | Candidate-Key bleibt produktiv gesperrt |
 
 Dies ist ein Fortschritt für die **Betreibergeräte-Interoperabilität**, nicht für eine nachweisbar vom Smartphone-Verlust unabhängige Recovery oder formale V1-Abnahme.
+
+## 20.10.2026 – OpenPGP-QA im echten, Git-Hash-abgeglichenen Testskript
+
+| Prüffall | Resultat | Belastbarer Nachweis |
+| --- | --- | --- |
+| `scripts/ci/orgavela-openpgp-synthetic-pack.sh` Skriptidentität | PASS | GitHub Blob SHA = lokal `git hash-object` `0bdf88dab604297a0fa21ba5456f346fbc878766` |
+| `scripts/ci/test-orgavela-openpgp-synthetic-pack.sh` Skriptidentität | PASS | Blob `0419da15160e885a83c0042514e4048a29a69a58` |
+| `scripts/ci/test-orgavela-pgpony-public-key.sh` Skriptidentität | PASS | Blob `94727028ad9dc3263c62ce954999967223efd017`; Public .asc Blob ebenfalls Git-hash-abgeglichen |
+| Öffentlicher PGPony-Key, v4 Ed25519/cv25519, Fingerprints, lokale Verschlüsselung | PASS | GnuPG 2.4.7; keine Owner-Private-Daten |
+| Synthetisches PGP-Archiv erzeugen / entschlüsseln / SHA256 | PASS | nur temporärer Testschlüssel und künstliche Dateien |
+| Negativtests falscher Fingerprint, synthetischer Private-Key-Input, Prod-Modus, vorhandene Ausgabe, fiktives `GH_TOKEN`, Opt-in fehlt, ungültige ID, Symlink | **8/8 PASS** | alle fehlertoleranzprüfenden Aufrufe endeten erwartungsgemäß mit Fehlercode |
+| Neuer CircleCI-Parameter `enable_pgpony_openpgp_offline` | Code: Default `false` | Featurebranch-Filter, keine Secret-Contexts, kein CI-Ausführungslauf |
+| CircleCI-PGPony-Job auf exakt diesem PR HEAD | **AUSSTEHEND** | nicht automatisch grün behaupten |
+| iPad-Kopie und unabhängige PGPony-Recovery | **AUSSTEHEND** | Betreiber kündigte Test an; noch kein Ergebnis gemeldet |
+| Echte GH05–08-Backups / R01–18 | **BLOCKIERT** | weiter keine GH03-Recovery-Abnahme |
+
+**Interpretation:** Lokaler Code-QA-PASS ist keine vollständig abgenommene CircleCI-Pipeline, kein aus zweiter Offlinekopie geprüfter PGPony-Owner-Key und keine Produktionsfreigabe.
