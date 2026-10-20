@@ -1,3 +1,5 @@
+**SUPERSEDED FOR NEW ORGAVELA BACKUPS, 20.10.2026:** Following owner decision to adopt PGPony/OpenPGP, this age-specific format choice is retained only as **historical record**. Current binding decision: [W0_O03_PGPONY_OPENPGP_MIGRATION_ADR_2026-10-20.md](W0_O03_PGPONY_OPENPGP_MIGRATION_ADR_2026-10-20.md). Do not delete older AgePony key or old synthetic age evidence.
+
 # W0/O03 / GH-03 – Entscheidung zur produktiven Backup-Verschlüsselung und Recovery
 
 **Status:** GH-03-Architekturentscheidung getroffen; **Owner-Key und Recovery-Abnahme ausstehend**  
