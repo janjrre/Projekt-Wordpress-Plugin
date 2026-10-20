@@ -5,11 +5,39 @@
 version: 2.1
 
 parameters:
+  enable_gh06_age_release_offline:
+    type: boolean
+    default: false
+
   enable_gh05_synthetic_parity:
     type: boolean
     default: false
 
 jobs:
+  # No secrets, no GitHub API, no source access: offline fake-provider gates.
+  gh06-age-release-offline-qa:
+    docker:
+      - image: cimg/python:3.12
+    resource_class: small
+    working_directory: ~/orgavela-gh06-offline
+    steps:
+      - checkout
+      - run:
+          name: Reject unsafe GH06 age inputs without real GitHub API
+          command: |
+            set -euo pipefail
+            test "$CIRCLE_PROJECT_USERNAME" = "janjrre"
+            test "$CIRCLE_PROJECT_REPONAME" = "Projekt-Wordpress-Plugin"
+            test "$CIRCLE_BRANCH" = "feat/gh06-synthetic-age-release-20261020"
+            for key in GH_TOKEN BACKUP_GITHUB_TOKEN SFTP_HOST SFTP_PASSWORD SSH_PRIVATE_KEY AGE_SECRET_KEY BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE; do
+              test -z "$(printenv "$key" || true)" || exit 1
+            done
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends jq >/dev/null
+            bash -n scripts/ci/orgavela-upload-github-release-age-synthetic.sh
+            bash -n scripts/ci/orgavela-github-release-age-remote-e2e.sh
+            python3 -m unittest discover -v -s scripts/ci -p 'test_orgavela_age_release_offline.py'
+
   # Retain the existing no-secret CircleCI pilot semantics from Draft PR #17.
   # This pilot executes ONLY on its own ci/circleci-free-pilot-o03 branch.
   offline-connection-smoke:
@@ -109,6 +137,15 @@ jobs:
             echo 'GH05_PARITY_PRODUCTION_CAPTURE=disabled'
 
 workflows:
+  gh06-age-release-offline-manual:
+    when: << pipeline.parameters.enable_gh06_age_release_offline >>
+    jobs:
+      - gh06-age-release-offline-qa:
+          filters:
+            branches:
+              only:
+                - feat/gh06-synthetic-age-release-20261020
+
   connection-pilot-only:
     jobs:
       - offline-connection-smoke:
