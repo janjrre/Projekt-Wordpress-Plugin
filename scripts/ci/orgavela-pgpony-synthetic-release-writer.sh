@@ -14,7 +14,7 @@ fail(){ printf 'PGP04_REFUSED: %s\n' "$1" >&2; exit 1; }
 for key in GITHUB_TOKEN BACKUP_GITHUB_TOKEN AGE_SECRET_KEY BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE ORGAVELA_BACKUP_PRIVATE_KEY SFTP_HOST SFTP_PASSWORD SSH_PRIVATE_KEY IONOS_SSH_HOST IONOS_SSH_PASSWORD GOOGLE_DRIVE_TOKEN_JSON; do
   [[ -z "${!key:-}" ]] || fail "unexpected credential: $key"
 done
-for cmd in gh jq sha256sum stat gpg awk grep find; do command -v "$cmd" >/dev/null || fail "missing $cmd"; done
+for cmd in gh jq sha256sum stat gpg awk grep find cmp mktemp; do command -v "$cmd" >/dev/null || fail "missing $cmd"; done
 work="${1:-}"
 [[ "$work" == /* && "$work" != / && -d "$work" && ! -L "$work" ]] || fail 'invalid ciphertext workspace'
 id='orgavela-synthetic-pgpony-handoff-001'
@@ -39,7 +39,7 @@ jq -e --arg id "$id" --arg sha "$sha" --argjson bytes "$bytes" '
 packets="$(gpg --batch --list-packets "$work/$archive" 2>/dev/null || true)"
 grep -q '^:pubkey enc packet:' <<<"$packets" || fail 'no public-key encryption'
 grep -q '^:encrypted data packet:' <<<"$packets" || fail 'no encrypted payload'
-grep -q 'keyid CE2FD9E58CC6484AF1DE' <<<"$packets" || fail 'wrong encryption subkey'
+grep -q 'keyid D9E58CC6484AF1DE' <<<"$packets" || fail 'wrong encryption subkey'
 # Pin the branch revision that was reviewed and locked. Only explicit commit value is permitted.
 [[ "${PGP04_APPROVED_SHA:-}" =~ ^[[:xdigit:]]{40}$ ]] || fail 'approved commit SHA absent'
 [[ "${CIRCLE_SHA1:-}" == "$PGP04_APPROVED_SHA" ]] || fail 'running source SHA differs from reviewed code'
