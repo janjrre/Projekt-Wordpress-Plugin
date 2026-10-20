@@ -3,6 +3,12 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 20.10.2026 – GH06 CircleCI-Context eingeschränkt, zusätzliche API-Config-Sperre ausstehend
+
+- **Betreiber-Screenshots:** eigener CircleCI-Context `orgavela-age-release-tests`, noch keine Environment Variables; Project Restriction ausschließlich `Projekt-Wordpress-Plugin`; Expression Restriction genau `pipeline.git.branch == "test/orgavela-age-release-o03" and not job.ssh.enabled`. Group `All members` ist der Default; Projekt und Expression gelten laut CircleCI weiterhin zusätzlich (AND). GitHub-Testbranch `protected=true` unabhängig bestätigt.
+- **Ausstehende Nachschärfung vor PAT:** Expression um `and not (pipeline.config_source starts-with "api")` ergänzen, damit unversionierte API-Konfigurationen nicht an künftige Release-Secrets kommen. Für maximale Zugriffsbeschränkung nach Betreiber-/Admin-Prüfung optional Default-Gruppe `All members` entfernen (nur Org-Admins). GitHub-Branchschutz-Einzelregeln wegen API-403 weiterhin im UI zu bestätigen. Kein Secret oder Remote-Job freigeben.
+- **Technischer Status:** GH06 synthetische Offline-Tests CircleCI #209 weiter 13/13 PASS, echte age-Release-Remote-Tests **noch nicht durchgeführt**; token-bearing Job nicht ausgerollt, keine tatsächlichen Backups, keine Kosten. GH03 unabhängige AgePony-Recovery bleibt ausstehend. V1 62/71, M0–M7 0/8, P4 0/4, R01–R18 0/18, PR-Integration offen.
+
 ## Update 20.10.2026 – GH06 age Release-Testbranch nach Betreiber-Änderung geschützt
 
 - **GitHub-Sicherheitsstatus bestätigt:** `test/orgavela-age-release-o03` meldet nach Betreiber-Einrichtung per unabhängiger Branch-API `protected=true`. Vorheriger Zustand `false` ist behoben. Die detaillierte Protection-API gibt jedoch `403` zurück – genaue Einzelcheckboxen (PR-Pflicht, Bypass, Force Pushes, Deletion) sind **nicht** vom Assistenten verifiziert. Required-Status-Checks sind derzeit laut Branch-Ansicht nicht erzwungen. Kein vollständiger Sicherheitsgate-PASS für Remote-Tokens.
