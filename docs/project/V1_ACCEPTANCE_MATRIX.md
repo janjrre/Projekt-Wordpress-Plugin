@@ -406,3 +406,16 @@ Dies ist ein Fortschritt für die **Betreibergeräte-Interoperabilität**, nicht
 | GH03 private Copy-2 Recovery / echte GH05–08 / V1 Gates | **OFFEN/BLOCKIERT** | Keine formale Abnahme |
 
 Kein Provider-PASS wird durch lokale grüne Tests ersetzt.
+
+## 20.10.2026 – Zweiter PGPony-CircleCI-Fehler: genaue Zeile 27, Bitlängenassertion korrigiert
+
+| Prüffall | Ergebnis | Konkreter Beleg |
+| --- | --- | --- |
+| Manueller CircleCI Lauf 2 auf Commit `49ace9d...` | **FAIL** | Step `public_key_preflight`, `test-orgavela-pgpony-public-key.sh` **Zeile 27**, `exit=1` |
+| GnuPG-Colons-Public-Key-Verifikation alt | **zu strikt** | Regex verlangt fest `:255:22:`, obwohl Längenanzeige nicht stabil ist; beobachteter CI-Zeilenfehler eindeutig, genaue CI-GnuPG-Längenanzeige nicht gezeigt |
+| Korrigierter öffentlicher Schlüsseltest | **lokal PASS** | Commit `22952acf...`, GitHub Blob `1f23cbbd625cb60e51b57f4db2643f5fee3ec162`, exakter Datei-Hash lokal bestätigt |
+| Variantenprüfung 255/256 Bit | **lokal PASS** | Primär-Algorithmus 22 und Encryption-Subkey-Algorithmus 18 mit Capability e; Fingerprints weiterhin vollständig angeheftet |
+| CircleCI-Test auf korrigiertem Commit | **AUSSTEHEND** | Kein Run 3, keine Provider-Abnahme |
+| Owner Private-Key Copy 2 / GH03 / reale GH05–08 | **BLOCKIERT** | Noch kein unabhängig geprüfter Backup-Restore |
+
+**Gezielt bekannte Fehlerstelle entfernt; erneuter Provider-PASS darf nicht vor tatsächlichem Lauf behauptet werden.**
