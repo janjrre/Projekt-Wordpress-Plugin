@@ -706,7 +706,14 @@
       "pgp04_lock_save_evidence": "Operator confirmed clicking Save changes after GitHub branch-protection edit, following screenshot of Lock branch + Do not allow bypass + Allow force pushes off and matching 1 branch; owner attestation 2026-10-20.",
       "pgp04_exact_sha_verified_after_operator_save": "62c9524f09d9f0ad0e4eea0648cb1be14b051f0f",
       "pgp04_sha_verified_api": "GitHub compare identical, ahead_by=0 behind_by=0 vs locked candidate",
-      "pgp04_approved_sha_context_variable_configured": false
+      "pgp04_approved_sha_context_variable_configured": true,
+      "pgp04_approved_sha_context_variable_name_operator_ui_confirmed": true,
+      "pgp04_approved_sha_context_variable_suffix_ui": "1f0f",
+      "pgp04_approved_sha_context_variable_full_value_verified": false,
+      "pgp04_approved_sha_context_variable_evidence": "Operator screenshot 2026-10-20 23:11 local time: only variable PGP04_APPROVED_SHA shown in context orgavela-pgp04-release-only, masked value ending 1f0f; full 40-character value cannot be independently read.",
+      "pgp04_context_gh_token_present_operator_ui": false,
+      "pgp04_no_secret_source_ci_run_executed": false,
+      "pgp04_exact_sha_verified_after_sha_context_screenshot": "62c9524f09d9f0ad0e4eea0648cb1be14b051f0f"
     },
     {
       "id": "O04",
