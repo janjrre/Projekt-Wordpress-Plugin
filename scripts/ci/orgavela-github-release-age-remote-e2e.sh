@@ -26,7 +26,7 @@ tar -cf "$root/input.tar" -C "$root/input" data.txt
 age-keygen -o "$root/synthetic-test-identity.txt" >/dev/null 2>&1
 recipient="$(age-keygen -y "$root/synthetic-test-identity.txt")"
 [[ "$recipient" == age1* ]] || fail 'unexpected synthetic test recipient'
-backup_id="orgavela-age-synthetic-ci-\${CIRCLE_BUILD_NUM:?}"
+backup_id="orgavela-age-synthetic-ci-${CIRCLE_BUILD_NUM:?}"
 archive="$root/work/$backup_id.tar.age"
 age -r "$recipient" -o "$archive" "$root/input.tar"
 age -d -i "$root/synthetic-test-identity.txt" -o "$root/recovered.tar" "$archive"
