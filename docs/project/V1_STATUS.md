@@ -3,6 +3,13 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 20.10.2026 – GH_TOKEN vom Betreiber hinterlegt, GH06 Release-Test bleibt vor Approval angehalten
+
+- Betreiber bestätigt `GH_TOKEN hinterlegt` im vorher vereinbarten CircleCI-Context `orgavela-age-release-tests`. **Nur Betreiberbestätigung**: kein Tokenwert gelesen, keine unabhängige CircleCI-Variablen-API, Scope oder Ablaufdatum geprüft; niemals Token in Chat/GitHub-Dokumente oder Screenshots bringen.
+- GitHub-Testbranch `test/orgavela-age-release-o03` noch `protected=true`, HEAD `eba067913eb0290b2a95e40029f77e3b803ed924`; PR #24 merged; synthetischer age GitHub-Release-Workflow `enable_gh06_age_release_remote` weiterhin `default=false` und hat separaten Hold `gh06-age-release-manual-approval`. **Keine neue Pipeline, kein Approval, kein GitHub Release** durch den Assistenten gestartet.
+- **Nächste Betreiberhandlung:** Freie CircleCI-Credits unter Plan/Usage erneut prüfen. Danach höchstens einen manuellen Pipeline-Trigger auf Config- und Checkout-Branch `test/orgavela-age-release-o03`, NUR Boolean `enable_gh06_age_release_remote=true`, alle anderen Flags false. Wenn `gh06-age-release-manual-approval` auf **On Hold** steht, Screenshot mit Job/Branch/Commit teilen und **NICHT auf Approve klicken**, bevor das Target und die Freigabegrenzen kontrolliert sind. Bei Kostenanforderung/unbekannten Jobs/fehlender Hold sofort stoppen. Nach Test/Abbruch Token widerrufen und Context-`GH_TOKEN` löschen.
+- Keine Betreiber-AgePony-Recovery-Identity in CI, keine echten WordPress-/MariaDB-/IONOS-Backups. GH03 unabhängige Owner-Recovery fehlt. V1-Zähler weiterhin 62/71 normative Codingpakete, M0–M7 formale 0/8, P4 0/4, Release-Gates 0/18, gestapelte PR-Integration offen.
+
 ## Update 20.10.2026 – GH06 Context #283 PASS und geschützter Synthetic-PR24-Merge
 
 - **GH06 Context:** Post-Gruppenwiederherstellungs-CircleCI Pipeline #283, GitHub Commit `cb22a2b434ee18ef79811afd3c99f47a7ac36a4b`, Job `gh06-age-context-smoke` [#8](https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/8), Providerstatus `success`. Betreiberlog: `GH06_CONTEXT_ACCESS=PASS`, `GH06_CONTEXT_SECRETS=NONE` (nur explizit abgefragte Namen) und `GH06_GITHUB_RELEASE_UPLOADED=NO`.
