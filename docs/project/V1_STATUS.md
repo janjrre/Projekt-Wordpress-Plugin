@@ -620,3 +620,11 @@ Der Betreiber meldet: eigener Drucker vorhanden, AgePony-Backup-PDF **bereits ge
 **Evidenzgrenze:** Eine lokal separat erstellte OpenPGP-Synthetik-Probe lief erfolgreich; **die exakt committed Version ist bislang nicht als CI-Lauf oder gegen einen echten PGPony-Eigentümerschlüssel geprüft**. Ein anschließender Abruf der neuen GitHub-Rohdateien in der lokalen Testlaufzeit schlug aufgrund nicht verfügbarer DNS/Internetverbindung fehl. Kein automatisches Hochstufen auf bestandenes PGP-02/03/04. Der spätere Betreiber kann einen kostenfreien, ausdrücklich manuellen no-secret CI-Run auf genau geprüftem Commit separat freigeben; keine GH_TOKEN/IONOS-Credentials dafür.
 
 **Nächste Priorität:** PGPony-Key auf Betreibergerät erstellen, v4/encryption-subkey-Kompatibilität mit GnuPG unabhängig prüfen, 2 physisch getrennte gesicherte OpenPGP-Private-Key-Kopien samt Notfallpassphrase und getrennte Restore-Probe; ohne solche Nachweise keine echten GH05–08 Backups. Projektstände bleiben **62/71 Coding, 0/8 M, 0/4 P4, 0/18 R**, V1 offen.
+
+## 20.10.2026 – Neuer PGPony-Owner-Schlüssel laut Betreiber erzeugt (GH03 Teilfortschritt)
+
+Betreiber meldet nach OpenPGP-Migrationsauftrag: **PGPony-Schlüssel erstellt**. Im verbindlichen `V1_PROGRESS.json` unter W0/O03 ist die Erzeugung deshalb als **owner-attested** markiert. **Noch nicht geprüft**: ob OpenPGP v4 oder v6, Algorithmus und Encryption-Subkey, voller öffentlicher Fingerprint, GnuPG-Kompatibilität, Schlüsselkopien mit eigenständigem Notfallzugang, vom Ursprungstelefon unabhängiges Restore. Der zuvor gedruckte AgePony-Papierausdruck im Safe **enthält nicht diesen neuen OpenPGP-Schlüssel**.
+
+**Unmittelbar nächste Betreiberaktion:** Nur in PGPony unter Keyring die **lokal angezeigte Key-Version und den Algorithmus** nachsehen und diese unvertraulichen Eigenschaften mitteilen; keine geheimen QR-Codes, private Exportdateien, Passphrase oder vollständigen Screenshots. Später zwei getrennte geschützte Recovery-Kopien des PGPony-Keymaterials anlegen und mindestens eine in unabhängigem Offline-Tool gegen künstliche Daten testen. Bis dahin kein echter Backup-Upload, keine Keys in CI, keine automatische Sicherung.
+
+V1 unverändert: historische 62/71 Coding-Pakete, formal M0–M7 0/8, P4 0/4, Release-Gates 0/18. Draft PR #25 bleibt ungemergt.
