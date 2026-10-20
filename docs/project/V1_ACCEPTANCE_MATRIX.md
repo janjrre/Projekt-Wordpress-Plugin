@@ -362,3 +362,15 @@ Historische GH04-GPG- und GH06-age-CI-Belege bleiben unabhängig gültig, erfül
 | GH03/Produktion GH05–08 | **BLOCKIERT** | Kein produktiver Writer/Restore/Schedule |
 
 **Technischer Teilfortschritt, keine formale GH03-, Milestone- oder Release-Gate-Abnahme.**
+
+## 20.10.2026 – PGPony-Entschlüsselung extern erzeugter GnuPG-Datei
+
+| GH03-Test | Status | Abnahmegrenze |
+| --- | --- | --- |
+| GnuPG-Public-Key-Import und künstliche Verschlüsselung | PASS | separater, bereits dokumentierter GnuPG-2.4.7-Test ohne Private-Key |
+| PGPony auf iPhone: externe `.gpg`-Datei mit ursprünglichem Privatkey entschlüsselt | **PASS laut Betreiber** | ausdrückliche Nutzerantwort „ja ich konnte es entschlüsseln“, tatsächliche Klartext-Sollcode-Gleichheit nicht zusätzlich bestätigt |
+| Zwei geschützte physisch getrennte Private-Key-Kopien des neuen PGPony-Schlüssels | **OFFEN** | kein Nachweis |
+| Wiederherstellung allein aus zweiter Kopie ohne ursprünglichen iPhone-Vault | **OFFEN** | kein Nachweis |
+| GH03 endgültig / produktive GH05–08 | **NICHT ABGENOMMEN** | Candidate-Key bleibt produktiv gesperrt |
+
+Dies ist ein Fortschritt für die **Betreibergeräte-Interoperabilität**, nicht für eine nachweisbar vom Smartphone-Verlust unabhängige Recovery oder formale V1-Abnahme.
