@@ -649,3 +649,18 @@ Keine formalen V1-Gates dadurch bestanden: M 0/8, P4 0/4, R 0/18.
 | V2 Remote-Release / PGPony-iPad Restore | **NICHT AUSGEFÜHRT** | kein GitHub Token, kein Remote Release |
 
 Formale Abnahmezahlen unverändert: M0–M7 0/8, P4 0/4, R01–18 0/18; Codinghistorie 62/71.
+
+## 21.10.2026, 00:07 – PGP04 V2 Protection UI Evidence
+
+| Gate | Stand | Abgrenzung |
+|---|---|---|
+| Exakter V2-Branch `security/pgp04-synthetic-release-v2-20261020` | **PASS, Betreiber-Screenshot** | Branchname im Regel-Formular sichtbar |
+| `Lock branch` + `Do not allow bypassing` | **PASS, Betreiber-Screenshot** | Checkboxen beide aktiviert |
+| Force Push und Branchlöschung verboten | **PASS, Betreiber-Screenshot** | Checkboxen beide deaktiviert |
+| Regel gespeichert und auf 1 Branch angewendet | **PASS, GitHub-UI** | `Branch protection rule created.`, neues Regel-Listenelement `Currently applies to 1 branch` |
+| V2 Code-SHA nach Erstellung unverändert | **PASS, GitHub Connector** | `bead6a3386958bfc3f1bbc4c13b925506777ef5e`, `compare_commits` 0/0 |
+| Effektiver Protection-Status per API / aktiver Write-Deny | **NICHT DURCHGEFÜHRT** | GitHub-App hat keinen API-Lese-/Schreibzugang zu Branch-Regeln; Testbranch nicht verändern |
+| V2 CircleCI Context Branch-Expression und approved SHA | **NOCH V1** | Umstellung im dedizierten Context durch Betreiber notwendig, noch tokenfrei |
+| V2 tokenloser CI Provider-Run und E2E Release | **NICHT DURCHGEFÜHRT** | Keine Tokens, kein weiterer CircleCI-Run |
+
+Keine formale V1-Abnahme: Codinghistorie 62/71, M0–M7 0/8, P4 0/4, R01–18 0/18.
