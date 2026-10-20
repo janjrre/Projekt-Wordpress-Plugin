@@ -466,3 +466,18 @@ Kein Provider-PASS wird durch lokale grüne Tests ersetzt.
 | Produktive GH05–08, GitHub Backup-Releases, automatische Jobs, V1 R01–18 | **BLOCKIERT** | Kein neuer Datenzugriff oder Release freigegeben |
 
 Diese Papierkopie ist ein **neuer echter Offline-Fortschritt**, aber kein unabhängig beobachteter Restore oder ein zweites geschütztes Ausfallgebiet.
+
+## 20.10.2026 – GH03 PGPony-Papierkopie #1 wiederhergestellt
+
+| Abnahmekriterium | Status | Nachweisgrenze |
+| --- | --- | --- |
+| Neue PGPony-Private-Key-Kopie #1 physisch im Safe | **OWNER-BESTÄTIGT** | Vorherige Aussage über Papierausdruck im Safe |
+| Private Key **direkt aus dem Papierausdruck** rekonstruiert/importiert | **PASS laut Betreiber** | Antwort „Ja habe ich es hat geklappt“ auf eindeutige Papier-Restore-Frage; kein Secret an Chat gesendet |
+| Extern verschlüsselte synthetische OrgaVela-Testdatei mit Papier-Restore-Schlüssel entschlüsselt | **PASS laut Betreiber** | Eigenständige Betreiberbestätigung, nicht vom Assistenten selbst beobachtet |
+| Vollständig isolierter Keyring / erneut identischer FPR beim Papier-Restore | **nicht separat belegt** | Nur früherer iPad-Fingerprint-Abgleich bestätigt |
+| Zweite unabhängig geschützt und anderswo aufbewahrte neue PGPony-Offline-Kopie #2 | **OFFEN** | Erster Safe und Geräte allein decken keinen Verlust des Safes ab |
+| Wiederherstellung aus echter Copy #2 | **OFFEN** | Noch keine Kopie oder Test |
+| Passphrase-Notfallverfügbarkeit getrennt von Schlüsselkopien | **OFFEN** | Kein Zugriff auf Passphrase nötig/erwünscht |
+| Formale GH03-Abnahme / produktive GH05–08 | **BLOCKIERT** | Zuerst Copy #2 und Notfall-Wiederherstellung belegen |
+
+**Evidenzlevel:** Operator-Attestation für Papier-Recovery aus Copy #1, aber noch kein vollständig abgesicherter, kopie-2-unabhängiger Disaster-Recovery-Test. Früherer synthetischer CircleCI-PASS bleibt gültig; V1-Gates nicht neu abgenommen.
