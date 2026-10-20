@@ -14,7 +14,7 @@ fail(){ printf 'PGP04_REFUSED: %s\n' "$1" >&2; exit 1; }
 for key in GITHUB_TOKEN BACKUP_GITHUB_TOKEN AGE_SECRET_KEY BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE ORGAVELA_BACKUP_PRIVATE_KEY SFTP_HOST SFTP_PASSWORD SSH_PRIVATE_KEY IONOS_SSH_HOST IONOS_SSH_PASSWORD GOOGLE_DRIVE_TOKEN_JSON; do
   [[ -z "${!key:-}" ]] || fail "unexpected credential: $key"
 done
-for cmd in gh jq sha256sum stat gpg awk grep find cmp mktemp; do command -v "$cmd" >/dev/null || fail "missing $cmd"; done
+for cmd in gh jq sha256sum stat gpg awk grep find cmp mktemp curl; do command -v "$cmd" >/dev/null || fail "missing $cmd"; done
 work="${1:-}"
 [[ "$work" == /* && "$work" != / && -d "$work" && ! -L "$work" ]] || fail 'invalid ciphertext workspace'
 id='orgavela-synthetic-pgpony-handoff-001'
@@ -65,13 +65,71 @@ release="$(gh api -X POST "repos/$GITHUB_BACKUP_REPOSITORY/releases" -f tag_name
 release_id="$(jq -er '.id | select(type == "number" and . > 0)' <<<"$release")" || fail 'numeric release ID absent'
 upload_url="$(jq -er '.upload_url | split("{")[0]' <<<"$release")"
 [[ "$upload_url" == "https://uploads.github.com/repos/janjrre/orgavela-backups/releases/$release_id/assets" ]] || fail 'unexpected upload host'
-# gh release upload accepts the numeric tag after draft creation but uses the
-# release lookup semantics; use the upload_url returned by GitHub instead.
+# Use the exact uploads.github.com URL returned by GitHub. gh api's
+# --hostname treats the argument as a GitHub installation hostname and could
+# incorrectly choose api.uploads.github.com: NEVER use it for raw uploads.
+# Restrict to HTTPS, no redirects, require HTTP 201 and validate JSON response.
+# curl's -H @- reads the token from stdin: no token in argv, disk or logs.
+[[ "$GH_TOKEN" != *
+assets="$(gh api "repos/$GITHUB_BACKUP_REPOSITORY/releases/$release_id/assets?per_page=100")" || fail 'asset listing failed'
+jq -e 'type=="array" and length==3 and all(.[]; .state=="uploaded")' <<<"$assets" >/dev/null || fail 'expected exactly three uploaded assets'
+verify_remote_asset_bytes() {
+  local stage="$1" listing asset aid temp
+  listing="$(gh api "repos/$GITHUB_BACKUP_REPOSITORY/releases/$release_id/assets?per_page=100")" || fail "remote listing unavailable at $stage"
+  jq -e 'type=="array" and length==3 and all(.[]; .state=="uploaded")' <<<"$listing" >/dev/null || fail "incorrect remote asset count at $stage"
+  for asset in "$archive" "$sidecar" manifest.json; do
+    aid="$(jq -er --arg n "$asset" '[.[] | select(.name==$n)] | if length==1 then .[0].id else empty end' <<<"$listing")" || fail "missing/duplicate remote asset $asset"
+  temp="$(mktemp)"
+  # Ensure raw binary response, not a JSON description mistaken for a download.
+  gh api -H 'Accept: application/octet-stream' "repos/$GITHUB_BACKUP_REPOSITORY/releases/assets/$aid" >"$temp" || fail 'remote binary readback failed'
+  cmp -s "$work/$asset" "$temp" || fail "remote asset mismatch: $asset"
+    rm -f "$temp"
+  done
+}
+verify_remote_asset_bytes before_publish
+published="$(gh api -X PATCH "repos/$GITHUB_BACKUP_REPOSITORY/releases/$release_id" -F draft=false)" || fail 'could not publish test release'
+jq -e --arg tag "$tag" '.tag_name == $tag and .draft==false and .immutable==true' <<<"$published" >/dev/null || fail 'published release immutability not confirmed'
+confirmed="$(gh api "repos/$GITHUB_BACKUP_REPOSITORY/releases/$release_id")" || fail 'published release readback missing'
+jq -e --arg tag "$tag" --argjson rid "$release_id" '.id==$rid and .tag_name==$tag and .immutable==true and .draft==false' <<<"$confirmed" >/dev/null || fail 'final immutable release readback failed'
+verify_remote_asset_bytes after_publish
+printf 'PGP04_SYNTHETIC_RELEASE_METADATA_VERIFIED=PASS\nPGP04_RELEASE_ID=%s\nPGP04_TAG=%s\nPGP04_OPERATOR_RESTORE=PENDING\n' "$release_id" "$tag"
+\\r'* && "$GH_TOKEN" != *
+assets="$(gh api "repos/$GITHUB_BACKUP_REPOSITORY/releases/$release_id/assets?per_page=100")" || fail 'asset listing failed'
+jq -e 'type=="array" and length==3 and all(.[]; .state=="uploaded")' <<<"$assets" >/dev/null || fail 'expected exactly three uploaded assets'
+verify_remote_asset_bytes() {
+  local stage="$1" listing asset aid temp
+  listing="$(gh api "repos/$GITHUB_BACKUP_REPOSITORY/releases/$release_id/assets?per_page=100")" || fail "remote listing unavailable at $stage"
+  jq -e 'type=="array" and length==3 and all(.[]; .state=="uploaded")' <<<"$listing" >/dev/null || fail "incorrect remote asset count at $stage"
+  for asset in "$archive" "$sidecar" manifest.json; do
+    aid="$(jq -er --arg n "$asset" '[.[] | select(.name==$n)] | if length==1 then .[0].id else empty end' <<<"$listing")" || fail "missing/duplicate remote asset $asset"
+  temp="$(mktemp)"
+  # Ensure raw binary response, not a JSON description mistaken for a download.
+  gh api -H 'Accept: application/octet-stream' "repos/$GITHUB_BACKUP_REPOSITORY/releases/assets/$aid" >"$temp" || fail 'remote binary readback failed'
+  cmp -s "$work/$asset" "$temp" || fail "remote asset mismatch: $asset"
+    rm -f "$temp"
+  done
+}
+verify_remote_asset_bytes before_publish
+published="$(gh api -X PATCH "repos/$GITHUB_BACKUP_REPOSITORY/releases/$release_id" -F draft=false)" || fail 'could not publish test release'
+jq -e --arg tag "$tag" '.tag_name == $tag and .draft==false and .immutable==true' <<<"$published" >/dev/null || fail 'published release immutability not confirmed'
+confirmed="$(gh api "repos/$GITHUB_BACKUP_REPOSITORY/releases/$release_id")" || fail 'published release readback missing'
+jq -e --arg tag "$tag" --argjson rid "$release_id" '.id==$rid and .tag_name==$tag and .immutable==true and .draft==false' <<<"$confirmed" >/dev/null || fail 'final immutable release readback failed'
+verify_remote_asset_bytes after_publish
+printf 'PGP04_SYNTHETIC_RELEASE_METADATA_VERIFIED=PASS\nPGP04_RELEASE_ID=%s\nPGP04_TAG=%s\nPGP04_OPERATOR_RESTORE=PENDING\n' "$release_id" "$tag"
+\\n'* ]] || fail 'invalid token format'
 for asset in "$archive" "$sidecar" manifest.json; do
-  gh api --method POST --hostname uploads.github.com \
-    -H "Content-Type: application/octet-stream" \
-    --input "$work/$asset" \
-    "repos/$GITHUB_BACKUP_REPOSITORY/releases/$release_id/assets?name=$asset" >/dev/null || fail "asset upload failed: $asset"
+  upload_response="$(mktemp)"
+  upload_status="$(
+    printf 'Authorization: Bearer %s\\nAccept: application/vnd.github+json\\nContent-Type: application/octet-stream\\n' "$GH_TOKEN" |
+      curl --silent --show-error --fail --proto '=https' \
+        --connect-timeout 10 --max-time 90 --retry 0 \
+        --header @- --request POST --data-binary "@$work/$asset" \
+        --output "$upload_response" --write-out '%{http_code}' \
+        "$upload_url?name=$asset"
+  )" || fail "asset upload failed: $asset"
+  [[ "$upload_status" == 201 ]] || fail "unexpected upload status for $asset"
+  jq -e --arg name "$asset" '.name == $name and .state == "uploaded" and (.id | type == "number")' "$upload_response" >/dev/null || fail "invalid upload response for $asset"
+  rm -f "$upload_response"
 done
 assets="$(gh api "repos/$GITHUB_BACKUP_REPOSITORY/releases/$release_id/assets?per_page=100")" || fail 'asset listing failed'
 jq -e 'type=="array" and length==3 and all(.[]; .state=="uploaded")' <<<"$assets" >/dev/null || fail 'expected exactly three uploaded assets'
