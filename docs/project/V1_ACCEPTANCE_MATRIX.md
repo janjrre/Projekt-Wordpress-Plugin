@@ -563,3 +563,18 @@ PGP03-PASS ist kein GH04-PASS, kein produktiver Backup-PASS und keine formale V1
 | GitHub finaler Branch-Lock und CircleCI Context-Restriktionen | **OFFEN** | Noch kein Freigabenachweis |
 
 Keine neue formale V1-Abnahme; M 0/8, P4 0/4, R 0/18.
+
+## 20.10.2026, 22:48 – PGP04 Restriktions- und Publisher-Nachtrag
+
+| Prüfung | Status | Beleg und Abgrenzung |
+|---|---|---|
+| CircleCI Context `orgavela-pgp04-release-only` existiert | **Betreiber-UI bestätigt** | Screenshot Organization Settings → Contexts |
+| Nur Projekt `Projekt-Wordpress-Plugin` | **Betreiber-UI bestätigt** | Exactly one project restriction |
+| Expression: exakter PGP04-Branch, Name, Owner, SSH off, API-config-source off | **Betreiber-UI bestätigt** | Ein gespeicherter Ausdruck sichtbar; noch kein Runtime-Zugriffstest |
+| Context-Variablen leer | **Betreiber-UI bestätigt** | Keine Variablen gelistet; GitHub-Token NICHT konfiguriert |
+| Group Restriction `All members` | **Sichtbar** | Kein Einzelgruppen-Nachweis; Organisationsmitgliedschaft nicht unabhängig ermittelt |
+| Publisher-Manifest strikt, nach veröffentlichtem Release alle 3 Remoteassets binär erneut gelesen | **CODE COMMITTED** | Commit `71c0d6cc3dc9ec619b13096b350d1670bee7ef46`, Blob `6e207aefa7edcb9e9302efccacd88fa0c633287a` |
+| Exakt identische neue Publisher-Version, Syntax + Mock-API-Regressionsfälle | **LOKAL 14/14 PASS** | `git hash-object` stimmt, Python Exit 0, Fake-API-Erfolg/Fehler; KEINE Provider-Abnahme |
+| CircleCI Branch-Lock, Runtime-/Token-Permissions- und GitHub-Release-E2E | **OFFEN** | Vor Secret-Nutzung vollständig nachweisen |
+
+Die lokale Fake-GitHub-Testmatrix darf **nicht** als produktiver oder echter GitHub-Release-PASS gewertet werden. M0–M7 0/8, P4 0/4, R01–R18 0/18 unverändert.
