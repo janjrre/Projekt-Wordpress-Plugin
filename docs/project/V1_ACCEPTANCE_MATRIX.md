@@ -481,3 +481,18 @@ Diese Papierkopie ist ein **neuer echter Offline-Fortschritt**, aber kein unabh�
 | Formale GH03-Abnahme / produktive GH05–08 | **BLOCKIERT** | Zuerst Copy #2 und Notfall-Wiederherstellung belegen |
 
 **Evidenzlevel:** Operator-Attestation für Papier-Recovery aus Copy #1, aber noch kein vollständig abgesicherter, kopie-2-unabhängiger Disaster-Recovery-Test. Früherer synthetischer CircleCI-PASS bleibt gültig; V1-Gates nicht neu abgenommen.
+
+## 20.10.2026 – GH03 PGPony owner-controlled key recovery
+
+| Kriterium | Ergebnis | Evidenz |
+| --- | --- | --- |
+| Zweite eigene private PGPony-Offlinepapierkopie an unabhängig geschütztem Ort | **PASS (Owner-Attestation)** | Nutzer bestätigt zusätzliche Kopie und erfolgreiche Wiederherstellung aus dieser |
+| Wiederherstellung aus Papierkopie #1 | **PASS (Owner-Attestation)** | Voriger Test: PGPony-Key direkt aus Papier importiert, synthetisches GPG-Fixture entschlüsselt |
+| Wiederherstellung aus Papierkopie #2 | **PASS (Owner-Attestation)** | Betreiber bestätigt auch beim zweiten Papier wieder erfolgreiche Wiederherstellung |
+| Passphrase im Notfall offline und auf Zweitgerät verfügbar | **PASS (Owner-Attestation)** | Nur erfolgreiche Sicherungsmethode, keine Passphrase empfangen |
+| GH03 Besitzer-Key-Recovery insgesamt | **PASS, owner-attested** | Keine externe physische Auditierung, kein eigens verifizierter Copy2-Paket-SHA/isolierter Keyring |
+| PGP-03 Quell-/Ciphertext-only Writer-Grenze | **NEU VORZUBEREITEN, NICHT ABGENOMMEN** | Default-OFF synthetische Zwei-Job-Pipeline |
+| PGP-04 privater immutable Release und echter GH05–08-Vollrestore | **BLOCKIERT** | Keine Token, keine reale Quelle, keine isolierte reale Wiederherstellung |
+| M0–M7, P4, R01–R18 | **0/8, 0/4, 0/18** | Historische Codingzählung 62/71 bleibt unverändert |
+
+**GH03 ist eine Key-Recovery-Teilabnahme, nicht die O03-Live-Backup- oder V1-Abnahme.**
