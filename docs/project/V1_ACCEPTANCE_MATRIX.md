@@ -291,3 +291,17 @@ Keiner dieser Vorbereitungspunkte erhöht die historischen 62/71-Coding-Pakete o
 | GH06 nach dem Lauf | Kurzlebigen Fine-grained PAT widerrufen, `GH_TOKEN` im Context löschen | **OFFEN**, Betreiberbestätigung erforderlich | Keine erneuten geheimnistragenden Läufe vorher |
 
 Dies ist ergänzende **synthetische Transport-Sicherheits-Evidenz** unter W0/O03, **keine** Abnahme einer der 18 formalen V1-Release-Sperren und kein realer Backup-/Recovery-SLA-Nachweis. Maßgebliches Fortschrittsregister bleibt `docs/operations/V1_PROGRESS.json`.
+
+## 20.10.2026 – Ergänzender GH06-Cleanup-Beleg (Betreiberbestätigung)
+
+| Synthetisches GH06-Ereignis | Status | Belegqualität |
+| --- | --- | --- |
+| CircleCI #298 native age Release-E2E | BESTANDEN | Provider-Screenshot und unabhängiger GitHub Release-ID-418380590-Metadaten-Read |
+| CircleCI #299 Approval-HOLD | BESTANDEN | Betreiber-Screenshot: Writer wartet |
+| CircleCI #299 abgebrochen | Betreiber bestätigt | Antwort „Erledigt“ auf konkrete Abbruchanweisung, kein CircleCI-Admin-API-Read |
+| GH06-Test-PAT widerrufen | Betreiber bestätigt | Antwort „Erledigt“, privater GitHub-Tokenstatus nicht per Connector lesbar |
+| GH_TOKEN aus `orgavela-age-release-tests` entfernt | Betreiber bestätigt | Antwort „Erledigt“, CircleCI-Context nicht per API gelesen |
+| Dauerhafter Owner-age-Key, zwei unabhängige Offlinekopien + echter Restore | **OFFEN** | GH03 – separates Gate |
+| Produktions-GH05/06/07/08 | **OFFEN** | Keine Live-Sicherungen, kein Zeitplan |
+
+**GH06 synthetic E2E + Operator-Cleanup geschlossen**, aber W0/O03-Produktionsbackup sowie sämtliche **R01–R18 formal 0/18** bleiben offen. Diese Zeile ergänzt den vorherigen „cleanup OPEN“-Momentstand chronologisch, ohne historische Belege umzudeuten.
