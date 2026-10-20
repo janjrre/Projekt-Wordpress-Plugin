@@ -48,3 +48,11 @@ Dieser Branch wurde **nur für den späteren isolierten PGP04-Test** vom dokumen
 - [ ] Nachweis Remote-Immutable, SHA256, Besitzer-Restore und anschließende Token-Revocation
 
 **STOP**, sobald ein Kriterium offen bleibt. Dokumentationsänderungen an diesem Branch sind bis zur späteren Lock-Aktivierung möglich; deshalb **jetzt ausdrücklich noch nicht für Secret-Nutzung freigegeben**.
+
+## Ergänzung 20.10.2026 – Zielrepository: GitHub Release Immutability aktiv prüfen
+
+**Wichtig:** Der offizielle GitHub-Workflow für immutable Releases ist: im PRIVATEN Zielrepository `janjrre/orgavela-backups` unter `Settings` → `General` bis zum Bereich `Releases` scrollen und `Enable release immutability` prüfen/aktivieren (GitHub Dokumentation: https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/establish-provenance-and-integrity/prevent-release-changes). Die Option wirkt **nur auf zukünftige Veröffentlichungen**. Deshalb muss sie VOR PGP04-Synthetik-Release tatsächlich aktiv sein. Historisch bestanden bereits andere, getrennte GH04/GH06 Release-Synthetiktests; das beweist allein nicht den aktuellen Konfigurationszustand.
+
+**Sicherheits-Gate:** Ein Release als Draft anlegen, genau drei verschlüsselte Artefakte noch im Draft übertragen, dann publishen; serverseitiges `immutable=true`, binären Remote-Readback und PGPony-Besitzer-Restore einzeln nachweisen. Dieser Publisher kann mit minimalem GitHub Contents RW Token **nicht** die Repository-Administrationskonfiguration selbst einschalten. Die offizielle schreibende Immutable-Einstellung verlangt Repository Administration WRITE, die gerade NICHT auf den Kurzzeit-Token erweiterbar ist. Bei nicht bestätigter Checkbox STOP; keine Tokenfreigabe.
+
+**Wahrheitsgrenze:** Dieser Nachtrag ist eine Code-/Dokumentationsprüfung, keine aktuelle bestätigte Einstellung im privaten Backup-Repository, keine Code-SHA-Freigabe und keine PGP04-Release-Abnahme.
