@@ -3,6 +3,12 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 20.10.2026 – GH06 Context-Prüfung auf minimalen PR #23 eingegrenzt
+
+- Auf Nutzerfrage, ob andere Draft-PRs ebenfalls auf „Ready for review“ sollen, alle GH06-Abhängigkeiten überprüft: PRs #17–#21 offen/Draft, PR #22 vom Betreiber auf Ready gestellt. **PR #22 hatte tatsächlich 6 Dateien/28 Commits** statt nur Context-Smoke und hätte unerwünschte GH06-Status-/Dokumentations-Commits in den geschützten Testbranch übernommen.
+- **Abhilfe umgesetzt:** Direkt von `test/orgavela-age-release-o03` einen neuen Branch `ci/gh06-context-smoke-isolated-20261020` abgezweigt, exakt nur `.circleci/config.yml` mit default-false `enable_gh06_age_context_smoke` ergänzt. GitHub-PR [#23](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/23) ist Draft, **1 Datei/1 Commit (44 Insertions)** unabhängig geprüft, noch nicht gemergt oder in CircleCI gelaufen. Breiten [PR #22](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/22) klar als superseded markiert und **ohne Merge geschlossen**.
+- **Nächste Betreiberaktion:** Nur PR #23 diff prüfen, bei Zustimmung **diesen** auf Ready for review stellen; PRs #17–#21 nicht pauschal umstellen. Danach normaler PR-Merge nach Review, dann genau ein manueller leeres-Context-CI-Smoke; **keine Secrets/Token/echter age-Release** bis test-spezifische Gates bestanden. V1 unverändert 62/71 historisches Coding, 0/8 M-Abnahmen, 0/4 P4, 0/18 Release-Gates, GH03 owner-recovery und produktive GH05/06/07/08 offen.
+
 ## Update 20.10.2026 – GH06 branch rule Save bestätigt; Context-Autorisierungstest Draft PR #22
 
 - Betreiber bestätigt ausdrücklich **Save changes** für die auf Screenshots kontrollierte GitHub-Testbranchschutzregel `test/orgavela-age-release-o03`. GitHub-API `protected=true`, Detail-API 403, keine unabhängige Detailverifikation; **PR required/an**, **bypass verboten/an**, **force-push/aus**, **deletion/aus** gemäß Betreiber-Screenshots. Required Status Checks und Approvals weiterhin **aus**.
