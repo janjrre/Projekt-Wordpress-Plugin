@@ -3,6 +3,12 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 20.10.2026 – GH06 Context: beide Expressions aktiv, Detail-Branchschutz noch zu prüfen
+
+- Neuer Betreiber-Screenshot bestätigt beide separaten CircleCI-Expression-Restrictions: Branch `test/orgavela-age-release-o03` plus `not job.ssh.enabled` UND `not (pipeline.config_source starts-with "api")`. Vorheriger Screenshot hatte die Restriktion nur für Projekt `Projekt-Wordpress-Plugin` bestätigt; laut CircleCI-Dokumentation werden alle Expression-Zeilen und die Projekt-Restriction mit **AND** ausgewertet. Kein Token/Remote-Job/Release wurde erstellt.
+- **Nächster Gate:** GitHub-Branchschutz-Einzelregeln auf `test/orgavela-age-release-o03` im Settings-UI prüfen (PR-Pflicht, kein Bypass, Force-Push/Delete aus, Required Checks). GitHub API liefert nur `protected=true`, Einzelregeln 403; erforderliche Statuschecks derzeit nicht nachweisbar aktiv (`enforcement_level=off`). Danach ggf. CircleCI-Group statt `All members` enger und GH06-Source-/Writer-Isolation vor PAT-Hinterlegung bewerten.
+- Historisch GH05 CI #188 synthetisch grün und GH06 CI #209 Fake-Github-QA 13/13 grün. GH03 Owner-Recovery und produktive GH05–08 weiterhin unakzeptiert. V1-Zahlen unverändert 62/71 technische Pakete, M0–M7 0/8, P4 0/4, R01–18 0/18.
+
 ## Update 20.10.2026 – GH06 CircleCI-Context eingeschränkt, zusätzliche API-Config-Sperre ausstehend
 
 - **Betreiber-Screenshots:** eigener CircleCI-Context `orgavela-age-release-tests`, noch keine Environment Variables; Project Restriction ausschließlich `Projekt-Wordpress-Plugin`; Expression Restriction genau `pipeline.git.branch == "test/orgavela-age-release-o03" and not job.ssh.enabled`. Group `All members` ist der Default; Projekt und Expression gelten laut CircleCI weiterhin zusätzlich (AND). GitHub-Testbranch `protected=true` unabhängig bestätigt.
