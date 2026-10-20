@@ -2,6 +2,8 @@
 # PGPony public-only GnuPG preflight for OrgaVela: no secrets, network or releases.
 set -euo pipefail
 set +x
+# Print only the failing source line number; no key contents or shell trace.
+trap 'status=$?; printf "PGPONY_DIAGNOSTIC_FAILED script=test-orgavela-pgpony-public-key.sh line=%s exit=%s\\n" "$LINENO" "$status" >&2' ERR
 umask 077
 for cmd in gpg awk grep sha256sum mktemp; do command -v "$cmd" >/dev/null 2>&1 || exit 69; done
 [[ -z "${GH_TOKEN:-}" && -z "${SFTP_HOST:-}" && -z "${SFTP_PASSWORD:-}" ]] || { echo "Refusing secret contexts" >&2; exit 1; }
@@ -24,7 +26,8 @@ sub="$(printf '%s\n' "$keydetails" | awk -F: '$1=="sub"{pending=1; next} pending
 [[ "$primary" == "$expected_primary" && "$sub" == "$expected_sub" ]]
 printf '%s\n' "$keydetails" | grep -Eq '^pub:[^:]*:255:22:'
 printf '%s\n' "$keydetails" | grep -Eq '^sub:[^:]*:255:18:.*:e:'
-gpg --batch --check-sigs "$expected_primary" 2>&1 | grep -q 'sig!'
+gpg --batch --check-sigs "$expected_primary" > "$work/self-sig-check.log" 2>&1
+grep -q 'sig!' "$work/self-sig-check.log"
 printf 'OrgaVela PUBLIC-only synthetic fixture. No real WordPress data.\n' > "$work/fixture.txt"
 gpg --batch --yes --trust-model always --recipient "$expected_primary" --output "$work/fixture.gpg" --encrypt "$work/fixture.txt"
 packets="$(gpg --batch --list-packets "$work/fixture.gpg" 2>&1 || true)"
