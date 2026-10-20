@@ -242,3 +242,17 @@ Die Dreamloud-Produktionsbelege #348/#353 gelten **nur** für Dreamloud (OpenPGP
 
 
 **Nachweis-Nachtrag 20.10.2026 – tatsächlich ausgeführte CircleCI-Pipeline #188:** [Producer-Job #4](https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/4) und [Writer-Job #5](https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/5) von GitHub auf Commit `590d530686356d641774a27ff4004aa27fd063aa` unabhängig als **SUCCESS** verifiziert; Betreiber-Screenshots: kompletter 20-s-Workflow, source 11 s, writer 3 s, verschlüsselter Workspace-Transfer 11 KiB. Alle Test-/Key-/Writer-Schritte im geprüften CI-Skript sind zwingend; Roh-stdout nicht separat überprüft. **Formal weiterhin KEIN GH-03**, kein produktives GH-05, kein GH-06-Release, GH-07-Restore oder GH-08-Zeitplan; keine Erhöhung von M0–M7-, P4-, R-Gates oder historischen Coding-Paket-Zählern. 
+
+### GH-06 age Release synthetische Vorprüfung (20.10.2026, Draft PR #21)
+
+| Prüfpunkt | Evidenz | Status |
+| --- | --- | --- |
+| GH06-AGE-01 | Native age statt GH04 OpenPGP: nur .tar.age, Header age-encryption.org/v1, fake synthetic input | **CODE/STATIC OK; RUNTIME NICHT GETESTET** |
+| GH06-AGE-02 | Privates Repo-Pin janjrre/orgavela-backups, keine produktive Datenquelle oder Owner-Privatekey | **CODE/STATIC OK; OFFLINE-NEGATIVTESTS OFFEN** |
+| GH06-AGE-03 | Exakt drei Releaseassets, unberührte Drafts/Tags, double SHA256 Full Remote ID-Readbacks und Verified Publish | **CODE VORBEREITET; KEIN UPLOAD** |
+| GH06-AGE-04 | Published Release immutable=true, unabhängiger Tag-Download, Wiederherstellung ausschließlich künstlicher age-Daten | **CODE VORBEREITET; KEIN REALER PROVIDERLAUF** |
+| GH06-AGE-05 | 13 lokale Fake-gh-Checks, keine echten GitHub Calls oder Tokens; manuell parametrisierter no-secret CircleCI-Job | **TESTS DEFINIERT, NICHT AUSGEFÜHRT; default false** |
+| GH06-AGE-06 | Protected GH06 Testbranch, auf Projekt/Branch beschränkter neuer Writer-Context und kurzlebiger Einzelrepo-Token | **NICHT EINGERICHTET – GEPLANTER STROM OFF** |
+| GH06-AGE-07 | Produktiver age Writer nach Owner-GH03-Recovery, echter GH05 Konsistenz, eigenem isolierten GH07-Restore | **BLOCKIERT / NICHT ABGENOMMEN** |
+
+Keiner dieser Vorbereitungspunkte erhöht die historischen 62/71-Coding-Pakete oder M0–M7 0/8, P4 0/4, R01–18 0/18 formalen Gates. Historische GH05-CircleCI #188 ist ein anderer Quellcommit/Job. [GH-06-Runbook](../operations/W0_O03_GH06_AGE_RELEASE_PREPARATION_2026-10-20.md).
