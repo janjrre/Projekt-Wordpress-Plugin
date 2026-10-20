@@ -209,7 +209,7 @@ jobs:
             set -euo pipefail
             sudo apt-get update -qq
             sudo apt-get install -y --no-install-recommends gnupg jq gzip tar coreutils >/dev/null
-            gpg --version | head -1
+            gpg --version
       - run:
           name: Exercise pinned owner PUBLIC key and synthetic-only roundtrip
           command: |
