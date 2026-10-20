@@ -319,3 +319,18 @@ Dies ist ergänzende **synthetische Transport-Sicherheits-Evidenz** unter W0/O03
 | GH03 formell `accepted` / GH05–08 echte Backups | **NEIN / gesperrt** | 1 Kopie ersetzt keine geprüfte Wiederherstellung oder operative Backup-Gates |
 
 **Entscheidung:** `gh03_offline_copy1_attested=true` ausschließlich als durch Betreiber belegter Papier-Druck-/Safe-Verwahrstatus, `gh03_offline_copy2_attested=false`, `gh03_formal_accepted=false`. Keine öffentlichen Secrets, keine neue CircleCI- oder produktive WordPress-Ausführung.
+
+## 20.10.2026 – O03 Wechsel auf OpenPGP/PGPony
+
+| Kontrollpunkt | Beleg / Status |
+| --- | --- |
+| Formatwahl für neue produktive Sicherungen | PGPony/OpenPGP vom Betreiber bestätigt, Masterplan v2.22 |
+| Dreamloud-Architekturprüfung | Read-only Source: OpenPGP public key fingerprint, separated capture/writer, immutable releases, isolated restore; keine geteilten Secrets |
+| Historische GH04 GPG- und GH06 age-Tests | Beide synthetisch bestanden; nicht owner-PGPony-Interoperabilität |
+| PGPony-Owner-Key mit GnuPG kompatibel | OFFEN |
+| Zwei separate geschützte neue OpenPGP-Recovery-Kopien | OFFEN; gedrucktes AgePony-PDF zählt nicht |
+| Decrypt aus unabhängigem PGPony-Private-Key | OFFEN |
+| GnuPG-OpenPGP-Synthetik-Prototyp | Lokal unter isoliertem Einmal-Testschlüssel erfolgreich, noch kein PR-HEAD-Provider-E2E |
+| Produktive GH05–08/Release R01–18 | BLOCKIERT, 0/18 |
+
+Dies ist ein nicht-produktiver O03-Architekturwechsel; er erzeugt **keine** formale V1-Abnahme.
