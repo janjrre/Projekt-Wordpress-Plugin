@@ -725,7 +725,19 @@
       "pgp04_v2_upload_protocol": "Official uploads.github.com REST release upload_url, stdin-only curl -H @-, no redirects, HTTP201 JSON validation; untested against provider",
       "pgp04_v2_restricted_context_no_secret_smoke_code_present": true,
       "pgp04_v2_no_secret_source_test_executed": false,
-      "pgp04_v2_release_writer_executed": false
+      "pgp04_v2_release_writer_executed": false,
+      "pgp04_v1_approval_operator_cancelled": true,
+      "pgp04_v1_approval_cancel_evidence": "Operator wrote 'Abgebrochen' in direct reply to request to cancel CircleCI V1 owner-approval, 2026-10-20 23:49 local time; no direct provider API readback.",
+      "pgp04_v2_writer_blob_local_verified": "0e5f2292aeb484ab443c5a566767809f356de2ab",
+      "pgp04_v2_writer_bash_n_local_pass": true,
+      "pgp04_v2_curl_stdin_headers_local_http201_pass": true,
+      "pgp04_v2_local_mock_full_matrix_passed": false,
+      "pgp04_v2_local_mock_completed_cases": 8,
+      "pgp04_v2_local_mock_total_target_cases": 13,
+      "pgp04_v2_local_mock_note": "Exact GitHub v2 writer reconstructed by Git blob hash; syntax PASS. With real public GnuPG fixture and fake gh/curl, success, public_repo, auth403, http500, duplicate_release, duplicate_tag, missing_asset, corrupt_readback PASS. Runtime timed out before remainder; later fast mock attempt completed only first 7 before timeout. No blanket 13/13 for v2.",
+      "pgp04_v2_branch_sha_verified": "bead6a3386958bfc3f1bbc4c13b925506777ef5e",
+      "pgp04_v2_branch_lock_operator_attested": false,
+      "pgp04_v2_ci_source_provider_pass": false
     },
     {
       "id": "O04",
