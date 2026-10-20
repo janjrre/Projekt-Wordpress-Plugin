@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-20",
-  "snapshot_basis": "2026-10-20 GH06 age-only GitHub Release synthetic transport Draft PR #21 stacked on GH05 Draft #20. Adapted GH04 artificial GPG uploader/full numeric-ID asset readbacks before/after publish and independent remote-only restore to native age X25519. Added 13 OFFLINE fake-gh/negative-security tests and default-FALSE no-secret CircleCI GH06 QA job, not yet run. Remote GH06 CircleCI token job deliberately NOT defined, test branch/context not yet approved; no Release, token, CI job, host, paid action or backup executed. GitHub static readback confirms five new/changed files and gates. GH05 CI #188 succeeded at exact older SHA 590d530 with two synthetic jobs; GH03 owner independent offline recovery still unverified. V1 62/71 historical coding and formal acceptances 0/8 M, 0/4 P4, 0/18 R unchanged.",
+  "snapshot_basis": "2026-10-20 GH06 no-secret offline QA CircleCI pipeline #209 on exact source commit 6f885c585557661e3250fc477e2464779cf01adc SUCCESS, independent GitHub status ci/circleci: gh06-age-release-offline-qa success (provider job #6). Operator screenshots show actual Python stdout: 13 tests ran 0.147s, OK, 0 failures, and a single GH06 job completed green in CircleCI. No actual GitHub Release age upload, provider API remote test, protected GH06 test branch/context/token setup, production data or backup has taken place. GH05 synthetic CI #188 previously verified. GH03 independent age offline recovery still blocked. V1 coding 62/71 and formal 0/8 milestone, 0/4 P4, 0/18 release unchanged.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -376,7 +376,7 @@
       "gh05_parity_source_pipeline_duration_seconds": 20,
       "gh05_parity_test_count_raw_stdout_verified": false,
       "gh05_parity_real_data_captured": false,
-      "gh06_age_transport_draft_status": "code_statically_verified_offline_unit_tests_not_run",
+      "gh06_age_transport_draft_status": "offline_fake_gh_ci_pass_verified_remote_release_not_run",
       "gh06_age_transport_pr": 21,
       "gh06_age_transport_branch": "feat/gh06-synthetic-age-release-20261020",
       "gh06_age_transport_scripts": [
@@ -385,13 +385,20 @@
       ],
       "gh06_age_transport_tests_file": "scripts/ci/test_orgavela_age_release_offline.py",
       "gh06_age_transport_offline_tests_defined": 13,
-      "gh06_age_transport_offline_tests_passed": false,
-      "gh06_age_transport_offline_ci_run": null,
+      "gh06_age_transport_offline_tests_passed": true,
+      "gh06_age_transport_offline_ci_run": 209,
       "gh06_age_transport_actual_release_uploaded": false,
       "gh06_age_transport_immutable_age_release_verified": false,
       "gh06_age_transport_source": "Based on already accepted GH04 synthetic GPG release/restore transport; adapted to native age X25519 in separate Draft PR #21; GitHub readback of source only",
       "gh06_age_transport_ci_flag": "enable_gh06_age_release_offline (boolean default false), branch feat/gh06-synthetic-age-release-20261020, no secrets or cloud calls; no live GH06 remote job configured",
-      "gh06_age_transport_live_blockers": "First perform offline no-secret CircleCI QA at pinned SHA; then protect separate GH06 remote test branch and verify project/branch restricted CircleCI Context, short-lived only orgavela-backups PAT and Free quota for optional synthetic-only immutable release. GH03 independent offline owner recovery remains missing. No production backups/cron."
+      "gh06_age_transport_live_blockers": "Offline QA success is artificial fake gh only. For future synthetic native age real GitHub Release: require new protected exact test branch, project/branch restricted CircleCI context and fresh least-privilege short-lived token restricted solely to private orgavela-backups. CircleCI remote job not configured and no real release performed yet. Owner GH03 independent recovery still missing, production GH05 source capture and GH06 writer unaccepted.",
+      "gh06_age_transport_offline_tests_count_passed": 13,
+      "gh06_age_transport_offline_tests_failed": 0,
+      "gh06_age_transport_offline_ci_job": "gh06-age-release-offline-qa",
+      "gh06_age_transport_offline_ci_job_link": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/6",
+      "gh06_age_transport_offline_ci_status": "success",
+      "gh06_age_transport_offline_ci_test_sha": "6f885c585557661e3250fc477e2464779cf01adc",
+      "gh06_age_transport_offline_raw_test_evidence": "Operator screenshot: Ran 13 tests in 0.147s, OK; independent GitHub status ci/circleci: gh06-age-release-offline-qa SUCCESS at exact SHA. fake gh only."
     },
     {
       "id": "O04",
@@ -777,7 +784,7 @@
   },
   "immediate_next": [
     "GH-03: owner confirms native AgePony age X25519 identity, local iOS paper PDF and SUCCESS of same-device artificial note encrypt/decrypt on 2026-10-19. This is NOT independent offline recovery. No USB media available, owner chooses temporary local-only storage; risk of device loss remains. Keep GH-03 OPEN until two separately secured offline recovery copies and copy-2 synthetic restore are proven. Never transmit private PDF/key/QR/passphrase.",
-    "GH06 Stage A: run one opt-in no-secret/offline CircleCI job gh06-age-release-offline-qa via enable_gh06_age_release_offline=true on exact config and checkout branch feat/gh06-synthetic-age-release-20261020, with GH05 flag false, after Free-credit sanity check. Confirm new tests pass at pinned SHA. No upload or secrets. Subsequent GH06 Stage B synthetic private GitHub age Release requires separate protected branch test/orgavela-age-release-o03 and restricted Context/token setup, no operator private key. GH03 independent recoverability still blocks any real backup.",
+    "GH06 stage A achieved: CircleCI #209 GH06 age release offline QA at 6f885c5 all 13 tests PASS; do not rerun. Next implement/prepare a separate default-false age synthetic private GitHub Release CI test on specially protected test/orgavela-age-release-o03 branch; BEFORE any token inject or provider run require verified protected branch, project+branch restricted CircleCI context, short-lived repo-only PAT, Free quotas, explicit manual trigger. Remote stage not done. No actual age release, no real backups, no GH03 independent recovery.",
     "GH-08 only after GH-07 full actual restore: check IONOS provider recovery points, Free-plan credit availability, secure scheduling, retention and alerting. No automatic backup or pruning approved yet."
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
