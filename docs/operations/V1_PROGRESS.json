@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-20",
-  "snapshot_basis": "2026-10-20 owner shows CircleCI #283 Context post-restoration PASS on cb22a2b; GitHub commit status provider job #8 success. GitHub backup repo future release immutability checked in Settings UI. PR24 independently reviewed one .circleci/config.yml file +68/-0, default-FALSE enable_gh06_age_release_remote and separate CircleCI approval on only protected test branch, synthetics-only scripts already in branch. Marked PR24 Ready and regular protected squash merge succeeded at eba067913eb0290b2a95e40029f77e3b803ed924. GitHub readback: protected branch=true on exact merged SHA, CI boolean default false, approval gate required, restricted context, older jobs retained, no cron. NO GH06 provider remote release attempted, no GH_TOKEN secrets, no real OrgaVela data or additional costs. V1 historical technical coding 62/71 and formal 0/8 milestones, 0/4 P4, 0/18 release gates unchanged. GH03 independent Owner-key recovery remains missing.",
+  "snapshot_basis": "User attested GitHub fine-grained GH_TOKEN placed directly in CircleCI orgavela-age-release-tests. Protected test branch still eba067913eb0290b2a95e40029f77e3b803ed924, PR24 merged, CircleCI GH06 synthetic age Release E2E workflow default FALSE and manual approval required. GH06 after-group Context #283 success and backup repository release immutability owner UI checked. No secret value inspected, token scope/expiry and free quota not independently checked; no new CircleCI job/release triggered, age remote immutable and recovery E2E still untested. User must check free quota and get job into hold only, NO Approve until review. GH03 owner offline independent recovery and productive GH05–08 blocked; coding 62/71, milestones 0/8, P4 0/4, R01-18 0/18.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -391,7 +391,7 @@
       "gh06_age_transport_immutable_age_release_verified": false,
       "gh06_age_transport_source": "Based on already accepted GH04 synthetic GPG release/restore transport; adapted to native age X25519 in separate Draft PR #21; GitHub readback of source only",
       "gh06_age_transport_ci_flag": "enable_gh06_age_release_offline (boolean default false), branch feat/gh06-synthetic-age-release-20261020, no secrets or cloud calls; no live GH06 remote job configured",
-      "gh06_age_transport_live_blockers": "GH06 group-restoration Context positive smoke #283 SUCCESS, repo future release immutability checked in owner UI, sole CircleCI org member self-attested; protected PR24 1-file +68 CI-only squash merged at eba067913eb0290b2a95e40029f77e3b803ed924. No GH06 remote pipeline, no GH_TOKEN or actual release. Next operator creates short-lived fine-grained PAT solely for private janjrre/orgavela-backups with Repository Contents read/write and automatic metadata read, adds ONLY as GH_TOKEN to restricted Context; no token/password/owner age key via chat. Manual GH06 age release test requires single Boolean trigger and separate approval after free quota check; explicit user approval before test. GH03 offline independent Owner recovery still missing, production GH05/06/07/08 blocked.",
+      "gh06_age_transport_live_blockers": "Owner attests GH_TOKEN inserted in restricted CircleCI Context. No direct provider verification of token validity/scope/expiry, and free CircleCI quota not checked for this proposed run. New workflow default=false, manual approval gate exists and protected branch SHA eba067913eb0290b2a95e40029f77e3b803ed924 verified. Before any writer execution: operator checks remaining free credits, triggers ONLY enable_gh06_age_release_remote=true on Config Source AND Checkout test/orgavela-age-release-o03, all other booleans false; pauses at gh06-age-release-manual-approval HOLD and shares screenshot prior to clicking Approve. No real age Release provider run yet; post-run revoke fine-grained PAT and delete Context GH_TOKEN. GH03 independent owner recovery still missing, live backups blocked.",
       "gh06_age_transport_offline_tests_count_passed": 13,
       "gh06_age_transport_offline_tests_failed": 0,
       "gh06_age_transport_offline_ci_job": "gh06-age-release-offline-qa",
@@ -405,7 +405,7 @@
       "gh06_age_remote_test_branch_protected": true,
       "gh06_age_remote_branch_protection_evidence": "2026-10-20 GitHub GET /repos/janjrre/Projekt-Wordpress-Plugin/branches/test/orgavela-age-release-o03: protected=false, protection.enabled=false",
       "gh06_age_remote_context_configured": true,
-      "gh06_age_remote_token_configured": false,
+      "gh06_age_remote_token_configured": true,
       "gh06_age_remote_ci_job_configured": true,
       "gh06_age_remote_run_authorized": false,
       "gh06_age_remote_test_branch_protection_evidence": "2026-10-20 after operator says Branchschutz gespeichert, independent GitHub GET /repos/janjrre/Projekt-Wordpress-Plugin/branches/test/orgavela-age-release-o03 => protected=true, protection.enabled=true; required_status_checks enforcement_level=off (not proof of any CI requirement). Branch protection detail GET returned 403 Resource not accessible by integration, so exact PR/no-bypass/force-push/deletion settings remain owner confirmation pending.",
@@ -487,7 +487,10 @@
       "gh06_age_remote_synthetic_e2e_pr_merged": true,
       "gh06_age_remote_synthetic_e2e_merged_sha": "eba067913eb0290b2a95e40029f77e3b803ed924",
       "gh06_age_remote_ci_job_default_off": true,
-      "gh06_age_remote_manual_approval_required": true
+      "gh06_age_remote_manual_approval_required": true,
+      "gh06_age_remote_token_owner_attested": true,
+      "gh06_age_remote_token_provider_verified": false,
+      "gh06_age_remote_token_evidence": "2026-10-20 operator says GH_TOKEN hinterlegt after instructed direct insertion into CircleCI Context orgavela-age-release-tests. No secret value ever read or copied, no CircleCI Context variable API inspection. Repo scope, contents permission and actual expiry remain owner-only not independently verifiable."
     },
     {
       "id": "O04",
@@ -873,7 +876,7 @@
   },
   "immediate_next": [
     "GH-03: owner confirms native AgePony age X25519 identity, local iOS paper PDF and SUCCESS of same-device artificial note encrypt/decrypt on 2026-10-19. This is NOT independent offline recovery. No USB media available, owner chooses temporary local-only storage; risk of device loss remains. Keep GH-03 OPEN until two separately secured offline recovery copies and copy-2 synthetic restore are proven. Never transmit private PDF/key/QR/passphrase.",
-    "GH06 artificial native age immutable GitHub Release E2E CI workflow now securely merged to protected test/orgavela-age-release-o03 at eba0679, DEFAULT FALSE and requires CircleCI manual approval. User can prepare a short-lived fine-grained Github PAT (only janjrre/orgavela-backups, Contents read/write, Metadata read automatic, no Admin or WordPress/Source permissions) and save directly into orgavela-age-release-tests Context as GH_TOKEN. NEVER send token in chat/screenshots. After confirm free CircleCI allowance, explicitly approve one manual enable_gh06_age_release_remote=true run on config+checkout exact test branch (all others false), then separate CircleCI approval only once and verify 3 remote assets, immutable flag and artificial age restore. Revoke PAT and delete Context GH_TOKEN afterwards. GH03 private owner recovery separately needed before production.",
+    "GH06 owner reports GH_TOKEN saved to orgavela-age-release-tests. First confirm CircleCI Free remaining credits via Plan/Usage. Trigger one Pipeline with both config source + checkout branch test/orgavela-age-release-o03, ONLY enable_gh06_age_release_remote=true, other params false. It should create gh06-age-release-synthetic-remote-manual workflow with gh06-age-release-manual-approval HOLD and no GH06 publisher job yet. Share HOLD screenshot/CI pipeline ID BEFORE clicking Approve so permissions/source/branch/credits can be checked; then only after explicit confirmation approve one test. Never send token/screenshots of token, never owner age key. On pass/abort revoke PAT and delete GH_TOKEN from CircleCI. If unexpected jobs/charges stop. GH03 real backups still blocked.",
     "GH-08 only after GH-07 full actual restore: check IONOS provider recovery points, Free-plan credit availability, secure scheduling, retention and alerting. No automatic backup or pruning approved yet."
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
