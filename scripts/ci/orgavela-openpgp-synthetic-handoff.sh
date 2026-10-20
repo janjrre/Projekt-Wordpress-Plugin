@@ -48,6 +48,11 @@ validate_ciphertext_workspace() {
     and .archive_sha256==$digest and .archive_bytes==$size
     and .public_key_fingerprint==$fpr' \
     "$workspace/manifest.json" >/dev/null || fail 'public manifest metadata mismatch'
+  # Writer may inspect only public encrypted packet headers, never private keys.
+  # Both CircleCI jobs run without contexts, and importing owner secrets is denied.
+  if gpg --batch --with-colons --list-secret-keys 2>/dev/null | grep -q '^sec'; then
+    fail 'private OpenPGP key present in handoff verifier'
+  fi
   local packets kid
   packets="$(gpg --batch --list-packets "$workspace/$encrypted" 2>/dev/null || true)"
   grep -q '^:pubkey enc packet:' <<< "$packets" ||
