@@ -24,8 +24,25 @@ keydetails="$(gpg --batch --with-colons --with-fingerprint --with-subkey-fingerp
 primary="$(printf '%s\n' "$keydetails" | awk -F: '$1=="fpr"{print $10; exit}')"
 sub="$(printf '%s\n' "$keydetails" | awk -F: '$1=="sub"{pending=1; next} pending && $1=="fpr"{print $10; exit}')"
 [[ "$primary" == "$expected_primary" && "$sub" == "$expected_sub" ]]
-printf '%s\n' "$keydetails" | grep -Eq '^pub:[^:]*:255:22:'
-printf '%s\n' "$keydetails" | grep -Eq '^sub:[^:]*:255:18:.*:e:'
+# Key-length field is not stable across GnuPG versions (255 vs 256 for 25519).
+# Validate OpenPGP algorithm identifiers and an encryption-capable subkey,
+# separately from the already pinned full fingerprints.
+check_algorithms() {
+  printf '%s\n' "$1" | awk -F: '
+    $1 == "pub" && $4 == "22" { primary_ed25519 = 1 }
+    $1 == "sub" && $4 == "18" && $12 ~ /[eE]/ { sub_cv25519_encryption = 1 }
+    END { if (!primary_ed25519 || !sub_cv25519_encryption) exit 1 }
+  '
+}
+check_algorithms "$keydetails"
+# Regression probe against the equally valid 256-bit display used by
+# some GnuPG builds. This modifies *only* the non-authoritative length label.
+keydetails_256="$(printf '%s\n' "$keydetails" | awk -F: '
+  BEGIN { OFS = ":" }
+  ($1 == "pub" && $4 == "22") || ($1 == "sub" && $4 == "18") { $3 = "256" }
+  { print }
+')"
+check_algorithms "$keydetails_256"
 gpg --batch --check-sigs "$expected_primary" > "$work/self-sig-check.log" 2>&1
 grep -q 'sig!' "$work/self-sig-check.log"
 printf 'OrgaVela PUBLIC-only synthetic fixture. No real WordPress data.\n' > "$work/fixture.txt"
