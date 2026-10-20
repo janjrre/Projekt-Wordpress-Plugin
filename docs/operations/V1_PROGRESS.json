@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-20",
-  "snapshot_basis": "2026-10-20 screenshot review: CircleCI context orgavela-age-release-tests created with ONLY project Projekt-Wordpress-Plugin and Expression branch test/orgavela-age-release-o03 AND not job.ssh.enabled, no Environment Variables. GitHub branch protected=true independently verified. CircleCI raw API not accessed; screenshot-based evidence only. Official CircleCI context docs recommend additionally blocking unversioned API configuration; group All members remains default (AND with project+expression, not an override). No token/context secret, remote job, remote release, production backup, deployment or paid action. V1 coding/formal gates unchanged.",
+  "snapshot_basis": "2026-10-20 owner screenshot confirms CircleCI context orgavela-age-release-tests has two Expression Restriction rows (branch test/orgavela-age-release-o03 AND no ssh, plus not pipeline.config_source starts-with api). CircleCI current official docs independently verified multiple expression rows are logical AND, combined with project restrictions as AND. GitHub test branch protected=true independently verified earlier, but exact protection rule details unavailable due to API 403 and required status checks enforcement off. GH06 fake-gh offline QA #209 remains 13/13 PASS. No secrets, context API read, token, GH06 remote job, GitHub release, real data, costs or new CI run. GH03 independent offline private key recovery remains missing, V1 counters unchanged.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -391,7 +391,7 @@
       "gh06_age_transport_immutable_age_release_verified": false,
       "gh06_age_transport_source": "Based on already accepted GH04 synthetic GPG release/restore transport; adapted to native age X25519 in separate Draft PR #21; GitHub readback of source only",
       "gh06_age_transport_ci_flag": "enable_gh06_age_release_offline (boolean default false), branch feat/gh06-synthetic-age-release-20261020, no secrets or cloud calls; no live GH06 remote job configured",
-      "gh06_age_transport_live_blockers": "Context restrictions project+branch+no SSH visually confirmed, env vars empty, GitHub branch protected=true. Before token: harden context expression to reject pipeline.config_source starts-with api (unversioned API configuration); optionally remove All members default group; confirm detailed GitHub PR/force/delete/bypass protections (403 to connector). No remote CI job/code on protected branch, no token, no actual age Release. GH03 independent offline owner recovery still missing.",
+      "gh06_age_transport_live_blockers": "Two CircleCI Context Expression Restrictions now visually verified and semantically AND according to CircleCI docs; project restriction on only Projekt-Wordpress-Plugin previously screenshot verified; branch protected=true independently Github. GitHub individual protection details still unreadable (403), branch API required_status_checks.enforcement_level=off. Need confirm PR/no bypass/no force push/no deletion via owner screenshot; group All members could be tightened to admins if available; need threat model/review of gh06 real remote test and protected-source branch before token creation. No real remote age release, owner GH03 offline independent restore missing.",
       "gh06_age_transport_offline_tests_count_passed": 13,
       "gh06_age_transport_offline_tests_failed": 0,
       "gh06_age_transport_offline_ci_job": "gh06-age-release-offline-qa",
@@ -417,7 +417,16 @@
       "gh06_age_remote_context_evidence": "2026-10-20 operator screenshots show context orgavela-age-release-tests exists, project restriction exactly Projekt-Wordpress-Plugin, expression restriction branch exact plus no SSH, empty Environment variables section; CircleCI backend API verification unavailable, only screenshot visual evidence.",
       "gh06_age_remote_context_variables_empty_owner_screenshot": true,
       "gh06_age_remote_context_group": "All members (CircleCI default); project/branch expressions additionally AND-restrict access; tighter admin-only group recommended before PAT if owner is admin",
-      "gh06_age_remote_context_hardening_pending": "Add and not (pipeline.config_source starts-with \"api\") to branch+SSH expression to prevent unversioned API-supplied config from using future token; consider removing All members group to restrict to org admins. Do not insert PAT yet. Branch-specific GitHub protection details still not accessible via integration (403)."
+      "gh06_age_remote_context_hardening_pending": "Add and not (pipeline.config_source starts-with \"api\") to branch+SSH expression to prevent unversioned API-supplied config from using future token; consider removing All members group to restrict to org admins. Do not insert PAT yet. Branch-specific GitHub protection details still not accessible via integration (403).",
+      "gh06_age_remote_context_expression_api_config_block_verified": true,
+      "gh06_age_remote_context_expression_restrictions": [
+        "pipeline.git.branch == \"test/orgavela-age-release-o03\" and not job.ssh.enabled",
+        "not (pipeline.config_source starts-with \"api\")"
+      ],
+      "gh06_age_remote_context_approved_for_pre_secret_configuration": true,
+      "gh06_age_remote_context_credential_approval": false,
+      "gh06_age_remote_context_expression_evidence": "2026-10-20 owner screenshot after saving shows two separately listed Context Expression Restrictions: exact test branch with no SSH and not (pipeline.config_source starts-with \"api\"). CircleCI docs explicitly state all expression rows combine with AND; earlier screenshot verified project restriction only Projekt-Wordpress-Plugin; no CircleCI API read performed.",
+      "gh06_age_remote_context_group_review_pending": true
     },
     {
       "id": "O04",
@@ -803,7 +812,7 @@
   },
   "immediate_next": [
     "GH-03: owner confirms native AgePony age X25519 identity, local iOS paper PDF and SUCCESS of same-device artificial note encrypt/decrypt on 2026-10-19. This is NOT independent offline recovery. No USB media available, owner chooses temporary local-only storage; risk of device loss remains. Keep GH-03 OPEN until two separately secured offline recovery copies and copy-2 synthetic restore are proven. Never transmit private PDF/key/QR/passphrase.",
-    "GH06 context review: screenshots confirm empty restricted context on Projekt-Wordpress-Plugin/test/orgavela-age-release-o03 with SSH reruns excluded. Before storing any PAT, modify expression to add `and not (pipeline.config_source starts-with \"api\")`, optionally remove All members group (admin-only if operator admin), and verify exact PR/no-bypass/force-push/deletion GitHub protection settings via owner screenshot (API 403). Do not trigger remote CI, create secrets or upload any release until hardened controls and code are accepted. GH03 owner offline recovery still open.",
+    "GH06 context complete for empty pre-secret stage: project only Projekt-Wordpress-Plugin, test/orgavela-age-release-o03 branch, no SSH and no unversioned API config (two ANDed expressions). Before any PAT/remote CI: ask owner to open GitHub Settings > Branches rule for exact GH06 test branch and verify screenshots PR requirement, do-not-bypass, force pushes off, deletion off, and consider required status checks (API currently enforcement off). Optional restrict Group 'All members' to admins when feasible. GH06 remote scripts need security/runtime code review before adding token job on protected branch. Do not upload real data; GH03 still blocks production.",
     "GH-08 only after GH-07 full actual restore: check IONOS provider recovery points, Free-plan credit availability, secure scheduling, retention and alerting. No automatic backup or pruning approved yet."
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
