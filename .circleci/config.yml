@@ -5,6 +5,10 @@
 version: 2.1
 
 parameters:
+  enable_gh06_age_release_remote:
+    type: boolean
+    default: false
+
   enable_gh06_age_context_smoke:
     type: boolean
     default: false
@@ -18,6 +22,51 @@ parameters:
     default: false
 
 jobs:
+  # GH06 REAL GITHUB API, but ARTIFICIAL DATA ONLY.
+  # This job NEVER runs from a regular push: both a manual pipeline flag AND
+  # an in-workflow approval gate are required on the one protected test branch.
+  gh06-age-release-synthetic-e2e:
+    docker:
+      - image: cimg/python:3.12
+    resource_class: small
+    working_directory: ~/orgavela-gh06-age-release-e2e
+    steps:
+      - checkout
+      - run:
+          name: Refuse unintended source, owner keys or missing scoped token
+          command: |
+            set +x
+            set -euo pipefail
+            umask 077
+            test "$CIRCLE_PROJECT_USERNAME" = "janjrre"
+            test "$CIRCLE_PROJECT_REPONAME" = "Projekt-Wordpress-Plugin"
+            test "$CIRCLE_BRANCH" = "test/orgavela-age-release-o03"
+            test -n "$(printenv GH_TOKEN || true)"
+            for key in GITHUB_TOKEN BACKUP_GITHUB_TOKEN AGE_SECRET_KEY ORGAVELA_BACKUP_PRIVATE_KEY \
+                BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE \
+                SFTP_HOST SFTP_PASSWORD IONOS_SSH_PASSWORD SSH_PRIVATE_KEY \
+                GOOGLE_DRIVE_TOKEN_JSON DUPLICATI_GOOGLE_DRIVE_AUTH_ID; do
+              test -z "$(printenv "$key" || true)" || exit 1
+            done
+            echo 'GH06_SYNTHETIC_AGE_SOURCE_CHECK=PASS'
+      - run:
+          name: Install official distribution tools for artificial E2E
+          command: |
+            set -euo pipefail
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends age gh jq >/dev/null
+            age --version
+            gh --version | head -n 1
+      - run:
+          name: Publish only synthetic AGE archive and prove remote immutable restore
+          no_output_timeout: 10m
+          command: |
+            set +x
+            set -euo pipefail
+            umask 077
+            export ORGAVELA_GH06_AGE_RELEASE_APPROVED=YES
+            bash scripts/ci/orgavela-github-release-age-remote-e2e.sh
+
   # Stage-B PRE-SECRET proof: verify protected branch may use the empty restricted
   # CircleCI context. No GitHub token, no remote release, no WordPress access.
   gh06-age-context-smoke:
@@ -170,6 +219,25 @@ jobs:
             echo 'GH05_PARITY_PRODUCTION_CAPTURE=disabled'
 
 workflows:
+  gh06-age-release-synthetic-remote-manual:
+    when: << pipeline.parameters.enable_gh06_age_release_remote >>
+    jobs:
+      - gh06-age-release-manual-approval:
+          type: approval
+          filters:
+            branches:
+              only:
+                - test/orgavela-age-release-o03
+      - gh06-age-release-synthetic-e2e:
+          requires:
+            - gh06-age-release-manual-approval
+          context:
+            - orgavela-age-release-tests
+          filters:
+            branches:
+              only:
+                - test/orgavela-age-release-o03
+
   gh06-age-context-smoke-manual:
     when: << pipeline.parameters.enable_gh06_age_context_smoke >>
     jobs:
