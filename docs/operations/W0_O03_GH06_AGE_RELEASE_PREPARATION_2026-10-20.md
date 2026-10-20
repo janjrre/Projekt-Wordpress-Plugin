@@ -181,3 +181,18 @@ GitHub wurde unabhängig lesend geprüft: geschützter Branch `test/orgavela-age
 **Betriebssichere schrittweise Freigabe:** Betreiber zuerst CircleCI Free Usage/Credits überprüfen (nicht über verfügbaren GitHub-Connector lesbar); bei gefordertem Upgrade/Zusatzkosten STOP. Dann höchstens einen manuellen CircleCI-Pipeline-Trigger auf **Config Source Branch UND Checkout Branch `test/orgavela-age-release-o03`** mit exakt `enable_gh06_age_release_remote=true` und **ALLEN anderen Parametern FALSE**. Noch **NICHT** den anschließenden CircleCI-Hold `gh06-age-release-manual-approval` freigeben; zuerst Screenshot mit Pipeline-ID, Branch/Commit, Hold und sichtbaren Jobs prüfen. Erst nach gesonderter Bestätigung einen einzigen künstlichen Writer-Job authorisieren. Bei fehlendem Hold, unerwarteten Jobnamen, Zugangsdatenmeldungen oder Kosten STOP ohne blinden Rerun. Bei Fehler nach Draft-Erstellung keine künstlichen Releases/Assets löschen, sondern Diagnose; schließlich PAT sofort widerrufen und `GH_TOKEN` aus CircleCI entfernen, auch bei Misserfolg.
 
 Die synthetische Runbook-Abnahme ist **keine echte Owner-Privatekey-Recovery**; GH03 unabhängige offline AgePony-Wiederherstellung ist weiterhin offen, reale GH05/06/07/08 gesperrt. V1 Coding 62/71 historisch, 0/8 formale Milestones, 0/4 P4, 0/18 Release-Gates, PR-Integration offen.
+
+## 20.10.2026 – GH06 **synthetisches** age Release E2E #298 PASS und Approval-Hold #299 PASS
+
+**Source:** geschützt `test/orgavela-age-release-o03`, `eba067913eb0290b2a95e40029f77e3b803ed924`. Keine Änderung an Site oder Source-Production-Backup. Betreiber-Screenshot CircleCI Pipeline #298: `gh06-age-release-manual-approval` wurde freigegeben; `gh06-age-release-synthetic-e2e` anschließend SUCCESS, inklusive ausgewiesenem `PASS` für binären ID-bezogenen SHA-256-Remote-Readback vor/nach Publication, `immutable=true` und unabhängige entschlüsselte synthetische Wiederherstellung. Die visuelle Quelle ist ein Provider-Screenshot; binäre Restore-Inhalte nicht getrennt durch Assistenz heruntergeladen.
+
+**Unabhängige Repo-/Release-Read:** privates Ziel `janjrre/orgavela-backups`, GH Release **ID 418380590**, Tag `backup-orgavela-age-synthetic-ci-10`, publiziert 2026-10-20T12:36:00Z, `immutable=true`, `draft=false`, genau drei Assets mit digest-Metadaten:
+- `manifest.json`: `sha256:4233d509b51989b6e89b1b8b79f50b75a5137492bf2dab590c81badac7160aa2`
+- `orgavela-age-synthetic-ci-10.tar.age`: `sha256:421e4c539fd9b3ce18aac7ca68dee662bfef60309f4be920c369c72eb8d4d302`
+- `orgavela-age-synthetic-ci-10.tar.age.sha256`: `sha256:80e49f882053c812f2d6363fe61855f0ab21bd22a17b7001258cd7e5da250946`
+
+**Separater Sperrnachweis:** Betreiber-Screenshot CircleCI Pipeline #299, `gh06-age-release-manual-approval` hält explizit ON HOLD; `gh06-age-release-synthetic-e2e` nicht gestartet. Damit ist das manuelle Gate nachgewiesen. Danach **Cancel** empfohlen, jedoch noch keine unabhängige Bestätigung des abgebrochenen Zustands.
+
+**Jetzt erforderlich:** GitHub Fine-grained **Test-PAT widerrufen**, CircleCI Context `orgavela-age-release-tests` **GH_TOKEN entfernen**. Nicht das historische GH04-Token/den GPG-Context verwechseln. Keine weitere Freigabe von #299, keine neuen Releases erforderlich. Erst nach Betreiberbestätigung beide Sicherheitsbereinigungen als erledigt dokumentieren.
+
+**Abgrenzung:** Nur temporäre synthetische age-Identität im CI; nicht die private Eigentümer-Recovery-Identität aus GH03. Keine echten WordPress-/MariaDB-Backups, keine unabhängige Wiederherstellung mit dauerhafter Schlüssel-Kopie, kein Cron oder produktiver Writer/Deployment. **GH06 synthetische Runtime: BESTANDEN. Administrativer Abschluss: Cleanup offen. GH03 und reale GH05–08: offen. V1: 62/71 historisch, 0/8 M, 0/4 P4, 0/18 R.**
