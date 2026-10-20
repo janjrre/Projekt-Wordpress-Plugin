@@ -3,6 +3,12 @@
 **Stand:** 12.10.2026, initiale V1-Baseline nach Liveprüfung. **V1-Status: NICHT ABGENOMMEN.**  
 **Normativer Masterplan:** [V1_ACCEPTANCE_PLAN.md](../operations/V1_ACCEPTANCE_PLAN.md) · **Verbindliche Fortschrittsdaten:** [V1_PROGRESS.json](../operations/V1_PROGRESS.json) · **Zentrales Abnahme-Issue:** [#15](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15) · **Ergänzende Roadmap:** [V1_MASTER_PLAN.md](V1_MASTER_PLAN.md) · **Abnahmematrix:** [V1_ACCEPTANCE_MATRIX.md](V1_ACCEPTANCE_MATRIX.md) · **Arbeitsjournal:** [ASSISTANT_WORK_LOG.md](../operations/ASSISTANT_WORK_LOG.md).
 
+## Update 20.10.2026 – GH06 klassische Branchregel anhand 3 Screenshots geprüft
+
+- Der Betreiber zeigt die klassische GitHub-Branchregel für exakt `test/orgavela-age-release-o03` (Applies to 1 branch): **Require PR=an**, **Do not allow bypassing=an**, **Allow force pushes=aus**, **Allow deletions=aus**. GitHub-Branch-API bestätigt `protected=true`; Detail-API liefert 403, daher Checkboxes sind **Screenshotbeleg**, nicht unabhängig aus Backend gelesen.
+- **Offene Härtung und Speicherbeleg:** `Require approvals` und `Require status checks to pass before merging` sind aus. Ein sichtbarer `Save changes`-Button kann auf noch nicht gespeicherte Änderungen hindeuten; nach dem Speichern/Neuladen als Betreiber bestätigen. Wegen Solo-Maintainer-Risiko nicht ohne Abstimmung Review-Pflicht erzwingen; passende erforderliche Checks erst nach prüfbarem GH06-Remote-Job setzen. Vor GitHub PAT außerdem CircleCI-Context-Gruppe `All members` / Rechtekreis und GH06 Source/Writer-Codegrenzen beurteilen.
+- **Keine Secrets oder echten Releases:** GH05 synthetisch #188 SUCCESS, GH06 13/13 no-secret #209 PASS. GH03 Owner-Recovery offline nicht abgenommen, GH05 echte OrgaVela-Quelle, GH06 private age Release, GH07 real Restore und GH08 Schedule gesperrt. V1 unverändert 62/71 Coding, M0–M7 0/8, P4 0/4, R01–18 0/18, PR-Integration offen.
+
 ## Update 20.10.2026 – GH06 Context: beide Expressions aktiv, Detail-Branchschutz noch zu prüfen
 
 - Neuer Betreiber-Screenshot bestätigt beide separaten CircleCI-Expression-Restrictions: Branch `test/orgavela-age-release-o03` plus `not job.ssh.enabled` UND `not (pipeline.config_source starts-with "api")`. Vorheriger Screenshot hatte die Restriktion nur für Projekt `Projekt-Wordpress-Plugin` bestätigt; laut CircleCI-Dokumentation werden alle Expression-Zeilen und die Projekt-Restriction mit **AND** ausgewertet. Kein Token/Remote-Job/Release wurde erstellt.
