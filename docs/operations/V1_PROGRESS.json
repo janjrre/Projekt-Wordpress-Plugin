@@ -682,7 +682,12 @@
       "openpgp_pgp03_ci_pgp04_context_secrets_exposed": false,
       "openpgp_pgp04_remote_release_status": "blocked_until_protected_branch_and_restricted_context_and_new_scoped_token; no token created",
       "openpgp_pgp04_test_branch_gate": "The current Draft PR#25 source branch feat/o03-pgpony-openpgp-migration-20261020 returns protected=false from GitHub GET branch. It is NOT safe to expose a GH_TOKEN on this branch merely because YAML filters match. Use a dedicated protected test branch, branch/PR/no-bypass controls verified, tightly restricted CircleCI context and explicit owner approval before any synthetic remote release.",
-      "openpgp_pgp04_immutable_release_test_passed": false
+      "openpgp_pgp04_immutable_release_test_passed": false,
+      "pgp04_backup_repo_release_immutability_operator_ui_confirmed": true,
+      "pgp04_backup_repo_release_immutability_confirmation": "GitHub Settings > General > Releases screenshot from operator, 2026-10-20 22:33; only setting, no remote release claim",
+      "pgp04_ci_manual_approval_job_committed": true,
+      "pgp04_ci_manual_approval_job_commit": "6c8431fb1dab860ad52c77c1d88ca7eefd23ca64",
+      "pgp04_ci_runtime_approval_tested": false
     },
     {
       "id": "O04",
