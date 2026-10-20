@@ -214,10 +214,13 @@ jobs:
           name: Exercise pinned owner PUBLIC key and synthetic-only roundtrip
           command: |
             set -euo pipefail
+            echo 'PGPONY_QA_STAGE=syntax'
             bash -n scripts/ci/orgavela-openpgp-synthetic-pack.sh
             bash -n scripts/ci/test-orgavela-openpgp-synthetic-pack.sh
             bash -n scripts/ci/test-orgavela-pgpony-public-key.sh
+            echo 'PGPONY_QA_STAGE=public_key_preflight'
             bash scripts/ci/test-orgavela-pgpony-public-key.sh
+            echo 'PGPONY_QA_STAGE=synthetic_openpgp_roundtrip'
             bash scripts/ci/test-orgavela-openpgp-synthetic-pack.sh
             echo 'PGPONY_OFFLINE_QA=PASS'
 
