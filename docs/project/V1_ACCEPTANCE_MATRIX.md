@@ -938,3 +938,16 @@ Formal Coding historisch 62/71, M0–M7 0/8, P4 0/4, R01–R18 0/18 unveraendert
 | Real Capture, GitHub-Releasetest mit Echtdaten, tatsächlicher isolierter Restore und Scheduler | **NICHT ABGENOMMEN** | Nur danach separate technische Abnahme; keinerlei Echtdaten abgerufen |
 
 V1 Coding historisch 62/71, formale M0–M7 0/8, P4 0/4, Release 0/18 unverändert.
+
+## 21.10.2026 – PGP05 Runnerkosten / manuelles read-only `schema`-Audit (v2.48)
+
+| Prüfpunkt | Status | Konsequenz |
+|---|---|---|
+| Repository öffentlich, Runner Standard `ubuntu-latest` | **0-€-GITHUB-ACTIONS-KOSTEN VERIFIZIERT** | [GitHub Docs](https://docs.github.com/en/actions/reference/runners/github-hosted-runners): public Standardrunner free/unlimited; nicht auf kostenpflichtige Runner/andere Dienstleister übertragbar |
+| Automatischer Main-Branch-Auditrequest-Push | **GESPERRT, HTTP 409** | GitHub-Branchschutz blockiert erwartungsgemäß; keine Änderung/kein Run |
+| Bestehender Workflow-Dispatcher `main`, `operation=schema` | **BETREIBER-KLICK ERFORDERLICH** | GitHub Apps in dieser Sitzung bieten keine Workflow-Dispatch-Mutation, UI-Link im Masterplan |
+| Reale OrgaVela SSH/WP-CLI-Quelle erneut geprüft | **NOCH NICHT** | Vorherige Runs vom 12.10. sind historisch; neuer Test erst nach manuellem Run |
+| 20/20 WP-Probe-Offlineunit-Tests | **SYNTHETISCH PASS** | Anderer ungemergter Featurebranch, nicht Bestandteil bestehenden Main-Workflows |
+| Live SQL-Dump/Backup, echter Restore, GitHub Release, Scheduler | **BLOCKED** | Keine Änderung der produktiven Gates |
+
+Coding 62/71 historisch; M0–M7 0/8, P4 0/4, Release 0/18 unverändert.
