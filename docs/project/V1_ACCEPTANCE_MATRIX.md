@@ -911,3 +911,17 @@ Formal Coding historisch 62/71, M0–M7 0/8, P4 0/4, R01–R18 0/18 unveraendert
 | Zusätzliche verschlüsselte GitHub-Backups, echter Source-Writer, Scheduler | **BLOCKED** | Keine Produktivfreigabe aus UI-Nachweis ableiten |
 
 62/71 historische Coding, formale M 0/8, P4 0/4, R 0/18 unverändert.
+
+
+## 21.10.2026 – PGP05 Zwei-Kanal-Recovery-Definition (Masterplan v2.46)
+
+| Prüfpunkt | Abnahmestand | Beleggrenze |
+|---|---|---|
+| IONOS Provider-Restorepunkte OrgaVela | **UI-TEILBELEG PASS** | 9 datierte Einträge, Anbieterbeschreibung Dateien+DB; kein Restore/internes Backup geprüft |
+| IONOS Quelle für realen isolierten Restore verfügbar / wiederherstellbar | **OFFEN** | UI `Wiederherstellen` darf nicht auf aktiver WordPress-Seite für Test benutzt werden |
+| PGPony/GitHub synthetischer Pack/Encrypt/Writer / Integritätsguard | **SYNTHETISCH PASS** | Eigene Offline-/PGP04-Evidenz, ausdrücklich keine Echtdaten |
+| Bestehender synthetischer MariaDB-11.8-Dump/Restore-Workflow im Repository | **BESTAND GEPRÜFT, JETZT NICHT GESTARTET** | `.github/workflows/orgavela-restore-rehearsal.yml`, `scripts/ci/orgavela-synthetic-restore.sh`; nicht auf OrgaVela-Echtdaten angewendet |
+| Gesamter WordPress+MariaDB-Restore eines echten Backups im isolierten Klon | **OFFEN** | Nur dieser Erfolg mit ACL-/SMTP-/Cron-Isolation, vollständigen Inhalten und gemessener Dauer kann reales O03-Gate freigeben |
+| Freigabefolge Source-Capture → Ciphertext-GitHub-Publish → isolierter Restore → Scheduler | **JEWEILS GESPERRT/NEUES OPERATOR-GO** | Kein CI-Run, keine Secrets, kein echter Datenzugriff und keine Kosten autorisiert |
+
+[Detailplan](../operations/PGP05_DUAL_CHANNEL_RECOVERY_ACCEPTANCE_20261021.md); [Bereinigter IONOS-Evidenzbericht](../operations/PGP05_ORGAVELA_WORDPRESS_READONLY_METADATA_20261021.md). Historie Coding 62/71, formal M0–M7 0/8, P4 0/4, R01–R18 0/18.
