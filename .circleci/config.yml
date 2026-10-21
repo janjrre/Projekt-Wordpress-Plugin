@@ -292,27 +292,28 @@ jobs:
             bash scripts/ci/orgavela-openpgp-synthetic-handoff.sh writer /tmp/orgavela-pgpony-handoff
             echo 'PGPONY_HANDOFF_CI_WRITER=PASS'
 
-  # V2: verify restricted context and approved SHA WITHOUT any token.
-  # Runs before manual hold, refuses unexpected credentials.
-  pgp04-context-no-secret-smoke:
+  # V3: after owner approval, verify restricted context SHA and token presence without printing secrets.
+  # Token-bearing context is never attached to jobs before the manual approval gate.
+  pgp04-context-sha-token-smoke:
     docker:
       - image: cimg/base:stable
     resource_class: small
     steps:
       - checkout
       - run:
-          name: Verify restricted context grants only reviewed SHA, no tokens
+          name: Verify approved SHA and restricted token availability without disclosing token
           command: |
             set -euo pipefail
             test "$CIRCLE_PROJECT_USERNAME" = janjrre
             test "$CIRCLE_PROJECT_REPONAME" = Projekt-Wordpress-Plugin
-            test "$CIRCLE_BRANCH" = security/pgp04-synthetic-release-v2-20261020
+            test "$CIRCLE_BRANCH" = security/pgp04-synthetic-release-v3-20261021
             test "$(printenv PGP04_APPROVED_SHA || true)" = "$CIRCLE_SHA1"
-            for key in GH_TOKEN GITHUB_TOKEN BACKUP_GITHUB_TOKEN SFTP_PASSWORD IONOS_SSH_PASSWORD SFTP_HOST AGE_SECRET_KEY BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE; do
+            test -n "$(printenv GH_TOKEN || true)"
+            for key in GITHUB_TOKEN BACKUP_GITHUB_TOKEN SFTP_PASSWORD IONOS_SSH_PASSWORD SFTP_HOST AGE_SECRET_KEY BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE; do
               test -z "$(printenv "$key" || true)"
             done
             echo PGP04_CONTEXT_ACCESS=PASS
-            echo PGP04_CONTEXT_TOKEN=NONE
+            echo PGP04_CONTEXT_TOKEN=PRESENT_MASKED
 
   # PGP04: owner PGPony key PUBLIC-only producer. Never receives Context or GitHub token.
   pgp04-synthetic-source:
@@ -327,7 +328,7 @@ jobs:
             set -euo pipefail
             test "$CIRCLE_PROJECT_USERNAME" = janjrre
             test "$CIRCLE_PROJECT_REPONAME" = Projekt-Wordpress-Plugin
-            test "$CIRCLE_BRANCH" = security/pgp04-synthetic-release-v2-20261020
+            test "$CIRCLE_BRANCH" = security/pgp04-synthetic-release-v3-20261021
             for key in GH_TOKEN GITHUB_TOKEN BACKUP_GITHUB_TOKEN SFTP_HOST SFTP_PASSWORD IONOS_SSH_HOST IONOS_SSH_PASSWORD BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE AGE_SECRET_KEY; do
               test -z "$(printenv "$key" || true)"
             done
@@ -364,9 +365,22 @@ jobs:
             set -euo pipefail
             test "$CIRCLE_PROJECT_USERNAME" = janjrre
             test "$CIRCLE_PROJECT_REPONAME" = Projekt-Wordpress-Plugin
-            test "$CIRCLE_BRANCH" = security/pgp04-synthetic-release-v2-20261020
+            test "$CIRCLE_BRANCH" = security/pgp04-synthetic-release-v3-20261021
             sudo apt-get update -qq
-            sudo apt-get install -y --no-install-recommends gnupg jq gh coreutils curl >/dev/null
+            sudo apt-get install -y --no-install-recommends gnupg jq coreutils curl ca-certificates >/dev/null
+            # GitHub CLI is not available in the runner's default apt sources.
+            # Use the official GitHub CLI signed apt repository, no unauthenticated package installs.
+            sudo install -d -m 0755 /etc/apt/keyrings
+            curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
+              https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+              | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
+            sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+            printf 'deb [arch=%s signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main\n' \
+              "$(dpkg --print-architecture)" \
+              | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends gh >/dev/null
+            gh --version | head -n 1
             export ORGAVELA_PGP_SYNTHETIC_ONLY=YES
             export PGP04_OPERATOR_APPROVED=YES
             export GITHUB_BACKUP_REPOSITORY=janjrre/orgavela-backups
@@ -381,27 +395,18 @@ workflows:
           filters:
             branches:
               only:
-                - security/pgp04-synthetic-release-v2-20261020
-      # Prove context authorization and exact SHA WITHOUT secrets first.
-      - pgp04-context-no-secret-smoke:
-          context:
-            - orgavela-pgp04-release-only
+                - security/pgp04-synthetic-release-v3-20261021
+      # Owner approval happens BEFORE any job receives the token-bearing context.
+      - pgp04-owner-approval:
+          type: approval
           requires:
             - pgp04-synthetic-source
           filters:
             branches:
               only:
-                - security/pgp04-synthetic-release-v2-20261020
-      # Manual release approval only after both no-secret gates pass.
-      - pgp04-owner-approval:
-          type: approval
-          requires:
-            - pgp04-context-no-secret-smoke
-          filters:
-            branches:
-              only:
-                - security/pgp04-synthetic-release-v2-20261020
-      - pgp04-synthetic-release-writer:
+                - security/pgp04-synthetic-release-v3-20261021
+      # Check the SHA and token presence only AFTER manual approval.
+      - pgp04-context-sha-token-smoke:
           context:
             - orgavela-pgp04-release-only
           requires:
@@ -409,7 +414,16 @@ workflows:
           filters:
             branches:
               only:
-                - security/pgp04-synthetic-release-v2-20261020
+                - security/pgp04-synthetic-release-v3-20261021
+      - pgp04-synthetic-release-writer:
+          context:
+            - orgavela-pgp04-release-only
+          requires:
+            - pgp04-context-sha-token-smoke
+          filters:
+            branches:
+              only:
+                - security/pgp04-synthetic-release-v3-20261021
 
   pgpony-ciphertext-handoff-manual:
     when: << pipeline.parameters.enable_pgpony_ciphertext_handoff >>
