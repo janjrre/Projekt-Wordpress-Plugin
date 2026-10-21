@@ -1,3 +1,5 @@
+> **AKTUELLER FORMAT-HINWEIS (21.10.2026):** Die unten stehenden `age`-Anleitungen sind **historisch**. Die bereits am 20.10.2026 vom Betreiber freigegebene [PGPony/OpenPGP-Migrations-ADR](W0_O03_PGPONY_OPENPGP_MIGRATION_ADR_2026-10-20.md) ersetzt sie als aktuelle Formatentscheidung fuer neue OrgaVela-Backups. PGP-04 hat ausschließlich synthetisch PASS. PGP-05 [Draft PR #28](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/28) enthält bisher nur tokenfreie Offline-Prüfungen; keine echten Backups oder automatischen Jobs sind autorisiert. Alte Abschnitte bleiben bewusst zur Audit-Nachvollziehbarkeit erhalten.
+
 # OrgaVela / W0–O03: ausschließlich IONOS + privates GitHub-Backup-Repository
 
 **Verbindlicher Betreiberentscheid: 13.10.2026** · Status: **GH-01 privates Repository verifiziert; GH-02 bis GH-08 offen, kein echtes Backup/Restore nachgewiesen**. Dieses Runbook ersetzt das externe Google-Drive-Backupziel aus früheren O03-Arbeitsschritten; alte Einträge bleiben als Historie bestehen.

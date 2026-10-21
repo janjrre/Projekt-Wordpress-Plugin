@@ -787,3 +787,15 @@ Historische Codingpakete 62/71, M0–M7 0/8, P4 0/4, Release-Gates 0/18 unveraen
 | Echte Backup-Quelle, isolierter Real-Restore, Automatisierung/Scheduler | **OFFEN / GESPERRT** | PGP-05 / O03 / weitere V1-Gates, neue ausdrueckliche Betreiberfreigabe erforderlich |
 
 **Keine formale V1-Release-Abnahme:** Codinghistorie 62/71, M0–M7 0/8, P4 0/4, R01–R18 0/18 unveraendert.
+
+## 21.10.2026 – PGP-05 Entwicklungsteilabnahme: Offline-Ciphertext-Contract
+
+| Kriterium | Status | Evidenzgrenze |
+|---|---|---|
+| Separater PGP-05-Branch auf PGP-04 V3-Basis, Draft PR #28 | **GitHub PASS** | Frozen PGP04 V3 unverändert; Head `532d3d478ec87c26928877d13d17e93c5becc5b3`, kein Merge |
+| Prüfer auf genau drei erlaubte synthetische Ciphertext-Dateien, striktem 9-Felder-Manifest und SHA-256 | **Code vorhanden** | nur fiktive Bytes und lokal gespeicherte Fixtures, keine OpenPGP-Packet- oder Remote-Release-Freigabe |
+| Tampering, unerwarteter Klartext, Produktionsflag, Symlink-Ancestry, Hardlinks, falsche Manifest-Felder/Fingerprint | **LOKAL 20/20 PASS** | Python 3.13.5 unittest, SHA-Match lokal/GitHub geprüft, keine CircleCI-Ausführung |
+| Echte OrgaVela-IONOS-Quelle, Produktionsverschlüsselung, getrennte Contexts, Remote-Release, isolierter Restore | **GESPERRT/OPEN** | wird nicht durch Offline-Code freigegeben |
+| Produktiv-Scheduler | **GESPERRT** | weitere Betreiberfreigabe notwendig |
+
+V1 Zähler unverändert: 62/71 historische Codingpakete, M0–M7 0/8, P4 0/4, R 0/18.
