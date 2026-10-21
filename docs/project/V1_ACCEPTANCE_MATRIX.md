@@ -925,3 +925,16 @@ Formal Coding historisch 62/71, M0–M7 0/8, P4 0/4, R01–R18 0/18 unveraendert
 | Freigabefolge Source-Capture → Ciphertext-GitHub-Publish → isolierter Restore → Scheduler | **JEWEILS GESPERRT/NEUES OPERATOR-GO** | Kein CI-Run, keine Secrets, kein echter Datenzugriff und keine Kosten autorisiert |
 
 [Detailplan](../operations/PGP05_DUAL_CHANNEL_RECOVERY_ACCEPTANCE_20261021.md); [Bereinigter IONOS-Evidenzbericht](../operations/PGP05_ORGAVELA_WORDPRESS_READONLY_METADATA_20261021.md). Historie Coding 62/71, formal M0–M7 0/8, P4 0/4, R01–R18 0/18.
+
+## 21.10.2026 – PGP05 Read-only-Identity-Probe (unmerged Featurebranch; v2.47)
+
+| Gate | Status | Nachweisgrenze |
+|---|---|---|
+| Betreiberfreigabe für kostenfreie Identitäts-/Metadata-Arbeit | **JA** | Ausdrückliche breite 0-€-Freigabe am 21.10.2026, kein Runner mit Abrechnungsrisiko |
+| WP-CLI-only Probe: feste Site-URL, vorhandene Root-Konfigdatei, erwartete Ordner, WordPress-DB-Verbindung, 52/52 InnoDB, 10 Core/UOP-Tabellen | **LOKAL CODE FERTIG** | PHP-Code/Unit Tests im noch **ungemergten** neuen Featurebranch, keine IONOS Live-Ausführung |
+| Synthetisches Testpaket und PHP-Syntax | **20/20 lokale künstliche Tests PASS; php -l OK** | Python-Fake-wpdb statt echte Daten; Quell-Blobs `7a5801d0c2c8405901e50acd95f5aab96cf18b48` / `35a695566a3a906c6e8be63277da8a9dcf0fbab2` |
+| Neuer Runner ohne finanzielle Belastung | **NICHT NACHGEWIESEN** | PCjan offline; Actions-Runner ungeklärt kostenpflichtig möglich → nicht gestartet |
+| Neuer realer Shell-/SQL-Metadata-Lauf | **GENEHMIGT NUR WENN 0 € / NICHT AUSGEFÜHRT** | Kein aktueller Live-SSH-Root, keine effektive WP-Datenbankkennungsvergleichung |
+| Real Capture, GitHub-Releasetest mit Echtdaten, tatsächlicher isolierter Restore und Scheduler | **NICHT ABGENOMMEN** | Nur danach separate technische Abnahme; keinerlei Echtdaten abgerufen |
+
+V1 Coding historisch 62/71, formale M0–M7 0/8, P4 0/4, Release 0/18 unverändert.
