@@ -98,3 +98,19 @@ Im Plugin-Metadaten-Inventar sind IONOS-Essentials, IONOS-Marketplace und IONOS-
 **Nächste Betreiber-UI-Aktion:** ausschließlich auf den blauen Datenbanknamen tippen, im Bereich `Struktur` die **Metadaten** der Tabelle-/Typ-/Engine-Spalten ansehen und den Screenshot auf Wunsch mit maskierter Datenbank-/Hostkennung teilen. Nicht `SQL`, `Anzeigen` (Zeilen), `Exportieren`, `Importieren`, `Operationen`, `Rechte überprüfen` oder `Datenbankstatistiken aktivieren` benutzen. Die Tabellenstruktur darf zunächst nur mit allgemeinen WordPress-Kennzeichen plausibilisiert werden; der echte Zusammenhang mit WordPress muss über weitere vertrauenswürdige Identitätsbelege abgesichert werden.
 
 **Status:** Ein DB-Schema ist sichtbar und seine Kollation bekannt. **Noch kein Beweis**, dass genau dieses Schema das aktive WordPress-Schema ist, dass alle Tabellen InnoDB verwenden oder dass konsistente echte DB+Datei-Snapshots möglich sind. Keine Änderung am Masterplan-v2.43-Gate oder Produktionsfreigaben.
+
+
+## Nachtrag phpMyAdmin-Strukturansicht mit 52 Tabellen (Betreiber-Screenshot)
+
+**Zeitpunkt:** 21.10.2026, nach der zuvor dokumentierten 14:11-Datenbankübersicht. **Evidenzart:** ausschließlich direkt vom Betreiber übergebene phpMyAdmin-`Struktur`-Ansicht. Der Assistent hat phpMyAdmin **nicht** selbst bedient, keine Tabellendaten abgerufen, keine SQL-Abfrage ausgeführt und keine der Bildschirmkopien ins Repository hochgeladen.
+
+**Sichtbar und bestätigt:**
+- phpMyAdmin-Strukturseite meldet **52 Tabellen** in dem vom Betreiber zuvor geöffneten einzelnen Schema.
+- Namensmuster typischer WordPress-Tabellen (`*_options`, `*_posts`, `*_users`, `*_comments`, `*_terms`) sowie UOP-Core-spezifischer Tabellen (z. B. `*_uop_organizations`, `*_uop_persons`, `*_uop_consent_records`, `*_uop_registrations`, `*_uop_waitlist_entries`), außerdem Action-Scheduler-Tabellen und MCP-Plugin-Metadaten. Der konkrete WordPress-Tabellenprefix und Datenbank-/Serverkennungen sind hier **bewusst redigiert**.
+- Dies ist eine **starke strukturelle Plausibilisierung**, dass die Tabellen zur aktiven OrgaVela-/UOP-Core-Installation gehören; noch kein unabhängiger Abgleich mit der effektiv verwendeten `wp-config.php` oder der tatsächlichen Konfigurationsdatei.
+
+**Nicht sichtbar:** Die Aufnahme schneidet rechts nach Spalte `Aktion` ab; `Typ`/`Engine` ist darauf **nicht** lesbar. Folglich **nicht** als InnoDB-only bestätigen oder einen transaktionskonsistenten DB-Dump als zulässig markieren. Tabelleninhalte, Benutzerdaten, Backup-Erstellung und Datenbankgrößen pro Tabelle wurden nicht eingesehen oder angefordert.
+
+**Sicherer nächster Betreiber-UI-Schritt:** Auf derselben phpMyAdmin-`Struktur`-Übersichtsseite **nur horizontal scrollen** (gegebenenfalls iPhone-Querformat oder Safari `Desktop-Website anfordern`) und den sichtbaren Abschnitt mit `Typ`/`Engine` für die Tabellen fotografieren. Keine Checkboxen, `SQL`, `Anzeigen`, `Operationen`, `Exportieren` oder `Datenbankstatistiken aktivieren` verwenden. Maskieren von Server- und DB-Identifikatoren empfohlen. Wenn `Typ` auch dann nicht angezeigt wird, zunächst ohne Änderungen zurückmelden.
+
+**Status:** Metadatenbeleg **52 Tabellen + WordPress/UOP-Namensmuster**, weiter kein Engine-Gate bestanden, kein echtes DB-/Filesystem-Capture, keine neue Produktionsfreigabe. Masterplan **v2.43** und formale Release-Counts unverändert.
