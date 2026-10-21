@@ -68,3 +68,21 @@ Ten fixed gates, currently **6/10** formal:
 - The next owner action is **read-only inspection** of `Websites & Shops > OrgaVela > Erweiterte Einstellungen > SFTP & SSH > Konten verwalten`. Show account-list / project-scope / allowed access-root information if present, **mask usernames, hostnames, customer/contract identifiers, account IDs and all authentication secrets**. Do not click create/edit/reset/delete and do not export a key or password.
 - The remote WP-CLI collector on draft PR #32 remains **unconditionally disabled** and the scanner's public CLI remains **synthetic-only**. No real SSH/DB/file-content read authorized by this evidence.
 - **Checkpoint-5 unchanged: 6/10 formally accepted; four open gates #6 independent live security review, #8 current host/SSH/domain binding, #9 private independent DB mapping, #10 explicitly authorized no-bootstrap live metadata test.** Supporting operator subcheck A is now complete but is not a separate gate.
+
+## Operator evidence update — 2026-10-22, 00:21 local (existing IONOS account)
+
+The operator provided a **read-only screenshot** of **IONOS > Websites & Shops > OrgaVela > Sichere FTP-Zugänge verwalten**:
+- The account overview displays **1 of 200 in use**.
+- Exactly **one visible SFTP + SSH** account, with project-relevant personal note `ChatGPT / GitHubActions`.
+- Its **assigned directory is `/`**, i.e. the **whole webspace of the selected hosting contract** according to IONOS official guidance. The screenshot masked the username; no password, token or SSH key was shared. The account's listed root is **not** evidence for exclusive `/public` access or an actual shell chroot.
+- IONOS official documentation (current-generation hosting): https://www.ionos.de/hilfe/hosting/ftp-zugaenge-einrichten-und-verwalten/sftp/ssh-konto-erstellen/ states the default `/` assignment permits the *entire webspace*, and that restricting a subdirectory is an SFTP-level limitation **not necessarily a PHP/SSH security boundary**. The IONOS contract appears separate from Dreamloud per operator project context; verify the actual technical account isolation before claiming it.
+- Do **NOT** narrow, delete, rotate, reconfigure, clone or revoke this existing account without a separately agreed deployment compatibility plan: current GitHub Actions/other pipelines might rely on it. No new hosting contract or paid service is needed just for this review.
+
+**Safety finding:** The existing SFTP+SSH account is **broader than the intended PGP05 read-only source**. Treat its credentials as write-capable across that contract webspace. Both the future source identity probe and eventual producer need a dedicated scope/isolation design. A file-path allowlist in an application is *defense-in-depth* but **not** an operating-system-enforced restriction against a compromised general-purpose shell account.
+
+**Checkpoint-5 gate impact:** The owner/account-inventory substep of gate #8 is now **PASS (UI inventory)**. This does **not** complete #8: current SSH hostkey handshake, effective account-to-contract mapping, SSH current working directory/chroot and domain virtual-host binding still await independently verified evidence. #6 live security review, #9 effective WP DB identity, #10 explicit owner-approved no-bootstrap live metadata run remain OPEN. The fixed **checkpoint total remains 6/10**.
+
+**Next actions:** 
+1. Offline: design a pinned, non-bootstrapping **read-only** probe that never calls PHP/WP-CLI, never reads `wp-config.php`, emits only sanitized PASS/REFUSED and is not bundled with production secrets. Keep it in a Draft branch and synthetic test mode until separately approved.
+2. Owner: in this *same* existing OrgaVela account, optionally open **account details** in IONOS in view-only mode and privately compare the displayed server/contract assignment with the OrgaVela project; do not share account name, host, password or any credentials in GitHub/chat.
+3. For an actual connection, separately authorize the precise operator/runner, known host key, account, and command allowlist; do **not** use the pre-existing broader `orgavela-readonly-audit.sh` WP-CLI probe as PGP-05 evidence.
