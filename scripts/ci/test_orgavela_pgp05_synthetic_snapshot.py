@@ -126,6 +126,35 @@ class SyntheticSourceTests(unittest.TestCase):
         self.assertIn(':pubkey enc packet:',gpg.stdout)
         self.assertIn('keyid '+source.SUBKEY_ID,gpg.stdout)
 
+    def test_independent_writer_process_accepts_ciphertext_only(self):
+        output=self.home/'ciphertext-only-writer'
+        source.produce(output)
+        writer=Path(__file__).parent/'orgavela_pgp05_asset_gate.py'
+        proc=subprocess.run([os.sys.executable,str(writer),'--workspace',str(output)],
+                            capture_output=True,text=True,timeout=15,check=False)
+        self.assertEqual(proc.returncode,0,proc.stderr)
+        self.assertIn('PGP05_ASSET_CONTRACT_SYNTHETIC_ONLY=PASS',proc.stdout)
+
+    def test_independent_writer_process_rejects_modified_ciphertext(self):
+        output=self.home/'ciphertext-only-tampered'
+        source.produce(output)
+        cipher=output/(source.BACKUP_ID+'.tar.gpg')
+        cipher.write_bytes(cipher.read_bytes()+b'malicious')
+        writer=Path(__file__).parent/'orgavela_pgp05_asset_gate.py'
+        proc=subprocess.run([os.sys.executable,str(writer),'--workspace',str(output)],
+                            capture_output=True,text=True,timeout=15,check=False)
+        self.assertEqual(proc.returncode,1)
+        self.assertIn('PGP05_ASSET_CONTRACT=REFUSED',proc.stderr)
+
+    def test_external_manifest_leaks_no_internal_synthetic_sql(self):
+        output=self.home/'ciphertext-no-internal-manifest'
+        source.produce(output)
+        public=(output/'manifest.json').read_bytes()
+        self.assertNotIn(source.SYNTHETIC_SQL,public)
+        self.assertNotIn(source.SYNTHETIC_MARKER,public)
+        self.assertNotIn(b'wp-content',public)
+        self.assertNotIn(b'ionos',public.lower())
+
     def test_gzip_components_synthetic(self):
         self.assertEqual(gzip.decompress(gzip.compress(source.SYNTHETIC_SQL,mtime=0)),source.SYNTHETIC_SQL)
         self.assertGreater(len(source.synthetic_files_snapshot()),50)

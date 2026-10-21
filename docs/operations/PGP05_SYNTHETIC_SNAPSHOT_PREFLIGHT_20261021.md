@@ -34,3 +34,13 @@ Tests include a public-only GnuPG cipher fixture, exact three-asset handoff, no 
 **No production capture, no real backup, no workflow modification, no CircleCI run, no PATs, no merge or paid services.** Historical coding 62/71; formal V1 M0–M7 0/8, P4 0/4 and Release R01–R18 0/18 unchanged.
 
 See [PGP-05 issue #27](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27) and the approved [PGPony/OpenPGP migration ADR](W0_O03_PGPONY_OPENPGP_MIGRATION_ADR_2026-10-20.md).
+
+
+## Aktueller lokaler Sicherheitsnachtrag: separater Writer-Prozess (21.10.2026)
+
+Nach erfolgreichem Cross-PR-Test mit dem **byteidentischen PR28-Validator** wurden drei zusätzliche unabhängige Offline-Testfälle eingebaut:
+1. Source-Producer erzeugt echte fiktive GnuPG-verschlüsselte drei Dateien; ein **separater Python-Prozess** ruft das unveränderte ursprüngliche PR28-CLI-Programm über dessen Dateipfad auf und meldet **PGP05_ASSET_CONTRACT_SYNTHETIC_ONLY=PASS**.
+2. Der separat gestartete Writer verweigert einen nach Übergabe gezielt manipulierten Ciphertext (**PGP05_ASSET_CONTRACT=REFUSED**, exit 1), selbst wenn der vorherige Source-Producer bestanden hat.
+3. Das öffentliche Manifest darf weder den synthetischen SQL-Inhalt noch WordPress-Dateipfade oder den künstlichen Upload-Marker offenlegen.
+
+**Lokales Endergebnis: 23/23 PASS** (Python 3.13.5, GnuPG 2.4.7). Die neu zu GitHub hochgeladene Testdatei hat exakt die lokal geprüfte Git-Blob-SHA **42e0bc1cf9b444cc3a1c5382591346d8ad611550**; der komplette PR28-Gate-Blob ist weiterhin identisch zu GitHub **56dc9960dfdb946e7286d9a9044946e6cd3545e5**. Keine Secrets, keine IONOS-Verbindung, keine CI-Pipeline, kein GitHub-Release, kein Real-Backup oder produktiver Scheduler. Der Test beweist **getrennte Offline-Prozesse**, noch **nicht** getrennte CircleCI-Contexts oder tatsächliche echte WordPress-/MariaDB-Konsistenz.
