@@ -173,3 +173,27 @@ Im Plugin-Metadaten-Inventar sind IONOS-Essentials, IONOS-Marketplace und IONOS-
 **Nächste sichere UI-Prüfung:** Der Betreiber kann im **Webspace Explorer `public/` anklicken** und nur die **Datei-/Ordnernamen auf oberster Ebene** als Screenshot zeigen, um die WordPress-Basisdateien (z. B. `index.php`, `wp-load.php`; Existenz von `wp-config.php`, falls sichtbar) zu erkennen. **Keine Dateien öffnen** (`wp-config.php` enthält Geheimnisse!), herunterladen, kopieren, bearbeiten oder löschen; `backup_storage/` nicht öffnen. Namen/Serverkennung bei Bedarf ausblenden. Alternativ später Document-Root direkt aus bereits vorhandener IONOS-UI ansehen. Für eine neue direkte SSH-/DB-Abfrage ist nach wie vor eine gesonderte explizite Freigabe notwendig.
 
 **Status:** WordPress-Installationsverzeichnis `/public` **sehr plausibel via Webspace-UI**, aber nicht unabhängig als produktiver Domain-Document-Root verifiziert. Keine Erhöhung formaler V1-Abnahme, kein PGP05-Backup-Produktiv-GO. Masterplan v2.44 und 52/52-InnoDB-Teilnachweis unverändert.
+
+
+## WordPress-Dateinamensprüfung im IONOS Webspace Explorer (Betreiber-Screenshots 21.10.2026)
+
+**Belegart:** Zwei ausschließlich durch den Betreiber bereitgestellte IONOS-Webspace-Explorer-Screenshots, Verzeichnis `/public`, oberer und unterer Teil der sichtbaren Dateinamenliste. Der Assistent hat keine Datei geöffnet, kopiert, heruntergeladen, gehasht, verändert oder über SSH/SFTP ausgelesen. Bilder wurden nicht in GitHub gespeichert.
+
+**Von den beiden Bildern bestätigt:**
+- Unter `/public` existieren die Ordner `wp-admin/`, `wp-content/`, `wp-includes/`, außerdem `.opcache/`. Zahlreiche typische WordPress-Root-Dateien sind sichtbar, insbesondere `index.php`, `wp-load.php`, `wp-settings.php`, `wp-cron.php`, `wp-login.php`, `wp-config-sample.php`, `readme.html` und `license.txt`.
+- **`/public/wp-config.php` ist sichtbar**, vom UI mit rund **3,6 KB** und Modus **`600`** ausgewiesen. **Keine** Einsicht in Dateiinhalte, DB-Zugangsdaten, Salts, Keys oder Schemaangaben. `600` schränkt Dateilesung unter üblichen POSIX-Rechten auf den Besitzer ein; die effektive Besitzer-, ACL-, Backup-Prozess- und Root-Privilege-Zuordnung ist weiterhin **unbekannt**.
+- `.htaccess` (ca. 6,06 KB; UI `644`) und `php.ini` (ca. 458 Bytes; UI `644`) sowie mindestens eine weitere PHP-Konfigurations-/Integrationsdatei mit UI-Modus `600` und weitere PHP-Dateien sind vorhanden. **Keine** Aussage über ihre Inhalte, Vertrauenswürdigkeit, Funktionen oder notwendige Ausschlüsse/Änderungen möglich.
+- Die angezeigten WordPress-Verzeichnisse tragen den UI-Modus `755`. Das erlaubt noch **keinen** Schluss, dass der bestehende SFTP-/GitHub-Deploy-Account alle gesicherten Dateien sicher lesen darf.
+- Die bereits gezeigte Datenbank mit **52/52 InnoDB-Tabellen** sowie UOP-/WP-Tabellennamen ist strukturell passend. Die **effektiv in `wp-config.php` referenzierte Datenbank** ist mit diesen Screenshots weiterhin nicht überprüft.
+
+**Ergebnis/eng abgegrenzte Teilabnahme:** Das Vorhandensein einer tatsächlichen **WordPress-Installationsdateistruktur unter `/public`** ist jetzt direkt durch Dateinamen auf dem OrgaVela-Webspace bestätigt und nicht nur aus drei Ordnern abgeleitet. **Kein unabhängiger Domain-Document-Root-Nachweis:** Die Domain-`orgavela.com`-Zuordnung zu genau diesem Dateipfad sowie SSH-Chroot/Filesystem-Root und echte WordPress-DB-Konfiguration benötigen noch eine von den Dateinamen unabhängige Zuordnungsquelle. Die Produktivfähigkeit und Realdaten-Sicherung bleiben ungeprüft.
+
+**Backup-Sicherheitsimplikationen zur späteren Implementierung:**
+1. Eine künftige dateibasierte OrgaVela-Sicherung darf `wp-config.php`, `.htaccess`, `php.ini` und weitere Konfigurationen **nicht versehentlich auslassen**; ihr Inhalt und weitere Dateinamen gehören ausschließlich in das **vor dem Offsite-Transport verschlüsselte innere Archiv**, niemals in öffentliche Manifeste oder Logs. Keine Secret-Ausgabe zur Verifikation.
+2. Die Rechte `600` bedeuten, dass ein separater minimalprivilegierter Backup-Source-Prozess die effektive **Lesbarkeit** der notwendigen Dateien sicher nachweisen müsste, ohne Rechte automatisch zu lockern oder den bestehenden Deploy-Account mit einem Release-PAT zu kombinieren.
+3. Das auf Webspace-Ebene **neben `public/`** vorhandene `backup_storage/` ist ein gesondert zu bewertender Speicherbereich. Nicht automatisch rekursiv in die WordPress-Source einbeziehen; seine Inhalte, Verantwortlichkeit und Aktualität sind unbekannt.
+4. Weder ein ungeprüftes Ausschließen zusätzlicher Root-Dateien noch ein pauschales Öffnen/Lesen unbekannter PHP-Dateien ist durch die Betreiber-Screenshots freigegeben.
+
+**Risikoarmer nächster Identitätsbeleg ohne Dateiöffnung:** In der vorhandenen IONOS-Oberfläche von `Websites & Shops → OrgaVela` die **WordPress-Installations-/Domain-Zuordnung bzw. das Dokumentenstammverzeichnis** als reine Metadatenübersicht betrachten, wenn dort verfügbar. Keine `wp-config.php`-Einsicht, keine Datei-Dumps, SQL, SSH, Token-, Cron- oder Berechtigungsänderungen. Falls die Oberfläche keinen Document-Root ausweist, vor direkter SSH-/DB-Metadatenprüfung eine **separate ausdrückliche Scope-Freigabe** einholen.
+
+**Unverändert blockiert:** realer kombinierter WordPress+InnoDB-Snapshot, Backup-Producer/Writer-Produktivfreigabe, GitHub-Release und Scheduler. Masterplan bleibt v2.44; V1-Zähler historisch 62/71 Coding, formal M0–M7 0/8, P4 0/4, Release 0/18.
