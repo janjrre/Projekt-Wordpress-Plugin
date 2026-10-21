@@ -709,3 +709,19 @@ V1 formal unveraendert: M 0/8, P4 0/4, R01-18 0/18, historisch 62/71 implementie
 | PGPony Betreiber-Recovery und Token-Revoke | OFFEN | Nach Writerversuch auszufuehren |
 
 Keine neuen formalen V1-Gates: M0-M7 0/8, P4 0/4, Release-R01-18 0/18; Codinghistorie 62/71.
+
+## 21.10.2026 – PGP04 V3 erster realer Release-Upload (Abnahmegrenze)
+
+| Kontrolle | Ergebnis | Nachweisumfang |
+|---|---|---|
+| V3-Source auf Commit 3c9f0bb8bd85fb97e09b84c870fb42fdf491a8de | CircleCI PASS | 12s und 6/6 Guardchecks, synthetische PGPony-Paketverschluesselung |
+| Approval und tokenbezogener Context-SHA-Smoke | CircleCI PASS | Approval manuell gegeben; Smoke 13s; CONTEXT_ACCESS=PASS, CONTEXT_TOKEN=PRESENT_MASKED |
+| V3 GitHub Release Writer | CircleCI PASS | 32s, gh 2.102.1, RELEASE_METADATA_VERIFIED=PASS |
+| Release-ID und Tag | CircleCI belegt | 419226447 und pgp04-synthetic-32 |
+| Genau drei Assets, remote bytegleich, immutable=true | Writer implementiert und als PASS protokolliert | GitHub PRIVATE Release per Connector noch nicht unabhaengig gelesen |
+| Betreiber-Sichtpruefung Repo-Release und Download | OFFEN | Download von .tar.gpg, .sha256 und manifest.json |
+| PGPony-Entschluesselung / synthetischer WordPress-/SQL-Restore | OFFEN | Auf Betreibergeraet, keine Keys/Passphrase an Chat |
+| Fine-Grained-PAT widerrufen und CircleCI GH_TOKEN geloescht | OFFEN | Betreiberbestaetigung noch ausstehend, SOFORT ausfuehren |
+| Produktivbackups | GESPERRT | Keine echten Website-/MariaDB-Daten gestattet |
+
+PGP04 Ende-zu-Ende noch OPEN, V1 M0-M7 0/8, P4 0/4, R01-R18 0/18; Codinghistorie 62/71.
