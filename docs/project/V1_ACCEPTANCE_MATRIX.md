@@ -886,3 +886,16 @@ Formale V1-Zahlen unveraendert: 62/71 Coding historisch, M 0/8, P4 0/4, R 0/18.
 | IONOS Provider-Backups, DB+WP-Dateien-Snapshot, echter Restore | **OFFEN/GESPERRT** | Keine Real-Daten-Capture-/Upload-Freigabe; keinerlei Neu-Test |
 
 [Pruefbericht](../operations/PGP05_ORGAVELA_WORDPRESS_READONLY_METADATA_20261021.md). Formale V1-Zaehler M 0/8, P4 0/4, R 0/18, historische Coding 62/71 unveraendert.
+
+## 21.10.2026 – PGP05 IONOS Datenbank-Engine-Gate (4-seitige Betreiber-PDF)
+
+| Gate | Ergebnis | Beleg / Grenze |
+| --- | --- | --- |
+| Alle Tabellen in der gezeigten IONOS phpMyAdmin-Struktur mit transaktionaler Engine | **PASS: 52/52 InnoDB; MyISAM 0** | 4 PDF-Seiten mit Tabellen-Engine-Spalte und Summenzeile, vom Betreiber eingereicht; ungekuerzte PDF nicht ins GitHub-Repo uebernommen |
+| Datenbank-Metadaten Groesse/Zaehler | **4,2 MiB / 2.929 angezeigt** | InnoDB-Datensatzzaehlung ggf. schaetzend, keine Tabellenzeilen gelesen |
+| Tabellenkollation vs. Schema-Default | **utf8mb4_unicode_520_ci / utf8mb3_general_ci** | Nicht gleichwertige Eigenschaftsfelder; kein Inkonsistenzfehler allein daraus |
+| Tatsaechlich von WordPress genutzte DB-Konfiguration, gepinnter IONOS SSH-Root | **OFFEN** | Tabellenstruktur sehr plausibel, aber nicht mit effektiver `wp-config.php` unabhaengig verifiziert |
+| DDL-/Cron-/Anwendungs-Schreibbarriere und konsistenter WordPress+MariaDB-Snapshot | **GESPERRT / NICHT AUSGEFUEHRT** | InnoDB allein reicht nicht; keine reale Capture-Freigabe |
+| Produktiver Release, isolierter Restore, Scheduler | **NICHT FREIGEGEBEN** | PGP05 Provider-Gates bleiben unabgenommen |
+
+Formal Coding historisch 62/71, M0–M7 0/8, P4 0/4, R01–R18 0/18 unveraendert.

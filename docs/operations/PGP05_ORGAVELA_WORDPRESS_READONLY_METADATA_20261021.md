@@ -114,3 +114,24 @@ Im Plugin-Metadaten-Inventar sind IONOS-Essentials, IONOS-Marketplace und IONOS-
 **Sicherer nächster Betreiber-UI-Schritt:** Auf derselben phpMyAdmin-`Struktur`-Übersichtsseite **nur horizontal scrollen** (gegebenenfalls iPhone-Querformat oder Safari `Desktop-Website anfordern`) und den sichtbaren Abschnitt mit `Typ`/`Engine` für die Tabellen fotografieren. Keine Checkboxen, `SQL`, `Anzeigen`, `Operationen`, `Exportieren` oder `Datenbankstatistiken aktivieren` verwenden. Maskieren von Server- und DB-Identifikatoren empfohlen. Wenn `Typ` auch dann nicht angezeigt wird, zunächst ohne Änderungen zurückmelden.
 
 **Status:** Metadatenbeleg **52 Tabellen + WordPress/UOP-Namensmuster**, weiter kein Engine-Gate bestanden, kein echtes DB-/Filesystem-Capture, keine neue Produktionsfreigabe. Masterplan **v2.43** und formale Release-Counts unverändert.
+
+
+## Nachtrag PDF-Strukturexport 14:16: sämtliche 52 Tabellen InnoDB
+
+**Datum/Evidenz:** 21.10.2026, gegen 14:16 gemäß vierseitigem phpMyAdmin-Struktur-Ausdruck, direkt vom Betreiber in die Konversation hochgeladen. **Die unredigierte PDF enthält Server-, Datenbank- und Tabellenprefixkennungen; das Original wurde bewusst NICHT in GitHub hochgeladen, zitiert oder verlinkt.** Für den Repository-Nachweis werden ausschließlich aggregierte und sanitierte technische Feststellungen erfasst. Kein eigener SSH-, SQL-, phpMyAdmin- oder Serverzugriff des Assistenten.
+
+| Sichtbares Metadatum | Ergebnis aus den vier PDF-Seiten | Belastbarkeit |
+| --- | --- | --- |
+| Strukturansicht einer IONOS-MariaDB-Datenbank | **52 Tabellen** | Vierseitige vom Betreiber gesicherte Momentaufnahme derselben bereits gezeigten Datenbank |
+| Typ/Storage Engine | **Alle 52 Tabellen = InnoDB** (jeweils die Engine-Spalte, Seiten 1–4) | **ENGINE-METADATENPRÜFUNG für dieses sichtbare Schema BESTANDEN**. Kein MyISAM-Eintrag in der vollständigen Liste. Noch keine unabhängige Identifikation via tatsächlich geladener WordPress-Konfigurationsdatei |
+| Tabellenkollation | Durchgehend **utf8mb4_unicode_520_ci** | Der Datenbank-Default in der Zusammenfassungszeile lautet hingegen **utf8mb3_general_ci**; das ist kein Widerspruch, da Tabellen- und Schema-Kollation getrennt sein können |
+| Angezeigte Datensätze | **2.929 gesamt** | phpMyAdmin-Zählung, bei InnoDB potentiell eine Schätzung; keine echten Datensätze/Tabellenzeilen gelesen |
+| Gesamtgröße (phpMyAdmin) | **4,2 MiB** | Nur tabellarische Datenbank-Speicherbelegung, kein vollständiger WordPress-Dateien-/Backupumfang |
+| Überhang in Zusammenfassungszeile | **0 B** | Kein Nachweis von DB-/WP-Datei-Konsistenz oder Backupfähigkeit |
+| Strukturplausibilität | WordPress-Core, UOP-Core, Action-Scheduler, MCP-Plugin-Tabellengruppen | Starke Plausibilisierung der OrgaVela-Zuordnung, aber **noch kein** unabhängiger Proof von Datenbankname/-Host in verwendeter WP-Konfiguration |
+
+**Ergebnis / wesentliche Gate-Trennung:** Für die im PDF sichtbare Datenbank ist die bisher offene Frage nach nichttransaktionalen **MyISAM-Tabellen beantwortet: 52/52 InnoDB**. Ein auf InnoDB basierender konsistenter transaktionaler *Datenbank*-Snapshot ist damit grundsätzlich technisch plausibel (geeigneter Dump-/Transaktionsmodus vorausgesetzt). **KEIN PASS** für vollständigen Backup-Source-Identity-/Quiescence-/DDL-/WP-Files-Snapshot: `--single-transaction` allein verhindert keine gleichzeitige DDL und garantiert keinen mit Dateien zeitgleichen Wiederherstellungspunkt. Weder aktive WordPress-Datenbankkonfiguration noch Quellroot, Credentials/Rechte, externer Cron, Schreibbarriere, echt verschlüsselter Capture, Release oder System-Restore wurden getestet.
+
+**Nächste sinnvolle risikoarme Betreiberaktion:** Nun nicht mehr zum Tabellen-Engine-Scrollen zurückkehren. Als Nächstes die bereits vorhandene IONOS-Oberfläche **SFTP & SSH → Konten verwalten** nur in der Übersicht öffnen und (nur wenn möglich) die Hosting-/Pfadzuordnung beurteilen. **Keine** Passwörter, privaten Schlüssel, neuen Konten oder Tokens anzeigen/anlegen, keinen Verbindungstest über SSH starten und keine aufwändigen Statistiken aktivieren. Server-/Vertrags-IDs auf neuen Bildern maskieren. Direkter neuer SSH-/SQL-Connectorlauf bleibt bis gesonderter Freigabe untersagt.
+
+**Projektstatus:** Nur die Engine-Metadaten dieses sichtbaren Schemas sind PASS. PGP05 reale Backup-Quellidentität und kombinierte WordPress-Dateien/MariaDB-Recovery-Konsistenz bleiben BLOCKED. Formaler V1-Meilensteinzähler wird nicht erhöht.
