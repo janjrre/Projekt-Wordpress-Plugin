@@ -754,3 +754,18 @@ Historische Codingpakete 62/71; formale M0–M7 0/8, P4 0/4, R01–R18 0/18; PGP
 | Produktiver Capture, geplanter Scheduler, echte Backupfreigabe | **GESPERRT** | PGP-05 Sicherheitsgates in [Issue #27](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27) |
 
 **Formal bleibt PGP-04 E2E OPEN; V1 M0–M7 0/8, P4 0/4, R01–18 0/18, historisch 62/71 Codingpakete.**
+
+## 21.10.2026 – aktualisierte Betreiber-Abnahme PAT und Restore-Dateien
+
+| Nachweis | Ergebnis | Grenzen |
+|---|---|---|
+| Fine-Grained-PAT auf GitHub widerrufen | **BETREIBER BESTAETIGT PASS** | Ausdrueckliche Aussage „Der Token wurde bereits widerrufen“; API-seitig wegen sensitiver PAT-Endpunkte nicht unabhaengig gelesen |
+| Dedizierter CircleCI-Context `GH_TOKEN` entfernt | **UI-SCREENSHOT PASS** | Bereits zuvor verifiziert; kein Geheimnis mehr im Context laut Betreiber-Screenshot |
+| PGPony-Testbackup entschluesselt | **BETREIBER BESTAETIGT PASS** | Erfolgreich auf eigenem Geraet, kein privater Schluessel in GitHub/CI |
+| Synthetische Archivdateien nach Entschluesselung vorhanden | **BETREIBER BESTAETIGT PASS** | Betreiber berichtet, die synthetischen Archivinhalte kontrolliert und die Dateien vollstaendig vorgefunden zu haben; `database.sql.gz` und `wordpress-files.tar.gz` erwartet |
+| Exakte Textmarker in den inneren synthetischen Komponenten | **NICHT AUSDRUECKLICH BESTAETIGT** | Producer-Code erzeugt erwartete Testmarker, Nutzer bestaetigte nur Vorhandensein, nicht wortgetreue Inhalte |
+| Lokaler SHA-256-Dateiabgleich gegen Sidecar | **OFFEN** | Writer pruefte Remote-Byteidentitaet und Sidecar; unabhaengiger Betreiber-Vergleich nicht berichtet |
+| PGP-04 formale vollstaendige Content-/Integritaets-Abnahme | **OFFEN (letzte Nachweise)** | Nicht mit echter Website-Wiederherstellung verwechseln |
+| Produktive Backups / Scheduler | **GESPERRT** | Keine Freigabe |
+
+Historische Codingpakete 62/71, M0–M7 0/8, P4 0/4, Release-Gates 0/18 unveraendert.
