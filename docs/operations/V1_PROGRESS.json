@@ -772,7 +772,25 @@
       "pgp04_v3_recovery_branch": "security/pgp04-synthetic-release-v3-20261021",
       "pgp04_v3_recovery_pr": "https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/26",
       "pgp04_v3_status": "DRAFT / NOT APPROVED / NOT RUN; corrected signed gh apt installation and moved context-token access after manual approval; owner must lock branch and rebind context+SHA before any test",
-      "pgp04_v3_expected_sha": "3c9f0bb8bd85fb97e09b84c870fb42fdf491a8de"
+      "pgp04_v3_expected_sha": "3c9f0bb8bd85fb97e09b84c870fb42fdf491a8de",
+      "pgp04_v3_source_provider_executed": true,
+      "pgp04_v3_source_provider_status": "PASS; operator screenshots CircleCI pipeline #505 2026-10-21, source 12s; synthetic GnuPG OpenPGP, no plaintext workspace, 6/6 early rejection",
+      "pgp04_v3_source_markers": [
+        "PGP04_OFFLINE_EARLY_REJECTION_TESTS=6/6 PASS",
+        "PGP04_V2_NO_SECRET_PREFLIGHT=PASS",
+        "PGPONY_HANDOFF_PRODUCER=PASS",
+        "PGPONY_WORKSPACE_PLAINTEXT=NONE",
+        "PGP04_SOURCE_CIPHERTEXT_ONLY=PASS"
+      ],
+      "pgp04_v3_workspace_size_ui": "1.7 KiB",
+      "pgp04_v3_circleci_pipeline_number": 505,
+      "pgp04_v3_approval_state": "ON_HOLD; not yet approved; operator screenshot of pgp04-owner-approval",
+      "pgp04_v3_context_smoke_executed": false,
+      "pgp04_v3_writer_executed": false,
+      "pgp04_v3_remote_release_confirmed": false,
+      "pgp04_v3_locked_head_sha_reverified": "3c9f0bb8bd85fb97e09b84c870fb42fdf491a8de",
+      "pgp04_v3_repository_target_private_verified": true,
+      "pgp04_v3_context_proof_limit": "Previous UI screenshot V3-only expression, GH_TOKEN masked present, PGP04_APPROVED_SHA masked ending a8de; actual full value/token scopes only runtime or owner evidence; pending post-approval smoke."
     },
     {
       "id": "O04",
