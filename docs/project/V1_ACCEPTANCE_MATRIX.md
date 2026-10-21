@@ -810,3 +810,16 @@ V1 Zähler unverändert: 62/71 historische Codingpakete, M0–M7 0/8, P4 0/4, R 
 | Echtes Backup, Owner Decrypt eines neuen PGP-05-Releases, isolierter WP+MariaDB-Restore | **NICHT AUSGEFUEHRT** | Kein produktiver Datenzugriff, keine neuen Token, keine reale Freigabe |
 
 V1 Zaehler unveraendert M 0/8, P4 0/4, R 0/18, technische historische Coding 62/71.
+
+## 21.10.2026 – PGP05 Checkpoint 2, offline Synthetic Snapshot Gate
+
+| Gate | Stand | Quelle/Grenze |
+|---|---|---|
+| Testdaten-/Quellidentitaet und Zweipass-Inventar | **LOKAL SYNTHETISCH PASS** | Exakt kuenstliche WordPress-/SQL-Fixtures, Drift/Symlink/Hardlink-Abbruch; kein echter Webroot |
+| Fake-DB + Fake-WordPress und interner Hashmanifest verschluesselt | **LOKAL PASS** | OrgaVela OpenPGP PUBLIC Key/GnuPG; keine private Keydatei |
+| Writer-Handoff nur Ciphertext/Sidecar/desinfiziertes Manifest | **LOKAL PASS mit Adapter** | 20/20 lokale Python/GnuPG Tests; lokaler vereinfachter Asset-Pruefadapter anstelle des realen PR28-Moduls |
+| Gecommitete PR28/PR29-Kombination und vollstaendiger realer Asset-Pruefer | **NICHT AUSGEFUEHRT** | kein CircleCI/Runner, kein unabhaengiger Repository-Test |
+| Echte WordPress+MariaDB-Konsistenz, Quellzugriff, realer Release, isolierter Restore | **OFFEN/GESPERRT** | verlangt neu definierte Security-Freigaben |
+| Produktions-Scheduler | **GESPERRT** | separate spaetere Zustimmung |
+
+Keine Erhoehung formaler Zaehler: historische Coding 62/71, M 0/8, P4 0/4, R01–18 0/18.
