@@ -769,3 +769,21 @@ Historische Codingpakete 62/71; formale M0–M7 0/8, P4 0/4, R01–R18 0/18; PGP
 | Produktive Backups / Scheduler | **GESPERRT** | Keine Freigabe |
 
 Historische Codingpakete 62/71, M0–M7 0/8, P4 0/4, Release-Gates 0/18 unveraendert.
+
+## 21.10.2026 – PGP-04 V3 finale ABNAHME: vollsynthetisches Restore-Paket
+
+| Gate / Nachweis | Endstatus | Grundlage |
+|---|---|---|
+| CircleCI #505, geschuetzter V3 SHA, manueller Approval, 6/6 Guard-Tests | **PASS** | Betreiber-Screenshots und GitHub Branch/Writer-Code Readback |
+| GitHub Release 419226447 / `pgp04-synthetic-32`, exakt 3 Assets, `immutable=true`, serverseitige Digests | **PASS** | Unabhaengige GitHub-REST-Metadatenpruefung |
+| Zweimaliger Remote-Bytevergleich und Sidecar vor Publish | **WRITER PASS** | Gruener Writer-Pruefmarker, kein zusaetzlicher unabh. Binary-Rehash durch Assistent |
+| PGPony Entschluesselung auf Betreibergeraet | **BETREIBER-PASS** | Fruehere ausdrueckliche Bestaetigung |
+| `database.sql.gz`, `wordpress-files.tar.gz` vorhanden | **BETREIBER-PASS** | Archiv lokal geprueft |
+| SQL `CREATE TABLE orgavela_synthetic_only (id INTEGER);` | **BETREIBER-PASS** | Eigentuemerrueckfrage zu exaktem Text mit „ja habe ich“ beantwortet |
+| `SYNTHETIC TEST ONLY - NO REAL SITE DATA` in innerer WordPress-Datei | **BETREIBER-PASS** | Eigentuemerrueckfrage zu exaktem Text mit „ja habe ich“ beantwortet |
+| Lokale `.tar.gpg` SHA-256 gegen `.tar.gpg.sha256` | **BETREIBER-PASS** | Eigentuemerrueckfrage zum Hash-Abgleich mit „ja habe ich“ beantwortet; nicht durch Assistent selbst gerechnet |
+| GitHub PAT widerrufen / CircleCI GH_TOKEN entfernt | **BETREIBER-PASS / SCREENSHOT-PASS** | Kein Zugriff auf Tokenwert, GitHub PAT-Revocation API nicht ausgelesen |
+| **PGP-04 V3 vollsynthetischer Ciphertext-Release und Inhalts-Restore** | **ABGENOMMEN / PASS** | Gilt **nur fuer synthetisches OpenPGP-Paket**, nicht fuer echte WP+DB-Systemwiederherstellung |
+| Echte Backup-Quelle, isolierter Real-Restore, Automatisierung/Scheduler | **OFFEN / GESPERRT** | PGP-05 / O03 / weitere V1-Gates, neue ausdrueckliche Betreiberfreigabe erforderlich |
+
+**Keine formale V1-Release-Abnahme:** Codinghistorie 62/71, M0–M7 0/8, P4 0/4, R01–R18 0/18 unveraendert.
