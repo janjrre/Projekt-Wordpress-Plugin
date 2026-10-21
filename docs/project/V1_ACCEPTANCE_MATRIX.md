@@ -823,3 +823,15 @@ V1 Zaehler unveraendert M 0/8, P4 0/4, R 0/18, technische historische Coding 62/
 | Produktions-Scheduler | **GESPERRT** | separate spaetere Zustimmung |
 
 Keine Erhoehung formaler Zaehler: historische Coding 62/71, M 0/8, P4 0/4, R01–18 0/18.
+
+## 21.10.2026 – PGP05 PR28+PR29 Integrationsnachtrag (ersetzt fruehere offene Lokalpruefung)
+
+| Check | Status | Scope / Beleg |
+|---|---|---|
+| Vollstaendiger PR28 Asset-Validator im lokalen Testsuitepfad | **SHA GITHUB-IDENTISCH** | Git-Blob `56dc9960dfdb946e7286d9a9044946e6cd3545e5` |
+| Synthetische PGP05 DB+Files Fixture -> OpenPGP-PUBLIC-Key -> Drei-Dateien-Handoff -> ORIGINAL PR28 Contract | **LOKAL 20/20 PASS** | Python 3.13.5/GnuPG 2.4.7, erneut durchgefuehrt nach Ersetzung des lokalen Minimaladapters |
+| Neues gestapeltes Feature-PR29 | **OPEN / DRAFT / UNMERGED** | HEAD `37894d8f79e45a537ebbbf90a52fde19d9b78e0c`; Base PR28 Branch |
+| Provider CircleCI fuer diese Kombination | **NICHT AUSGEFUEHRT** | Kein neuer Run, kein zweites PGPony-Recovery dieses Pakets |
+| Echte OrgaVela MariaDB-Transaktions- und WordPress-Dateikonsistenz | **OFFEN / GESPERRT** | Nur fest codierte kuenstliche Fixture, keine produktiven Zugriffe |
+
+Formale V1-Zahlen: Coding historisch 62/71, M 0/8, P4 0/4, R 0/18 unveraendert.
