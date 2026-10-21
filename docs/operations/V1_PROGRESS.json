@@ -756,7 +756,7 @@
       "pgp04_v2_context_provider_duration_seconds_ui": 4,
       "pgp04_v2_context_runtime_evidence": "2026-10-21 00:29 screenshots: pgp04-context-no-secret-smoke SUCCESS; PGP04_CONTEXT_ACCESS=PASS; PGP04_CONTEXT_TOKEN=NONE; job checkout HEAD bead6a3, expected v2 branch.",
       "pgp04_v2_approved_sha_variable_runtime_evidence": "The compiled CircleCI context no-secret-smoke job checks PGP04_APPROVED_SHA == CIRCLE_SHA1 and exits success with marker. Code blob d3170f9a4ecfb6b80ac0422042e94c457df6f77b and UI HEAD bead6a3, GitHub compare exact bead6a3386958bfc3f1bbc4c13b925506777ef5e.",
-      "pgp04_v2_approval_state": "ON_HOLD; NOT APPROVED as of user screenshot; reviewed code/branch checks complete; explicit one-time approval instruction can now be issued to operator",
+      "pgp04_v2_approval_state": "APPROVED ONCE BY OPERATOR; writer FAILED BEFORE SCRIPT due to apt package gh unavailable (exit 100); no release verified",
       "pgp04_v2_real_remote_asset_upload_verified": false,
       "pgp04_v2_remote_immutable_release_verified": false,
       "pgp04_v2_owner_restore_verified": false,
@@ -767,7 +767,12 @@
       "pgp04_v2_pat_created_operator_verified": true,
       "pgp04_v2_gh_token_context_presence_verified": true,
       "pgp04_v2_pat_creation_evidence": "Operator stated on 2026-10-21 token 'ist mit deinen einstellungen erstellt'; fine-grained token existence and claimed configuration owner-attested, exact scope/expiration not independently provider-inspected.",
-      "pgp04_v2_gh_token_context_presence_evidence": "2026-10-21 user screenshot shows masked GH_TOKEN and masked PGP04_APPROVED_SHA in CircleCI environment variables; last four visible SHA characters ef5e match locked bead6a3386958bfc3f1bbc4c13b925506777ef5e. Screenshot alone cannot independently prove context ID, PAT permissions, full SHA or current CircleCI approval state; previous screenshots attested context restrictions."
+      "pgp04_v2_gh_token_context_presence_evidence": "2026-10-21 user screenshot shows masked GH_TOKEN and masked PGP04_APPROVED_SHA in CircleCI environment variables; last four visible SHA characters ef5e match locked bead6a3386958bfc3f1bbc4c13b925506777ef5e. Screenshot alone cannot independently prove context ID, PAT permissions, full SHA or current CircleCI approval state; previous screenshots attested context restrictions.",
+      "pgp04_v2_failure_root_cause": "2026-10-21 CircleCI screenshot: E: Unable to locate package gh; apt-get exit 100 in writer pre-script install step",
+      "pgp04_v3_recovery_branch": "security/pgp04-synthetic-release-v3-20261021",
+      "pgp04_v3_recovery_pr": "https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/26",
+      "pgp04_v3_status": "DRAFT / NOT APPROVED / NOT RUN; corrected signed gh apt installation and moved context-token access after manual approval; owner must lock branch and rebind context+SHA before any test",
+      "pgp04_v3_expected_sha": "3c9f0bb8bd85fb97e09b84c870fb42fdf491a8de"
     },
     {
       "id": "O04",
