@@ -1,4 +1,7 @@
 import json
+import os
+from contextlib import redirect_stderr
+from io import StringIO
 from pathlib import Path
 import tempfile
 import unittest
@@ -28,10 +31,10 @@ class ContractTests(unittest.TestCase):
         self.assertFalse(x['production_capture_allowed'])
         self.assertFalse(x['independent_db_mapping_proven'])
 
-    def test_runtime_receipt_structural_only(self):
+    def test_runtime_receipt_is_refused_after_wpcli_retirement(self):
         x=valid(); x['source']='runtime-wp-cli'
-        result=m.validate(x)
-        self.assertFalse(result['production_capture_allowed'])
+        with self.assertRaises(m.Refused):
+            m.validate(x)
 
     def test_all_fields_required(self):
         for key in valid():
@@ -101,5 +104,44 @@ class ContractTests(unittest.TestCase):
         x=m.validate(valid())
         self.assertIs(x['production_capture_allowed'],False)
         self.assertIs(x['isolated_restore_proven'],False)
+
+    def test_unhashable_json_values_fail_closed(self):
+        for field in ('source', 'wp_root_candidate'):
+            for invalid in ([], {}, [1,2], {'secret': 'do not disclose'}, None, 42, True):
+                specimen = valid(); specimen[field] = invalid
+                with self.subTest(field=field, invalid=repr(invalid)):
+                    with self.assertRaises(m.Refused):
+                        m.load(json.dumps(specimen).encode())
+
+    def test_invalid_object_never_prints_traceback(self):
+        with tempfile.TemporaryDirectory() as td:
+            for key in ('source', 'wp_root_candidate'):
+                specimen = valid(); specimen[key] = {'secret': 'SENSITIVE SENTINEL'}
+                p = Path(td) / 'receipt.json'
+                p.write_text(json.dumps(specimen))
+                out = StringIO()
+                with redirect_stderr(out):
+                    result = m.main(['--metadata-receipt', str(p)])
+                self.assertEqual(result, 1)
+                self.assertEqual(out.getvalue().strip(), 'PGP05_IDENTITY_CONTRACT=REFUSED')
+
+    def test_receipt_file_type_and_mode_fail_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / 'receipt.json'
+            p.write_text(json.dumps(valid()))
+            p.chmod(0o666)
+            self.assertEqual(m.main(['--metadata-receipt', str(p)]), 1)
+            p.chmod(0o600)
+            self.assertEqual(m.main(['--metadata-receipt', str(p)]), 0)
+            link = Path(td) / 'link.json'
+            link.symlink_to(p)
+            self.assertEqual(m.main(['--metadata-receipt', str(link)]), 1)
+            parent = Path(td) / 'linkdir'
+            parent.symlink_to(Path(td), target_is_directory=True)
+            self.assertEqual(m.main(['--metadata-receipt', str(parent/'receipt.json')]), 1)
+            fifo = Path(td) / 'pipe'
+            os.mkfifo(fifo)
+            self.assertEqual(m.main(['--metadata-receipt', str(fifo)]), 1)
+
 
 if __name__=='__main__':unittest.main()
