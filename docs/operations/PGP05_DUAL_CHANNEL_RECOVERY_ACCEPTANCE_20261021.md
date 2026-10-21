@@ -80,3 +80,18 @@ Dieses Dokument ist ein **freigabepflichtiger Ablaufplan, keine Aufforderung zur
 **Keine der derzeit offenen realen Recovery-Abnahmen darf allein anhand dieser Vorlage als PASS eingetragen werden.**
 
 **Stand der formalen V1-Abnahme:** historisch 62/71 Codingpakete, M0–M7 0/8, P4 0/4, R01–R18 0/18. PGP-05 Produktivfreigaben weiter `false`.
+
+
+## H. Historische OrgaVela-Read-only-GitHub-Actions-Läufe – Metadatenprüfung am 21.10.2026
+
+**Ausschließlich GitHub-API-Abfrage bereits abgeschlossener Runs, keine neue Runner-Ausführung und keine Logs/Secrets abgerufen.** Die Metadaten der drei bekannten Läufe vom 12.10.2026 bestätigen alle `status=completed`, `conclusion=success` und `event=push` auf `main`. Für jeden Lauf wurde die damals versionierte, nicht-sensitive `.github/audit-requests/orgavela-readonly.json` gelesen; alle hatten `target=orgavela.com` und folgende Modi:
+
+| Ablauf (historisch 12.10.2026) | Commit-/Run-Evidenz | Was die Erfolgsmeldung grundsätzlich stützt |
+|---|---|---|
+| **`probe`** | [GitHub Actions #38264254555](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38264254555), Run-Head `3ecc6848de8e78550978ba472cd7cd595ff9454e` | Der damalige fest begrenzte SSH-/WP-CLI-Identitäts-/Plugincheck schloss erfolgreich ab, nicht eine neue produktive Quellprüfung |
+| **`schema`** | [GitHub Actions #38264354774](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38264354774), Run-Head `b6a7f155fa048c3a701ec105e3b4fa0b2e90ea35` | Ein damaliger eng begrenzter UOP-Schema-/Statuscheck schloss erfolgreich ab; vollständige reale Restorefähigkeit wird damit nicht belegt |
+| **`backup-preflight`** | [GitHub Actions #38267570599](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/runs/38267570599), Run-Head `b81a13500d56d6a1a875cbf3518d606d32b5f0e7` | Nur Lesbarkeit abgeleiteter Bucket-Größen, Tool-Verfügbarkeit und WordPress/DB-Aggregatmetadaten; keine Backup-Erstellung |
+
+**Sicherheitsreview des vorhandenen Source-Skripts** `scripts/ci/orgavela-readonly-audit.sh` (nur read-only GitHub-Dateiinspektion): zwingt `GITHUB_REPOSITORY` und `GITHUB_REF=main`, verwendet den vorhandenen eingeschränkten `orgavela-ionos`-Environment-Kontext, prüft einen fest vorgegebenen SSH-ED25519-Host-Fingerprint und WordPress-`home` gegen `https://orgavela.com`, installiert nichts auf dem Zielhost und gibt nur erlaubte Ergebniskennzeichen aus. **Wichtige Grenze:** `IONOS_AUDIT_WP_ROOT` stammt aus der GitHub-Variable bzw. nimmt `/public` als Default; wenn dieser Pfad im Shell-Namespace nicht passt, sucht der alte Scriptcode verschiedene zugelassene konventionelle Shellpfade. **Der tatsächlich aufgelöste SSH-Root wurde aus Gründen der Secret-/Pfad-Redaktion nicht als prüfbarer Wert ausgegeben.** Ein erfolgreicher historischer Run beweist deshalb **nicht**, dass der heutige produktive Backup-Prozess denselben geprüften und ausschließlich für OrgaVela freigegebenen Shell-/DB-Pfad verwenden kann.
+
+**Evidenzfolge:** Frühere sichere SSH-/WP-CLI-Kontrollen sind **historisch unabhängig bestätigt**, nicht „nie stattgefunden“. Aktuelle produktive identitätsgebundene Source-Rechte, tatsächlicher Document-Root und DB-Konfigurationsabgleich sind weiterhin vor erstem echten Capture auf neue Betreiberfreigabe angewiesen. In dieser Aufgabe keine CircleCI-/GitHub-Actions-Runs, SSH-/DB-Abfragen oder Kosten ausgelöst.
