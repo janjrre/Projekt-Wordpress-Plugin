@@ -155,6 +155,46 @@ class SyntheticSourceTests(unittest.TestCase):
         self.assertNotIn(b'wp-content',public)
         self.assertNotIn(b'ionos',public.lower())
 
+    def test_writer_public_only_openpgp_packet_passes_separate_process(self):
+        output=self.home/'encrypted-writer'
+        source.produce(output)
+        writer=Path(__file__).parent/'orgavela_pgp05_offline_writer.py'
+        proc=subprocess.run([os.sys.executable,str(writer),'--synthetic-only','--workspace',str(output)],
+                            capture_output=True,text=True,timeout=15,check=False)
+        self.assertEqual(proc.returncode,0,proc.stderr)
+        self.assertIn('PGP05_WRITER_PUBLIC_ONLY_PREFLIGHT=PASS',proc.stdout)
+
+    def test_writer_rejects_hash_consistent_but_fake_encryption(self):
+        output=self.home/'forged-ciphertext'
+        source.produce(output)
+        name=source.BACKUP_ID+'.tar.gpg'
+        fake=b'not actually OpenPGP ciphertext but hashes match'
+        import hashlib
+        sha=hashlib.sha256(fake).hexdigest()
+        (output/name).write_bytes(fake)
+        (output/(name+'.sha256')).write_text(sha+'  '+name+'\n')
+        manifest_file=output/'manifest.json'
+        metadata=json.loads(manifest_file.read_text())
+        metadata['archive_sha256']=sha
+        metadata['archive_bytes']=len(fake)
+        manifest_file.write_text(json.dumps(metadata)+'\n')
+        from orgavela_pgp05_asset_gate import validate
+        validate(str(output))  # SHA-only validator accepts the forged blob by design.
+        writer=Path(__file__).parent/'orgavela_pgp05_offline_writer.py'
+        proc=subprocess.run([os.sys.executable,str(writer),'--synthetic-only','--workspace',str(output)],
+                            capture_output=True,text=True,timeout=15,check=False)
+        self.assertEqual(proc.returncode,1)
+        self.assertIn('PGP05_WRITER_PREFLIGHT_REFUSED',proc.stderr)
+
+    def test_writer_default_off(self):
+        output=self.home/'writer-default-off'
+        source.produce(output)
+        writer=Path(__file__).parent/'orgavela_pgp05_offline_writer.py'
+        proc=subprocess.run([os.sys.executable,str(writer),'--workspace',str(output)],
+                            capture_output=True,text=True,timeout=15,check=False)
+        self.assertEqual(proc.returncode,1)
+        self.assertIn('PGP05_WRITER_PREFLIGHT_REFUSED',proc.stderr)
+
     def test_gzip_components_synthetic(self):
         self.assertEqual(gzip.decompress(gzip.compress(source.SYNTHETIC_SQL,mtime=0)),source.SYNTHETIC_SQL)
         self.assertGreater(len(source.synthetic_files_snapshot()),50)

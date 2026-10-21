@@ -44,3 +44,12 @@ Nach erfolgreichem Cross-PR-Test mit dem **byteidentischen PR28-Validator** wurd
 3. Das öffentliche Manifest darf weder den synthetischen SQL-Inhalt noch WordPress-Dateipfade oder den künstlichen Upload-Marker offenlegen.
 
 **Lokales Endergebnis: 23/23 PASS** (Python 3.13.5, GnuPG 2.4.7). Die neu zu GitHub hochgeladene Testdatei hat exakt die lokal geprüfte Git-Blob-SHA **42e0bc1cf9b444cc3a1c5382591346d8ad611550**; der komplette PR28-Gate-Blob ist weiterhin identisch zu GitHub **56dc9960dfdb946e7286d9a9044946e6cd3545e5**. Keine Secrets, keine IONOS-Verbindung, keine CI-Pipeline, kein GitHub-Release, kein Real-Backup oder produktiver Scheduler. Der Test beweist **getrennte Offline-Prozesse**, noch **nicht** getrennte CircleCI-Contexts oder tatsächliche echte WordPress-/MariaDB-Konsistenz.
+
+
+## Finaler Offline-Nachtrag: Writer prüft auch OpenPGP-Empfänger unabhängig (21.10.2026)
+
+Ein neu hinzugefügter **synthetic-only Writer-Preflight** unter scripts/ci/orgavela_pgp05_offline_writer.py ist **kein** GitHub Release-Uploader. Er läuft eigenständig ohne Tokens/Netzzugriff, prüft erst den vollständigen PR28-Manifest-/SHA-Vertrag und danach in einem frischen, privaten GnuPG-Home die tatsächlichen Public-Key-Encrypted-Packets und genau die freigegebene OrgaVela-Encryption-Subkey-ID D9E58CC6484AF1DE. Er verweigert zusätzliche/mangelhafte Pakete oder das Fehlen des ausdrücklichen --synthetic-only-Flags.
+
+Zusätzliche echte Offline-Regressionstests beweisen (1) korrektes OpenPGP-Paket im getrennten Writer-Prozess PASS, (2) künstlich gefälschte nicht verschlüsselte Nutzdaten mit **nachträglich korrekt angepassten Manifest- und SHA-256-Werten** werden durch den neuen Writer trotzdem REFUSED und (3) fehlendes synthetisches Opt-in wird verweigert. Der reine PR28-SHA-Validator akzeptiert das Hash-konsistente Fälschungsfixture erwartungsgemäß, der strengere GnuPG-Writer weist es zurück.
+
+**Final lokaler Stand: 26/26 PASS** mit exakt dem GitHub-Original des PR28-Validators, Python3.13.5/GnuPG2.4.7. Lokale Git-Blobs entsprechen exakt den hochgeladenen Quelltexten: neuer Writer **79eaca5b60a76136403aa6a93b6282c0d7b66b8c** und Testmodul **33483719a3f2588c504427959e773fe10c234240**. Es erfolgte keine echte Datenbank-/WordPress-Sicherung, keine CI-Runner-Ausführung, kein GitHub-Release und keine Freigabe von Produktivbackup oder Scheduler. OpenPGP Packet Header ohne Private Key beweisen nicht die Entschlüsselbarkeit oder System-Restore-Fähigkeit.
