@@ -59,3 +59,12 @@ Ten fixed gates, currently **6/10** formal:
 (3) independently authorized ciphertext-only immutable GitHub Release writer and digest readback;
 (4) isolated, safely disconnected real WordPress+MariaDB restore and owner PGPony validation;
 (5) approved scheduler, RPO/RTO, retention, alerts, key recovery and ongoing cost boundaries.
+
+## Operator evidence update — 2026-10-22, 00:08 local (IONOS UI)
+
+- The operator provided a screenshot from **IONOS > Websites & Shops > OrgaVela > Webspace Explorer > Pfaddetails** of the WordPress-containing `/public` folder. The UI now **explicitly displays the absolute path** and resolves to the previously allowlisted **`home-www-public` root class**. The literal provider-internal path is intentionally omitted from this **public** GitHub document; retain the screenshot in the operator-controlled evidence context. Screenshot also displays a last-modified timestamp, which is not proof of a recently changed WordPress configuration.
+- **Operator UI absolute-path display: PASS as supporting evidence.** Step A in the operator evidence list above is now fulfilled. Earlier UI evidence showed WordPress core dirs, `wp-config.php` existence/mode, UOP Core and a visible MU plugin in this project tree.
+- **Do not overclaim:** this screenshot proves the webspace explorer's own filesystem mapping, not an independent current **SSH session** view, the externally active domain's virtual-host DocumentRoot, `ABSPATH`, or the effective WordPress database selector. Formal gate **#8 stays OPEN** pending SSH hostkey handshake / SSH account permission boundary / shell-root and domain-DocumentRoot crosscheck.
+- The next owner action is **read-only inspection** of `Websites & Shops > OrgaVela > Erweiterte Einstellungen > SFTP & SSH > Konten verwalten`. Show account-list / project-scope / allowed access-root information if present, **mask usernames, hostnames, customer/contract identifiers, account IDs and all authentication secrets**. Do not click create/edit/reset/delete and do not export a key or password.
+- The remote WP-CLI collector on draft PR #32 remains **unconditionally disabled** and the scanner's public CLI remains **synthetic-only**. No real SSH/DB/file-content read authorized by this evidence.
+- **Checkpoint-5 unchanged: 6/10 formally accepted; four open gates #6 independent live security review, #8 current host/SSH/domain binding, #9 private independent DB mapping, #10 explicitly authorized no-bootstrap live metadata test.** Supporting operator subcheck A is now complete but is not a separate gate.
