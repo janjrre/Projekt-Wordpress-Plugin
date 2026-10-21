@@ -16,9 +16,9 @@ Neuer, separat gestapelter Draft PR: `feat/pgp05-synthetic-archive-restore-guard
 
 ## Nachweise (lokal, keine CI-/GitHub-Release-Ausführung)
 
-Testsuite `scripts/ci/test_orgavela_pgp05_synthetic_archive_verify.py`: **26/26 lokal PASS** auf Python 3.13.5. Enthält künstliches Positiv-TAR sowie fehlende/zusätzliche/duplizierte Pfade, Traversal, SQL/WordPress-Markerfälschung bei passend neu berechneten Hashes, Komponentendigest-/Manifestfehler, falschen Empfänger, doppelte JSON-Keys, GZIP-Trailing-Junk, potenzielle Dekompressionsbombe, TAR-Symlinks auf beide Ebenen und CLI-Default-Off/Symlink/Relativpfad.
+Testsuite `scripts/ci/test_orgavela_pgp05_synthetic_archive_verify.py`: **28/28 lokal PASS** auf Python 3.13.5. Enthält künstliches Positiv-TAR sowie fehlende/zusätzliche/duplizierte Pfade, Traversal, SQL/WordPress-Markerfälschung bei passend neu berechneten Hashes, Komponentendigest-/Manifestfehler, falschen Empfänger, doppelte JSON-Keys, GZIP-Trailing-Junk, potenzielle Dekompressionsbombe, TAR-Symlinks auf beide Ebenen und CLI-Default-Off/Symlink/Relativpfad.
 
-**Gesamtes erneut lokal getestetes synthetisches Entwicklungspaket: 84/84 PASS** aus 52 Tests für den originalen PR29-Snapshot plus neuem Archive-Gate und 32 Tests im PR30-Quellvertrag. Die beiden neuen Dateien stimmen bytegenau mit den lokal getesteten Git-Blobs überein: `36e49195aa4143b6b5bde7b0ba9537c0199a04ac` und `ff9b74addc06a6a6beadb372af428e13b418e7c9`. Das sind lokale Python-Tests, **keine Provider- oder End-to-End-Owner-Abnahme**.
+**Gesamtes erneut lokal getestetes synthetisches Entwicklungspaket: 86/86 PASS** aus 54 Tests für den originalen PR29-Snapshot plus neuem Archive-Gate und 32 Tests im PR30-Quellvertrag. Die beiden neuen Dateien stimmen bytegenau mit den lokal getesteten Git-Blobs überein: `18be7f07e1ac048367e1de3cc758e975f98e04fe` und `bd174b576f879afdbf1b1b393d99957a268e158d`. Das sind lokale Python-Tests, **keine Provider- oder End-to-End-Owner-Abnahme**.
 
 Lokal:
 `python3 -m unittest discover -v -s scripts/ci -p 'test_orgavela_pgp05_synthetic_*.py'`
@@ -40,3 +40,9 @@ Lokal:
 **Ausdrücklich NICHT freigegeben:** echte Sicherung, IONOS-Site-Zugriff, CircleCI-Neulauf, neue Geheimnisse, PR-Merge, Scheduler, bezahlte Verträge. Formale V1-Zähler unverändert: 62/71 historische Codingpakete, M0–M7 0/8, P4 0/4, R01–R18 0/18.
 
 Referenzen: [O03/PGP-05 Sicherheitsgates #27](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27), [Draft PR #30](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/30), [OpenPGP-ADR](W0_O03_PGPONY_OPENPGP_MIGRATION_ADR_2026-10-20.md).
+
+## Sicherheitsreview-Nachtrag: Original-Producer und TAR-Ende (21.10.2026)
+
+Zusätzlich zur Datei-/Manifestprüfung verlangt die TAR-Validierung nun ausschließlich zulässige Nullbytes nach dem letzten Mitglied einschließlich der TAR-Endmarkierung, um ansonsten vom Parser stillschweigend ignorierte angehängte Bytes abzuweisen. Ein weiterer Integrationstest erfasst direkt im Speicher das von **dem tatsächlichen synthetischen PR29-Producer vor der Verschlüsselung** gebaute innere TAR und validiert es gegen den vollständigen neuen Archivprüfer. Für diesen *einen* Test wurde die Verschlüsselungsfunktion mit einem rein lokalen künstlichen Rückgabebyte-Stand-in versehen, um das **nicht verschlüsselte innere TAR ausschließlich vor dem Encrypt-Schritt** überprüfen zu können. Dies ist **kein** Test einer neuen OpenPGP-Entschlüsselung oder des Owner-Keys. Der separate PR29-GnuPG-Test bleibt dafür die kryptografische synthetische Referenz.
+
+**Endstand: 28/28 Archivprüfungen PASS, gesamte lokal erneut ausgeführte Prüfgruppen 86/86 PASS** (PR29 Snapshot/Writer 26, PR30 simulierte Source-Policy 32, Archivprüfer 28). Bitgenau geprüfte neue SHA-Blobs Source `18be7f07e1ac048367e1de3cc758e975f98e04fe`, Test `bd174b576f879afdbf1b1b393d99957a268e158d`. Kein CI-Run, realer Snapshot, privater Key oder System-Restore.

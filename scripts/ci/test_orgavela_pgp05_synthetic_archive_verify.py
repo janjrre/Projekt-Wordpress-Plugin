@@ -7,6 +7,7 @@ from pathlib import Path
 import tarfile
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import orgavela_pgp05_synthetic_archive_verify as verify
 import orgavela_pgp05_synthetic_snapshot as maker
@@ -146,6 +147,25 @@ class ArchiveTests(unittest.TestCase):
                 else: info.size=len(v)
                 tar.addfile(info, io.BytesIO(v) if info.isfile() else None)
         self.denied(buf.getvalue())
+
+    def test_refuse_hidden_trailing_tar_bytes(self):
+        self.denied(self.pack()+b'ADDED DATA')
+
+    def test_producer_actual_inner_tar_is_accepted(self):
+        # Verify the real synthetic packer schema: capture its PRE-encryption
+        # test archive in memory. No owner private key or decrypt is involved.
+        captured = []
+        def save_synthetic_package(package, work):
+            captured.append(package)
+            return b'ARTIFICIAL OFFLINE CIPHERTEXT STAND-IN'  # local fake only
+        with tempfile.TemporaryDirectory() as td:
+            out=Path(td)/'ciphertext-only'
+            with patch.object(maker,'encrypt_public_only',side_effect=save_synthetic_package):
+                maker.produce(out)
+            self.assertEqual(len(captured),1)
+            self.assertEqual(verify.validate_archive(captured[0])['result'],
+                             'SYNTHETIC_ARCHIVE_ONLY')
+            self.assertTrue((out/'manifest.json').exists())
 
     def test_bad_archive_header(self):
         self.denied(b'not a tarfile')

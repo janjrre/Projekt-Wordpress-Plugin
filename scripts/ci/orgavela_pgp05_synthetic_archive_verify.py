@@ -57,6 +57,7 @@ def tar_members(blob, expected):
     require(type(blob) is bytes and 0 < len(blob) <= MAX_ARCHIVE, 'unsafe tar size')
     with tarfile.open(fileobj=io.BytesIO(blob), mode='r:') as tf:
         seen = {}
+        last_member_end = 0
         for member in tf:
             require(member.name in expected and member.name not in seen,
                     'unexpected or duplicate archive name')
@@ -68,6 +69,12 @@ def tar_members(blob, expected):
             content = stream.read(MAX_MEMBER + 1)
             require(len(content) == member.size, 'truncated member')
             seen[member.name] = content
+            last_member_end = max(last_member_end, member.offset_data +
+                                  ((member.size + 511) // 512) * 512)
+    # Python tarfile ignores bytes after the end marker. Refuse hidden appendices.
+    tail = blob[last_member_end:]
+    require(len(blob) % 512 == 0 and len(tail) >= 1024 and
+            not any(tail), 'non-zero or missing TAR end padding')
     require(set(seen) == set(expected), 'missing required member')
     return seen
 
