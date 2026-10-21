@@ -860,3 +860,16 @@ Codinghistorie 62/71; formale M0–M7 0/8, P4 0/4, R01–R18 0/18 unveraendert.
 | Produktion: realer Capture, Release, isolierter Real-Restore, Scheduler | **GESPERRT** | eigene neue Freigaben zwingend |
 
 [Draft PR30](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/30), [PGP05-Sicherheitsdesign](https://github.com/janjrre/Projekt-Wordpress-Plugin/blob/feat/pgp05-source-consistency-model-20261021/docs/operations/PGP05_SOURCE_CONSISTENCY_DESIGN_20261021.md). Historische Codingpakete 62/71, formal M 0/8, P4 0/4, R 0/18 unveraendert.
+
+## 21.10.2026 – PGP05 Offline-Archivkontrolle nach synthetischer Entschluesselungsgrenze (PR31)
+
+| Gate | Ergebnis | Nachweis / Abgrenzung |
+| --- | --- | --- |
+| TAR-Grenzen: exakt drei Komponenten, reguläre Dateien, keine Link-/Pfad-Traversal-/Dubletten-/Trailing-Bytes | **28/28 neue Tests LOKAL PASS** | nur synthetisches, bereits unverschluesseltes TAR, keine echte Site oder Dateiextraktion |
+| Internes SHA-/SQL-/WordPress-Marker-/OpenPGP Public-FPR-Manifest, bei bewusst neu berechneten falschen Inhalten REFUSED | **LOKAL PASS** | feste kuenstliche SQL/WP-Marker; keine Authentizitaetsbehauptung gegen kompromittierten Producer |
+| Original-Synthetic-Producer inner TAR -> echter neuer TAR-Verifier | **LOKAL PASS** | Original-Producer wird vor dem Encryption-Aufruf mit einem test-only Stand-in zur Inhaltspruefung abgefangen; kein neues Owner-Decrypt |
+| Rollup PR29 Snapshot+Writer 26 + PR30 Source-Simulation 32 + PR31 Inner Archive 28 | **86/86 LOKAL PASS** | Python3.13.5; kein CircleCI-/Github-Release-/IONOS-Provider-Test |
+| Owner Private-Key Recovery in Public-Candidate-Metadaten | **OWNER-ATTESTED** | wurde historisch falsch mit false gefuehrt; jetzt true mit Provenienz `owner_recovery_evidence_verified_by_assistant=false` |
+| Aktuelle IONOS Identitaet, reale DB+WP-Snapshot Konsistenz und echter isolierter Restore | **OFFEN / BLOCKED** | requires ausdrueckliches Operator-Go, kein Live-Zugriff bisher |
+
+Formale V1-Zahlen unveraendert: 62/71 Coding historisch, M 0/8, P4 0/4, R 0/18.
