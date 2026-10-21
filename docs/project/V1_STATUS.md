@@ -962,3 +962,17 @@ Der Betreiber zeigte das IONOS-Projekt `OrgaVela` für `orgavela.com` mit automa
 
 **Status:** Operatorfreigabe für 0-€-Audit bereits vorhanden; **Ausführung noch ausstehend, da manuelle `workflow_dispatch`-Action über den vorhandenen GitHub-Connector nicht unterstützt wird**. Formale V1-Gates unverändert, Codinghistorie 62/71, M0–M7 0/8, P4 0/4, R01–R18 0/18.
 
+
+### 21.10.2026 – PGP05 Draft PR #32 Offline-Vertrag 15/15 PASS, Live-Runs weiterhin nicht gestartet
+
+
+## 21.10.2026 – PGP05 zusätzlicher offline Metadaten-Receipt-Vertrag und Draft PR #32 (Masterplan v2.49)
+
+**Arbeitsauftrag:** Betreiber sagte „Fahre fort“ zum einmaligen OrgaVela-only Read-only-SSH-/WP-/MariaDB-Metadatencheck. Die bereits zuvor in Masterplan v2.47/v2.48 protokollierte Betreiberfreigabe für **kostenfreie** Schritte ist unverändert. Keine neuen Verträge, Secrets, Backend-Veränderungen oder kostenpflichtigen Jobs erlaubt.
+
+**Implementierungsnachtrag:** Neuer **[Draft PR #32](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/32)** auf `main` (Head `3e8e7c1fb7dd2b784a99d8201a8308623cff1a60`) dokumentiert einen zusätzlichen **Offline-JSON-Metadatenvertrag**, **15/15 lokale Python-Tests PASS**, eine noch nicht remote ausgeführte Remote-Collector-Shell-Skizze mit `bash -n` und separat geprüftem `php -l`, plus [strikten Ausführungshold](https://github.com/janjrre/Projekt-Wordpress-Plugin/blob/feat/pgp05-readonly-ssh-metadata-check-20261021/docs/operations/PGP05_READONLY_IDENTITY_PREPARATION_20261021.md). Exakt getestete Blobs: Contract `8ecc94486ad8c8c6f5625852d895456821ad4641`, Tests `182086034788a3dc7305e082bca65e63ed796ad0`, Shell `a9ed7cf84baa1d8f8a70ad6ca84bb453b3b41232`. **Kein neuer GitHub-Actions-Run** ist durch den Featurebranch entstanden (GitHub Actions-API geprüft). Keine neue Workflow-Datei, kein Trigger, kein SSH-/SQL-Remotezugriff und **kein Merge**.
+
+**Abgleich mit bereits vorbereitetem v2.47-Featurebranch:** [`feat/pgp05-readonly-live-binding-preflight-20261021`](https://github.com/janjrre/Projekt-Wordpress-Plugin/tree/feat/pgp05-readonly-live-binding-preflight-20261021) enthält unabhängig bereits eine PHP-Identity-Probe und **20/20 lokale synthetische Tests**. PR32 ist daher **ergänzende Vertrags-/Schutzevidenz, keine neue Ersatz-Abnahme**. Vor jeglichem Merge/Live-Einsatz müssen beide Umsetzungen konsolidiert und insbesondere MU-Plugin/WordPress-Bootstrap-Nebeneffekte bewertet werden. Ein JSON-Vertrags-`PASS` ist **kein Live-SSH-Identitätsbeleg**, kein unabhängiger phpMyAdmin-DB-Namensabgleich und kein produktives Backup-GO.
+
+**Sinnvollster nächste reale Schritt bleibt v2.48:** Die schon vorhandene und bereits historisch erfolgreich getestete [GitHub-Main-Read-only-Auditworkflow](https://github.com/janjrre/Projekt-Wordpress-Plugin/actions/workflows/orgavela-readonly-audit.yml) kann der Betreiber manuell mit `Branch main` und `operation: schema` auslösen. Der öffentliche Repo-Standardrunner `ubuntu-latest` ist laut GitHub-Dokumentation kostenlos (Kosten nur für andere Runner/Provider nicht daraus ableiten). Der bestehende Dispatcher wird vom hier verbundenen GitHub-Tool nicht unterstützt. **Dieser alte Workflow führt NICHT PR32 oder die v2.47-PHP-Identity-Probe aus und beweist keinen exakten Source-Shell-Root;** er liefert nur einen neuen eng begrenzten WP-/Schema-Status. Kein `Wiederherstellen`, kein Datenexport/Backup, kein GitHub-Release, kein Scheduler, keine neuen Kosten. V1 historisch 62/71 Coding, formal M 0/8, P4 0/4, Release-Gates 0/18 unverändert.
+

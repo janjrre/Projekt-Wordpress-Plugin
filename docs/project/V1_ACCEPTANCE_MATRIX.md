@@ -951,3 +951,16 @@ V1 Coding historisch 62/71, formale M0–M7 0/8, P4 0/4, Release 0/18 unverände
 | Live SQL-Dump/Backup, echter Restore, GitHub Release, Scheduler | **BLOCKED** | Keine Änderung der produktiven Gates |
 
 Coding 62/71 historisch; M0–M7 0/8, P4 0/4, Release 0/18 unverändert.
+
+## 21.10.2026 – PGP05 zusätzlicher Receipt-Vertrag PR32 (Masterplan v2.49)
+
+| Audit-Element | Status | Grenzen |
+| --- | --- | --- |
+| Separater PHP-FakeWP-Identity-Probe aus v2.47 | **20/20 lokal PASS** | synthetisch, anderer ungemergter Branch, kein Runner |
+| PR #32 strikt sanitierter JSON-Metadaten-Validator | **15/15 lokal PASS** | testet Format/Negativfälle, KEINE Live-Authentizität |
+| PR #32 Remote-Shell-/PHP-Collector-Syntax | **bash -n / php -l PASS** | noch nicht gegen WordPress ausgeführt, MU-Plugin-Boot-Effekte offen |
+| GitHub Runner durch PR32 | **KEINE neuen Actions-Runs** | Public-Repo-Branchänderung ohne Main-Workflow-Trigger; nach API-Liste keine neuen Läufe |
+| Bestehender manuell autorisierter Main-Workflow `schema` | **Noch Benutzer-Dispatch ausstehend** | Nur bestehende Read-only-Auditlogik; weder PHP-Probe v2.47 noch neuer PR32-Code |
+| Neuer produktiver Backup-Capture, Release, Restore, Scheduler | **BLOCKED** | keine neue Betreiber-GO durch lokale Tests |
+
+Formale V1-Werte 62/71 historische Coding, M0–M7 0/8, P4 0/4, Release 0/18 unverändert.
