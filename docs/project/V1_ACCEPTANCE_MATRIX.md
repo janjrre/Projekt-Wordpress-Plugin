@@ -694,3 +694,18 @@ V1 formale Zahlen unverändert: M0–M7 0/8, P4 0/4, R01–R18 0/18, historische
 | iPad Besitzer-Restore, Tokenwiderruf | OFFEN | Erst nach gesonderter Freigabe |
 
 V1 formal unveraendert: M 0/8, P4 0/4, R01-18 0/18, historisch 62/71 implementiert.
+
+## 21.10.2026 – PGP04 V3 CircleCI Pipeline #505 vor manueller Release-Freigabe
+
+| Gate | Status | Beleg |
+|---|---|---|
+| Exakter V3-Code SHA | GitHub PASS | compare_commits identical: 3c9f0bb8bd85fb97e09b84c870fb42fdf491a8de, 0/0 |
+| Tokenloser V3 Source-Job | CIRCLECI PASS | Pipeline #505, 12s, 6/6 early guards und public OpenPGP source PASS |
+| Ciphertext-only Workspace | CIRCLECI PASS | PGPONY_WORKSPACE_PLAINTEXT=NONE, 1.7 KiB persistiert |
+| Manueller Owner-Hold | ON HOLD | CircleCI Screenshot, Freigabe noch nicht betaetigt |
+| V3 Context-SHA-/Token-Smoke | NOT RUN | Nach Owner-Approval; GH_TOKEN-Praesenz und volle SHA werden geprueft |
+| V3 GH CLI Signed-Apt-Installation und Release-Writer | NOT RUN | Nach erfolgreich bestandenem Context-Smoke |
+| Remote Immutable-Release / 3 Asset SHA-Readback | OFFEN | Noch keine V3 GitHub Upload-Evidenz |
+| PGPony Betreiber-Recovery und Token-Revoke | OFFEN | Nach Writerversuch auszufuehren |
+
+Keine neuen formalen V1-Gates: M0-M7 0/8, P4 0/4, Release-R01-18 0/18; Codinghistorie 62/71.
