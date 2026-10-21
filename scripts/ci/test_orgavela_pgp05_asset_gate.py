@@ -1,8 +1,6 @@
 """Offline PGP-05 ciphertext-workspace contract regression tests; no CI or secrets."""
-import copy
 import hashlib
 import json
-import os
 import pathlib
 import tempfile
 import unittest
@@ -110,6 +108,17 @@ class AssetGateTests(unittest.TestCase):
     def test_reject_world_writable_workspace(self):
         self.dir.chmod(0o777)
         self.denied()
+
+    def test_reject_parent_directory_symlink(self):
+        nested = self.dir / "nested"
+        nested.mkdir()
+        for name in (ARCHIVE, SIDE, "manifest.json"):
+            (self.dir / name).rename(nested / name)
+        with tempfile.TemporaryDirectory() as other:
+            alias = pathlib.Path(other) / "indirect"
+            alias.symlink_to(self.dir, target_is_directory=True)
+            with self.assertRaises(Refused):
+                validate(str(alias / "nested"))
 
     def test_reject_manifest_symlink(self):
         (self.dir / "manifest.json").unlink()

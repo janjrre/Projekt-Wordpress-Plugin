@@ -40,8 +40,8 @@ def safe_workspace(folder):
     path = Path(folder)
     if not path.is_absolute() or path == Path("/") or ".." in path.parts:
         raise Refused("workspace must be safe absolute directory")
-    if path.is_symlink() or not path.is_dir():
-        raise Refused("workspace must be real directory")
+    if any(part.is_symlink() for part in (path, *path.parents)) or not path.is_dir():
+        raise Refused("workspace and its ancestors must not be symlinks")
     st = path.stat()
     if st.st_mode & stat.S_IWOTH:
         raise Refused("world-writable workspace")
