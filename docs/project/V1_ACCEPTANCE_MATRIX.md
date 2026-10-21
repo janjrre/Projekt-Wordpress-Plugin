@@ -848,3 +848,15 @@ Formale V1-Zahlen: Coding historisch 62/71, M 0/8, P4 0/4, R 0/18 unveraendert.
 | Produktiver Quelle-/DB-Snapshot, Produktionsrelease, isolierter WordPress+MariaDB Restore, Scheduler | **OFFEN/GESPERRT** | Keine neuen Freigaben |
 
 Codinghistorie 62/71; formale M0–M7 0/8, P4 0/4, R01–R18 0/18 unveraendert.
+
+## 21.10.2026 – PGP05 Checkpoint 3: rein synthetische Source-Consistency-Simulation
+
+| Sicherheitsgate | Ergebnis | Evidenzgrenze |
+| --- | --- | --- |
+| Kuenstliche Quell-Identitaet, InnoDB-Fake-DB, Write-/Cron-/extern-/DDL-Fences, 14 geordnete Schritte, Hashgleichheit, Rollen-Isolation | **LOKAL 32/32 PASS** | Python3.13.5, nur synthetische JSON-Daten; kein realer Quellzugriff |
+| Echte OrgaVela IONOS-Hostingidentitaet / WP-Root / DB zugeordnet | **OFFEN** | Historisches read-only Audit-Skript nur gelesen, nicht ausgefuehrt |
+| Realer MariaDB Engine-Mix / DDL-Fence / konsistenter Dateien+DB-Zeitpunkt | **OFFEN** | Test-JSON kann keine echte Lock-/Filesystem-Konsistenz beweisen |
+| getrennte echte Source-/Writer-Context-Rechte, Betreiberfreigaben | **OFFEN/GESPERRT** | keine neuen Secrets, PATs oder Workflow-Runs |
+| Produktion: realer Capture, Release, isolierter Real-Restore, Scheduler | **GESPERRT** | eigene neue Freigaben zwingend |
+
+[Draft PR30](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/30), [PGP05-Sicherheitsdesign](https://github.com/janjrre/Projekt-Wordpress-Plugin/blob/feat/pgp05-source-consistency-model-20261021/docs/operations/PGP05_SOURCE_CONSISTENCY_DESIGN_20261021.md). Historische Codingpakete 62/71, formal M 0/8, P4 0/4, R 0/18 unveraendert.

@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-21",
-  "snapshot_basis": "PGP04 V3 SYNTHETIC-ONLY OpenPGP/PGPony GitHub release -> operator decrypt -> synthetic archive contents and SHA256 sidecar verification formally accepted 2026-10-21 on explicit owner attestation. CircleCI #505 writer PASS; independent GitHub REST release 419226447 immutable=true, exactly three uploaded assets/digests, protected approved commit. Owner confirmed exact SQL marker, WordPress synthetic marker, local tar.gpg SHA256 match, decryption, file presence, fine-grained PAT revocation; CircleCI GH_TOKEN deletion screenshot. Owner verifications are attested, not independently replayed. Production capture, isolated real WP+DB restore, automated scheduler and V1 formal release gates remain BLOCKED; 62/71 historic coding, M 0/8, P4 0/4, R 0/18. PGP05 first offline, synthetic-only ciphertext artifact contract: Draft PR#28 on feature SHA 532d3d478ec87c26928877d13d17e93c5becc5b3 (based frozen PGP04 V3), local Python 3.13.5 suite 20/20 PASS and exact Git blobs confirmed; NOT provider CI; no real captures or releases. OpenPGP/PGPony selected already 2026-10-20 ADR; historical age runbook annotated. PGP05 follow-on public-only GnuPG integration: one additional local synthetic ciphertext encryption/packet+subkey/manifest/sidecar test PASS (GnuPG 2.4.7), total local 21/21 PASS, Draft PR#28 head 1301f7d346b340617948572968ed78cd75000b1b; no private key, CI or real data. New PGP05 checkpoint2 stacked Draft PR29 synthetic-only database.sql.gz+WordPress files fixture in public-key encrypted ciphertext-only handoff: local Python3.13.5/GnuPG2.4.7 20/20 PASS using local reduced stand-in for PR28 validator; full PR28/29 code combined NOT run, no production or CircleCI. PGP05 synthetic snapshot PR29 integrated locally with EXACT GitHub PR28 asset validator blob SHA 56dc9960dfdb946e7286d9a9044946e6cd3545e5; reran 20/20 local PASS 2026-10-21, current PR29 SHA 37894d8f79e45a537ebbbf90a52fde19d9b78e0c. No CI/provider, no real WordPress/MariaDB consistency proof or backup authorization. PGP05 PR29 26/26 local tests PASS with separate offline writer OpenPGP packet/subkey validation and hash-consistent fake ciphertext rejection; independent writer module, actual PR28 asset gate and synthetic GnuPG public-only source. No CI/provider, no production snapshot or release.",
+  "snapshot_basis": "PGP04 V3 SYNTHETIC-ONLY OpenPGP/PGPony GitHub release -> operator decrypt -> synthetic archive contents and SHA256 sidecar verification formally accepted 2026-10-21 on explicit owner attestation. CircleCI #505 writer PASS; independent GitHub REST release 419226447 immutable=true, exactly three uploaded assets/digests, protected approved commit. Owner confirmed exact SQL marker, WordPress synthetic marker, local tar.gpg SHA256 match, decryption, file presence, fine-grained PAT revocation; CircleCI GH_TOKEN deletion screenshot. Owner verifications are attested, not independently replayed. Production capture, isolated real WP+DB restore, automated scheduler and V1 formal release gates remain BLOCKED; 62/71 historic coding, M 0/8, P4 0/4, R 0/18. PGP05 first offline, synthetic-only ciphertext artifact contract: Draft PR#28 on feature SHA 532d3d478ec87c26928877d13d17e93c5becc5b3 (based frozen PGP04 V3), local Python 3.13.5 suite 20/20 PASS and exact Git blobs confirmed; NOT provider CI; no real captures or releases. OpenPGP/PGPony selected already 2026-10-20 ADR; historical age runbook annotated. PGP05 follow-on public-only GnuPG integration: one additional local synthetic ciphertext encryption/packet+subkey/manifest/sidecar test PASS (GnuPG 2.4.7), total local 21/21 PASS, Draft PR#28 head 1301f7d346b340617948572968ed78cd75000b1b; no private key, CI or real data. New PGP05 checkpoint2 stacked Draft PR29 synthetic-only database.sql.gz+WordPress files fixture in public-key encrypted ciphertext-only handoff: local Python3.13.5/GnuPG2.4.7 20/20 PASS using local reduced stand-in for PR28 validator; full PR28/29 code combined NOT run, no production or CircleCI. PGP05 synthetic snapshot PR29 integrated locally with EXACT GitHub PR28 asset validator blob SHA 56dc9960dfdb946e7286d9a9044946e6cd3545e5; reran 20/20 local PASS 2026-10-21, current PR29 SHA 37894d8f79e45a537ebbbf90a52fde19d9b78e0c. No CI/provider, no real WordPress/MariaDB consistency proof or backup authorization. PGP05 PR29 26/26 local tests PASS with separate offline writer OpenPGP packet/subkey validation and hash-consistent fake ciphertext rejection; independent writer module, actual PR28 asset gate and synthetic GnuPG public-only source. No CI/provider, no production snapshot or release. 2026-10-21 PGP05 checkpoint 3 Draft PR30 off PR29: 32/32 local Python3.13.5 tests on exact GitHub blobs; ONLY synthetic ordered DB/file writer-fence and consistency transcript validation, never production evidence. IONOS source mapping/DB engine/consistency not independently verified, no IONOS connections or CI runs.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -875,7 +875,17 @@
       "pgp05_offline_writer_module": "scripts/ci/orgavela_pgp05_offline_writer.py",
       "pgp05_offline_writer_blob": "79eaca5b60a76136403aa6a93b6282c0d7b66b8c",
       "pgp05_offline_writer_packet_validation_local_passed": true,
-      "pgp05_offline_writer_hash_consistent_fake_ciphertext_refusal_local_passed": true
+      "pgp05_offline_writer_hash_consistent_fake_ciphertext_refusal_local_passed": true,
+      "pgp05_source_consistency_plan_pr": 30,
+      "pgp05_source_consistency_plan_commit": "145aec2d49a814d9615a78d587d96f9cfa163f5f",
+      "pgp05_source_consistency_model_status": "DESIGN + SYNTHETIC-ONLY JSON CAPTURE TRANSCRIPT SIMULATOR: 14 ordered steps, 32/32 Python local PASS, no source/DB connection, no production evidence",
+      "pgp05_source_consistency_model_local_tests_passed": 32,
+      "pgp05_source_consistency_model_local_tests_total": 32,
+      "pgp05_source_consistency_model_source_blob": "acd41ae788d634aaf3e304d5a49327508ff7a8b7",
+      "pgp05_source_consistency_model_tests_blob": "a94d22a76eba57fa06ff18fbb2e7d95ac50afbdb",
+      "pgp05_source_consistency_model_provider_ci_executed": false,
+      "pgp05_current_ionos_installation_identity_verified_for_backup": false,
+      "pgp05_db_engine_and_consistency_verified": false
     },
     {
       "id": "O04",
@@ -1267,7 +1277,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.40",
+  "masterplan_version": "2.41",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
