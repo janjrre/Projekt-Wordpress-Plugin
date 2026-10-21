@@ -873,3 +873,16 @@ Codinghistorie 62/71; formale M0–M7 0/8, P4 0/4, R01–R18 0/18 unveraendert.
 | Aktuelle IONOS Identitaet, reale DB+WP-Snapshot Konsistenz und echter isolierter Restore | **OFFEN / BLOCKED** | requires ausdrueckliches Operator-Go, kein Live-Zugriff bisher |
 
 Formale V1-Zahlen unveraendert: 62/71 Coding historisch, M 0/8, P4 0/4, R 0/18.
+
+## 21.10.2026 – PGP05 aktuelle OrgaVela WordPress-Metadaten (Betreiberfreigabe, nur READ-ONLY)
+
+| Checkpoint | Ergebnis | Sicherheitsgrenze |
+| --- | --- | --- |
+| Aktuelle WP-Instanz OrgaVela, https://orgavela.com, HTTPS, kein Multisite | **DIRECT WP CONNECTOR PASS** | Übereinstimmende `core` und `mosmcp` WordPress-Read-only-Metadaten |
+| WordPress 7.1.3, PHP 8.3.35, MariaDB **Server** 11.8.8, Apache | **DIRECT WP CONNECTOR PASS** | Laufzeitmetadaten; **kein** DB-Schema/Tabellenengine-Zugriff |
+| UOP Core 0.1.0-alpha.2 aktiv, 8 Plugins gesamt/7 aktiv | **DIRECT WP CONNECTOR PASS** | Plugin-Metadaten, keine WP-Inhaltsdaten |
+| WordPress-Cron deaktiviert, Loopback HTTP 200, zwei ueberfaellige WP-Aufgaben | **BEOBACHTET / PRUEFBEDARF** | externer Host-Cron nicht verifiziert; keinerlei Cronjob ausgefuehrt oder verstellt |
+| Eindeutiger IONOS Vertrag/SSH Host/SFTP-Webroot und MariaDB Datenbank/Engines | **OFFEN** | WordPress-Metadaten nicht hinreichend; gesonderte Freigabe vor direktem IONOS-SSH-/DB-Metadatenzugriff erforderlich |
+| IONOS Provider-Backups, DB+WP-Dateien-Snapshot, echter Restore | **OFFEN/GESPERRT** | Keine Real-Daten-Capture-/Upload-Freigabe; keinerlei Neu-Test |
+
+[Pruefbericht](../operations/PGP05_ORGAVELA_WORDPRESS_READONLY_METADATA_20261021.md). Formale V1-Zaehler M 0/8, P4 0/4, R 0/18, historische Coding 62/71 unveraendert.
