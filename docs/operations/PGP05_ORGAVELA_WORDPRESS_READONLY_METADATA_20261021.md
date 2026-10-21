@@ -61,3 +61,24 @@ Im Plugin-Metadaten-Inventar sind IONOS-Essentials, IONOS-Marketplace und IONOS-
 5. PR #28–#31 bleiben Draft/unmerged; keine neuen Tokens, Keys, Verträge oder CI-Jobs. PGP04 synthetisch PASS. PGP05 echte Sicherung, echter Isolations-Restore, automatisches Scheduling GESPERRT.
 
 **Formale V1-Werte unverändert:** 62/71 historische Codingpakete, M0–M7 0/8, P4 0/4, R01–R18 0/18.
+
+
+## Nachtrag Betreiber-Screenshots: IONOS-Hosting / phpMyAdmin / Domain
+
+**21.10.2026, 14:04–14:07 Ortszeit der vom Betreiber aufgenommenen Mobilgerät-Screenshots; Evidenzart: vom Betreiber direkt gelieferte IONOS-Oberflächenansichten, keine durch uns neu ausgeführte IONOS-Connector-/SSH-/SQL-Abfrage.** Drei Screenshots wurden ausschließlich visuell bewertet; die Bilder selbst, technische Server-FQDN, Kontaktdaten und Datenbankkennungen wurden **nicht** nach GitHub kopiert.
+
+| Sichtbarer IONOS-Bereich | Beobachtung | Begrenzung |
+| --- | --- | --- |
+| WordPress-Erweiterte Einstellungen / Webspace | `0,19 GB von 49 GB` belegt | Momentaufnahme; noch keine gesicherte Aussage zu tatsächlich erforderlicher Backup-Archivgröße |
+| Zweiter Belegungszähler | `13.799 von 262.144` genutzt | Einheit in der Aufnahme nicht ausdrücklich benannt; daher **nicht** ohne weiteren Beleg als Inode-Anzahl klassifiziert |
+| Datenbank-Ressource innerhalb IONOS-Einstellungen | `Maria DB v11.8`, `0,01 GB von 2 GB` belegt | Nicht die konkrete WP-Datenbank oder deren Tabellen-/Engine-Liste nachgewiesen; Größen gerundet |
+| Verwaltungsfunktionen | `Webspace Explorer`, `SFTP & SSH – Konten verwalten`, `phpMyAdmin öffnen` | UI-Optionen sichtbar, **keine** Dateilesung, Loginweitergabe, Schreibaktion oder SSH-Verbindung ausgeführt |
+| phpMyAdmin | Version `4.9.11`; Server-FQDN oben erkennbar, **bewusst nicht in GitHub notiert**; Ansicht zeigt allgemeine Einstellungen | phpMyAdmin ist erreichbar, aber **keine** Datenbankliste, `information_schema`-/Engine-Abfrage oder Zuordnung zur WP-Konfiguration geprüft |
+| Domains & SSL – `orgavela.com` | Verwendungsart `Durch IONOS verwaltet`, Ziel `WordPress`, SSL-Zertifikat `Zugewiesen` | Domain-Ziel ist belegt; dies identifiziert nicht beweissicher SSH-Root, konkrete Datenbank, Hosting-Vertrag oder Backup-Pfad |
+| Domain Guard | kostenpflichtiges Zusatzangebot eingeblendet | **Keine** Bestellung erforderlich/erteilt, von PGP05-Backup getrennt |
+
+**Aktualisierte Evidenzbewertung:** Die Screenshots ergänzen die durch den OrgaVela-WordPress-Connector belegte Webinstanz um einen IONOS-UI-Beleg zu Domain-Ziel und Ressourcenbelegung. Sie verbessern die Plausibilität der Hosting-Zuordnung. **Noch nicht** belegbar sind der Name der tatsächlich von dieser WordPress-Installation verwendeten Datenbank, Engines ihrer Tabellen (InnoDB/MyISAM), SFTP-/SSH-Root, Host-Key-Fingerprint oder transaktionskonsistente DB+FS-Sicherung.
+
+**Nächster risikoarmer Schritt durch den Betreiber:** In phpMyAdmin zunächst **„Datenbanken“** öffnen und ausschließlich die Übersichtsseite ansehen/screenshotten. Datenbankkennungen, Hostnamen und sonstige Infrastrukturkennungen auf geteilten Screenshots möglichst teilweise maskieren. Danach gegebenenfalls die Registerkarte **„Struktur“** der korrekten WordPress-Datenbank betrachten, ohne Daten-Tabellen oder `SQL` zu öffnen, keine Downloads, Export-/Import-, Änderungs- oder Backupaktionen. Die Zuordnung zu WordPress bleibt dabei mit anderen Belegen abzugleichen.
+
+**Freigaben unverändert:** Diese UI-Screenshots sind kein Go für neue Connector-SSH-/SFTP-/SQL-Abfragen, echte Datensicherungen, CI, Release-Writer, private Schlüssel, Scheduler oder kostenpflichtige Produkte. PGP05 Produktivgates OFFEN. Formale V1-Kennzahlen unverändert.
