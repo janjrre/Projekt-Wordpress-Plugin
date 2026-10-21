@@ -756,7 +756,7 @@
       "pgp04_v2_context_provider_duration_seconds_ui": 4,
       "pgp04_v2_context_runtime_evidence": "2026-10-21 00:29 screenshots: pgp04-context-no-secret-smoke SUCCESS; PGP04_CONTEXT_ACCESS=PASS; PGP04_CONTEXT_TOKEN=NONE; job checkout HEAD bead6a3, expected v2 branch.",
       "pgp04_v2_approved_sha_variable_runtime_evidence": "The compiled CircleCI context no-secret-smoke job checks PGP04_APPROVED_SHA == CIRCLE_SHA1 and exits success with marker. Code blob d3170f9a4ecfb6b80ac0422042e94c457df6f77b and UI HEAD bead6a3, GitHub compare exact bead6a3386958bfc3f1bbc4c13b925506777ef5e.",
-      "pgp04_v2_approval_state": "ON_HOLD; NOT_APPROVED pending permission-form review and secure direct token entry",
+      "pgp04_v2_approval_state": "ON_HOLD; NOT APPROVED; wait for confirmation of direct GH_TOKEN context entry and second safety check",
       "pgp04_v2_real_remote_asset_upload_verified": false,
       "pgp04_v2_remote_immutable_release_verified": false,
       "pgp04_v2_owner_restore_verified": false,
@@ -764,8 +764,9 @@
       "pgp04_v2_synthetic_remote_release_operator_approval_evidence": "Explicit user message on 2026-10-21: Ja, ich gebe den einmaligen, ausschließlich synthetischen PGP-04-GitHub-Release-Test frei. Token creation/storage guidance authorized; hold must only be approved on subsequent explicit instruction.",
       "pgp04_v2_scope_authorized": "one-time synthetic encrypted release only; private janjrre/orgavela-backups; no real WP or MariaDB data",
       "pgp04_v2_pat_permission_plan": "fine-grained; resource owner janjrre; only select orgavela-backups; Contents: read and write; Metadata: read; other rights none; 1-day expiry if available",
-      "pgp04_v2_pat_created_operator_verified": false,
-      "pgp04_v2_gh_token_context_presence_verified": false
+      "pgp04_v2_pat_created_operator_verified": true,
+      "pgp04_v2_gh_token_context_presence_verified": false,
+      "pgp04_v2_pat_creation_evidence": "Operator stated on 2026-10-21 token 'ist mit deinen einstellungen erstellt'; fine-grained token existence and claimed configuration owner-attested, exact scope/expiration not independently provider-inspected."
     },
     {
       "id": "O04",
