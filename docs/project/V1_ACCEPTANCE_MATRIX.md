@@ -835,3 +835,16 @@ Keine Erhoehung formaler Zaehler: historische Coding 62/71, M 0/8, P4 0/4, R01�
 | Echte OrgaVela MariaDB-Transaktions- und WordPress-Dateikonsistenz | **OFFEN / GESPERRT** | Nur fest codierte kuenstliche Fixture, keine produktiven Zugriffe |
 
 Formale V1-Zahlen: Coding historisch 62/71, M 0/8, P4 0/4, R 0/18 unveraendert.
+
+## 21.10.2026 – PGP05 getrennter Offline-Writer (nur synthetisch)
+
+| Sicherheitsgate | Ergebnis | Beleggrenze |
+|---|---|---|
+| Echte synthetische GnuPG-OpenPGP-Kapselung mit OrgaVela-PUBLIC-Key | **LOKAL PASS** | Public-only Source, keine Private Keys |
+| PR28 Gate sowie separater PR29-Writer-Prozess | **LOKAL PASS** | vollstaendiger originaler SHA-/Manifestvalidator + OpenPGP Packet/Subkey-Check |
+| Kuenstlich geaenderter Ciphertext nach Uebergabe | **LOKAL REFUSED wie erwartet** | separater Prozess erkennt falschen Hash |
+| Fake-Nicht-OpenPGP mit absichtlich passendem Manifest/Sidecar SHA | **LOKAL REFUSED wie erwartet** | PR28 SHA-Validator alleine akzeptiert das gefaelschte, hash-konsistente Paket; PGP05 Writer-Packet-Check verweigert es |
+| Gesamter PGP05 Snapshot->Writer Offline-Test | **26/26 LOKAL PASS** | Python3.13.5, GnuPG2.4.7, keine CircleCI-Provider-/Echt-Backup-Evidenz |
+| Produktiver Quelle-/DB-Snapshot, Produktionsrelease, isolierter WordPress+MariaDB Restore, Scheduler | **OFFEN/GESPERRT** | Keine neuen Freigaben |
+
+Codinghistorie 62/71; formale M0–M7 0/8, P4 0/4, R01–R18 0/18 unveraendert.
