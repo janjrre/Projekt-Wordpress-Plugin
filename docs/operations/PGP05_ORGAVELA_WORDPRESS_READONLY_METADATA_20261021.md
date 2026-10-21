@@ -82,3 +82,19 @@ Im Plugin-Metadaten-Inventar sind IONOS-Essentials, IONOS-Marketplace und IONOS-
 **Nächster risikoarmer Schritt durch den Betreiber:** In phpMyAdmin zunächst **„Datenbanken“** öffnen und ausschließlich die Übersichtsseite ansehen/screenshotten. Datenbankkennungen, Hostnamen und sonstige Infrastrukturkennungen auf geteilten Screenshots möglichst teilweise maskieren. Danach gegebenenfalls die Registerkarte **„Struktur“** der korrekten WordPress-Datenbank betrachten, ohne Daten-Tabellen oder `SQL` zu öffnen, keine Downloads, Export-/Import-, Änderungs- oder Backupaktionen. Die Zuordnung zu WordPress bleibt dabei mit anderen Belegen abzugleichen.
 
 **Freigaben unverändert:** Diese UI-Screenshots sind kein Go für neue Connector-SSH-/SFTP-/SQL-Abfragen, echte Datensicherungen, CI, Release-Writer, private Schlüssel, Scheduler oder kostenpflichtige Produkte. PGP05 Produktivgates OFFEN. Formale V1-Kennzahlen unverändert.
+
+
+## Nachtrag Betreiber-Screenshot: phpMyAdmin-Datenbankübersicht 14:11
+
+**Evidenzart:** vom Betreiber geteilter Screenshot der phpMyAdmin-Ansicht `Datenbanken`; keine neue Verbindung, kein SQL-Kommando und keine PHP-Datei- oder Datenbankzeilenlesung durch den Assistenten. Screenshot und explizite Server-/Datenbank-IDs wurden nicht ins GitHub-Repo kopiert.
+
+| Sichtbare Eigenschaft | Aussage | Beweisgrenze |
+| --- | --- | --- |
+| `Datenbanken` | **1 Datenbank** in der aktuell authentifizierten phpMyAdmin-Verbindung aufgelistet | Andere IONOS-Datenbanken oder andere DB-Konten nicht ausgeschlossen |
+| Datenbank-Kollation | **`utf8mb3_general_ci`** | Steht nicht im Widerspruch zur zuvor angezeigten anderen Server-Connection-/Default-Kollation `utf8mb4_unicode_520_ci`; Tabelle-/Spaltenzeichensätze bleiben zu prüfen |
+| IONOS-Datenbankservername | Auf Screenshot sichtbar, absichtlich aus öffentlicher Dokumentation ausgelassen | Keine WP-zu-Datenbank-Zuordnung oder Host-Key-Pinning |
+| `Datenbankstatistiken aktivieren` | UI-Warnung nennt möglichen **starken Traffic zwischen Web-/MySQL-Server** | Ausdrücklich **nicht aktivieren**; keine zusätzliche Abfrage ausgelöst |
+
+**Nächste Betreiber-UI-Aktion:** ausschließlich auf den blauen Datenbanknamen tippen, im Bereich `Struktur` die **Metadaten** der Tabelle-/Typ-/Engine-Spalten ansehen und den Screenshot auf Wunsch mit maskierter Datenbank-/Hostkennung teilen. Nicht `SQL`, `Anzeigen` (Zeilen), `Exportieren`, `Importieren`, `Operationen`, `Rechte überprüfen` oder `Datenbankstatistiken aktivieren` benutzen. Die Tabellenstruktur darf zunächst nur mit allgemeinen WordPress-Kennzeichen plausibilisiert werden; der echte Zusammenhang mit WordPress muss über weitere vertrauenswürdige Identitätsbelege abgesichert werden.
+
+**Status:** Ein DB-Schema ist sichtbar und seine Kollation bekannt. **Noch kein Beweis**, dass genau dieses Schema das aktive WordPress-Schema ist, dass alle Tabellen InnoDB verwenden oder dass konsistente echte DB+Datei-Snapshots möglich sind. Keine Änderung am Masterplan-v2.43-Gate oder Produktionsfreigaben.
