@@ -156,3 +156,20 @@ Im Plugin-Metadaten-Inventar sind IONOS-Essentials, IONOS-Marketplace und IONOS-
 **Sicherer nächster Schritt ohne Zugangsdaten:** Der Betreiber kann in der bereits bekannten IONOS-Oberfläche **Webspace Explorer** öffnen und ausschließlich die **Ordnernamen und den aktuell angezeigten Pfad auf oberster Ebene** ansehen/screenshotten, ohne Dateien (insbesondere `wp-config.php`) zu öffnen, zu downloaden, zu verändern oder einen SSH-Verbindungstest zu starten. Verzeichnis-/Serverdetails auf Screenshots soweit möglich maskieren. Erst nach weiterer Identitätsprüfung sowie eigener Betreiberfreigabe wären direkte read-only-SSH-Metadatenabfragen zulässig. **Keine** Kontoänderung oder kostenpflichtige Aktion.
 
 **Abnahme:** UI-Kontoinventar teilweise dokumentiert, **SSH-/WP-Root-/DB-Quellidentität weiter OFFEN**. Produktive PGP05-Backups, Secrets, CI, Release, Restore und Scheduler nicht freigegeben. Masterplan v2.44 / formale V1-Zähler unverändert.
+
+
+## Nachtrag: IONOS Webspace-Explorer-Verzeichnisbaum (Betreiber-Screenshot, 21.10.2026)
+
+**Evidenzquelle:** Direkt vom Betreiber übergebener Screenshot der obersten Webspace-Explorer-Ansicht aus OrgaVela. **Kein** SSH/SFTP, keine Dateiinhalte oder IONOS-/DB-Connector-Aufrufe durch den Assistenten. Screenshot selbst nicht in GitHub gespeichert.
+
+**Sichtbar und sicher lesbar:**
+- Im Webspace-Explorer liegt auf der obersten angezeigten Ebene `/` das Verzeichnis `public/` sowie `backup_storage/` (separater Verzeichniszweig mit `content/`).
+- Der aufgeklappte `public/`-Baum enthält `wp-admin/`, `wp-content/`, `wp-includes/` und `.opcache/`. Die drei WordPress-Standardverzeichnisse sprechen sehr stark dafür, dass `/public` die WordPress-Installationsbasis auf **diesem OrgaVela-Webspace** ist.
+- Für die in der rechten Tabelle sichtbaren Ordner `backup_storage/` und `public/` ist `755` als Zugriffsmodus angezeigt. Dies ist ein GUI-Metadatum, **keine** Prüfung der effektiven SSH-ACLs, tatsächlichen Eigentümer und Verzeichnisse auf dem Shellserver.
+- Das separate `backup_storage/` lässt **keine** Aussage zur Existenz, Aktualität, Verschlüsselung oder Eignung produktiver Backups zu. Das Verzeichnis wurde nicht geöffnet; insbesondere keine Datei- oder Sicherungsinhalte gesichtet.
+
+**Abgrenzung:** Die Ordnerstruktur ist der bisher stärkste UI-Beleg für die Verzeichnis-Hypothese `/public`. Dennoch nicht abschließend belegt: von der Domain `orgavela.com` genutzter Document Root in IONOS-Domain-/Hostingkonfiguration, tatsächlicher SFTP-/Shell-Chroot, effektive WordPress-Konfiguration und darin referenzierte Datenbank/Host, WP-Datei-/Uploads-Quiescence, Host-Key-Authentizität. Die Angabe `/` im SFTP-Kontoeintrag beweist **nicht** globalen Serverroot oder alle späteren Backup-Leserechte.
+
+**Nächste sichere UI-Prüfung:** Der Betreiber kann im **Webspace Explorer `public/` anklicken** und nur die **Datei-/Ordnernamen auf oberster Ebene** als Screenshot zeigen, um die WordPress-Basisdateien (z. B. `index.php`, `wp-load.php`; Existenz von `wp-config.php`, falls sichtbar) zu erkennen. **Keine Dateien öffnen** (`wp-config.php` enthält Geheimnisse!), herunterladen, kopieren, bearbeiten oder löschen; `backup_storage/` nicht öffnen. Namen/Serverkennung bei Bedarf ausblenden. Alternativ später Document-Root direkt aus bereits vorhandener IONOS-UI ansehen. Für eine neue direkte SSH-/DB-Abfrage ist nach wie vor eine gesonderte explizite Freigabe notwendig.
+
+**Status:** WordPress-Installationsverzeichnis `/public` **sehr plausibel via Webspace-UI**, aber nicht unabhängig als produktiver Domain-Document-Root verifiziert. Keine Erhöhung formaler V1-Abnahme, kein PGP05-Backup-Produktiv-GO. Masterplan v2.44 und 52/52-InnoDB-Teilnachweis unverändert.
