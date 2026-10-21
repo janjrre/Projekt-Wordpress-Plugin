@@ -899,3 +899,15 @@ Formale V1-Zahlen unveraendert: 62/71 Coding historisch, M 0/8, P4 0/4, R 0/18.
 | Produktiver Release, isolierter Restore, Scheduler | **NICHT FREIGEGEBEN** | PGP05 Provider-Gates bleiben unabgenommen |
 
 Formal Coding historisch 62/71, M0–M7 0/8, P4 0/4, R01–R18 0/18 unveraendert.
+
+## 21.10.2026 – IONOS-Backup-Provider-UI und OrgaVela-Restorepunkt-Nachweis
+
+| Gate | Status | Evidenzgrenze |
+|---|---|---|
+| OrgaVela-IONOS-Projekt und Domain orgavela.com | **PASS aus Betreiber-UI** | Projektübersicht und Projekteinstellungen, WP 7.1.3, Auto-Updates angezeigt |
+| Automatische WP-Dateien+DB-Backups, mindestens 14 Tage Retention | **IONOS-PROVIDERANGABE belegt** | Ausdrücklicher Hinweis im Tab Backups, nicht unabhängig archivierte Dateiinhalte |
+| Konkrete IONOS-Restorepunkte sichtbar | **9 UI-EINTRÄGE PASS** | 12., 14.–21.10.2026 um 14:03; 13.10. in der Aufnahme nicht gelistet |
+| Echtes Provider-Restore, Datenintegrität, Dateisystem+DB-Konsistenz | **NICHT GETESTET** | Kein Wiederherstellen gedrückt, keine Snapshotinhalte gelesen, kein isolierter Restore |
+| Zusätzliche verschlüsselte GitHub-Backups, echter Source-Writer, Scheduler | **BLOCKED** | Keine Produktivfreigabe aus UI-Nachweis ableiten |
+
+62/71 historische Coding, formale M 0/8, P4 0/4, R 0/18 unverändert.

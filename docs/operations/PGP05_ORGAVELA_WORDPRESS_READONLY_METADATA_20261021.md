@@ -197,3 +197,18 @@ Im Plugin-Metadaten-Inventar sind IONOS-Essentials, IONOS-Marketplace und IONOS-
 **Risikoarmer nächster Identitätsbeleg ohne Dateiöffnung:** In der vorhandenen IONOS-Oberfläche von `Websites & Shops → OrgaVela` die **WordPress-Installations-/Domain-Zuordnung bzw. das Dokumentenstammverzeichnis** als reine Metadatenübersicht betrachten, wenn dort verfügbar. Keine `wp-config.php`-Einsicht, keine Datei-Dumps, SQL, SSH, Token-, Cron- oder Berechtigungsänderungen. Falls die Oberfläche keinen Document-Root ausweist, vor direkter SSH-/DB-Metadatenprüfung eine **separate ausdrückliche Scope-Freigabe** einholen.
 
 **Unverändert blockiert:** realer kombinierter WordPress+InnoDB-Snapshot, Backup-Producer/Writer-Produktivfreigabe, GitHub-Release und Scheduler. Masterplan bleibt v2.44; V1-Zähler historisch 62/71 Coding, formal M0–M7 0/8, P4 0/4, Release 0/18.
+
+
+## Nachtrag 21.10.2026 – IONOS-Projektansicht: providerseitige WordPress-Backups
+
+**Evidenz:** Drei Betreiber-Screenshots `IONOS → Web-Projekte → OrgaVela`: `Übersicht`, `Einstellungen`, `Backups`. Keine Bilder, Kennungen oder persönlichen Daten werden ins GitHub-Repo kopiert; keine Backup- oder Restore-Aktion ausgelöst.
+
+**Direkt in der IONOS-UI beobachtet:** Projekt `OrgaVela` mit Domain `orgavela.com` und WordPress 7.1.3. Automatische WordPress-/Theme-/Plugin-/PHP-Updates werden in der Einstellungssicht als aktiviert angezeigt. Die Übersicht nennt automatische Updates und einen IONOS-Sicherheitsstatus; dies ersetzt keine unabhängige Sicherheitsabnahme.
+
+**Entscheidender Provider-Backup-Beleg:** Der Tab `Backups` sagt ausdrücklich: „Backups Ihrer WordPress-Website (Dateien und Datenbank umfassend) werden automatisch erstellt und für mindestens 14 Tage aufbewahrt“. Es sind **neun Wiederherstellungspunkte** auf der gezeigten Liste erkennbar: **12., 14., 15., 16., 17., 18., 19., 20. und 21.10.2026**, alle mit Uhrzeit **14:03**. Der neueste sichtbare Punkt ist **21.10.2026 um 14:03**. **13.10.2026 fehlt in der sichtbaren Liste**; die zugesagte Mindestens-14-Tage-Retention ist eine Anbieterangabe, aber keine Sichtprüfung von 14 lückenlosen täglichen Backup-Einträgen.
+
+**Keine Wiederherstellung vorgenommen.** Jede Backupzeile enthält `Wiederherstellen`; der UI-Hinweis warnt explizit vor Verlust aller Änderungen nach dem gewählten Zeitpunkt. Der Wiederherstellen-Button wurde nicht benutzt. Integrität, Konsistenz, tatsächlicher Inhalt, erfolgreicher Restore, IONOS-physische Unabhängigkeit/Georedundanz und Exportierbarkeit sind noch **unbekannt**. Ein Jetpack-Echtzeit-Backup-Coupon auf `Übersicht` ist Werbung, **kein** Nachweis einer aktivierten Jetpack-Backup-Lösung; kein Coupon oder Vertrag eingelöst.
+
+**Architekturfolge:** Providerseitige IONOS-Restorepunkte (WordPress-Dateien + DB laut Anbieter) sind nun **als verfügbare UI-Wiederherstellungspunkte belegt**. Das bereits beschlossene zusätzliche verschlüsselte GitHub-Offsite-Backup bleibt separate, vor Produktivbetrieb gesondert abzunehmende Recovery-Schicht. Eine IONOS-Provider-Backup-UI kann **nicht** ohne weitere Prüfung mit einem unveränderlichen, separat kontrollierten Offsite-Backup gleichgesetzt werden. In den drei Screenshots steht **kein** expliziter Domain-Document-Root; `/public` bleibt unabhängig von diesem UI-Beleg weiterhin die aus WordPress-Dateinamen sehr stark plausible Installationsbasis.
+
+**Freigaben:** keine SSH-/SQL-Connectorabfrage, kein neuer Datenzugriff, kein PGP05-Realdaten-Capture, kein GitHub-Release, kein CI-Run, kein Scheduler, kein bezahlter Zusatzdienst und keine Änderungen an Backups. Keine neue formale V1-Meilensteinabnahme durch bloß vorhandene Anbieter-Recoverypunkte.

@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-21",
-  "snapshot_basis": "PGP04 V3 SYNTHETIC-ONLY OpenPGP/PGPony GitHub release -> operator decrypt -> synthetic archive contents and SHA256 sidecar verification formally accepted 2026-10-21 on explicit owner attestation. CircleCI #505 writer PASS; independent GitHub REST release 419226447 immutable=true, exactly three uploaded assets/digests, protected approved commit. Owner confirmed exact SQL marker, WordPress synthetic marker, local tar.gpg SHA256 match, decryption, file presence, fine-grained PAT revocation; CircleCI GH_TOKEN deletion screenshot. Owner verifications are attested, not independently replayed. Production capture, isolated real WP+DB restore, automated scheduler and V1 formal release gates remain BLOCKED; 62/71 historic coding, M 0/8, P4 0/4, R 0/18. PGP05 first offline, synthetic-only ciphertext artifact contract: Draft PR#28 on feature SHA 532d3d478ec87c26928877d13d17e93c5becc5b3 (based frozen PGP04 V3), local Python 3.13.5 suite 20/20 PASS and exact Git blobs confirmed; NOT provider CI; no real captures or releases. OpenPGP/PGPony selected already 2026-10-20 ADR; historical age runbook annotated. PGP05 follow-on public-only GnuPG integration: one additional local synthetic ciphertext encryption/packet+subkey/manifest/sidecar test PASS (GnuPG 2.4.7), total local 21/21 PASS, Draft PR#28 head 1301f7d346b340617948572968ed78cd75000b1b; no private key, CI or real data. New PGP05 checkpoint2 stacked Draft PR29 synthetic-only database.sql.gz+WordPress files fixture in public-key encrypted ciphertext-only handoff: local Python3.13.5/GnuPG2.4.7 20/20 PASS using local reduced stand-in for PR28 validator; full PR28/29 code combined NOT run, no production or CircleCI. PGP05 synthetic snapshot PR29 integrated locally with EXACT GitHub PR28 asset validator blob SHA 56dc9960dfdb946e7286d9a9044946e6cd3545e5; reran 20/20 local PASS 2026-10-21, current PR29 SHA 37894d8f79e45a537ebbbf90a52fde19d9b78e0c. No CI/provider, no real WordPress/MariaDB consistency proof or backup authorization. PGP05 PR29 26/26 local tests PASS with separate offline writer OpenPGP packet/subkey validation and hash-consistent fake ciphertext rejection; independent writer module, actual PR28 asset gate and synthetic GnuPG public-only source. No CI/provider, no production snapshot or release. 2026-10-21 PGP05 checkpoint 3 Draft PR30 off PR29: 32/32 local Python3.13.5 tests on exact GitHub blobs; ONLY synthetic ordered DB/file writer-fence and consistency transcript validation, never production evidence. IONOS source mapping/DB engine/consistency not independently verified, no IONOS connections or CI runs. PGP05 checkpoint 4 Draft PR31, local synthetic-decrypted archive validator + 28/28 pass, rerun PGP29 snapshot/writer 26/26 + PR30 source simulation 32/32 = 86/86 local PASS. Owner PGPony second offline recovery copies attested; public candidate metadata reconciled with clear owner-attested provenance, no assistant replay. No real site reads, CI or production. 2026-10-21 operator-approved read-only via connected OrgaVela WordPress MCP, not SSH: app home/site URLs orgavela.com HTTPS, WordPress 7.1.3, PHP 8.3.35, MariaDB SERVER 11.8.8, UOP Core alpha.2 active, WP_Cron disabled 2 overdue/loopback 200. Does NOT verify IONOS hosting account/SSH root/DB schema/table engines nor authorize real captures/CI. 2026-10-21 owner-uploaded 4-page phpMyAdmin structure PDF for same displayed IONOS schema: every one of 52 tables InnoDB (engine metadata PASS for displayed schema), 2929 reported row counts possibly approximate, 4.2 MiB aggregate tables, per-table utf8mb4_unicode_520_ci vs schema default utf8mb3_general_ci. Original PDF contains identifiers and was not uploaded to GitHub; not independent WP config/DB identity or DB+FS snapshot consistency proof.",
+  "snapshot_basis": "PGP04 V3 SYNTHETIC-ONLY OpenPGP/PGPony GitHub release -> operator decrypt -> synthetic archive contents and SHA256 sidecar verification formally accepted 2026-10-21 on explicit owner attestation. CircleCI #505 writer PASS; independent GitHub REST release 419226447 immutable=true, exactly three uploaded assets/digests, protected approved commit. Owner confirmed exact SQL marker, WordPress synthetic marker, local tar.gpg SHA256 match, decryption, file presence, fine-grained PAT revocation; CircleCI GH_TOKEN deletion screenshot. Owner verifications are attested, not independently replayed. Production capture, isolated real WP+DB restore, automated scheduler and V1 formal release gates remain BLOCKED; 62/71 historic coding, M 0/8, P4 0/4, R 0/18. PGP05 first offline, synthetic-only ciphertext artifact contract: Draft PR#28 on feature SHA 532d3d478ec87c26928877d13d17e93c5becc5b3 (based frozen PGP04 V3), local Python 3.13.5 suite 20/20 PASS and exact Git blobs confirmed; NOT provider CI; no real captures or releases. OpenPGP/PGPony selected already 2026-10-20 ADR; historical age runbook annotated. PGP05 follow-on public-only GnuPG integration: one additional local synthetic ciphertext encryption/packet+subkey/manifest/sidecar test PASS (GnuPG 2.4.7), total local 21/21 PASS, Draft PR#28 head 1301f7d346b340617948572968ed78cd75000b1b; no private key, CI or real data. New PGP05 checkpoint2 stacked Draft PR29 synthetic-only database.sql.gz+WordPress files fixture in public-key encrypted ciphertext-only handoff: local Python3.13.5/GnuPG2.4.7 20/20 PASS using local reduced stand-in for PR28 validator; full PR28/29 code combined NOT run, no production or CircleCI. PGP05 synthetic snapshot PR29 integrated locally with EXACT GitHub PR28 asset validator blob SHA 56dc9960dfdb946e7286d9a9044946e6cd3545e5; reran 20/20 local PASS 2026-10-21, current PR29 SHA 37894d8f79e45a537ebbbf90a52fde19d9b78e0c. No CI/provider, no real WordPress/MariaDB consistency proof or backup authorization. PGP05 PR29 26/26 local tests PASS with separate offline writer OpenPGP packet/subkey validation and hash-consistent fake ciphertext rejection; independent writer module, actual PR28 asset gate and synthetic GnuPG public-only source. No CI/provider, no production snapshot or release. 2026-10-21 PGP05 checkpoint 3 Draft PR30 off PR29: 32/32 local Python3.13.5 tests on exact GitHub blobs; ONLY synthetic ordered DB/file writer-fence and consistency transcript validation, never production evidence. IONOS source mapping/DB engine/consistency not independently verified, no IONOS connections or CI runs. PGP05 checkpoint 4 Draft PR31, local synthetic-decrypted archive validator + 28/28 pass, rerun PGP29 snapshot/writer 26/26 + PR30 source simulation 32/32 = 86/86 local PASS. Owner PGPony second offline recovery copies attested; public candidate metadata reconciled with clear owner-attested provenance, no assistant replay. No real site reads, CI or production. 2026-10-21 operator-approved read-only via connected OrgaVela WordPress MCP, not SSH: app home/site URLs orgavela.com HTTPS, WordPress 7.1.3, PHP 8.3.35, MariaDB SERVER 11.8.8, UOP Core alpha.2 active, WP_Cron disabled 2 overdue/loopback 200. Does NOT verify IONOS hosting account/SSH root/DB schema/table engines nor authorize real captures/CI. 2026-10-21 owner-uploaded 4-page phpMyAdmin structure PDF for same displayed IONOS schema: every one of 52 tables InnoDB (engine metadata PASS for displayed schema), 2929 reported row counts possibly approximate, 4.2 MiB aggregate tables, per-table utf8mb4_unicode_520_ci vs schema default utf8mb3_general_ci. Original PDF contains identifiers and was not uploaded to GitHub; not independent WP config/DB identity or DB+FS snapshot consistency proof. IONOS Web-Projekte > OrgaVela provider backup UI owner screenshots 2026-10-21: provider claims daily WordPress files + DB retained >=14 days; nine visible restore points Oct 12 and Oct 14-21 at 14:03. Oct 13 not visible. UI listings verified, NO provider backup content integrity/restore test, NO production PGP05 approval.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -918,7 +918,7 @@
       "pgp05_ionos_ssh_or_sftp_webroot_verified": false,
       "pgp05_actual_database_schema_identity_verified": false,
       "pgp05_real_database_table_engines_verified": false,
-      "pgp05_ionos_provider_restore_points_verified": false,
+      "pgp05_ionos_provider_restore_points_verified": true,
       "pgp05_ionos_ssh_or_database_new_metadata_run_authorized": false,
       "pgp05_visible_ionos_schema_table_engine_pdf_passed": true,
       "pgp05_visible_ionos_schema_table_count": 52,
@@ -929,7 +929,28 @@
       "pgp05_visible_ionos_schema_total_size": "4.2 MiB (phpMyAdmin reported aggregate)",
       "pgp05_visible_ionos_schema_table_collation": "utf8mb4_unicode_520_ci (each table)",
       "pgp05_visible_ionos_schema_default_collation": "utf8mb3_general_ci",
-      "pgp05_visible_ionos_schema_engine_gate_scope": "PASS for tables of owner-displayed IONOS schema ONLY; not independently mapped to live WP configuration or consistency/backup-ready"
+      "pgp05_visible_ionos_schema_engine_gate_scope": "PASS for tables of owner-displayed IONOS schema ONLY; not independently mapped to live WP configuration or consistency/backup-ready",
+      "pgp05_ionos_provider_restore_points_evidence_scope": "Owner-provided IONOS OrgaVela Backups tab screenshots; nine UI-listed points and provider-stated daily WordPress files+database backups retained at least 14 days; no actual restore or content validation.",
+      "pgp05_ionos_provider_backup_ui_visible_restore_count": 9,
+      "pgp05_ionos_provider_backup_ui_visible_dates": [
+        "2026-10-12",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16",
+        "2026-10-17",
+        "2026-10-18",
+        "2026-10-19",
+        "2026-10-20",
+        "2026-10-21"
+      ],
+      "pgp05_ionos_provider_backup_ui_latest_visible": "2026-10-21 14:03 (provider UI timestamp)",
+      "pgp05_ionos_provider_backup_retention_provider_advertised_min_days": 14,
+      "pgp05_ionos_provider_backup_ui_gap_note": "The screenshot does not list 2026-10-13; do not infer 14 uninterrupted restore points from the 9 visible.",
+      "pgp05_ionos_provider_restore_executed": false,
+      "pgp05_ionos_provider_restore_independently_verified": false,
+      "pgp05_ionos_provider_contents_integrity_verified": false,
+      "pgp05_wp_site_domain_ionos_project_ui_verified": true,
+      "pgp05_ionos_domain_document_root_independently_verified": false
     },
     {
       "id": "O04",
@@ -1321,7 +1342,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.44",
+  "masterplan_version": "2.45",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",
