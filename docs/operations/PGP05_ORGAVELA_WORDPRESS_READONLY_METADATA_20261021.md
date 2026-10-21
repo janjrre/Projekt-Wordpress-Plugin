@@ -135,3 +135,24 @@ Im Plugin-Metadaten-Inventar sind IONOS-Essentials, IONOS-Marketplace und IONOS-
 **Nächste sinnvolle risikoarme Betreiberaktion:** Nun nicht mehr zum Tabellen-Engine-Scrollen zurückkehren. Als Nächstes die bereits vorhandene IONOS-Oberfläche **SFTP & SSH → Konten verwalten** nur in der Übersicht öffnen und (nur wenn möglich) die Hosting-/Pfadzuordnung beurteilen. **Keine** Passwörter, privaten Schlüssel, neuen Konten oder Tokens anzeigen/anlegen, keinen Verbindungstest über SSH starten und keine aufwändigen Statistiken aktivieren. Server-/Vertrags-IDs auf neuen Bildern maskieren. Direkter neuer SSH-/SQL-Connectorlauf bleibt bis gesonderter Freigabe untersagt.
 
 **Projektstatus:** Nur die Engine-Metadaten dieses sichtbaren Schemas sind PASS. PGP05 reale Backup-Quellidentität und kombinierte WordPress-Dateien/MariaDB-Recovery-Konsistenz bleiben BLOCKED. Formaler V1-Meilensteinzähler wird nicht erhöht.
+
+
+## Nachtrag SFTP-/SSH-Kontenuebersicht (Betreiber-Screenshot, 21.10.2026)
+
+**Beleg:** Vom Betreiber freiwillig übermittelter Screenshot auf der IONOS-Seite `Websites & Shops → OrgaVela → Sichere FTP-Zugänge verwalten`. **Nur visuelle Bewertung**; kein SSH-, SFTP-, Dateimanager- oder Datenbankzugriff durch den Assistenten. Benutzername ist im Original-Screenshot vom Betreiber maskiert; der Screenshot selbst wird aus Privatsphäregründen nicht im Repository gespeichert.
+
+| Sichtbare Eigenschaft | Ergebnis | Aussagegrenze |
+| --- | --- | --- |
+| Navigationskontext | **Websites & Shops → OrgaVela** | Belegt die IONOS-UI-Kontextzuordnung, nicht den vollständigen Site-Root-/DB-Vertrag |
+| SFTP-/SSH-Konten | **1 von 200** verwendet | Nur Kontenanzahl; keine Prüfung aktiver Schlüssel, Berechtigungen oder funktionierender Anmeldungen |
+| Protokoll | **SFTP + SSH** | Capability-Anzeige; **keine** SSH-Session eröffnet oder bestätigt |
+| Verzeichnis | **`/`** | **Vom Kontoeintrag angezeigtes Start-/Zugriffsverzeichnis**, kann innerhalb eines auf Webspace begrenzten Roots liegen; **nicht** als globaler Server-Root oder tatsächlich verwendeter WordPress-Webroot interpretieren |
+| Persönliche Notiz | **`ChatGPT / GitHubActions`** | Spricht dafür, dass der Account für Entwicklungs-/Deploy-Arbeiten eingerichtet wurde; Notiz allein beweist keine derzeit aktive CI-Nutzung und keine ausschließlichen Rechte |
+
+**Sicherheitsbewertung:** Der sichtbare vorhandene, offenbar für GitHub-Actions-Deploys vorgesehene `SFTP + SSH`-Account ist **nicht** ohne gesonderte minimalprivilegierte Backup-Quellrolle wiederzuverwenden. Source-Snapshot-Job benötigt eng begrenzte OrgaVela-Read-Rechte, keinerlei GitHub-Release-Writer-Token oder Dreamloud-Zugriff, und der Writer darf keine SSH-/DB-Secrets erhalten. Der `/`-Wert ist lediglich UI-Kontext, nicht die verifizierte Chroot-/Shell-/WP-Root-Zuordnung.
+
+**Offene Identitätsprüfung:** Exakter OrgaVela-WordPress-Dateiordner/Document Root, Einbindung effektiver Konfiguration und tatsächlich verwendeter DB, SSH-Host-Key, Vertragsgrenzen und Least-Privilege-Zugriffsrechte sind weiterhin **nicht verifiziert**. Ein erfolgreicher InnoDB-Tabellengate-Nachweis (52/52) beweist diese Punkte nicht.
+
+**Sicherer nächster Schritt ohne Zugangsdaten:** Der Betreiber kann in der bereits bekannten IONOS-Oberfläche **Webspace Explorer** öffnen und ausschließlich die **Ordnernamen und den aktuell angezeigten Pfad auf oberster Ebene** ansehen/screenshotten, ohne Dateien (insbesondere `wp-config.php`) zu öffnen, zu downloaden, zu verändern oder einen SSH-Verbindungstest zu starten. Verzeichnis-/Serverdetails auf Screenshots soweit möglich maskieren. Erst nach weiterer Identitätsprüfung sowie eigener Betreiberfreigabe wären direkte read-only-SSH-Metadatenabfragen zulässig. **Keine** Kontoänderung oder kostenpflichtige Aktion.
+
+**Abnahme:** UI-Kontoinventar teilweise dokumentiert, **SSH-/WP-Root-/DB-Quellidentität weiter OFFEN**. Produktive PGP05-Backups, Secrets, CI, Release, Restore und Scheduler nicht freigegeben. Masterplan v2.44 / formale V1-Zähler unverändert.
