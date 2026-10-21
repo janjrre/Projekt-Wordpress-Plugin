@@ -1,3 +1,5 @@
+> **Aktueller Nachtrag 21.10.2026:** Der reduzierte lokale Validierungsadapter wurde nach dem ersten Test **durch den vollständigen unveränderten Prüfer aus Draft PR #28 ersetzt**. Das Modul wurde aus GitHub read-only geladen und seine identische Git-Blob-SHA `56dc9960dfdb946e7286d9a9044946e6cd3545e5` im lokalen Python-Arbeitsbereich nachgewiesen. Danach wurden die **20/20 PGP05-Snapshot-Tests erneut lokal erfolgreich ausgeführt**, einschließlich echter GnuPG-OpenPGP-Public-Key-Verschlüsselung und Validierung durch das **echte** Modul. Das ist nun ein reproduzierbarer lokaler **PR28+PR29-Integrations-PASS**, weiterhin **kein** CI-Provider-/GitHub-Release-/Live-WordPress-Restore-PASS. Die ursprüngliche Testadapter-Evidenz unten ist der vorherige historische Zwischenstand.
+
 # PGP-05 – Checkpoint 2: synthetic snapshot consistency and encrypted handoff
 
 **Date:** 2026-10-21. **Scope:** offline, synthetic-only, no live or CI authorization.
