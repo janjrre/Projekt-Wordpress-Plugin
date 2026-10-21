@@ -2,7 +2,7 @@
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
   "snapshot_date": "2026-10-21",
-  "snapshot_basis": "PGP04 V3 SYNTHETIC-ONLY OpenPGP/PGPony GitHub release -> operator decrypt -> synthetic archive contents and SHA256 sidecar verification formally accepted 2026-10-21 on explicit owner attestation. CircleCI #505 writer PASS; independent GitHub REST release 419226447 immutable=true, exactly three uploaded assets/digests, protected approved commit. Owner confirmed exact SQL marker, WordPress synthetic marker, local tar.gpg SHA256 match, decryption, file presence, fine-grained PAT revocation; CircleCI GH_TOKEN deletion screenshot. Owner verifications are attested, not independently replayed. Production capture, isolated real WP+DB restore, automated scheduler and V1 formal release gates remain BLOCKED; 62/71 historic coding, M 0/8, P4 0/4, R 0/18. PGP05 first offline, synthetic-only ciphertext artifact contract: Draft PR#28 on feature SHA 532d3d478ec87c26928877d13d17e93c5becc5b3 (based frozen PGP04 V3), local Python 3.13.5 suite 20/20 PASS and exact Git blobs confirmed; NOT provider CI; no real captures or releases. OpenPGP/PGPony selected already 2026-10-20 ADR; historical age runbook annotated.",
+  "snapshot_basis": "PGP04 V3 SYNTHETIC-ONLY OpenPGP/PGPony GitHub release -> operator decrypt -> synthetic archive contents and SHA256 sidecar verification formally accepted 2026-10-21 on explicit owner attestation. CircleCI #505 writer PASS; independent GitHub REST release 419226447 immutable=true, exactly three uploaded assets/digests, protected approved commit. Owner confirmed exact SQL marker, WordPress synthetic marker, local tar.gpg SHA256 match, decryption, file presence, fine-grained PAT revocation; CircleCI GH_TOKEN deletion screenshot. Owner verifications are attested, not independently replayed. Production capture, isolated real WP+DB restore, automated scheduler and V1 formal release gates remain BLOCKED; 62/71 historic coding, M 0/8, P4 0/4, R 0/18. PGP05 first offline, synthetic-only ciphertext artifact contract: Draft PR#28 on feature SHA 532d3d478ec87c26928877d13d17e93c5becc5b3 (based frozen PGP04 V3), local Python 3.13.5 suite 20/20 PASS and exact Git blobs confirmed; NOT provider CI; no real captures or releases. OpenPGP/PGPony selected already 2026-10-20 ADR; historical age runbook annotated. PGP05 follow-on public-only GnuPG integration: one additional local synthetic ciphertext encryption/packet+subkey/manifest/sidecar test PASS (GnuPG 2.4.7), total local 21/21 PASS, Draft PR#28 head 1301f7d346b340617948572968ed78cd75000b1b; no private key, CI or real data.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -850,17 +850,19 @@
       "pgp04_owner_pgpony_remote_restore_scope": "Synthetic owner PGPony decrypt and literal test contents / local SHA verification only; no actual WordPress or MariaDB environment was restored.",
       "pgp05_phase_started": true,
       "pgp05_format": "OpenPGP PGPony (decision ADR 2026-10-20); old age design superseded",
-      "pgp05_offline_asset_contract_status": "IMPLEMENTED SYNTHETIC-ONLY; local 20/20 PASS 2026-10-21, not integrated in CI, not a production backup acceptance",
+      "pgp05_offline_asset_contract_status": "SYNTHETIC-ONLY Offline implementation + 20 pure contract unit tests and 1 owner-public-key GnuPG encryption/packet/sidecar integration test; 21/21 local PASS on Python3.13.5, GnuPG2.4.7; provider CI not run; no production acceptance",
       "pgp05_offline_asset_contract_pr": 28,
-      "pgp05_offline_asset_contract_commit": "532d3d478ec87c26928877d13d17e93c5becc5b3",
-      "pgp05_offline_asset_contract_local_tests_passed": 20,
-      "pgp05_offline_asset_contract_local_tests_total": 20,
+      "pgp05_offline_asset_contract_commit": "1301f7d346b340617948572968ed78cd75000b1b",
+      "pgp05_offline_asset_contract_local_tests_passed": 21,
+      "pgp05_offline_asset_contract_local_tests_total": 21,
       "pgp05_offline_asset_contract_provider_ci_executed": false,
       "pgp05_offline_asset_contract_source_blob": "56dc9960dfdb946e7286d9a9044946e6cd3545e5",
       "pgp05_offline_asset_contract_tests_blob": "fff7ca70634955f0a063a6e1fcea8ca68ffcd600",
       "pgp05_real_site_capture_authorized": false,
       "pgp05_real_site_restore_performed": false,
-      "pgp05_scheduler_authorized": false
+      "pgp05_scheduler_authorized": false,
+      "pgp05_public_only_gnupg_integration_blob": "081bba2b48f4663c98c10d5f5ca1989fb93f996c",
+      "pgp05_public_only_gnupg_integration_passed": true
     },
     {
       "id": "O04",
@@ -1252,7 +1254,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.36",
+  "masterplan_version": "2.37",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",

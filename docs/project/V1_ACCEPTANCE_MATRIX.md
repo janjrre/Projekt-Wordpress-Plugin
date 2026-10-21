@@ -799,3 +799,14 @@ Historische Codingpakete 62/71, M0–M7 0/8, P4 0/4, Release-Gates 0/18 unveraen
 | Produktiv-Scheduler | **GESPERRT** | weitere Betreiberfreigabe notwendig |
 
 V1 Zähler unverändert: 62/71 historische Codingpakete, M0–M7 0/8, P4 0/4, R 0/18.
+
+## 21.10.2026 – PGP-05 verifizierter Public-Only OpenPGP-Integrationsnachtrag
+
+| Pruefung | Ergebnis | Beweisgrenze |
+|---|---|---|
+| PGP-05 Contract-Unit-Tests | **20/20 LOKAL PASS** | Python 3.13.5; fiktionale Ciphertext-Bytes; kein Produktivsystem |
+| Zusätzlicher GnuPG-Test mit originalem OrgaVela PUBLIC Key | **1/1 LOKAL PASS** | GnuPG 2.4.7, isoliertes GNUPGHOME ohne Secret Keys, echte synthetische Public-Key-Verschluesselung, Public Fingerprint und Encryption Subkey Packet geprueft |
+| PGP-05 gesamter Offline-Teststand | **21/21 PASS** | PR #28 Head `1301f7d346b340617948572968ed78cd75000b1b`; keine CircleCI-Providerfreigabe |
+| Echtes Backup, Owner Decrypt eines neuen PGP-05-Releases, isolierter WP+MariaDB-Restore | **NICHT AUSGEFUEHRT** | Kein produktiver Datenzugriff, keine neuen Token, keine reale Freigabe |
+
+V1 Zaehler unveraendert M 0/8, P4 0/4, R 0/18, technische historische Coding 62/71.
