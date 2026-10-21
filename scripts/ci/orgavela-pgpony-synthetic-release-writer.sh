@@ -8,7 +8,7 @@ fail(){ printf 'PGP04_REFUSED: %s\n' "$1" >&2; exit 1; }
 [[ "${PGP04_OPERATOR_APPROVED:-}" == "YES" ]] || fail 'manual owner approval absent'
 [[ "${ORGAVELA_PGP_SYNTHETIC_ONLY:-}" == "YES" ]] || fail 'synthetic-only permission absent'
 [[ "${CIRCLE_PROJECT_USERNAME:-}" == "janjrre" && "${CIRCLE_PROJECT_REPONAME:-}" == "Projekt-Wordpress-Plugin" ]] || fail 'unexpected source project'
-[[ "${CIRCLE_BRANCH:-}" == "security/pgp04-synthetic-release-v2-20261020" ]] || fail 'unexpected branch'
+[[ "${CIRCLE_BRANCH:-}" == "security/pgp04-synthetic-release-v3-20261021" ]] || fail 'unexpected branch'
 [[ "${GITHUB_BACKUP_REPOSITORY:-}" == "janjrre/orgavela-backups" ]] || fail 'unexpected target'
 [[ -n "${GH_TOKEN:-}" ]] || fail 'missing one-time scoped token'
 for key in GITHUB_TOKEN BACKUP_GITHUB_TOKEN AGE_SECRET_KEY BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE ORGAVELA_BACKUP_PRIVATE_KEY SFTP_HOST SFTP_PASSWORD SSH_PRIVATE_KEY IONOS_SSH_HOST IONOS_SSH_PASSWORD GOOGLE_DRIVE_TOKEN_JSON; do
