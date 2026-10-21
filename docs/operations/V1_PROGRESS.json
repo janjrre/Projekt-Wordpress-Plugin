@@ -1,8 +1,8 @@
 {
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
-  "snapshot_date": "2026-10-20",
-  "snapshot_basis": "Operator screenshots at 18:57 show PGPony/OpenPGP PGP03 synthetic CircleCI TWO JOB handoff SUCCESS on actual source commit 4eac786c3868dc4e79f1cf1dd16dc11b93512ff8 (PR#25 head verified). pgpony-handoff-source and writer green; 9/9 negative tests, only encrypted .gpg+sha256+sanitized manifest crossed CircleCI workspace; 1.7 KiB, no plaintext or private key, no GitHub upload, producer/writer final markers PASS. GH03 owner paper key copies/restores+passphrase operator-attested PASS. Separate GH04 historical disposable-testkey and GH06 age synthetic evidence retained; PGP04 new permanent PGPony public-key encrypted remote immutable GitHub Release not tested. Security blocker: PR#25 feature branch is NOT PROTECTED (GitHub protected=false); no credentialed workflow must run on it without independent branch and restricted CircleCI context gate. V1 historical coding 62/71, 0/8 formal M, 0/4 P4, 0/18 R unchanged.",
+  "snapshot_date": "2026-10-21",
+  "snapshot_basis": "Independent GitHub REST release-ID and tag readback on 2026-10-21 confirms PGP04 V3 synthetic release 419226447, immutable=true, draft=false, prerelease=true, exactly three uploaded assets with server-side SHA256 digests; V3 branch protected=true at reviewed SHA and PR#26 remains draft. CircleCI #505 source/approval/context/writer PASS documented by operator screenshot; owner PGPony decrypt PASS, CircleCI GH_TOKEN removal PASS. Direct binary/sidecar rehash, synthetic archive content restore and GitHub PAT revocation NOT YET confirmed. No real backups authorized. Historical 62/71 coding, formal 0/8 M, 0/4 P4, 0/18 R unchanged.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -156,7 +156,7 @@
       "pgp04_local_fake_github_api_cases_passed": 14,
       "pgp04_local_fake_github_api_cases_total": 14,
       "pgp04_local_test_scope": "Offline fake GitHub API only: PUBLIC PGPony key synthetic ciphertext, strict manifest, binary readback before AND after publish, 14/14 expected outcomes. Exact GitHub publisher blob 6e207aef... re-run; Python mock harness local/uncommitted, not CircleCI or real GitHub E2E.",
-      "pgp04_provider_synthetic_release_test_passed": false,
+      "pgp04_provider_synthetic_release_test_passed": true,
       "pgp04_owner_pgpony_remote_restore_verified": false,
       "pgp04_real_site_capture_authorized": false,
       "preflight_verified_run": 38267570599,
@@ -680,9 +680,9 @@
       "openpgp_pgp03_release_upload_occurred": false,
       "openpgp_pgp03_ci_billable_credits": "not independently verified",
       "openpgp_pgp03_ci_pgp04_context_secrets_exposed": false,
-      "openpgp_pgp04_remote_release_status": "CIRCLECI WRITER PASS; released encrypted synthetic test GitHub Release 419226447 tag pgp04-synthetic-32, owner restore and independent release verification PENDING.",
+      "openpgp_pgp04_remote_release_status": "CIRCLECI #505 synthetic release writer PASS + independent GitHub REST release readback PASS (ID 419226447, immutable=true, 3 uploaded assets, server SHA256 digests). Owner PGPony decrypt PASS; PAT revoke and content restore OPEN.",
       "openpgp_pgp04_test_branch_gate": "The current Draft PR#25 source branch feat/o03-pgpony-openpgp-migration-20261020 returns protected=false from GitHub GET branch. It is NOT safe to expose a GH_TOKEN on this branch merely because YAML filters match. Use a dedicated protected test branch, branch/PR/no-bypass controls verified, tightly restricted CircleCI context and explicit owner approval before any synthetic remote release.",
-      "openpgp_pgp04_immutable_release_test_passed": false,
+      "openpgp_pgp04_immutable_release_test_passed": true,
       "pgp04_backup_repo_release_immutability_operator_ui_confirmed": true,
       "pgp04_backup_repo_release_immutability_confirmation": "GitHub Settings > General > Releases screenshot from operator, 2026-10-20 22:33; only setting, no remote release claim",
       "pgp04_ci_manual_approval_job_committed": true,
@@ -771,7 +771,7 @@
       "pgp04_v2_failure_root_cause": "2026-10-21 CircleCI screenshot: E: Unable to locate package gh; apt-get exit 100 in writer pre-script install step",
       "pgp04_v3_recovery_branch": "security/pgp04-synthetic-release-v3-20261021",
       "pgp04_v3_recovery_pr": "https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/26",
-      "pgp04_v3_status": "CircleCI #505 PGPony/OpenPGP synthetic source/context/release writer PASS; operator PGPony decryption SUCCESS; archive contents inspection and PAT revocation not yet independently/operator confirmed; production remains blocked.",
+      "pgp04_v3_status": "SYNTHETIC remote release PASS, independent GitHub release metadata/assets/digests/immutability PASS; operator PGPony decryption PASS; Context GH_TOKEN deleted. Direct binary/sidecar rehash, extracted-content restore and GitHub PAT revocation OPEN. Production blocked.",
       "pgp04_v3_expected_sha": "3c9f0bb8bd85fb97e09b84c870fb42fdf491a8de",
       "pgp04_v3_source_provider_executed": true,
       "pgp04_v3_source_provider_status": "PASS; operator screenshots CircleCI pipeline #505 2026-10-21, source 12s; synthetic GnuPG OpenPGP, no plaintext workspace, 6/6 early rejection",
@@ -801,9 +801,9 @@
         "manifest.json"
       ],
       "pgp04_v3_release_assets_provider_writer_verified": true,
-      "pgp04_v3_release_assets_independent_api_or_ui_verified": false,
+      "pgp04_v3_release_assets_independent_api_or_ui_verified": true,
       "pgp04_v3_release_immutability_writer_verified": true,
-      "pgp04_v3_release_immutability_independent_api_or_ui_verified": false,
+      "pgp04_v3_release_immutability_independent_api_or_ui_verified": true,
       "pgp04_v3_operator_restore_status": "PGPONY DECRYPTION PASS (operator-attested); extracted database.sql.gz and wordpress-files.tar.gz and inner synthetic contents NOT YET CONFIRMED; full restore acceptance OPEN.",
       "pgp04_v3_token_cleanup_status": "GH_TOKEN REMOVED from CircleCI: UI screenshot confirmed; fine-grained PAT GitHub revocation PENDING operator confirmation.",
       "pgp04_v3_further_ci_runs_authorized": false,
@@ -816,7 +816,25 @@
       "pgp04_v3_operator_pgpony_decryption_success": true,
       "pgp04_v3_operator_pgpony_decryption_evidence": "2026-10-21 operator states 'ich habe das verschlüsselte Testbackup bereist erfolgreich mit PGPony entschlüsselt'. Decryption PASS is operator attestation, not inspection of decrypted archive contents.",
       "pgp04_v3_decrypted_synthetic_contents_confirmed": false,
-      "pgp04_v3_full_e2e_acceptance": false
+      "pgp04_v3_full_e2e_acceptance": false,
+      "pgp04_v3_branch_protected_api_verified": true,
+      "pgp04_v3_branch_protection_detail_no_bypass_verified": false,
+      "pgp04_v3_remote_binary_content_independently_rehashed": false,
+      "pgp04_v3_sidecar_sha256_content_independently_read": false,
+      "pgp04_v3_release_api_audited_at": "2026-10-21",
+      "pgp04_v3_release_published_at": "2026-10-21T06:28:54Z",
+      "pgp04_v3_github_api_asset_sha256_digests": {
+        "manifest.json": "1616aab19505ee0081a41bc5bd169dc4a4e2e3c12a84e85f2f16812d7e1efedc",
+        "orgavela-synthetic-pgpony-handoff-001.tar.gpg": "4d209133b371f41799032fb207077dbcb7f205405622fe037d5c4035aa901621",
+        "orgavela-synthetic-pgpony-handoff-001.tar.gpg.sha256": "267768b643b6cd6d88c3b552d1e2806d8e03ebb6bbcf30fcc80dd2079207bede"
+      },
+      "pgp04_v3_github_api_asset_sizes": {
+        "manifest.json": 427,
+        "orgavela-synthetic-pgpony-handoff-001.tar.gpg": 1151,
+        "orgavela-synthetic-pgpony-handoff-001.tar.gpg.sha256": 112
+      },
+      "pgp04_v3_release_api_evidence_document": "docs/operations/PGP04_V3_GITHUB_API_RELEASE_CLOSEOUT_20261021.md",
+      "pgp04_v3_next_backup_issue": 27
     },
     {
       "id": "O04",
@@ -1208,7 +1226,7 @@
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,
   "tracker_url": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/15",
-  "masterplan_version": "2.21",
+  "masterplan_version": "2.33",
   "companion_documents": [
     "docs/project/V1_MASTER_PLAN.md",
     "docs/project/V1_STATUS.md",

@@ -739,3 +739,18 @@ PGP04 Ende-zu-Ende noch OPEN, V1 M0-M7 0/8, P4 0/4, R01-R18 0/18; Codinghistorie
 | Produktive Backups | **GESPERRT** | Keine Freigabe zur Erfassung realer WordPress/MariaDB-Daten |
 
 Historische Codingpakete 62/71; formale M0–M7 0/8, P4 0/4, R01–R18 0/18; PGP04 formales Gesamtgate OPEN.
+
+## 21.10.2026 – unabhängige GitHub-API-Releasekontrolle (technische Teilabnahme)
+
+| Gate | Ergebnis | Beleg / Grenze |
+|---|---|---|
+| V3 Commit und geschützter Branch | **GitHub API PASS** | `protected=true`, HEAD `3c9f0bb8bd85fb97e09b84c870fb42fdf491a8de`; Detail-No-Bypass nicht erneut API-geprüft |
+| Release 419226447 / Tag `pgp04-synthetic-32` | **GitHub API PASS** | Separater ID-/Tag-Readback, `immutable=true`, `draft=false`, `prerelease=true` |
+| Genau 3 Assets und GitHub-SHA-256-Digests | **GitHub API PASS** | Alle `uploaded`, Größen 1151/112/427 Bytes, individuelle GitHub-Digests in [Spezialaudit](../operations/PGP04_V3_GITHUB_API_RELEASE_CLOSEOUT_20261021.md) |
+| Remote Bytevergleich | **Writer PASS / unabhängig OFFEN** | Ciphertext-Binary nicht unabhängig heruntergeladen und rehashed; Sidecar-Inhalt noch nicht direkt gelesen |
+| PGPony entschlüsselt / GH_TOKEN aus Context gelöscht | **Betreiber-PASS / Screenshot-PASS** | Einzeln dokumentiert, kein voller Archivinhaltstest |
+| Fine-Grained PAT bei GitHub widerrufen | **OFFEN / sicherheitskritisch** | Explizite Betreiberbestätigung steht aus |
+| Entpacktes SQL+WordPress synthetisch geprüft | **OFFEN** | Keine private Schlüssel oder Klartextdaten an CI übergeben |
+| Produktiver Capture, geplanter Scheduler, echte Backupfreigabe | **GESPERRT** | PGP-05 Sicherheitsgates in [Issue #27](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27) |
+
+**Formal bleibt PGP-04 E2E OPEN; V1 M0–M7 0/8, P4 0/4, R01–18 0/18, historisch 62/71 Codingpakete.**
