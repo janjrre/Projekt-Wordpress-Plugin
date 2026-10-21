@@ -725,3 +725,17 @@ Keine neuen formalen V1-Gates: M0-M7 0/8, P4 0/4, Release-R01-18 0/18; Codinghis
 | Produktivbackups | GESPERRT | Keine echten Website-/MariaDB-Daten gestattet |
 
 PGP04 Ende-zu-Ende noch OPEN, V1 M0-M7 0/8, P4 0/4, R01-R18 0/18; Codinghistorie 62/71.
+
+## 21.10.2026 – Betreiber-Decrypt PASS, Context Secret Cleanup PASS (Formales PGP04-E2E noch offen)
+
+| Gate | Stand | Evidenz |
+|---|---|---|
+| CircleCI #505 Source, Context und Release Writer | PASS | Writer-Log RELEASE_METADATA_VERIFIED=PASS, ID 419226447, Tag pgp04-synthetic-32 |
+| PGPony Entschluesselung durch Schluesselinhaber | **BETREIBER BESTAETIGT: PASS** | Ausdrueckliche Nachricht zur erfolgreichen Entschluesselung des verschluesselten Testbackups |
+| CircleCI GH_TOKEN aus dediziertem Context entfernt | **UI PASS** | Screenshot Erfolgsmeldung GH_TOKEN environment variable deleted; nur PGP04_APPROVED_SHA bleibt |
+| GitHub Fine-Grained-PAT widerrufen | **OFFEN** | Noch keine direkte Betreiberbestaetigung; keine Verwechslung mit Context-Variable-Loeschung |
+| Entpacktes Archiv / synthetische Testdateien und SQL-Inhalt kontrolliert | **OFFEN** | Decryption alleine beweist noch keinen vollstaendigen Recover-Test |
+| Genau drei GitHub Release Assets / immutable unabh. UI-Abnahme | **OFFEN** | CI Writer prueft Remote-Bytegleichheit und immutable; kein separater GitHub UI-Readback belegt |
+| Produktive Backups | **GESPERRT** | Keine Freigabe zur Erfassung realer WordPress/MariaDB-Daten |
+
+Historische Codingpakete 62/71; formale M0–M7 0/8, P4 0/4, R01–R18 0/18; PGP04 formales Gesamtgate OPEN.
