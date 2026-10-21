@@ -1,0 +1,45 @@
+# PGP-05 isolated CircleCI Free validation. Branch-scoped and synthetic only.
+# Never attach contexts, SSH/DB credentials, backups, artifacts, workspaces, or schedules.
+version: 2.1
+
+jobs:
+  pgp05-offline-security:
+    docker:
+      - image: cimg/python:3.12
+    resource_class: small
+    working_directory: ~/project
+    steps:
+      - checkout
+      - run:
+          name: Verify exact OrgaVela repository and branch, reject credential injection
+          command: |
+            set -euo pipefail
+            [[ "${CIRCLE_PROJECT_USERNAME:-}" == "janjrre" ]]
+            [[ "${CIRCLE_PROJECT_REPONAME:-}" == "Projekt-Wordpress-Plugin" ]]
+            [[ "${CIRCLE_BRANCH:-}" == "feat/pgp05-readonly-ssh-metadata-check-20261021" ]]
+            for name in IONOS_SSH_HOST IONOS_SSH_USER IONOS_SSH_PASSWORD IONOS_DB_HOST IONOS_DB_PASSWORD IONOS_KNOWN_HOSTS GH_TOKEN GITHUB_TOKEN BACKUP_GITHUB_TOKEN ORGAVELA_BACKUP_PRIVATE_KEY BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE AGE_SECRET_KEY; do
+              [[ -z "${!name:-}" ]] || {
+                echo "PGP05_CI_UNEXPECTED_SECRET=REFUSED" >&2
+                exit 1
+              }
+            done
+            echo "PGP05_CI_ISOLATION=PASS"
+      - run:
+          name: Test only PGP-05 synthetic guards without injected environment
+          command: |
+            set -euo pipefail
+            bash -n scripts/ci/orgavela_pgp05_readonly_remote_collect.sh
+            code=0
+            response="$(bash scripts/ci/orgavela_pgp05_readonly_remote_collect.sh 2>&1)" || code=$?
+            [[ "$code" -eq 78 && "$response" == "PGP05_REMOTE_IDENTITY=REFUSED" ]]
+            env -i PATH="$PATH" HOME=/tmp PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -v -s scripts/ci -p 'test_orgavela_pgp05*.py'
+            echo "PGP05_OFFLINE_SECURITY=PASS"
+
+workflows:
+  pgp05-branch-only:
+    jobs:
+      - pgp05-offline-security:
+          filters:
+            branches:
+              only:
+                - feat/pgp05-readonly-ssh-metadata-check-20261021
