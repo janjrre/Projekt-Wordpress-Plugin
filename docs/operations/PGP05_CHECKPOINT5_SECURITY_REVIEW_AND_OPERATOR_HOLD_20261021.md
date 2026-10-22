@@ -86,3 +86,24 @@ The operator provided a **read-only screenshot** of **IONOS > Websites & Shops >
 1. Offline: design a pinned, non-bootstrapping **read-only** probe that never calls PHP/WP-CLI, never reads `wp-config.php`, emits only sanitized PASS/REFUSED and is not bundled with production secrets. Keep it in a Draft branch and synthetic test mode until separately approved.
 2. Owner: in this *same* existing OrgaVela account, optionally open **account details** in IONOS in view-only mode and privately compare the displayed server/contract assignment with the OrgaVela project; do not share account name, host, password or any credentials in GitHub/chat.
 3. For an actual connection, separately authorize the precise operator/runner, known host key, account, and command allowlist; do **not** use the pre-existing broader `orgavela-readonly-audit.sh` WP-CLI probe as PGP-05 evidence.
+
+## Operator evidence update — 2026-10-22, SSH connection details (IONOS UI)
+
+The owner viewed the **existing OrgaVela IONOS SFTP + SSH account detail page**:
+- The IONOS interface visibly displays a concrete **server/host** value, standard **SSH port 22**, **SFTP + SSH** protocol and an account name; the password is **not provided** (only a password help/reset link is displayed).
+- **Data minimization:** This public repository deliberately does **not** reproduce the server hostname, account identifier or visible username, nor does it store an unredacted screenshot. The owner should separately keep those details within the IONOS account interface. Hostname and username are not private keys, but they can assist credential-targeting and are unnecessary in this public audit.
+- This is an **account-side connection-target inventory**, not a successful SSH session, hostname-to-contract attestation, server-key handshake, or root-vHost binding. In particular, an official IONOS ED25519 fingerprint listed in documentation is only an **expected value**; before remote work the **actually presented** key must be matched to that independently verified reference and strict host-key checking enabled.
+- Earlier account-list evidence remains: its assigned SFTP directory is `/`, the entire webspace scope of the chosen hosting contract, and is not a read-only root boundary. Never modify its password, location or permissions as an incidental part of this checkpoint.
+- **Gate #8 still OPEN**, now with more complete owner UI evidence. A future remote SSH test still needs separate explicit source-specific owner permission and reviewed non-bootstrapping implementation. No credentials in CircleCI/GitHub plaintext; no WP-CLI/PHP, no general directory scans.
+
+### Low-risk operator-only confirmation for Gate #9 (no secrets transmitted)
+
+The WordPress.org *Learn WordPress* tutorial **Introduction to phpMyAdmin** explicitly identifies the way to determine which actual database a WordPress instance uses: WordPress Dashboard > **Tools > Site Health > Info > Database > Database name**. Compare that value **privately on the owner's device** with the name shown by IONOS phpMyAdmin for the **same OrgaVela project**:
+https://learn.wordpress.org/lesson/introduction-to-phpmyadmin/
+https://wordpress.org/documentation/article/site-health-screen/
+
+* Do **not** send either database name, host, DB user, DB prefix or the full Site Health screenshot into chat, tickets or this public repo. Never click `Copy site info to clipboard` to share the whole diagnostics.
+* Owner may attest **MATCH / MISMATCH / UNAVAILABLE** without disclosing the name. A match is owner-attested evidence of the configured live WP DB versus IONOS UI; it does **not** independently prove credential integrity, SSH mapping, backup consistency or restoreability. Retain Gate #9 pending owner attestation and any needed additional verification.
+* The Site Health **Info** screen itself is read-only; do not use Database repair, optimization, table changes, WP config reads, phpMyAdmin SQL exports or PHP code for this comparison.
+
+**Exact Checkpoint-5 result remains 6/10**, four gates open (#6 independent security review, #8 authenticated host/SSH/vHost binding, #9 effective WP-DB match, #10 authorized safe live metadata probe). This is UI evidence only, not real PGP05 backup authorization.
