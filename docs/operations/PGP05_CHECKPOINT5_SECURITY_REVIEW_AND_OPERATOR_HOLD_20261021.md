@@ -120,3 +120,10 @@ https://wordpress.org/documentation/article/site-health-screen/
 **Remaining Checkpoint 5 security holds unchanged:** #6 independent production-scope security review, #8 present-day pinned SSH handshake/identity-to-domain-root mapping, #10 separate explicit authorization plus bounded no-bootstrap read-only real source metadata run. Gate #9 cannot substitute for those.
 
 **Updated Checkpoint 5 count: 7 / 10 (70%), exactly 3 unaccepted gates.** The first PGP-05 real backup capture, remote writer, isolated restore and scheduler are different later approvals. No WordPress setting changed and no production information was fetched programmatically for this note.
+
+
+## 2026-10-22 — Current execution-context recheck and concrete review packet
+
+See [Cloud SSH readiness and independent review packet](PGP05_CLOUD_SSH_READINESS_AND_REVIEW_PACKET_20261022.md) for the exact tested SHA, 93/93 reproduced tests, official reference revalidation, permitted staged transport design, review findings R1–R7 and reviewer decision template.
+
+This runtime **has** SSH tools; DNS resolution fails, existing SSH configuration/agent/IONOS connection parameters are unavailable, and connected PCjan is offline. No actual endpoint keyscan, authenticated SSH, namespace/vHost metadata or database access occurred. Fresh official fingerprint equals the source constant, **not** a presented server key. Current user authorization permits free bounded read-only work without repeated blanket approval; security prerequisites remain. No current live-capable approved entry point or independent reviewer signoff exists. Bring the existing PCjan online for the next private transport-readiness step. **Checkpoint 5 remains 7/10; #6/#8/#10 open.** No site changes, backup, deploy, merge or new CI run requested.
