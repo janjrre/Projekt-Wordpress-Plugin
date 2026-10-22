@@ -981,3 +981,18 @@ Die Ergebniskommunikation an die GitHub-Issues wurde ausgeführt: [W0 #16 Kommen
 **Nächster Schritt:** Betreiber zeigt gespeicherte Project-/Expression-Restrictions. Erst danach drei Hostkey-only-Felder (Host privat, genehmigte SHA, bestätigter Null-Zusatzkostenrahmen) und exakt zugeordnete Hostkey-Pipeline vorbereiten. Metadatenmodus und Passwort weiterhin nicht konfigurieren. Unabhängiges Live-Review bleibt offen.
 
 **Fortschritt:** Checkpoint5 unverändert 7/10 (70 %), offen #6 unabhängige Live-Sicherheitsabnahme, #8 authentisierte SSH-/Namespace-/vHost-Bindung, #10 echter akzeptierter Metadatenlauf. V1 unverändert offen: 62/71 Codinghistorie, M0–M7 0/8, P4 0/4, R 0/18, PR32 Draft/unmerged, letzte belegte Live-Version alpha.2. Plan-/Prioritäten-/Abnahmestatus unverändert, daher keine künstliche Plan-/JSON-Zähleränderung.
+
+
+## 2026-10-22 — PGP05 Hostkey-only Context: Screenshot der gespeicherten Restrictions geprüft
+
+**Auftrag/Eingang:** Betreiber liefert Screenshot der Context-Detailseite. Anhang zuerst als nicht lesbar gemeldet; Datei war anschließend im angegebenen Scratch-Pfad vorhanden und wurde ausschließlich lokal visuell gelesen. Kein Library-Zugriff und keine Veränderung des Anhangs.
+
+**Sichtbarer Nachweis:** Contextname orgavela-pgp05-hostkey-only; Environment variables leer; Project restrictions genau Projekt-Wordpress-Plugin; Group restrictions All members (Mitgliederbestand nicht unabhängig geprüft). Gespeicherte Expression zeigt erwartete Repo-Owner-/Repo-Name-/Featurebranch-Bindung, vollständige Revision 392053bb0e3f24ef79cc66a5142a6558b3fa5ee5 sowie Ausschluss von job.ssh.enabled und api-Konfigurationsquellen. Alle sichtbaren Werte entsprechen der Einrichtungsliste. Kontext-ID nicht in dieses öffentliche Journal übernommen.
+
+**GitHub-Abgleich:** PR32 weiterhin Draft/ungemergt, aktueller HEAD exakt 392053bb0e3f24ef79cc66a5142a6558b3fa5ee5. Keine Codeänderung; Journaleintrag auf separatem Dokumentationsbranch, damit Revisions-Pinning erhalten bleibt.
+
+**Bewertung:** Gespeicherte UI-Projekt-/Expression-Restrictions als Screenshot-Teilnachweis akzeptiert, keine CircleCI-API-Prüfung, keine runtimeseitige Positiv-/Negativprüfung der Zugriffswirkung. Leere Variablen passen zum bisherigen Haltepunkt. Gruppe All members nicht als unabhängiger Sole-Owner-Beweis darstellen. Keine Kennungen/Secrets aus Screenshot veröffentlichen.
+
+**Nächste tatsächliche Betreiberaktion:** Genau drei Hostkey-only-Felder direkt in CircleCI hinzufügen: PGP05_SSH_HOST mit dem vorhandenen OrgaVela-access-Host privat, PGP05_APPROVED_SHA mit obiger vollständiger Revision und PGP05_ZERO_COST_CONFIRMED=yes ausschließlich nach Bestätigung ausreichender Free-Credits ohne Zusatzkosten. Kein Benutzername, Passwort, Private Key, DB-Wert oder Token. Screenshot nur der Variablennamen bei verdeckten Werten. Pipeline/Approval noch nicht gestartet.
+
+**Fortschritt/Grenzen:** Keine neuen Tests, Providerläufe, Hostkey-Keyscans, SSH-Logins oder Site-/DB-/Backup-/Deploy-/Merge-Aktionen. Context-UI-Unterbeleg abgeschlossen, Checkpoint5 weiter 7/10 (70 %), #6/#8/#10 offen. V1 unverändert 62/71 Codinghistorie, M0–M7 0/8, P4 0/4, R 0/18; letzte belegte Live-Version alpha.2, PR32 Draft. Plan/JSON-Abnahmezähler unverändert; nur append-only Evidenzprotokoll.
