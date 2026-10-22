@@ -11,7 +11,7 @@ parameters:
 jobs:
   pgp05-offline-security:
     docker:
-      - image: cimg/python:3.12
+      - image: docker.io/cimg/python@sha256:793ca7ea5a2fc27fa5b379fd077bf571c456d103992c7b3098cfc885f46cfa08
     resource_class: small
     working_directory: ~/project
     steps:
@@ -31,6 +31,17 @@ jobs:
             done
             echo "PGP05_CI_ISOLATION=PASS"
       - run:
+          name: Contextless runtime identity and required local primitives
+          command: |
+            set -euo pipefail
+            [[ "$(uname -m)" == "x86_64" ]]
+            for binary in /usr/bin/ssh /usr/bin/ssh-keyscan /usr/bin/python3 /bin/sh /usr/bin/id /usr/bin/stat /usr/bin/env; do
+              [[ -x "$binary" ]]
+            done
+            env -i PATH=/usr/bin:/bin HOME=/tmp LC_ALL=C /usr/bin/ssh -V
+            env -i PATH=/usr/bin:/bin HOME=/tmp LC_ALL=C /usr/bin/python3 --version
+            env -i PATH="$PATH" HOME=/tmp LC_ALL=C python3 -E -s -c 'import sys; sys.path.insert(0, "scripts/ci"); import orgavela_pgp05_circleci_ssh_probe as p; [p.trusted_binary(x) for x in (p.SSH, p.KEYSCAN, "/usr/bin/python3")]; print("PGP05_LOCAL_RUNTIME=PASS")'
+      - run:
           name: Test only PGP-05 synthetic guards without injected environment
           command: |
             set -euo pipefail
@@ -47,7 +58,7 @@ jobs:
         type: enum
         enum: [hostkey, metadata]
     docker:
-      - image: cimg/python:3.12
+      - image: docker.io/cimg/python@sha256:793ca7ea5a2fc27fa5b379fd077bf571c456d103992c7b3098cfc885f46cfa08
     resource_class: small
     working_directory: ~/project
     steps:

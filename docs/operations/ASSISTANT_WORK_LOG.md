@@ -979,3 +979,36 @@ Die Ergebniskommunikation an die GitHub-Issues wurde ausgeführt: [W0 #16 Kommen
 **Validierung:** Vollständige lokale synthetische PGP05-Suite: 117/117 OK. Erwartete negative REFUSED-/argparse-Ausgaben, keine echten Daten/Zugänge oder Netzwerkverbindungen. Zweitreview des Fixes separat dokumentiert. Neue Code-SHA wird nicht automatisch freigegeben; alte CircleCI-Erfolge gelten nur für 392053..., Context-Pinning wird nicht verändert und Secrets nicht eingetragen. Commit mit Skip-CI, kein Providerjob absichtlich ausgelöst.
 
 **Grenzen/Nächste:** Immutable verifizierte Executor-Identität vor Passwortinjektion, tatsächliche Startup-Evidenz und aktuelle Domain-Root-Zuordnung offen. Kein Login/SQL/PHP/WordPress/Backup/Deploy/Merge oder Kauf. Vollständiges Review und exakter aktueller Status werden im separaten Docsbranch veröffentlicht. Checkpoint5 weiterhin 7/10 (#6/#8/#10 offen), V1 unverändert 62/71 historisch, M0–M7 0/8, P4 0/4, R 0/18, zuletzt belegte Live-alpha.2.
+
+
+## 2026-10-22 — Build41-Log geprüft; neues offizielles Executorimage immutable gepinnt
+
+**Auftrag/Eingang:** Betreiber liefert Build41 Spin-up-Textlog. Datei lokal gelesen,
+nicht geändert oder öffentlich hochgeladen. W0/O01/O03 #27/Draft32. VorherigerHEAD
+4d7b257ae398d663cf35668777e7b5bbea95b17c Draft bestätigt.
+
+**Beleggrenze/Recherche:** Log zeigt cimg/python:3.12 und amd64, aber keinen vollen
+Manifestdigest. Kurze Layerkennungen erlauben keinen historischen Identitätsbeweis.
+Offizielle CircleCI-Imagebeschreibung bestätigt Publisher/Tagmodell. Webtool konnte
+DockerHub-API nicht öffnen; normaler direkter HTTPS-Read über urllib gelang.
+DockerHub-TagAPI + Registryindex + linux/amd64-Manifest unabhängig abgerufen;
+beide rohen Manifest-Hashes reproduziert. Anonymous Pull-Bearer nur in Speicher,
+kein Secret/Token geloggt. Aktueller legitimer Kandidat, nicht exakt Job41 behauptet.
+Details in PGP05_IMMUTABLE_EXECUTOR_PROVENANCE_20261022.md.
+
+**Umsetzung:** Beide Jobs auf docker.io/cimg/python@sha256:793ca7ea5a2fc27fa5b379fd077bf571c456d103992c7b3098cfc885f46cfa08
+gepinnt. Kontextfreier Runtimecheck im Offlinejob vor synthetischen Tests prüft
+Architektur/Pfade/Toolversionen/trusted binaries, ohne Netzwerklogin/Installation.
+Kein Context oder SHA-Pin bei CircleCI verändert. Keine Credentials oder Livejobs.
+
+**Validierung:** YAML strukturell korrekt, beide Pins identisch/defaultoff ohne
+Context; 117/117 lokale synthetische Tests PASS. Erster lokaler Patchaufruf wegen
+doppeltem Ziel im Patch verworfen; danach Updatepatch korrekt, kein Zwischenstand
+publiziert. Providerlauf/aktuell gezogenes Image/Tools auf neuerSHA noch unbestätigt.
+Separate Agentennachprüfung folgt auf exakter veröffentlichter SHA.
+Commit mit SkipCI; Betreiber startet anschließend ausschließlich off.
+
+**Grenzen:** Immutable Referenz löst nur veränderlichen Tag; keine Sicherheits-
+Signatur/Vulnerability-Abnahme behauptet. Startup-/Domain-/authentisierter
+Metadatenbeleg fehlen. CP5 weiter7/10; #6/#8/#10 offen. V1 unverändert62/71 historisch,
+M0–M7 0/8,P4 0/4,R0/18; alpha.2 zuletzt belegt, kein Livezugriff/Backup/Deploy/Merge/Kauf.
