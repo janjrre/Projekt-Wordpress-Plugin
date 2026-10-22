@@ -1,0 +1,119 @@
+# PGP05 — independent second-agent security review, 2026-10-22
+
+Tracking: #27 / Draft PR #32. Original target: `392053bb0e3f24ef79cc66a5142a6558b3fa5ee5`.
+Reviewer: separate Codex review agent pgp05_independent_review, explicitly assigned
+by the operator, independent of the implementation author. This is an independent
+AI second assessment, **not a human/external audit**. Publication by the author
+does not turn this into a GitHub human approval.
+
+## Decision
+**CHANGES_REQUIRED** for the original live metadata candidate; execution also
+**BLOCKED** on actual provider evidence. Criterion #6 is not accepted.
+`production_capture_allowed=false`. CP5 remains **7/10**, gates #6/#8/#10 open.
+
+## Reviewed evidence
+Reviewed config, probe, imported hostkey parser, two corresponding test files,
+operator guide, earlier R1–R7 packet, independent review request and AGENTS.md.
+Reviewer verified the original exact-revision local Git blob hashes:
+- config fc80687b3b63da14935980d834751b8f03f09b6b
+- probe ca222f91dcda2ddd978903efa7c100aa93b57414
+- parser 92b30edf3a33730b35c9ea5a1255e41351d232ad
+- probe tests 26241a462601a8cc1ffdcb36aff0b240b4cac1c5
+- parser tests 509e592461e59605fb8dc27f4a5376dd60ad4cff
+
+Reviewer ran the original full synthetic suite: **116 tests OK**. A separate
+synthetic reproduction supplied exact REMOTE_OK and stderr reporting a failed
+startup safety check; original code incorrectly returned authenticated_ssh=true.
+No network or real credentials were used. Reviewer independently fetched original
+exact-SHA statuses: offline #41, approval and hostkey #43 success; no metadata job.
+
+## Findings
+### P2 — unexpected SSH stderr accepted (original probe lines 229–231)
+The runner's stderr was discarded; only stdout was checked. Original positive
+test at line 116 deliberately included nonempty stderr. This conflicts with the
+fail-closed unexpected-output contract. Require empty bounded SSH stderr or a
+precisely reviewed benign allowlist, never log raw diagnostics, and test refusal
+with valid stdout plus invalid stderr. Keyscan stderr is a separate bounded,
+unauthenticated phase.
+
+Author remediation published at **4d7b257ae398d663cf35668777e7b5bbea95b17c**:
+exact stdout AND empty stderr; no allowlist. Tests now cover warning, whitespace,
+and binary/secret-like stderr plus cleanup. Author full suite: **117/117 OK**.
+Independent rereview disposition is appended below.
+
+### P2 — mutable credential-bearing executor (config lines 49–50)
+`cimg/python:3.12` is floating. Exact source SHA does not identify an image that
+will later receive a broad account password. Root-owned executable checks
+(probe original lines 94–99) establish neither image nor binary provenance.
+This is a missing prerequisite, **not evidence of an image compromise**.
+
+Before metadata credentials: obtain a legitimate immutable image digest, verify
+its source/runtime assumptions, pin the reviewed config to that digest, review
+the new full source SHA, and obtain a **contextless** provider result on that SHA.
+Do not invent a digest or treat hostkey success on a floating image as evidence
+for a future password job. **Unresolved** by the stderr patch.
+
+### Documentation consistency
+Old packet prohibited passwords in any environment; later candidate intentionally
+uses a private context and restricted child environment for SSH_ASKPASS. Explicit
+supersession/rationale and same-UID/root/executor trust boundary are necessary.
+Author patch adds this clarification; it does not claim absence of passwords
+from process memory/environment.
+
+## Provider/operator prerequisites, not solved by client code
+- Review applicable provider/server SSH/login-shell startup and relevant account
+  hooks **before** setting PGP05_STARTUP_REVIEWED=yes. Server may execute these
+  before the supplied clean command; client code and green tests cannot prove
+  no PHP/WordPress side effects from them.
+- Compare current provider domain-to-document-root configuration, accepted
+  runtime root and authenticated namespace. WordPress-looking files and a
+  provider-wide key do not prove active vHost binding.
+- Account remains broad/write-capable. No write/delete permission probes.
+  Client allowlist is not a server read-only ACL or backup authorization.
+- Exact metadata context restrictions must reject wrong config/repo/project/
+  branch/SHA before credential injection; runtime checks cannot replace them.
+  Review-reference syntax is an operator attestation, not verified approval.
+- Path checks are non-atomic and can race. Scope remains bounded metadata-shape
+  observation, not a snapshot or complete filesystem security proof.
+
+## Prior R1–R7 disposition
+| Item | Disposition |
+| --- | --- |
+| R1 synthetic bypass | Addressed by distinct opt-in live entry point; old contracts unchanged. |
+| R2 unbounded capture | Active transport bounds both streams/time and cleans process groups; interpretation needed stderr fix. |
+| R3 PATH/environment | Child execution substantially addressed; immutable runtime still unresolved. Older standalone network helper is not a hardened substitute. |
+| R4 identity/vHost/atomicity | Account/root shape improved; vHost and snapshot remain unproven. |
+| R5 broad account | Correctly disclosed, not technically removed; observational payload only. |
+| R6 startup hooks | Blocked on actual provider/account evidence. |
+| R7 old bootstrap audit | Not invoked; must remain excluded. |
+
+## Actions not performed
+Reviewer made no GitHub mutations, production connection, credential collection,
+context change, PHP/WordPress/SQL execution, backup, deployment, merge or purchase.
+Author published only source/docs remediation; no live runner requested.
+Original hostkey context variables had already been removed. Its old SHA pin
+was not changed and does not authorize the new source revision.
+
+## Independent rereview addendum — exact source 4d7b257ae398d663cf35668777e7b5bbea95b17c
+Separate reviewer fetched the published fixed probe/test blobs and confirmed
+they match local files b8736525903f1c90cffdf61f87c16ab86a45de06 /
+f892dfff5637ff53e3c765d9f8fc3e7e6a9e36b2. Independently reran **117/117 OK**.
+Stderr finding **RESOLVED**; documentation discrepancy **RESOLVED** after reading
+the published guide/packet. Remaining decision: **BLOCKED for live metadata**.
+Immutable runtime and provider startup remain unresolved; vHost is separate
+gate #8. Criterion #6 remains open; production_capture_allowed=false.
+
+## Smallest next operator action — no credentials or new pipeline
+Open the already completed contextless CircleCI #41:
+https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/41
+Expand **Spin-up environment** and provide the full cimg/python repository
+reference and complete registry **manifest digest**. Hide account/project
+identifiers or unrelated values; never share passwords, tokens or private keys.
+This is candidate runtime evidence only, not live approval. A truncated digest,
+image configuration ID or unrelated layer hash is insufficient.
+
+Next assistant work: independently verify legitimate cimg registry/repository
+provenance and correct manifest type; pin both jobs to repository@sha256;
+review resulting exact code SHA; then the operator can run only its default-off
+contextless tests and verify actual pulled image/tools. No password-context
+setup before these and actual provider startup prerequisites are accepted.

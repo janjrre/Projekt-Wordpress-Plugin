@@ -1056,3 +1056,34 @@ V1 unverändert offen: 62/71 Codinghistorie, M0–M7 0/8, P4 0/4, R 0/18; PR32 D
 **Nächster notwendiger Schritt:** Separaten unabhängigen technischen Reviewer bestimmen. Falls der Betreiber dafür ausdrücklich einen separaten Prüfagenten beauftragt, kann dessen Einschätzung als unabhängige KI-Zweitprüfung dokumentiert werden (nicht als menschliches/externes Audit); eine pauschale Approval-Zusage ist unzulässig. Reviewer muss insbesondere echte Startup-Evidenz von bloßer Context-Attestation unterscheiden. Codebranch bleibt gepinnt und unverändert. Journal und gezielte JSON-O03-Evidenz auf separatem Docsbranch; keine automatischen Pipelines, Merges, Deploys, Backups oder Kosten.
 
 **Fortschritt:** Cleanup-Unteraufgabe erledigt; vollständiger Checkpoint5 unverändert 7/10 (70 %), #6 unabhängiges Review, #8 authentisierte Konto/Namespace/vHost-Zuordnung und #10 tatsächlicher akzeptierter Metadatenlauf offen. V1 unverändert offen: 62/71 Codinghistorie, M0–M7 0/8, P4 0/4, R 0/18; PR32 Draft/unmerged, zuletzt belegte Live-alpha.2.
+
+
+## 2026-10-22 — explizit beauftragtes separates Sicherheitsreview ausgeführt und nachgeprüft
+
+**Auftrag/Scope:** Betreiber »ja mache das« zum separaten unabhängigen Prüfagenten.
+W0/O01/O03, #27/DraftPR32. Separater Agent prüfte Code/Config/Tests/Guides und R1–R7,
+keine Produktionsverbindungen oder GitHub-Mutationen durch Reviewer. Zweitprüfung
+als KI-Assessment benannt, nicht menschliches externes Audit.
+
+**Nachweise:** Originalcode392053... unverändert mit GitHub-Statuses offline41,
+approval und hostkey43 success. Reviewer bestätigte veröffentlichte Blob-Hashes,
+116/116 lokale Tests und reproduzierte stderr-PASS-Fehler. Autor korrigierte
+metadatenseitiges stderr-Verhalten und fügte drei adversarielle Subfälle hinzu;
+historische Password-env-/Batchmode-Planung ausdrücklich superseded.
+Commit4d7b257ae398d663cf35668777e7b5bbea95b17c im bestehenden PR32 veröffentlicht,
+mit Skip-CI und erwarteter alter Ref als Lease. Kein Contextpin oder Secret geändert.
+Reviewer las neue exakte SHA, bestätigte Fix und Dokumentation und 117/117 erneut.
+Vollbericht: PGP05_INDEPENDENT_SECURITY_REVIEW_20261022.md.
+
+**Entscheidung:** Unerwartetes SSH-stderr und Dokuwiderspruch RESOLVED. Floatendes
+Executorimage P2 weiter offen, Startup-/vHost-Beweise nicht aus Code erfindbar;
+Liveentscheidung BLOCKED, Criterion6 offen. Produktionscapture=false.
+Keine Provider-CI auf neuerSHA behauptet. Bestehende #41-Image-Spinausgabe kann
+vollständigen Manifestdigest als Kandidaten liefern; Konfig-ID/Layerhash genügt
+nicht. Verbundene Tools haben keinen CircleCI-Logzugriff; kein Cloudbrowser benutzt,
+kein neuer geheimnisfreier Job nur zur Digestbeschaffung nötig.
+
+**Nächste Benutzeraktion:** #41 → Spin-up environment vollständig aufklappen,
+Image-Repository + ungekürzten Registry-Manifestdigest zeigen, Secrets verdecken.
+Dann prüfen/pinnen/reviewen/kontextfreieCI. Credentials erst nach erfüllten Gates.
+Docsbranch separat fortgeführt; V1-Zähler unverändert, CP5 exakt7/10 mit6/8/10offen.

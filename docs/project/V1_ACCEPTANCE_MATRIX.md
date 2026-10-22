@@ -187,3 +187,29 @@ Betreiber-Screenshots zeigen genehmigten Hostkey-Approval und erfolgreichen Job 
 **Checkpoint5 unverändert 7/10 (70 %):** #8 hat jetzt zusätzlich den echten Hostkey-Kandidatenteil bestanden; vollständige authentisierte Konto/Namespace/vHost-Bindung bleibt offen, ebenso #6 unabhängiges Live-Review und #10 akzeptierter echter Metadatenlauf. Keine künstliche Erhöhung auf 8/10. Aktueller Fortschritt zeigt abgeschlossene Vorprüfung, nicht vollständige PGP05-/V1-Abnahme. Historische Abschnitte mit 'Hostkey nicht ausgeführt' sind durch diesen datierten Nachtrag im Kandidatenumfang überholt.
 
 V1-Zähler unverändert: 62/71 historische Codingpakete, M0–M7 0/8, P4 0/4, R01–R18 0/18. Dieser Dokumentationsnachtrag verändert den gepinnten PR32-Codebranch nicht.
+
+
+## 2026-10-22 — PGP05 unabhängige KI-Zweitprüfung und Fehlerbehebung
+Der ausdrücklich beauftragte separate Prüfagent prüfte PR32 auf 392053bb0e3f24ef79cc66a5142a6558b3fa5ee5.
+Zwei P2-Befunde: unerwartetes SSH-stderr konnte PASS ergeben; veränderliches
+cimg/python:3.12 ist vor Passwortinjektion nicht ausreichend festgeschrieben.
+Stderr-Fehler und widersprüchliche historische Credential-Dokumentation auf
+**4d7b257ae398d663cf35668777e7b5bbea95b17c** korrigiert; Zweitprüfer bestätigte
+beide Korrekturen und unabhängig **117/117 lokale synthetische Tests OK**.
+Keine menschliche Audit-/GitHub-Approval-Abnahme behauptet.
+[Reviewbericht und Nachprüfung](../operations/PGP05_INDEPENDENT_SECURITY_REVIEW_20261022.md).
+
+**Live-Urteil weiterhin BLOCKED**, #6 nicht erfüllt: immutable Runtime-Identität
+und tatsächlicher Provider-/Account-Startup-Nachweis fehlen. #8 benötigt zusätzlich
+authentisierte Namespace-/Domainbindung, #10 den akzeptierten echten Metadatenlauf.
+**Checkpoint5 7/10 (70%)**, #6/#8/#10 offen. Produktionscapture bleibt false.
+Keine Secrets/Kontexte eingerichtet, kein neuer Runner, SSH-Login, PHP/WordPress/SQL,
+Backup/Deploy/Merge oder Kauf. Alte CircleCI-Erfolge #41/#43 gelten ausschließlich
+für 392053..., neue Code-SHA hat noch keinen Provider-Testbeleg.
+Nächste tatsächliche Benutzeraktion: bestehendes CircleCI #41 öffnen, Abschnitt
+Spin-up environment mit vollständigem Image-Repository und Registry-Manifestdigest
+zeigen (keine Secrets, kein neuer Lauf). Danach Provenienzprüfung, beide Jobs
+immutable pinnen, genaue SHA erneut reviewen und kontextfreie Provider-CI.
+Hostkey-only-Variablen sind bereits entfernt; alte Restrictions nicht erweitert.
+V1 unverändert offen: 62/71 historisch, M0–M7 0/8, P4 0/4, R 0/18; PR32 Draft/
+ungemergt, zuletzt belegte Live-alpha.2 nicht erneut abgefragt.
