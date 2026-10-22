@@ -117,3 +117,25 @@ provenance and correct manifest type; pin both jobs to repository@sha256;
 review resulting exact code SHA; then the operator can run only its default-off
 contextless tests and verify actual pulled image/tools. No password-context
 setup before these and actual provider startup prerequisites are accepted.
+
+## Independent immutable-runtime addendum — c952645000b2954c04f1c0446c333392048065e6
+Reviewer independently fetched exact published config and verified blob
+2085eb8e2296df0fa97908564de1faffe0931a1c. Both jobs pin the same linux/amd64
+manifest. Independent HTTPS DockerHub/registry crosscheck reproduced raw-byte
+SHA256 of index d0177be857b2c8492d9d655f082bd32b6d02cc4cb7497abb99f8f2d66064fc29
+and manifest 793ca7ea5a2fc27fa5b379fd077bf571c456d103992c7b3098cfc885f46cfa08.
+Only small index/manifest metadata fetched, no image layers; anonymous token
+stayed in memory, never output. The uploaded historical log has no full digest;
+the registry result is correctly treated as a new candidate.
+
+Reviewer independently reran **117/117 OK**. New runtime step is local only,
+no install/authentication/site execution. Default off stays contextless and
+does not reach either SSH approval/probe. Stderr fix remains intact.
+
+**APPROVED only for default-off contextless provider test**, subject to existing
+free-credit prerequisite. Floating-image source finding remediated and registry
+provenance independently checked; actual provider pull/runtime on this exact
+source SHA remains unverified. No current GitHub statuses were present at author
+final check. **Live metadata BLOCKED; criterion #6 open; CP5 7/10**.
+Startup/hooks, domain/root and authenticated metadata evidence still missing.
+No widening of old context restrictions. production_capture_allowed=false.

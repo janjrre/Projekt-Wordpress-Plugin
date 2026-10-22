@@ -213,3 +213,33 @@ immutable pinnen, genaue SHA erneut reviewen und kontextfreie Provider-CI.
 Hostkey-only-Variablen sind bereits entfernt; alte Restrictions nicht erweitert.
 V1 unverändert offen: 62/71 historisch, M0–M7 0/8, P4 0/4, R 0/18; PR32 Draft/
 ungemergt, zuletzt belegte Live-alpha.2 nicht erneut abgefragt.
+
+
+## 2026-10-22 — PGP05 Executor immutable gepinnt, kontextfreier Providerlauf als nächster Schritt
+
+Das bereitgestellte Build41-Spin-up-Log enthält keinen vollständigen Manifestdigest;
+kurze Layer-IDs beweisen keine historische Imageidentität. Direkter HTTPS-Abgleich
+mit DockerHub cimg/python und Registry zeigte einen neuen legitimen linux/amd64-
+Kandidaten; Index- und Manifestbytes wurden SHA256-verifiziert. Beide Jobs sind
+auf **docker.io/cimg/python@sha256:793ca7ea5a2fc27fa5b379fd077bf571c456d103992c7b3098cfc885f46cfa08**
+festgeschrieben, Code-SHA **c952645000b2954c04f1c0446c333392048065e6**.
+Kein Bezug auf den exakt historischen Job41-Digest behauptet.
+[Provenienz](../operations/PGP05_IMMUTABLE_EXECUTOR_PROVENANCE_20261022.md).
+
+Runtimecheck ist lokal/begrenzt, keine Installation/Verbindung: x86_64, benötigte
+Binaries, SSH-/System-Pythonversionen und trusted-binary-Prüfung. YAML-/Shellsyntax
+PASS, **117/117 lokale synthetische Tests PASS**, vom separaten Reviewer erneut
+ausgeführt; exakte publizierte Config ebenfalls überprüft. Default-off bleibt
+ohne Context/Secrets und ist für den nächsten Provider-Test geeignet.
+
+**Nächste Betreiberaktion:** Featurebranch feat/pgp05-readonly-ssh-metadata-check-20261021
+auf exakter SHA c952645000b2954c04f1c0446c333392048065e6 mit pgp05_ssh_probe=off
+starten, übrige Modi aus. Spin-up-Image, Runtime-Step und Offline-Ergebnis zeigen.
+Kein Approval-/SSH-Job erwartet; keine Contextpins/Secrets anpassen.
+Provider-Pull und Runtime auf dieser SHA bleiben bis zu diesem Lauf unbestätigt.
+
+Live-Metadata weiter BLOCKED: Provider-Runtime und tatsächlich geprüftes SSH-
+Startupverhalten fehlen; Domainbindung/authentisierter Lauf ebenfalls offen.
+**CP5 7/10 (70%), #6/#8/#10 offen**; production_capture_allowed=false.
+V1 unverändert offen62/71 historisch, M0–M7 0/8, P4 0/4, R0/18; PR32 Draft/
+ungemergt; alpha.2 zuletzt belegt, kein neuer Livezugriff oder Kauf.
