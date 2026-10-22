@@ -223,9 +223,9 @@
         "live_hostkey_run": true,
         "authenticated_metadata_run": false,
         "independent_security_signoff": true,
-        "temporary_contexts_configured": false,
+        "temporary_contexts_configured": true,
         "production_capture_allowed": false,
-        "next": "Operator prepares empty separate metadata context restricted to exact project/repo/branch/c952645 revision and shows saved restrictions before credentials; then bounded metadata job. Adapt Dreamloud backup architecture separately, no blind credentials/capture copy.",
+        "next": "Operator enters exactly9 private metadata-context fields directly in CircleCI under verified restrictions, then shows names only/masked values; no pipeline/approval before configuration check.",
         "note": "Reviewer explicitly revised disproportionate mandatory provider-letter requirement. Criterion6 accepted boundedcommand under normal managed-provider trust; no hook inspection inferred. CP5 8/10 accepted; criteria8 and10 open; no login/capture yet.",
         "provider_ci_url": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/44",
         "hostkey_candidate_matches_provider": true,
@@ -262,7 +262,11 @@
         "independent_security_review_scope_revision": "PGP05-SSH-20261022.2",
         "startup_provider_evidence_mandatory": false,
         "startup_infrastructure_trust_assumption_accepted": true,
-        "decision_document": "docs/operations/PGP05_DREAMLOUD_REUSE_AND_BOUNDED_METADATA_DECISION_20261022.md"
+        "decision_document": "docs/operations/PGP05_DREAMLOUD_REUSE_AND_BOUNDED_METADATA_DECISION_20261022.md",
+        "metadata_context_created": true,
+        "metadata_context_credentials_configured": false,
+        "metadata_context_restrictions_screenshot_verified": true,
+        "metadata_context_restrictions_provenance": "operator supplied screenshot: empty variables, correct context name, project-only and full expected repo/branch/revision expression with SSH/API-config exclusions; no API/membership audit"
       }
     },
     {

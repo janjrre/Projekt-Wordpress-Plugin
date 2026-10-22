@@ -1245,3 +1245,39 @@ CP5 unverändert8/10 (80%), Kriterium8 authentisierte Konto/Namespace/Domainbind
 und10 akzeptierter tatsächlicher Metadatenlauf offen.
 V1 unverändert offen62/71 historisch,M0–M7 0/8,P4 0/4,R0/18,Livealpha.2 zuletzt
 belegt; PR32 Draft/ungemergt. Nächster realer Schritt benötigt Betreiber-UI.
+
+
+## 2026-10-22 — leerer Metadata-Context mit exakter Restriction per Screenshot bestätigt
+
+**Eingang:** Betreiberanhang image(20261022-090441).png trotz vorgeschalteter
+Dateifehlermeldung lokal erfolgreich visuell gelesen. Keine Library-Abfrage,
+keine Bildänderung/öffentliche Rohaufnahme oder Context-ID übernommen.
+W0/O01/O03,#27/Draft32; freigegebene Scopekorrektur PGP05-SSH-20261022.2 gilt.
+
+**Screenshot:** orgavela-pgp05-reviewed-metadata vorhanden, Environment variables
+leer; Group All members (Mitgliederbestand nicht unabhängig geprüft),
+Projectrestriction nur Projekt-Wordpress-Plugin. Gespeicherte Expression:
+Owner/Repo korrekt, feat/pgp05-readonly-ssh-metadata-check-20261021 und vollständige
+c952645000b2954c04f1c0446c333392048065e6, notjob.ssh.enabled und Ausschluss
+api-Konfigurationsquelle. Erwartete UI-Konfiguration bestanden, keine technische
+Negativ-/API-Erzwingungsprüfung behauptet.
+
+**GitHub:** PRHEAD weiterhin exaktc952645..., Draft; OfflineCircleCI44success.
+DocsHEADa7ad41d2... frisch bestätigt. Code unverändert, kein Test/Rerun nötig.
+
+**Nächster Betreiberpunkt:** genau9 Felder direkt in geprüftem Context eingeben:
+PGP05_SSH_HOST, PGP05_APPROVED_SHA, PGP05_ZERO_COST_CONFIRMED,
+PGP05_SSH_USER, PGP05_SSH_PASSWORD, PGP05_WP_ROOT,
+PGP05_REMOTE_SHA256, PGP05_STARTUP_REVIEWED, PGP05_METADATA_REVIEW_REF.
+Private Host/User/Passwort/Rootwerte werden nicht in öffentliches Journal kopiert;
+keine private Keys oder DBwerte. SHA/Script-Hash/Revisionsentscheidung konkret
+vorgegeben, Reviewreferenz #27 issuecomment6336878589 dokumentiert das tatsächlich
+revidierte unabhängige Approval. STARTUP_REVIEWED verweist ausdrücklich auf
+akzeptiertes Scope-/Infrastrukturtrustmodell, keine erfundene Hookinspektion.
+Zero-costyes nur im vorhandenen Freekontingent ohne Zusatzkosten.
+Danach ausschließlich Variablennamen/maskierte Werte zeigen; noch keine Pipeline
+oder Approval starten. Assistent trägt keinerlei Credentialwerte ein.
+
+**Stand:** Konfiguration vorbereitender Unterbeleg akzeptiert; CP5 unverändert8/10,
+#8/#10offen. Keine SSHsitzung/Metadata/WordPress/PHP/SQL/Backup/Deploy/Merge/Kauf.
+V1 offen62/71 historisch,M0–M7 0/8,P4 0/4,R0/18,Livealpha.2 zuletztbelegt.
