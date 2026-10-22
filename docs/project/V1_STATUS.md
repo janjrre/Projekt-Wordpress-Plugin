@@ -292,3 +292,10 @@ Der [Masterplan v2.11](../operations/V1_ACCEPTANCE_PLAN.md) bleibt normativ unve
 [Execution readiness and independent review packet](../operations/PGP05_CLOUD_SSH_READINESS_AND_REVIEW_PACKET_20261022.md); tracking #27 / Draft PR32. Code SHA `80eda724f2339afe1804fff91c3c10c27d694852`: 93/93 exact-blob local synthetic tests OK; existing CircleCI #40 success reverified. Documentation-only continuation; no code/CI/deploy change.
 
 Cloud runtime has SSH tools but DNS fails and no configured private access is available; PCjan is offline. Official IONOS fingerprint rechecked, actual endpoint key/SSH namespace/domain-root **not checked**. Review handoff prepared, independent signoff absent. **Checkpoint 5 = 7/10**, open #6 review, #8 authenticated identity/domain binding, #10 live metadata run/acceptance. Next: existing authorized PCjan online, private transport readiness; then complete reviewed live design. No passwords/keys in chat or GitHub. V1 acceptance unchanged: 62/71 historical coding, M0–M7 0/8, P4 0/4, R 0/18; PR32 Draft/unmerged, last evidenced live alpha.2 (not re-queried this session).
+
+
+## 22.10.2026 — PGP05 CircleCI SSH-Prüfjob erstellt, Live weiterhin offen
+
+[Anleitung](../operations/PGP05_CIRCLECI_SSH_PROBE_OPERATOR_GUIDE_20261022.md) · #27 / Draft PR32. Standard off führt nur kontextfreie Offline-Tests aus; hostkey und metadata sind explizite separate, manuell freizugebende Abläufe mit getrennten exakt SHA-beschränkten Contexts. **116/116 lokale synthetische Tests PASS**, YAML-Struktur und Shellsyntax PASS; keine neue Provider-CI-/Live-/Review-Abnahme. Contexts/Secrets nicht angelegt, keine Siteänderung.
+
+Nächster Betreiber-Schritt: **orgavela-pgp05-hostkey-only** zuerst auf Projekt und exakte geprüfte Revision beschränken, danach nur Host/SHA/Zero-cost-Bestätigung eintragen, **kein Passwort**. Authentisierter Metadatenmodus bleibt vor unabhängigem Startup-/Codereview gesperrt. PCjan nicht erforderlich. Checkpoint5 **7/10**, #6/#8/#10 offen; V1 unverändert 62/71 historisch, M0–M7 0/8, P4 0/4, R 0/18; alpha.2 zuletzt belegt, PR32 Draft/unmerged.

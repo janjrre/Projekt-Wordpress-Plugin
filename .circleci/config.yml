@@ -1,6 +1,12 @@
-# PGP-05 isolated CircleCI Free validation. Branch-scoped and synthetic only.
-# Never attach contexts, SSH/DB credentials, backups, artifacts, workspaces, or schedules.
+# PGP-05: default offline suite plus explicit, approval-gated SSH probes.
+# No backups/deploys/schedules/artifacts/workspaces. Live contexts are separate.
 version: 2.1
+
+parameters:
+  pgp05_ssh_probe:
+    type: enum
+    enum: ['off', hostkey, metadata]
+    default: 'off'
 
 jobs:
   pgp05-offline-security:
@@ -17,7 +23,7 @@ jobs:
             [[ "${CIRCLE_PROJECT_USERNAME:-}" == "janjrre" ]]
             [[ "${CIRCLE_PROJECT_REPONAME:-}" == "Projekt-Wordpress-Plugin" ]]
             [[ "${CIRCLE_BRANCH:-}" == "feat/pgp05-readonly-ssh-metadata-check-20261021" ]]
-            for name in IONOS_SSH_HOST IONOS_SSH_USER IONOS_SSH_PASSWORD IONOS_DB_HOST IONOS_DB_PASSWORD IONOS_KNOWN_HOSTS GH_TOKEN GITHUB_TOKEN BACKUP_GITHUB_TOKEN ORGAVELA_BACKUP_PRIVATE_KEY BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE AGE_SECRET_KEY; do
+            for name in PGP05_SSH_HOST PGP05_SSH_USER PGP05_SSH_PASSWORD PGP05_WP_ROOT PGP05_APPROVED_SHA PGP05_ZERO_COST_CONFIRMED PGP05_REMOTE_SHA256 PGP05_STARTUP_REVIEWED PGP05_METADATA_REVIEW_REF IONOS_SSH_HOST IONOS_SSH_USER IONOS_SSH_PASSWORD IONOS_DB_HOST IONOS_DB_PASSWORD IONOS_KNOWN_HOSTS GH_TOKEN GITHUB_TOKEN BACKUP_GITHUB_TOKEN ORGAVELA_BACKUP_PRIVATE_KEY BACKUP_RECOVERY_PRIVATE_KEY BACKUP_RECOVERY_PASSPHRASE AGE_SECRET_KEY; do
               [[ -z "${!name:-}" ]] || {
                 echo "PGP05_CI_UNEXPECTED_SECRET=REFUSED" >&2
                 exit 1
@@ -35,11 +41,84 @@ jobs:
             env -i PATH="$PATH" HOME=/tmp PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -v -s scripts/ci -p 'test_orgavela_pgp05*.py'
             echo "PGP05_OFFLINE_SECURITY=PASS"
 
+  pgp05-ssh-probe:
+    parameters:
+      mode:
+        type: enum
+        enum: [hostkey, metadata]
+    docker:
+      - image: cimg/python:3.12
+    resource_class: small
+    working_directory: ~/project
+    steps:
+      - checkout
+      - run:
+          name: Approved revision only; bounded SSH probe with sanitized output
+          no_output_timeout: 2m
+          command: |
+            set +x
+            set -euo pipefail
+            [[ "${CIRCLE_PROJECT_USERNAME:-}" == "janjrre" ]]
+            [[ "${CIRCLE_PROJECT_REPONAME:-}" == "Projekt-Wordpress-Plugin" ]]
+            [[ "${CIRCLE_BRANCH:-}" == "feat/pgp05-readonly-ssh-metadata-check-20261021" ]]
+            [[ "${CIRCLE_SHA1:-}" =~ ^[0-9a-f]{40}$ ]]
+            [[ "${PGP05_APPROVED_SHA:-}" == "$CIRCLE_SHA1" ]]
+            [[ "$(git rev-parse HEAD)" == "$CIRCLE_SHA1" ]]
+            python3 -E -s scripts/ci/orgavela_pgp05_circleci_ssh_probe.py --mode << parameters.mode >> --live-opt-in
+
 workflows:
   pgp05-branch-only:
+    when:
+      equal: ['off', << pipeline.parameters.pgp05_ssh_probe >>]
     jobs:
       - pgp05-offline-security:
           filters:
             branches:
               only:
                 - feat/pgp05-readonly-ssh-metadata-check-20261021
+
+  pgp05-hostkey-one-shot:
+    when:
+      equal: [hostkey, << pipeline.parameters.pgp05_ssh_probe >>]
+    jobs:
+      - pgp05-offline-security:
+          filters:
+            branches:
+              only: [feat/pgp05-readonly-ssh-metadata-check-20261021]
+      - approve-pgp05-hostkey:
+          type: approval
+          requires: [pgp05-offline-security]
+          filters:
+            branches:
+              only: [feat/pgp05-readonly-ssh-metadata-check-20261021]
+      - pgp05-ssh-probe:
+          name: pgp05-hostkey-candidate
+          mode: hostkey
+          requires: [approve-pgp05-hostkey]
+          context: orgavela-pgp05-hostkey-only
+          filters:
+            branches:
+              only: [feat/pgp05-readonly-ssh-metadata-check-20261021]
+
+  pgp05-metadata-one-shot:
+    when:
+      equal: [metadata, << pipeline.parameters.pgp05_ssh_probe >>]
+    jobs:
+      - pgp05-offline-security:
+          filters:
+            branches:
+              only: [feat/pgp05-readonly-ssh-metadata-check-20261021]
+      - approve-pgp05-metadata:
+          type: approval
+          requires: [pgp05-offline-security]
+          filters:
+            branches:
+              only: [feat/pgp05-readonly-ssh-metadata-check-20261021]
+      - pgp05-ssh-probe:
+          name: pgp05-reviewed-ssh-metadata
+          mode: metadata
+          requires: [approve-pgp05-metadata]
+          context: orgavela-pgp05-reviewed-metadata
+          filters:
+            branches:
+              only: [feat/pgp05-readonly-ssh-metadata-check-20261021]
