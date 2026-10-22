@@ -1124,3 +1124,49 @@ M0–M7 0/8,P4 0/4,R0/18; alpha.2 zuletzt belegt, kein Livezugriff/Backup/Deploy
 **Dokumentationsnachtrag:** Separater Prüfer las genaue Config c952645..., Blob2085eb8..., bestätigte beide Pins/default-off ohne Context und ungefährlichen lokalen Runtimecheck. Eigener erneuter Suite-Lauf117/117 OK. Livegates bleiben offen; kein Providerlauf durch Assistent gestartet.
 
 **Registry-Nachprüfung:** Separater Reviewer reproduzierte unabhängig Index-/Manifesthash per direktem HTTPS; nur Metadaten, keine Layer. Immutable-Sourcebefund behoben. Freigabe ausschließlich default-off kontextfreier Provider-Test, keine Live-Metadata-Abnahme. NeueSHA hat noch keine GitHub-Commitstatuses.
+
+
+## 2026-10-22 — sechs Build44-Logs geprüft, Provider-Runtime unabhängig bestätigt
+
+**Auftrag/Eingang:** Betreiber liefert sechs Build44-Textlogs nach vereinbartem
+default-off-Lauf. Lokal gelesen, keine Library-Abfrage/Anhangänderung oder
+Rohlogveröffentlichung. W0/O01/O03 #27/Draft32. Aktueller PRHEADc952645...,
+DocsHEAD046f5a66... frisch geprüft; Code unverändert.
+
+**Nachweise:** GitHub Commitstatus exactc952645000b2954c04f1c0446c333392048065e6
+offline-securitysuccess, CircleCI44. Operatorlogs0/99/101/102/103/104 zeigen
+gepinnte amd64-Runtime aus Cache, vollständige QuellSHA/Checkout, IsolationPASS,
+OpenSSH8.9p1 Ubuntu-3ubuntu0.17/OpenSSL3.0.2 und SystemhelperPython3.10.12,
+RuntimePASS und117/117 TestsOK (0.524s). Negative REFUSED-Meldungen erwartete
+Tests. Kein frischer Imagepull behauptet. Checkout erzeugt standardmäßig
+CI-lokale GitHub-Checkoutschlüssel; deren Inhalt ist nicht im Log, nicht ein
+IONOS-Login. Generierte maskierte CircleCI-OIDC-Variablen sind keine vom
+Betreiber hinterlegten IONOS-Secrets. Identifikatoren/Rohenv nicht publiziert.
+
+**Zweitprüfung:** Bereits beauftragter separater Reviewer las alle Logs und
+queried exactSHAStatus selbst. Immutable-/Runtime-Teilblock für genauSHA
+RESOLVED; vollständiges Criterion6 nicht erfüllt. Kein neuer lokaler Testlauf
+nötig, weil keine Codeänderung und echte117Providerergebnisse vorhanden.
+
+**Offener Nachweis:** tatsächliche Shell/Home/SSH-/Shell-Startupkette bei IONOS.
+Primärquellen recherchiert: IONOS-Hilfe beschreibt SSH/Webspace, kein tatsächliches
+Kontostartverhalten daraus belegbar. GNU-Startupmanual-Webabruf Timeout;
+OpenSSH-sshd-Primärdoku bestätigt mögliche Vorab-RC/Login-Shell-Mechanismen,
+nicht konkrete IONOS-Policy. SFTP nicht als pauschal hookfrei unterstellt.
+Vorbereitete Supportfrage + private lesende Providerdateimanager-Prüfung nur
+wirklich relevanter Dateien als sicherster nächster Nachweisweg dokumentiert.
+Keine Supportnachricht gesendet (nicht beauftragt), kein Login/Hookausführung,
+keine Secrets/Contextpinänderung oder Website-/DB-/Backup-/Deploy-/Merge/Kostenaktion.
+
+**Dokumentation:** Review-/Provenienz-Addendum, neue IONOS-Anfragevorlage,
+Plan/Status/Matrix/JSON und append-only Worklog auf Docsbranch. CodeHEAD behält
+seine bestandene Provider-CI. CP5 unverändert7/10, Kriterien6/8/10offen;
+V1 offen62/71 historisch,M0–M7 0/8,P4 0/4,R0/18,Livealpha.2 zuletzt belegt.
+
+**Log-Integritätswerte (keine Rohlogs):**
+step0 24c1c4f4f6fad13f0566e523ea2124a791c76cf0dac6492b6dffc1ae8a445d3c;
+step99 30433ab769b5fb9bab91808aec2dafe3c66dd37137778828a1a4f819382eb4f8;
+step101 6210e2c8b90e5052788c06cf76b5984fc90c5242f3b10cc179e59231f7c82ec0;
+step102 f32b8543bc9c7234aa822c0c31c8e4d3142329ddf0842541030759ac8294887f;
+step103 9b295bd9285c282f634de02652fb1b1e541623552c374e5bd37d522a7629b4a6;
+step104 f05c41aa331c720c000c74048d4434da7719da1692017ab3e270dcf965f80565.

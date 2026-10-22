@@ -139,3 +139,28 @@ source SHA remains unverified. No current GitHub statuses were present at author
 final check. **Live metadata BLOCKED; criterion #6 open; CP5 7/10**.
 Startup/hooks, domain/root and authenticated metadata evidence still missing.
 No widening of old context restrictions. production_capture_allowed=false.
+
+
+## Independent provider-runtime addendum — Build44, exact c952645000b2954c04f1c0446c333392048065e6
+
+Separate reviewer independently inspected the six operator-supplied logs and
+queried exact-SHA GitHub status: offline-security success,
+https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/44 .
+Step0 starts the exact pinned manifest from cache; this is not evidence of a
+fresh registry download. Steps99/101 bind source/checkout, 102 isolationPASS,
+103 trusted local runtimePASS, 104 **117/117 tests OK** including actual local
+OpenSSH -G and fictitious askpass-helper tests. Versions: OpenSSH8.9p1
+Ubuntu-3ubuntu0.17/OpenSSL3.0.2; system /usr/bin/python3=3.10.12 is the helper,
+not a claim about pyenv application Python. No real IONOS credentials or login.
+
+**Immutable-executor and actual-runtime subblock RESOLVED for this exactSHA.**
+Full live approval remains **BLOCKED**: actual server/account startup chain
+still needs provider confirmation plus private review of the relevant account
+files and transitively sourced files. Listing alone is not absence proof.
+Do not assume SFTP hook behavior; use provider filemanager pending clarification.
+[Prepared provider question](PGP05_IONOS_STARTUP_EVIDENCE_REQUEST_20261022.md)
+was not sent. Reviewer made no support/production/context mutations.
+
+Criterion6 remains open; CP5 **7/10**, #6/#8/#10 open.
+Domain/current namespace and actual accepted metadata run are separate.
+production_capture_allowed=false.

@@ -633,3 +633,32 @@ Startupverhalten fehlen; Domainbindung/authentisierter Lauf ebenfalls offen.
 **CP5 7/10 (70%), #6/#8/#10 offen**; production_capture_allowed=false.
 V1 unverändert offen62/71 historisch, M0–M7 0/8, P4 0/4, R0/18; PR32 Draft/
 ungemergt; alpha.2 zuletzt belegt, kein neuer Livezugriff oder Kauf.
+
+
+## 2026-10-22 — PGP05 Build44: gepinnte Runtime und 117 Tests beim Provider bestanden
+
+[CircleCI #44](https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/44) auf exakter
+SHA **c952645000b2954c04f1c0446c333392048065e6**: GitHub-Commitstatus
+ci/circleci: pgp05-offline-security=success. Sechs Betreiberlogs zeigen Quelle/
+Checkout passend, Isolation PASS, Start des exakt gepinnten amd64-Images aus
+Providercache, Runtime PASS, **117/117 Tests OK**. Kein neuer Registrydownload
+behauptet. OpenSSH8.9p1 Ubuntu-3ubuntu0.17/OpenSSL3.0.2, /usr/bin/python3=3.10.12;
+dies ist der geprüfte System-Helper, nicht die pyenv-Anwendungs-Pythonversion.
+Separater Reviewer las Logs und Status unabhängig und akzeptiert damit den
+Immutable-Executor-/tatsächlichen Runtime-Teilnachweis für genau diese SHA.
+
+**Noch keine SSH-Livefreigabe.** Es fehlt das tatsächliche IONOS-/Konto-
+Startverhalten vor dem übergebenen Kommando. Clientcode/env-i kann frühere
+SSH-/Shell-Hooks nicht ausschließen. Öffentliche Hilfe/SSH-Dokumentation ergibt
+keine konkrete IONOS-Kontokonfiguration. Providerbestätigung der tatsächlichen
+Shell/Home/Startupkette, danach private lesende Prüfung nur der relevanten
+Kontodateien über Providerdateimanager ist der nächste sichere Nachweisweg.
+[Vorbereitete, nicht versandte IONOS-Anfrage](../operations/PGP05_IONOS_STARTUP_EVIDENCE_REQUEST_20261022.md).
+Keine Startup-Dateien/SSH/SFTP testweise ausführen; keine Secrets im Chat/GitHub.
+
+**CP5 weiter 7/10 (70%)**: #6 Startup-/Live-Sicherheitsabnahme, #8 authentisierte
+Konto/Namespace/Domainzuordnung, #10 echter akzeptierter Metadatenlauf offen.
+Keine Contextpins/Secrets geändert; keine neue CI/Livesitzung/WordPress/PHP/SQL/
+Backup/Deploy/Merge/Kauf oder Supportnachricht durch den Assistenten.
+V1 unverändert offen62/71 historisch, M0–M7 0/8,P4 0/4,R0/18; DraftPR32/
+ungemergt; zuletzt belegte Live-alpha.2 nicht erneut abgefragt.
