@@ -226,14 +226,16 @@
         "independent_security_signoff": false,
         "temporary_contexts_configured": false,
         "production_capture_allowed": false,
-        "next": "Operator removes three temporary hostkey-only context variables; independent code/transport/startup review before metadata credentials or authenticated run",
+        "next": "Assign a separate independent technical reviewer; accepted review/startup evidence before private metadata credential setup and real run",
         "note": "Hostkey candidate PASS only; authenticated SSH, account/namespace/domain and live metadata gates remain open. Evidence: redacted owner screenshots and independent GitHub exact-revision provider status.",
         "provider_ci_url": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/41",
         "hostkey_candidate_matches_provider": true,
         "hostkey_candidate_authenticated": false,
         "hostkey_candidate_job_url": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/43",
         "verified_code_revision": "392053bb0e3f24ef79cc66a5142a6558b3fa5ee5",
-        "context_cleanup_verified": false
+        "context_cleanup_verified": true,
+        "context_cleanup_provenance": "operator-supplied-screenshot: zero context variables; restrictions retained",
+        "independent_review_request": "docs/operations/PGP05_CHECKPOINT5_INDEPENDENT_REVIEW_REQUEST_20261022.md"
       }
     },
     {
