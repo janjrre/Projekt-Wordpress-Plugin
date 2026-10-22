@@ -1218,3 +1218,30 @@ Projekt beschränken und Restrictions zeigen, noch keine Credentials/Approval.
 Supportanfrage entfällt als normaler Haltepunkt. Kein Produktionsbackup,
 Kontaktversand, Login, Contextänderung, Merge, Deployment oder Kauf ausgeführt.
 V1 unverändert offen62/71 historisch,M0–M7 0/8,P4 0/4,R0/18,alpha.2 zuletzt belegt.
+
+
+## 2026-10-22 — Fortsetzung: leeren Metadata-Context konkret vorbereiten
+
+**Auftrag:** Betreiber »okay mache das« zur vereinfachten Dreamloud-Vorlage und
+zum nächsten eigenen Metadaten-Context. Scope W0/O01/O03,#27/Draft32.
+GitHub erneut: CodeHEADc952645000b2954c04f1c0446c333392048065e6 unverändert,
+CircleCIoffline-security44success; DocsHEAD8cadf3aa8ba4ebec48118adace5c19fc15a7f634.
+Reviewrevision PGP05-SSH-20261022.2 bleibt maßgeblich; keine IONOS-Supportpflicht.
+
+**Ausführung/Ergebnis:** Vorhandene Werkzeugfähigkeiten geprüft: kein direkter
+CircleCI-Context-Verwaltungszugriff. Keine Credentials/Token angefordert oder
+alternative Browserautomatisierung benutzt. Vorbereitete exakte Anleitung
+im Entscheidungsdokument gilt: neuer separater orgavela-pgp05-reviewed-metadata,
+Projectrestriction ausschließlich Projekt-Wordpress-Plugin, Owner/Repo/
+Featurebranch/exakte c952645SHA gebunden, SSH-Rerun/API-Config ausgeschlossen.
+Betreiber erstellt/speichert zunächst leer und zeigt nur Restrictions, damit
+Zugangsweg vor Credentialinjektion konkret überprüfbar ist.
+Kein Context tatsächlich vom Assistenten angelegt, keine Variablen/Passwords
+eingetragen, kein Pipeline-/Approval-/SSH-/Backup-/Deploy-/Merge-/Kaufstart.
+
+**Validierung/Grenzen:** Dokumentationsfortsetzung, keine Codeänderung; vorhandene
+117/117 ProviderTests ausreichend, keine Wiederholungsprüfung erfunden.
+CP5 unverändert8/10 (80%), Kriterium8 authentisierte Konto/Namespace/Domainbindung
+und10 akzeptierter tatsächlicher Metadatenlauf offen.
+V1 unverändert offen62/71 historisch,M0–M7 0/8,P4 0/4,R0/18,Livealpha.2 zuletzt
+belegt; PR32 Draft/ungemergt. Nächster realer Schritt benötigt Betreiber-UI.
