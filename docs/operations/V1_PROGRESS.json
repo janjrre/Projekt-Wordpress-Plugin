@@ -207,10 +207,9 @@
         "date": "2026-10-22",
         "issue": 27,
         "draft_pr": 32,
-        "accepted_criteria": 7,
+        "accepted_criteria": 8,
         "total_criteria": 10,
         "open_criteria": [
-          6,
           8,
           10
         ],
@@ -223,11 +222,11 @@
         "new_provider_ci_verified": true,
         "live_hostkey_run": true,
         "authenticated_metadata_run": false,
-        "independent_security_signoff": false,
+        "independent_security_signoff": true,
         "temporary_contexts_configured": false,
         "production_capture_allowed": false,
-        "next": "Operator obtains actual IONOS shell/home/startup-chain confirmation via existing provider support; then private read-only provider-filemanager review of applicable account hooks, no SSH/SFTP test login. No credentials/context setup until accepted.",
-        "note": "Build44 on exact current source succeeds with pinned cached image, runtimePASS and117tests; separately reviewed. No IONOS login or metadata run. CP5 still7/10,6/8/10open.",
+        "next": "Operator prepares empty separate metadata context restricted to exact project/repo/branch/c952645 revision and shows saved restrictions before credentials; then bounded metadata job. Adapt Dreamloud backup architecture separately, no blind credentials/capture copy.",
+        "note": "Reviewer explicitly revised disproportionate mandatory provider-letter requirement. Criterion6 accepted boundedcommand under normal managed-provider trust; no hook inspection inferred. CP5 8/10 accepted; criteria8 and10 open; no login/capture yet.",
         "provider_ci_url": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/44",
         "hostkey_candidate_matches_provider": true,
         "hostkey_candidate_authenticated": false,
@@ -241,7 +240,7 @@
         "current_code_provider_ci_verified": true,
         "independent_security_review_performed": true,
         "independent_security_review_kind": "separate-agent-assessment-not-human-external-audit",
-        "independent_security_review_verdict": "Live metadata BLOCKED: actual IONOS account/server startup chain evidence still missing; immutable executor/runtime subblock resolved",
+        "independent_security_review_verdict": "APPROVED fixed metadata command exact c952645 under explicitly documented normal IONOS infrastructure trust; no startup observation asserted",
         "independent_review_report": "docs/operations/PGP05_INDEPENDENT_SECURITY_REVIEW_20261022.md",
         "ssh_stderr_finding_resolved": true,
         "credential_doc_discrepancy_resolved": true,
@@ -259,7 +258,11 @@
         "provider_runtime_openssh": "8.9p1 Ubuntu-3ubuntu0.17",
         "provider_runtime_system_helper_python": "3.10.12",
         "startup_provider_evidence_verified": false,
-        "startup_evidence_request": "docs/operations/PGP05_IONOS_STARTUP_EVIDENCE_REQUEST_20261022.md"
+        "startup_evidence_request": "docs/operations/PGP05_IONOS_STARTUP_EVIDENCE_REQUEST_20261022.md",
+        "independent_security_review_scope_revision": "PGP05-SSH-20261022.2",
+        "startup_provider_evidence_mandatory": false,
+        "startup_infrastructure_trust_assumption_accepted": true,
+        "decision_document": "docs/operations/PGP05_DREAMLOUD_REUSE_AND_BOUNDED_METADATA_DECISION_20261022.md"
       }
     },
     {

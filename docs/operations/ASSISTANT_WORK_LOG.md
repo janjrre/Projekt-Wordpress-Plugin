@@ -1170,3 +1170,51 @@ step101 6210e2c8b90e5052788c06cf76b5984fc90c5242f3b10cc179e59231f7c82ec0;
 step102 f32b8543bc9c7234aa822c0c31c8e4d3142329ddf0842541030759ac8294887f;
 step103 9b295bd9285c282f634de02652fb1b1e541623552c374e5bd37d522a7629b4a6;
 step104 f05c41aa331c720c000c74048d4434da7719da1692017ab3e270dcf965f80565.
+
+
+## 2026-10-22 — Betreiber hinterfragt Aufwand; Dreamloud-Vergleich und verhältnismäßige Reviewkorrektur
+
+**Auftrag:** Warum so viele Backupprüfungen, können sie entfallen bzw. Dreamloud
+einszu eins übernommen werden? OrgaVela-Fokus; Dreamloud ausdrücklich als
+read-only Vorlage konsultiert, nicht geändert/als Testumgebung benutzt.
+
+**Untersuchung:** Dreamloud-main3e1b7dc.../Backupbranch07d4ffb... geprüft.
+Main-CircleCI enthält Offlinepilot, echter Capture liegt im separaten Backupbranch.
+Aktuelle Capture/SSH/RemotePHP/staticDBconfig-Dateien gelesen; Handoff belegt
+historisch echten Ciphertext-Writer/Readbacks/isolationFullRestore, hier keine
+neuen Dreamloud-Betriebs-/Tageslaufprüfungen behauptet. Ein erratener Dateiname
+probe_password_source.py nicht vorhanden; korrekter Import
+probe_circleci_password_source.py danach gelesen. Kein Credentialwert benutzt,
+keine Zugänge/Schlüssel/Vertragskennungen in OrgaVela kopiert.
+
+**Sachliche Neubewertung:** pauschale Forderung nach vollständigem Beweis jeder
+internen IONOS-Startupfunktion war für begrenzte beobachtende Befehle überzogen.
+Separater Reviewer erneut beauftragt, ohne gewünschtes Approval vorzugeben.
+Er revidiert selbst seine Vorbedingung und erteilt APPROVED für festen
+Metadatenbefehl/c952645.../Script7d8e383c... unter normalem transparentem
+Managed-IONOS-Infrastrukturvertrauen. Kein Hookinspektionsnachweis erfunden,
+keine Garantie absolut nebenwirkungsfreier Server. Konkrete Hinweise auf
+Sitecode/Writes/abweichendes Verhalten bleiben Stopgrund.
+Erforderliche Klarstellung zu PGP05_STARTUP_REVIEWED ausdrücklich dokumentiert;
+Sicherheitsgrenzen wie exakter Hostpin, Source-SHA, getrennte Contexts/Secrets,
+begrenzteAusgabe/Zeit, keinrequestedPHP/SQL/WP/Writes bleiben unverändert.
+Keine zusätzliche pauschale Benutzerfreigabe nötig.
+
+**Ergebnis/Änderung:** Neue Entscheidung
+PGP05_DREAMLOUD_REUSE_AND_BOUNDED_METADATA_DECISION_20261022.md, exakter neuer
+Scope PGP05-SSH-20261022.2. Guide/Review/Plan/Status/Matrix/JSON supersedieren
+zwingende Startup-Supportpflicht, alte Supportvorlage als optionale Diagnose
+gekennzeichnet. Damit formal CP5-Kriterium6 erfüllt und CP5 **8/10**, #8/#10 offen.
+CodeSHA mit117ProviderTests unverändert, keine sinnlose Wiederholungs-CI.
+Die technisch proportionale Reviewrevision wird offen von echter neuer
+Serverevidenz unterschieden.
+
+**Weiterer Plan:** Dreamloud-Architektur wiederverwenden (Source→Publickey-
+Encryption→getrennterWriter→Readbacks→isolierterRestore), nur OrgaVela-
+Werte/Quelle/Schlüssel/Repository/Tabellenregeln. Dreamloud-PHP-/Wartungscapture
+überschreitet derzeitigen statischen Checkscope und wird nicht vorgezogen.
+Nächste echte Betreiberaktion: leeren eigenen Metadata-Context auf genauSHA/
+Projekt beschränken und Restrictions zeigen, noch keine Credentials/Approval.
+Supportanfrage entfällt als normaler Haltepunkt. Kein Produktionsbackup,
+Kontaktversand, Login, Contextänderung, Merge, Deployment oder Kauf ausgeführt.
+V1 unverändert offen62/71 historisch,M0–M7 0/8,P4 0/4,R0/18,alpha.2 zuletzt belegt.

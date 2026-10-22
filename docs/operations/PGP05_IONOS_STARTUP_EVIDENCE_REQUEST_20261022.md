@@ -1,3 +1,10 @@
+# Superseded as mandatory prerequisite — 2026-10-22
+
+This support request is now OPTIONAL targeted diagnosis for actual unusual
+startup evidence. No need to send it for normal bounded metadata review.
+See [revised scope and independent decision](PGP05_DREAMLOUD_REUSE_AND_BOUNDED_METADATA_DECISION_20261022.md).
+Nothing was sent. Historical prepared draft follows.
+
 # PGP05 — provider startup evidence request (prepared, NOT SENT)
 Date 2026-10-22. #27 / Draft #32; W0/O01/O03.
 No live login, credentials, configuration change or support contact by assistant.
