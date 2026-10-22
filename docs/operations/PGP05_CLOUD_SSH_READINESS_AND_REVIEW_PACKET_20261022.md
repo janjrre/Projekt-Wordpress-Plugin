@@ -191,3 +191,27 @@ After transport becomes available, complete independent design/code review
 before the real metadata collector; ordinary free preparatory checks need no
 renewed blanket authorization. Checkpoint 5 stays 7/10; V1 62/71 historical,
 M0–M7 0/8, P4 0/4, R01–R18 0/18, PR32 Draft/unmerged.
+
+
+## 2026-10-22 — supersession for the CircleCI password candidate
+
+The earlier section B describes the superseded PCjan/batch-key design. Its
+blanket ban on password environment variables and BatchMode=yes is **not** an
+accurate description of the later, separately reviewed CircleCI candidate.
+That candidate uses one password attempt with SSH_ASKPASS, an ephemeral helper
+containing no password literal, and a minimal child environment that includes
+the private context password. The helper sends the password to the SSH client
+pipe; it is absent from arguments, helper contents, receipts and public logs.
+The password necessarily exists in executor process memory/environment, which
+is not a secure enclave. Same-UID/root or compromised image/code can read it.
+Exact source restrictions, trusted immutable executor identity and isolated
+private context are prerequisites; these are not proven by a root-owned binary
+check. This is a design change for independent review, **not live approval**.
+
+The later distinct live-capable entry point is
+scripts/ci/orgavela_pgp05_circleci_ssh_probe.py. Original synthetic CLIs and the
+retired exit-78 collector remain unchanged. PCjan is no longer a prerequisite
+for that candidate. Actual hostkey-only success and context cleanup are recorded
+on the separate documentation branch; no authenticated metadata run occurred.
+SSH stderr must now be empty for a metadata receipt. Startup and vHost claims
+remain unproven; production_capture_allowed=false.

@@ -209,3 +209,24 @@ branch job after the security prerequisites are met.
 SSH/namespace/domain binding and #10 actual accepted metadata run remain open.
 The hostkey-only setup is the next concrete operator action, with no SSH
 password needed. V1 counts remain 62/71 historical, M0–M7 0/8, P4 0/4, R 0/18.
+
+
+## 2026-10-22 — independent second-agent review remediation (not live approval)
+
+A separate review agent, explicitly assigned by the operator, found that metadata
+mode discarded bounded SSH stderr even when stdout matched the expected marker.
+The implementation now requires **empty SSH stderr** as well as exact stdout;
+there is no diagnostic allowlist. Diagnostics remain private and are never printed.
+A warning, whitespace-only stderr, and arbitrary binary/secret-like stderr all
+refuse the receipt and clean local temporary files. Keyscan's protocol/banner
+stderr is a distinct unauthenticated phase and stays bounded and private.
+Full local synthetic suite after this fix: **117 tests OK**.
+
+Live metadata approval remains withheld: the floating executor image still needs
+an immutable, verified identity before password-context injection; applicable
+provider/login-shell startup behavior and current domain-root binding need
+independent evidence. Do not configure the metadata context or set the startup
+attestation to yes merely because these local tests pass. No paid resource,
+live login, PHP/WordPress/SQL, backup, deployment or merge is authorized by this
+remediation. A new code SHA requires a new exact-SHA review and context pin;
+the previous hostkey job success does not become CI evidence for changed code.

@@ -968,3 +968,14 @@ Die Ergebniskommunikation an die GitHub-Issues wurde ausgeführt: [W0 #16 Kommen
 **Nächste tatsächliche Benutzeraktion:** CircleCI Organization Settings → Contexts → `orgavela-pgp05-hostkey-only` neu und getrennt einrichten; zuerst Projekt-/Mitglieder-/exakte Revisionsbeschränkung prüfen, anschließend nur Host, genehmigte SHA und Zero-cost-Attestation hinterlegen. **Kein SSH-Passwort im Hostkey-Context.** Vollständige endgültige SHA/Expression wird im Trackingkommentar nach dem Commit angegeben. Erst danach hostkey-Pipeline auf exakt dieser SHA und Approval prüfen; metadata-Context vor unabhängigem Live-/Startup-Review nicht einrichten.
 
 **Zähler:** Checkpoint 5 weiter 7/10 (70 %), #6/#8/#10 offen. Job erstellt/örtlich getestet ≠ CI-grün ≠ unabhängig geprüft ≠ live ausgeführt. V1 offen, historisch 62/71, M0–M7 0/8, P4 0/4, R 0/18; letzte belegte Live-Version alpha.2 unverändert, nicht neu abgefragt; PR32 Draft/unmerged.
+
+
+## 2026-10-22 — Betreiber beauftragt unabhängige KI-Zweitprüfung; SSH-stderr-Fehler korrigiert
+
+**Auftrag:** Betreiber stimmt dem konkret vorbereiteten separaten Prüfagenten zu. W0/O01/O03, Issue27/DraftPR32. Agent unabhängig von der Codeautorschaft zugewiesen; keine menschliche/externe Audit-Zertifizierung behauptet. Zielcode 392053bb0e3f24ef79cc66a5142a6558b3fa5ee5; drei zugehörige CircleCI-Statuses erneut success. Docs-Evidenzstand 1f1e1f084b59727e6eebbd6cee99af25c1f2181f.
+
+**Befund und Änderung:** Zweitprüfer reproduziert, dass metadata bei exaktem stdout-Marker unerwartetes SSH-stderr ignoriert. Probe verlangt jetzt exaktes stdout UND leeres stderr; keine Allowlist oder Ausgabe privater Diagnostik. Erfolgsfixture korrigiert; neue adversarielle Subfälle Warning, Whitespace und binäre/secretartige Diagnostik prüfen REFUSED und Cleanup. Guide dokumentiert Verhalten und offenen Runtime-/Startup-/vHost-Nachweis. Älteres PCjan-Design mit pauschalem Password-env-Verbot ausdrücklich als durch die getrennte CircleCI-Kandidatendesignprüfung überholt markiert; Environment-Risiko offengelegt.
+
+**Validierung:** Vollständige lokale synthetische PGP05-Suite: 117/117 OK. Erwartete negative REFUSED-/argparse-Ausgaben, keine echten Daten/Zugänge oder Netzwerkverbindungen. Zweitreview des Fixes separat dokumentiert. Neue Code-SHA wird nicht automatisch freigegeben; alte CircleCI-Erfolge gelten nur für 392053..., Context-Pinning wird nicht verändert und Secrets nicht eingetragen. Commit mit Skip-CI, kein Providerjob absichtlich ausgelöst.
+
+**Grenzen/Nächste:** Immutable verifizierte Executor-Identität vor Passwortinjektion, tatsächliche Startup-Evidenz und aktuelle Domain-Root-Zuordnung offen. Kein Login/SQL/PHP/WordPress/Backup/Deploy/Merge oder Kauf. Vollständiges Review und exakter aktueller Status werden im separaten Docsbranch veröffentlicht. Checkpoint5 weiterhin 7/10 (#6/#8/#10 offen), V1 unverändert 62/71 historisch, M0–M7 0/8, P4 0/4, R 0/18, zuletzt belegte Live-alpha.2.

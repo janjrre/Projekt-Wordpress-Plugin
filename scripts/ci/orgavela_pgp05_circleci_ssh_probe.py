@@ -226,9 +226,11 @@ def probe(env, mode, *, runner=bounded_run):
         helper.chmod(0o700)
         child_env.update({'SSH_ASKPASS': str(helper), 'SSH_ASKPASS_REQUIRE': 'force',
                           'DISPLAY': 'pgp05:0', 'PGP05_SSH_PASSWORD': env['PGP05_SSH_PASSWORD']})
-        data, _ = runner(ssh_arguments(host, env['PGP05_SSH_USER'], pinfile, env['PGP05_WP_ROOT']),
+        data, errors = runner(ssh_arguments(host, env['PGP05_SSH_USER'], pinfile, env['PGP05_WP_ROOT']),
                          env=child_env, timeout=30, input_bytes=REMOTE_SCRIPT)
-        require(data == REMOTE_OK)
+        # With strict preloaded host pinning and LogLevel=ERROR, no stderr is
+        # expected. Never accept or publish startup warnings or diagnostics.
+        require(data == REMOTE_OK and errors == b'')
         return {'schema': 'orgavela-pgp05-ssh-probe/v1', 'mode': mode,
                 'hostkey_candidate_matches_provider': True, 'authenticated_ssh': True,
                 'expected_user_and_root_shape_matched': True,

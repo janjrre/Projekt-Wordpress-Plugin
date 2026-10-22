@@ -113,7 +113,7 @@ class TransportTests(unittest.TestCase):
             self.assertEqual((home/'known_hosts').stat().st_mode & 0o777, 0o600)
             self.assertEqual((home/'askpass').stat().st_mode & 0o777, 0o700)
             self.assertNotIn(environment(True)['PGP05_SSH_PASSWORD'].encode(), (home/'askpass').read_bytes())
-            return m.REMOTE_OK, b'synthetic banner never printed'
+            return m.REMOTE_OK, b''
         with patch.object(m, 'EXPECTED_FPR', FPR), patch.object(m, 'trusted_binary'):
             result = m.probe(environment(True), 'metadata', runner=runner)
         self.assertTrue(result['authenticated_ssh'])
@@ -130,6 +130,18 @@ class TransportTests(unittest.TestCase):
         with patch.object(m, 'EXPECTED_FPR', FPR), patch.object(m, 'trusted_binary'), self.assertRaises(m.Refused):
             m.probe(environment(True), 'metadata', runner=runner)
         self.assertTrue(all(not path.exists() for path in homes))
+
+    def test_unexpected_remote_stderr_refused_and_cleaned(self):
+        for diagnostic in (b'warning\n', b' ', b'synthetic-secret\x00\xff'):
+            with self.subTest(diagnostic=diagnostic):
+                homes = []
+                def runner(argv, **kw):
+                    homes.append(Path(kw['env']['HOME']))
+                    return (LINE, b'keyscan banner') if argv[0] == m.KEYSCAN else (m.REMOTE_OK, diagnostic)
+                with patch.object(m, 'EXPECTED_FPR', FPR), patch.object(m, 'trusted_binary'), self.assertRaises(m.Refused):
+                    m.probe(environment(True), 'metadata', runner=runner)
+                self.assertEqual(len(homes), 2)
+                self.assertTrue(all(not path.exists() for path in homes))
 
     def test_key_mismatch_never_authenticates(self):
         calls=[]
