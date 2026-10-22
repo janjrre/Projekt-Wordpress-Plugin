@@ -220,14 +220,20 @@
         "default_live_mode": "off",
         "local_synthetic_tests_passed": 116,
         "new_tests": 23,
-        "new_provider_ci_verified": false,
-        "live_hostkey_run": false,
+        "new_provider_ci_verified": true,
+        "live_hostkey_run": true,
         "authenticated_metadata_run": false,
         "independent_security_signoff": false,
         "temporary_contexts_configured": false,
         "production_capture_allowed": false,
-        "next": "Operator configures hostkey-only context with project and exact-revision restriction, without login credentials; review/provider validation before run",
-        "note": "Scoped latest PGP05 evidence; older baseline O03 fields are historical, not current PGP05 authorization. No global V1 acceptance change."
+        "next": "Operator removes three temporary hostkey-only context variables; independent code/transport/startup review before metadata credentials or authenticated run",
+        "note": "Hostkey candidate PASS only; authenticated SSH, account/namespace/domain and live metadata gates remain open. Evidence: redacted owner screenshots and independent GitHub exact-revision provider status.",
+        "provider_ci_url": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/41",
+        "hostkey_candidate_matches_provider": true,
+        "hostkey_candidate_authenticated": false,
+        "hostkey_candidate_job_url": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/43",
+        "verified_code_revision": "392053bb0e3f24ef79cc66a5142a6558b3fa5ee5",
+        "context_cleanup_verified": false
       }
     },
     {
