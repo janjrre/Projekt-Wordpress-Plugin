@@ -968,3 +968,16 @@ Die Ergebniskommunikation an die GitHub-Issues wurde ausgeführt: [W0 #16 Kommen
 **Nächste tatsächliche Benutzeraktion:** CircleCI Organization Settings → Contexts → `orgavela-pgp05-hostkey-only` neu und getrennt einrichten; zuerst Projekt-/Mitglieder-/exakte Revisionsbeschränkung prüfen, anschließend nur Host, genehmigte SHA und Zero-cost-Attestation hinterlegen. **Kein SSH-Passwort im Hostkey-Context.** Vollständige endgültige SHA/Expression wird im Trackingkommentar nach dem Commit angegeben. Erst danach hostkey-Pipeline auf exakt dieser SHA und Approval prüfen; metadata-Context vor unabhängigem Live-/Startup-Review nicht einrichten.
 
 **Zähler:** Checkpoint 5 weiter 7/10 (70 %), #6/#8/#10 offen. Job erstellt/örtlich getestet ≠ CI-grün ≠ unabhängig geprüft ≠ live ausgeführt. V1 offen, historisch 62/71, M0–M7 0/8, P4 0/4, R 0/18; letzte belegte Live-Version alpha.2 unverändert, nicht neu abgefragt; PR32 Draft/unmerged.
+
+
+## 2026-10-22 — PGP05 Hostkey-Context erstellt: Betreiberbestätigung, Einschränkungsprüfung ausstehend
+
+**Auftrag/Rückmeldung:** Betreiber meldet »ist erstellt« nach Anleitung zum neuen CircleCI-Context orgavela-pgp05-hostkey-only. Das wird ausschließlich als Betreiberbestätigung der Context-Erstellung erfasst; weder gespeicherte Projekt-/Mitglieder-/Revisionsbeschränkung noch Variablen oder Free-Kostenrahmen wurden damit unabhängig nachgewiesen.
+
+**Geprüft:** GitHub PR32 weiterhin Draft/ungemergt auf exakt 392053bb0e3f24ef79cc66a5142a6558b3fa5ee5. Kein CircleCI-Connector verfügbar; Cloud-Browser aktuell nicht verfügbar. Kein neuer Test-, Pipeline-, Approval-, SSH- oder Site-Lauf. Kein Zugangswert angefordert/ausgelesen. Lokale 116/116-Tests aus dem vorherigen Abschnitt nicht erneut als neue Tests behauptet.
+
+**Entscheidung/Umsetzung:** Zuerst Project restriction ausschließlich Projekt-Wordpress-Plugin und serverseitige Expression mit vollständiger genehmigter SHA prüfen; noch keine Variablen oder SSH-Passwort anfordern und keine Approval auslösen. Screenshot nur vom Restriktionsbereich, ohne Secretwerte/Kontokennungen. Codebranch bewusst unverändert lassen, damit das bestehende SHA-Pinning nicht durch einen Dokumentationscommit ungültig wird. Dieser append-only Journalnachtrag liegt deshalb auf separatem Dokumentationsbranch docs/pgp05-context-created-attestation-20261022, mit [skip ci]/[ci skip]. GitHub-Trackingkommentar referenziert diesen Nachweis; kein Merge.
+
+**Nächster Schritt:** Betreiber zeigt gespeicherte Project-/Expression-Restrictions. Erst danach drei Hostkey-only-Felder (Host privat, genehmigte SHA, bestätigter Null-Zusatzkostenrahmen) und exakt zugeordnete Hostkey-Pipeline vorbereiten. Metadatenmodus und Passwort weiterhin nicht konfigurieren. Unabhängiges Live-Review bleibt offen.
+
+**Fortschritt:** Checkpoint5 unverändert 7/10 (70 %), offen #6 unabhängige Live-Sicherheitsabnahme, #8 authentisierte SSH-/Namespace-/vHost-Bindung, #10 echter akzeptierter Metadatenlauf. V1 unverändert offen: 62/71 Codinghistorie, M0–M7 0/8, P4 0/4, R 0/18, PR32 Draft/unmerged, letzte belegte Live-Version alpha.2. Plan-/Prioritäten-/Abnahmestatus unverändert, daher keine künstliche Plan-/JSON-Zähleränderung.
