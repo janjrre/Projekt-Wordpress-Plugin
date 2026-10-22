@@ -39,7 +39,7 @@ E. Once A-D and independent code review are completed, design/approve one **non-
 F. The first real metadata-only receipt can be accepted for Checkpoint 5 **only** after its exact source, operator approval, hostkey, root and DB mapping are verified and recorded privately; it still cannot approve real backup capture.
 
 ## Exact Checkpoint-5 acceptance accounting
-Ten fixed gates, currently **6/10** formal:
+Ten fixed gates, now **7/10** formal, with gate #9 accepted as owner-attested UI-to-UI comparison on 2026-10-22:
 1. [x] IONOS project/domain screenshots
 2. [x] /public WordPress structure and wp-config UI-mode evidence
 3. [x] phpMyAdmin 52/52 InnoDB UOP table metadata
@@ -48,10 +48,10 @@ Ten fixed gates, currently **6/10** formal:
 6. [ ] independent production security review and live-scope scanner design
 7. [x] PR32 branch implementation + provider CircleCI Free green test (not merge)
 8. [ ] current SSH host/account/namespace and real domain DocumentRoot independently bound
-9. [ ] live WP effective DB ↔ IONOS database independently privately matched
+9. [x] OWNER-ATTESTED: effective WP Site Health DB name privately matched against IONOS OrgaVela phpMyAdmin schema; no name or identifier revealed
 10. [ ] owner-approved real metadata-only run + sanitized evidence, final gate signoff
 
-**Four formal gates remain.** Nothing above changes V1's historical 62/71 coding packages, M0-M7 0/8 accepted, P4 0/4 accepted, release R01-R18 0/18 green.
+**Three formal gates remain** (#6, #8, #10); #9 is accepted as owner-attested, not cryptographically independent. Nothing above changes V1's historical 62/71 coding packages, M0-M7 0/8 accepted, P4 0/4 accepted, release R01-R18 0/18 green.
 
 ## After Checkpoint 5: overall PGP-05 remains unfinished
 (1) coherent real WordPress files+MariaDB capture design and fail-closed source;
@@ -107,3 +107,16 @@ https://wordpress.org/documentation/article/site-health-screen/
 * The Site Health **Info** screen itself is read-only; do not use Database repair, optimization, table changes, WP config reads, phpMyAdmin SQL exports or PHP code for this comparison.
 
 **Exact Checkpoint-5 result remains 6/10**, four gates open (#6 independent security review, #8 authenticated host/SSH/vHost binding, #9 effective WP-DB match, #10 authorized safe live metadata probe). This is UI evidence only, not real PGP05 backup authorization.
+
+## Owner-attested WordPress-to-IONOS database match and runtime metadata — 2026-10-22
+
+**Gate #9 ACCEPTED at the owner-UI attestation standard**, with scope and provenance explicitly recorded:
+- The owner expressly confirmed that the **database name as displayed under the logged-in production WordPress Site Health information** matches the **database name shown by IONOS phpMyAdmin under this OrgaVela contract**, by **comparing them privately on their own device**.
+- **No database identifier** (name, user, host, prefix or credential) was supplied in the chat or committed to this public repo. Do not print or publicly hash a low-entropy DB name. This is a **human operator attestation across two interfaces**, not a database read by the assistant, not an independent technical connection proof and not a permit to export any rows or run SQL.
+- The owner also supplied a reduced WordPress Site Health diagnostic showing **configured runtime WordPress path** in the previously evidenced `home-www-public` class, `WP_HOME` / `WP_SITEURL` on **orgavela.com**, WordPress **7.1.3**, MariaDB server **11.8.8**, PHP **8.3.36** and reported DB size **about 4.33 MB**. These align with earlier IONOS webspace/phpMyAdmin UI screenshots, giving independent **interface consistency**, not a current SSH/vHost mapping or comprehensive data integrity proof.
+- Site Health reported **one Installatron MU-plugin** and UOP Core **0.1.0-alpha.2** active, consistent with prior plugin-structure evidence. Site Health also indicates writable PHP-owned WP directories. A **write-capable** web runtime and the contract-wide SSH account reinforce the prohibition on unreviewed live-script execution.
+- The owner posted the full diagnostics in a conversation. **Do not copy/paste that full report to GitHub tickets, CI logs, public release notes, or third-party tools.** It contains software versions, internal folder layout and security-relevant environmental hints even when not passwords. Public evidence here is deliberately aggregated.
+
+**Remaining Checkpoint 5 security holds unchanged:** #6 independent production-scope security review, #8 present-day pinned SSH handshake/identity-to-domain-root mapping, #10 separate explicit authorization plus bounded no-bootstrap read-only real source metadata run. Gate #9 cannot substitute for those.
+
+**Updated Checkpoint 5 count: 7 / 10 (70%), exactly 3 unaccepted gates.** The first PGP-05 real backup capture, remote writer, isolated restore and scheduler are different later approvals. No WordPress setting changed and no production information was fetched programmatically for this note.
