@@ -1011,3 +1011,16 @@ Die Ergebniskommunikation an die GitHub-Issues wurde ausgeführt: [W0 #16 Kommen
 **Nächste Benutzeraktion:** CircleCI Projekt-Wordpress-Plugin → Trigger Pipeline/Run Pipeline öffnen; Featurebranch feat/pgp05-readonly-ssh-metadata-check-20261021 und Parameter pgp05_ssh_probe=hostkey auswählen, Formular vor Absenden zeigen. Keine Login-Secrets erforderlich.
 
 **Status:** Checkpoint5 unverändert 7/10, #6 unabhängige Live-Sicherheitsabnahme, #8 authentisierte SSH-/Namespace-/vHost-Bindung und #10 echter akzeptierter Metadatenlauf offen. Keine neuen Tests/CI-/SSH-/Site-/Backup-/Deploy-/Merge-Aktionen. V1 offen und unverändert 62/71 historisch, M0–M7 0/8, P4 0/4, R 0/18, letzte belegte Live-alpha.2. Plan/JSON-Gatezähler unverändert.
+
+
+## 2026-10-22 — PGP05 pipeline #537: provider offline check GREEN, hostkey approval ready
+
+**Eingang/Befund:** Zwei Betreiber-Screenshots zeigen tatsächlich gestartete Pipeline #537 mit Commitpräfix 392053b, Workflow pgp05-hostkey-one-shot, pgp05-offline-security grün (16s), approve-pgp05-hostkey wartend und pgp05-hostkey-candidate noch nicht ausgeführt. Formular wurde vom Betreiber bereits abgesendet; keine erneute Auslösung erforderlich. Bilder lokal gelesen, nicht verändert/öffentlich kopiert.
+
+**Unabhängiger GitHub-Abgleich:** PR32 Draft/unmerged, HEAD vollständig 392053bb0e3f24ef79cc66a5142a6558b3fa5ee5. GitHub Commitstatus ci/circleci: pgp05-offline-security=success, https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/41 ; Approvalstatus pending mit Workflow-ID 9e8eb44c-16a1-413b-9713-1c19b9383ac5. Damit sind Provider-Configverarbeitung/Offline-Job auf neuer SHA belegt. Test-Einzelzählung im Providerlog nicht unabhängig gelesen; lokale 116/116 bleibt früherer lokaler Nachweis.
+
+**Skip-CI-Klärung:** Für diesen konkreten API-gestarteten Lauf wurde die Skip-markierte SHA tatsächlich verarbeitet; der zuvor bedingt beschriebene Startblock ist hier nicht eingetreten. Keine pauschale Behauptung zur Integrationstype aus dieser Beobachtung ableiten, kein Commit-/Revisionswechsel nötig.
+
+**Nächste Betreiberaktion:** Ausschließlich Approve job bei approve-pgp05-hostkey in dieser Pipeline freigeben. Nachfolgender Job prüft einmal den ED25519-Hostkeykandidaten gegen offiziellen Pin; keine Benutzeranmeldung, kein Passwort, keine Dateien/WordPress/PHP/SQL/Backups/Deploys. Bestehende allgemeine kostenfreie Freigabe und konkrete Hostkey-Context-Einrichtung decken diesen Schritt. Approval wurde vom Assistenten nicht geklickt. Danach Screenshot der Ausgabe von pgp05-hostkey-candidate auswerten, bei REFUSED nicht erneut starten oder Restriktionen abschwächen.
+
+**Dokumentation/Status:** Journal separat vom gepinnten Codebranch fortgeführt. Noch kein tatsächlicher Hostkeybeleg; Checkpoint5 bleibt 7/10, #6/#8/#10 offen. Provider-Offline-Sicherheit ist kein unabhängiges Live-Review. V1 unverändert offen, 62/71 historisch, M0–M7 0/8, P4 0/4, R 0/18, PR32 Draft und zuletzt belegte Live-alpha.2. Keine Live-/Site-/Credentialänderung durch den Assistenten.
