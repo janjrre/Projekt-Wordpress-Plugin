@@ -1589,3 +1589,29 @@ Assistent hat nichts gestarten/approvt,keineSecrets gelesen oderSitegeändert.
 #8Account-/Namespace-/Domainbindung und#10 akzeptierterMetadatenlauf offen;
 productioncapturefalse. V1offen62/71historisch,M0–M7 0/8,P4 0/4,R0/18,
 PR32Draft,alpha.2zuletztbelegt. KeinBackup/Deploy/Merge/Kauf/Dreamloud.
+
+
+## 2026-10-23, Europe/Berlin — Zielklärung; Job53 weiterhin unspezifisch verweigert
+**Auftrag:** Betreiber fragt nach aktuellem Ziel, neuerScreenshot
+image(20261023-071756).png. Zielverständlich erklärt: eigenständige zuverlässige
+verschlüsselte/offsite/wiederherstellbareOrgaVelaBackups, später automatisiert
+ohne lokalenPC. Aktueller engbegrenzterZwischenschritt ist ausschließlich
+bestehendenSSH-Zugang und richtigenAccount/Webroot an OrgaVela binden,
+mit Hostpin und festen Dateisystem-Metadatenprüfungen ohne WP/PHP/SQL/
+Dateiinhalte. Noch keineSicherung/Produktivfreigabe.
+
+**Beleg:** ScreenshotPipeline541 zeigt MetadataREFUSED/stageSSH/reasonPROCESS_EXIT.
+GitHub bestätigt auf vollerSHAf5e35ea36b192288920558b783fee2c46c854c18
+Offline51success,Approvalsuccess,Metadata53failure:
+https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/53 .
+Die neueengereDiagnose liefert hier keine zusätzlicheFehlerkategorie;
+Ursache/Login/erreichteRemoteprüfung bleiben unbekannt. Nichtalsfalsches
+Passwort/falscherPfad darstellen. Kein weitererBlindretry/neuerSHAwechsel
+oderneueBetreiberarbeit alleinfürkosmetischeDiagnosen. Zuerst verbleibenden
+SSH-Prozessfehler gezielt eingrenzen, Sicherheitsgrenzen beibehalten.
+
+**Umsetzung:** nurLog/JSONfortgeführt,keineCode-/Context-/Liveänderung.
+CP5weiter8/10,#8authentisierteAccount/Namespace/Domainbindung,#10erfolgreicher
+akzeptierterMetadatenlauf offen;productioncapturefalse. V1offen62/71historisch,
+M0–M7 0/8,P4 0/4,R0/18,PR32Draft,alpha.2zuletztbelegt.
+KeinBackup/Deploy/Merge/Kauf/Dreamloudzugriff; keineCredentialsveröffentlicht.
