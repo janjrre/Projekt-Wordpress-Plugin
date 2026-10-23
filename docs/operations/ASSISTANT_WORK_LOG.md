@@ -917,3 +917,208 @@ Die Ergebniskommunikation an die GitHub-Issues wurde ausgeführt: [W0 #16 Kommen
 **Nebenwirkung berücksichtigen:** Bei aktivem `main`-PR-Schutz darf auch der Assistent **Dokumentationsänderungen nicht mehr direkt auf `main` pushen**; künftige Commits nur im Branch/PR, kein Merge ohne Betreiberfreigabe. Die vorliegende reine Dokumentation erfolgt **vor** Aktivierung des Schutzes. Sicherheit geht vor CI-/Testgeschwindigkeit.
 
 **Abnahme/Zustand:** GH-01 erfüllt; GH-02 Project Restriction belegt, Expression per Betreiber angegeben, **Quellbranch-Schutz offen**; GH-03 Betreiberschlüssel offen; GH-04 Canary offen, GH-06 echter Snapshot GH-07 Restore weiter nicht ausgeführt. O03 `partial`, B04/R03 offen, historisches Coding **62/71**, formal M **0/8**, P4 **0/4**, Release **0/18**, PR-Merges **0**, Live UOP 0.1.0-alpha.2. Keine Kosten, keine produktive Änderung, keine Dreamloud-Aktion.
+
+
+## 2026-10-22 — PGP-05 Checkpoint 5: Cloud-SSH readiness and review handoff (#27 / Draft #32)
+
+**Auftrag:** Selbstständig kostenfreie, ausschließlich lesende SSH-Identitäts-/Hostkey-/Root-/Domainprüfungen prüfen, unabhängiges Sicherheitsreview und nicht bootstrappenden Live-Metadatencheck vorbereiten, Ergebnisse dokumentieren. Zuordnung W0/O01/O03. Geprüfter PR32-Code-HEAD `80eda724f2339afe1804fff91c3c10c27d694852`; main `0adacb427bd95dd87594e358ec9c6f2f5b38aae8`, laut GitHub protected=true (kein vollständiges Admin-Protection-Audit). Issue #27, PR32 und normative Plan-/Status-/JSON-/Matrix-/Freeze-Dokumente gelesen. Issue/PR-Nachträge sind aktueller als zahlreiche historische Baseline-Abschnitte; diese bleiben unverändert.
+
+**Ansatz/Entscheidung:** Vor einem Login lokale Transportfähigkeit, offizielle unabhängige Vertrauensreferenz und vorhandenen Zugang prüfen. Keine Übernahme von Secrets aus CI und kein alter WP-CLI-/Deployment-Probe als Ersatz. Aktuelle Betreiberfreigabe deckt kostenfreie begrenzte Read-only-Prüfungen; keine erneute pauschale Freigabefrage. Vorbereitung ist keine Sicherheitsabnahme.
+
+**Tatsächliche Befunde:** SSH/ssh-keyscan/Git/Python sind in dieser neuen Laufzeit vorhanden; alte Tool-Mangel-Aussage gilt hier nicht. DNS für öffentliche Provider-/Projekt-Hosts schlägt fehl; keine SSH-Konfiguration, known_hosts oder Agent, erforderliche IONOS-Konfigurationsvariablen fehlen (nur Präsenz geprüft, keine Secretwerte ausgelesen). PCjan erneut über verbundenes Tool als offline gemeldet, last seen 132h. Exakter privater SSH-Endpunkt/Authentisierung hier nicht verfügbar. Kein SSH-Verbindungsversuch/Keyscan zum tatsächlichen Ziel; keine IP-/Netzwerkpolicy-Umgehung.
+
+**Offizielle Referenz:** IONOS-ED25519-SHA256 am 22.10.2026 frisch über offizielle Hilfeseite gelesen, identisch zum PR32-Sollwert. Das ist kein präsentierter Hostkey und kein authentisierter Vertragsbeweis.
+
+**Offline-Tests:** Neun PGP05-Code-/Testdateien an exakter SHA über GitHub geladen. Lokale Materialisierung fügte zunächst eine Endleerzeile hinzu; vor endgültigem Test korrigiert und alle neun Git-Blob-Hashes gegen GitHub erfolgreich abgeglichen. Danach 93 Unittests OK (0,198 s). Bash-Syntax PASS; alter Collector verweigert mit Exit 78. GitHub bestätigt CircleCI #40 success auf Code-SHA. Kein neuer CI-Lauf angefordert. Dokumentationscommit mit [skip ci]/[ci skip]; Quellcode/Workflows unverändert.
+
+**Umsetzung:** Neues [Review-/Ausführungspaket](PGP05_CLOUD_SSH_READINESS_AND_REVIEW_PACKET_20261022.md) mit Trust-/Zielbindung, SSH-Optionsentwurf, erlaubten Metadaten, Startup-Hook-Grenzen, vHost-Nachweis, Redaction/Receipt und unabhängiger Reviewer-Abnahmevorlage. Autorenseitige Reviewpunkte R1–R7 ausdrücklich offen für Live-Fähigkeit: synthetische CLI/Receipt nicht umgehen, Ressourcenlimit vor Subprozess-Pufferung, vertrauenswürdiger Binary-Pfad/Umgebung, keine Eigentümer-/vHost-/Snapshot-Überbehauptung, breites schreibfähiges Konto, SSH-Startup-Hooks, alter WP-CLI-Audit nicht verwenden. Unabhängiges Review nicht behauptet oder eingereicht. Review-Runbook und Status erhalten append-only Verweise. Plan-Scope, Prioritäten und formale Gates unverändert; daher keine künstliche Masterplan-/V1-Zähleränderung.
+
+**Ergebnis/Grenzen:** Keine remote Dateien gelesen/geändert, kein PHP/WordPress/SQL, kein Backup/Restore/Release/Deployment/Merge, keine kostenpflichtige Leistung. Die SSH-/Verzeichnis-/Domain-Liveprüfungen sind NOT RUN. Nächste tatsächliche Betreiberabhängigkeit: vorhandenen PCjan online und autorisierten privaten Zugang verfügbar machen; anschließend sichere Zugangsfähigkeit prüfen, keine Passwörter/Keys an Chat/GitHub übermitteln. Unabhängiges Review und tatsächlich livefähige Implementierung bleiben zusätzlich Pflicht vor Metadatenlauf.
+
+**Fortschritt:** Checkpoint 5 unverändert **7/10 (70 %)**, offen #6 unabhängige Live-Sicherheitsabnahme, #8 authentisierte Host/Konto/Namespace/vHost-Bindung, #10 begrenzter echter Metadatenlauf + Abnahme. #9 nur owner-attested UI-Abgleich. V1 offen: historisch 62/71, M0–M7 0/8, P4 0/4, R01–R18 0/18; PR32 Draft/unmerged; zuletzt belegte Live-Version alpha.2 unverändert, in dieser Sitzung nicht neu abgefragt.
+
+
+## 2026-10-22 — PGP05: explicitly authorized one-step Cloud Browser alternative (#27 / Draft #32)
+
+**Auftrag/Entscheidung:** Betreiber kann PCjan nicht online bringen und autorisiert Cloud Browser gezielt für diesen Schritt. Die zuvor genannte PCjan-Abhängigkeit ist keine allgemeine technische Voraussetzung; benötigt wird ein zulässiger erreichbarer SSH-Client. Vorherige Aussage präzisiert: Cloud Browser kann IONOS-Kontoansichten bedienen, stellt auf der hier dokumentierten Oberfläche keinen nativen SSH-/Terminalzugriff bereit.
+
+**Ausführung:** Cloud Browser initial ohne Tabs; offizielle IONOS-Loginseite geöffnet, optionale Cookies abgelehnt, browserAuth für sichere Anmeldung verwendet. Rückgabe user_took_over; danach frische positive Anmeldung direkt im OrgaVela-Projekt bestätigt. Keine Credentials modellseitig eingegeben, ausgelesen oder veröffentlicht. Projekt/Einstellungen und bestehende SFTP+SSH-Kontoübersicht/-details lesend geöffnet. Ein Konto, Vertragswebspace-Scope / und Port 22; konkrete Konto-/Host-/Vertragskennungen bewusst nicht in GitHub übernommen. Sichtbare Verbindungsseite verweist auf externes FTP-Programm bzw. Konsole; **kein Webterminal auf den geprüften Projekt-/Kontoseiten gefunden**. Das ist keine Behauptung, alle IONOS-Produkte hätten generell kein Webterminal.
+
+**Fehler/Prüfgrenzen:** Zweimal verzögerte IONOS-Routennavigation mit DOMSnapshot-Timeout/leerem Inhaltsbereich; jeweiliges einmaliges Reload stellte Einstellungen bzw. Kontoliste wieder her. Webspace Explorer geöffnet, aber Dateiliste blieb beim geprüften Zustand noch im Lademodus; kein neuer Dateistruktur-/Rootnachweis daraus behauptet. Kein Bot-Block festgestellt. Exakter aus IONOS-UI bekannter SSH-Hostname einmal ausschließlich per lokaler DNS-Auflösung geprüft: **UNAVAILABLE**. Keine IP-/Netzwerkumgehung und kein tatsächlicher SSH-Keyscan/Login. Keine WordPress-/PHP-/SQL-Ausführung, keine Dateiinhalte oder Downloads, keine Konfigurationsänderung, Passwortänderung, Kontoanlage, Backup, Deployment, Restore, Merge oder kostenpflichtige Leistung.
+
+**Ergebnis/Nächster Weg:** Browser kann die IONOS-UI-Evidenz direkt bestätigen, aber aktuell den gepinnten authentisierten SSH-Nachweis nicht liefern. PCjan-online nicht erneut als einzig möglichen Weg verlangen; alternative kostenfreie Ausführungsumgebung oder Betreiber-SSH-Client mit sicherer bestehender Authentisierung erforderlich. Vor tatsächlichem Live-Metadatenlauf weiterhin unabhängige Design-/Codeabnahme. Kein zusätzlicher CI-Lauf ausgelöst. Dieser rein dokumentarische Nachtrag nutzt [skip ci]/[ci skip].
+
+**Zähler:** Checkpoint 5 unverändert 7/10 (70 %), offen #6 unabhängiges Live-Sicherheitsreview, #8 aktuelle authentisierte SSH-/Namespace-/Domainroot-Bindung, #10 tatsächlicher begrenzter No-Bootstrap-Metadatenlauf und Abnahme. #9 bleibt owner-attested. Normativer Scope/Plan und V1-Zähler unverändert: 62/71 historische Codingpakete, M0–M7 0/8, P4 0/4, R 0/18; PR32 Draft/unmerged, zuletzt belegte Live-Version alpha.2, in dieser Sitzung nicht via WordPress neu geprüft.
+
+
+## 2026-10-22 — W0/O01/O03 PGP05: kostenfreien CircleCI SSH-Prüfjob erstellt (#27 / Draft #32)
+
+**Auftrag:** Nach fehlendem SSH-Terminal im Cloud Browser den vorgeschlagenen abgesicherten CircleCI-Prüfjob erstellen. Kostenfreie Umsetzung freigegeben; keine produktiven Backups/Deployments/Merges ohne erfüllte Gates. Basis PR32 `5f4bbc96cf70528b52b262a5270a58e606161c4c`, weiter Draft/ungemergt. AGENTS, Worklog, Plan/JSON/Status/Matrix, Reviewpaket und CircleCI-Konfiguration geprüft. CircleCI-Config-Skill samt Approval/Branch-Patterns gelesen und angewandt. Offizielle CircleCI-/OpenSSH-Dokumentation zu Pipelinewerten, vor Secret-Injektion geprüften Context-Restrictions und SSH-Optionen überprüft.
+
+**Entscheidung:** Ein neues Live-Review-Kandidatenprogramm statt Umgehung des alten synthetischen Scanners. Standard off: nur Offline-Tests. Getrennte explizite Modi hostkey (ohne Authentisierung) und metadata (erst nach unabhängigem Review), jeweils Offline-Test → eigener manueller Approval → neuer, separater Context. Projekt-/Repository-/Branch-/vollständiges SHA-Pinning in Context-Expression ist zwingend vor Secret-Injektion; Shell/SHA-Prüfung allein schützt nicht vor bösartigem Kontextkonsumenten. Keine bestehenden Backup-/Deploy-Secrets wiederverwenden oder ändern. PCjan ist keine Voraussetzung.
+
+**Implementierung:** Neue Dateien `orgavela_pgp05_circleci_ssh_probe.py` und `test_orgavela_pgp05_circleci_ssh_probe.py` unter scripts/ci. Begrenzter Subprozess-Reader für stdout/stderr (je 16 KiB während des Lesens), Keyscan 9s/SSH 30s, Prozessgruppen-Abbruch/Reaping. Nur vertrauenswürdige absolute Systembinärpfade, frische Child-Umgebung; Hostkey muss offizieller ED25519-Referenz entsprechen. metadata verwendet strict known_hosts-Pinning, keine Weiterleitung/Proxy-/Agent-/Publickey-Fallbacks, einen Passwortversuch über lokalen askpass-Helper ohne Passwortliteral und statisches Shellskript über stdin. Nur id/pwd/test/stat/Glob/printf für erwartetes Konto, Root, ausgewählte Dateitypen/Ownership/private Config-Mode/MU-Bestand; keine Dateiinhalte/PHP/WordPress/SQL. Ergebnis hält Domain-/DB-/Read-only-ACL-/Capture-/Restore-Beweis ausdrücklich false. Shell-/SSH-Startup-Hooks liegen vor dem Skript und verlangen separate Prüfung.
+
+**Tests/Korrekturen:** Erste neue Suite mit 111 Tests OK; weitere lokale OpenSSH -G-, askpass-, Symlink-, PHP-Nichtausführungs- und Receipt-SHA-Tests ergänzt, final **116/116 OK (0,746 s; 93 bestehende + 23 neue Methoden)**. Alle Prozess-/Shelltests ausschließlich synthetisch/lokal, kein IONOS-Login. Remote-Shellsyntax und YAML-Struktur/Default-off/getrennte Contexts/Approval/Branchfilter PASS. Initiale textuelle YAML-Sperrwortprüfung traf den Kommentar "schedules" und wurde durch Prüfung tatsächlicher YAML-Schlüssel ersetzt; off explizit als String quotiert. Bestehende synthetische Source-Dateien und Exit-78-Collector unverändert. **Keine CircleCI-Providerkompilierung oder CI auf neuer SHA behauptet**; kein CLI/Docker hier verfügbar. Commit [skip ci]/[ci skip] verhindert absichtlichen neuen Providerlauf. Alte CircleCI #40 belegt nur ältere Code-SHA, nicht diesen Kandidaten.
+
+**Dokumentation:** [Operator-/Reviewer-Anleitung](PGP05_CIRCLECI_SSH_PROBE_OPERATOR_GUIDE_20261022.md) mit tatsächlichen Grenzen, zwei Contexts, exakter serverseitiger SHA-Expression, Kostenattestation, sicherer Erstkonfiguration ohne Passwort, Live-Reviewvoraussetzungen, temporärer Secrets-Bereinigung und Rollback. Plan erhält datierten Entwurfsnachtrag, JSON gezielte O03-Evidenz ohne Änderung V1-Messwerte, Status/Matrix verweisen auf denselben Kandidaten.
+
+**Nicht ausgeführt:** Keine Context-Erstellung/Restriktionsänderung, kein Passwort/Private Key/PAT eingegeben oder gelesen, kein Live-Keyscan/SSH/Metadatenzugriff, keine DB/Site-Mutation, kein Backup/Restore/Deploy/Release/Merge, keine neue kostenpflichtige Leistung. Zero-cost-Flag ist Betreiberattestation, kein eigener Billingnachweis. Kein unabhängiges Review behauptet.
+
+**Nächste tatsächliche Benutzeraktion:** CircleCI Organization Settings → Contexts → `orgavela-pgp05-hostkey-only` neu und getrennt einrichten; zuerst Projekt-/Mitglieder-/exakte Revisionsbeschränkung prüfen, anschließend nur Host, genehmigte SHA und Zero-cost-Attestation hinterlegen. **Kein SSH-Passwort im Hostkey-Context.** Vollständige endgültige SHA/Expression wird im Trackingkommentar nach dem Commit angegeben. Erst danach hostkey-Pipeline auf exakt dieser SHA und Approval prüfen; metadata-Context vor unabhängigem Live-/Startup-Review nicht einrichten.
+
+**Zähler:** Checkpoint 5 weiter 7/10 (70 %), #6/#8/#10 offen. Job erstellt/örtlich getestet ≠ CI-grün ≠ unabhängig geprüft ≠ live ausgeführt. V1 offen, historisch 62/71, M0–M7 0/8, P4 0/4, R 0/18; letzte belegte Live-Version alpha.2 unverändert, nicht neu abgefragt; PR32 Draft/unmerged.
+
+
+## 2026-10-22 — Betreiber beauftragt unabhängige KI-Zweitprüfung; SSH-stderr-Fehler korrigiert
+
+**Auftrag:** Betreiber stimmt dem konkret vorbereiteten separaten Prüfagenten zu. W0/O01/O03, Issue27/DraftPR32. Agent unabhängig von der Codeautorschaft zugewiesen; keine menschliche/externe Audit-Zertifizierung behauptet. Zielcode 392053bb0e3f24ef79cc66a5142a6558b3fa5ee5; drei zugehörige CircleCI-Statuses erneut success. Docs-Evidenzstand 1f1e1f084b59727e6eebbd6cee99af25c1f2181f.
+
+**Befund und Änderung:** Zweitprüfer reproduziert, dass metadata bei exaktem stdout-Marker unerwartetes SSH-stderr ignoriert. Probe verlangt jetzt exaktes stdout UND leeres stderr; keine Allowlist oder Ausgabe privater Diagnostik. Erfolgsfixture korrigiert; neue adversarielle Subfälle Warning, Whitespace und binäre/secretartige Diagnostik prüfen REFUSED und Cleanup. Guide dokumentiert Verhalten und offenen Runtime-/Startup-/vHost-Nachweis. Älteres PCjan-Design mit pauschalem Password-env-Verbot ausdrücklich als durch die getrennte CircleCI-Kandidatendesignprüfung überholt markiert; Environment-Risiko offengelegt.
+
+**Validierung:** Vollständige lokale synthetische PGP05-Suite: 117/117 OK. Erwartete negative REFUSED-/argparse-Ausgaben, keine echten Daten/Zugänge oder Netzwerkverbindungen. Zweitreview des Fixes separat dokumentiert. Neue Code-SHA wird nicht automatisch freigegeben; alte CircleCI-Erfolge gelten nur für 392053..., Context-Pinning wird nicht verändert und Secrets nicht eingetragen. Commit mit Skip-CI, kein Providerjob absichtlich ausgelöst.
+
+**Grenzen/Nächste:** Immutable verifizierte Executor-Identität vor Passwortinjektion, tatsächliche Startup-Evidenz und aktuelle Domain-Root-Zuordnung offen. Kein Login/SQL/PHP/WordPress/Backup/Deploy/Merge oder Kauf. Vollständiges Review und exakter aktueller Status werden im separaten Docsbranch veröffentlicht. Checkpoint5 weiterhin 7/10 (#6/#8/#10 offen), V1 unverändert 62/71 historisch, M0–M7 0/8, P4 0/4, R 0/18, zuletzt belegte Live-alpha.2.
+
+
+## 2026-10-22 — Build41-Log geprüft; neues offizielles Executorimage immutable gepinnt
+
+**Auftrag/Eingang:** Betreiber liefert Build41 Spin-up-Textlog. Datei lokal gelesen,
+nicht geändert oder öffentlich hochgeladen. W0/O01/O03 #27/Draft32. VorherigerHEAD
+4d7b257ae398d663cf35668777e7b5bbea95b17c Draft bestätigt.
+
+**Beleggrenze/Recherche:** Log zeigt cimg/python:3.12 und amd64, aber keinen vollen
+Manifestdigest. Kurze Layerkennungen erlauben keinen historischen Identitätsbeweis.
+Offizielle CircleCI-Imagebeschreibung bestätigt Publisher/Tagmodell. Webtool konnte
+DockerHub-API nicht öffnen; normaler direkter HTTPS-Read über urllib gelang.
+DockerHub-TagAPI + Registryindex + linux/amd64-Manifest unabhängig abgerufen;
+beide rohen Manifest-Hashes reproduziert. Anonymous Pull-Bearer nur in Speicher,
+kein Secret/Token geloggt. Aktueller legitimer Kandidat, nicht exakt Job41 behauptet.
+Details in PGP05_IMMUTABLE_EXECUTOR_PROVENANCE_20261022.md.
+
+**Umsetzung:** Beide Jobs auf docker.io/cimg/python@sha256:793ca7ea5a2fc27fa5b379fd077bf571c456d103992c7b3098cfc885f46cfa08
+gepinnt. Kontextfreier Runtimecheck im Offlinejob vor synthetischen Tests prüft
+Architektur/Pfade/Toolversionen/trusted binaries, ohne Netzwerklogin/Installation.
+Kein Context oder SHA-Pin bei CircleCI verändert. Keine Credentials oder Livejobs.
+
+**Validierung:** YAML strukturell korrekt, beide Pins identisch/defaultoff ohne
+Context; 117/117 lokale synthetische Tests PASS. Erster lokaler Patchaufruf wegen
+doppeltem Ziel im Patch verworfen; danach Updatepatch korrekt, kein Zwischenstand
+publiziert. Providerlauf/aktuell gezogenes Image/Tools auf neuerSHA noch unbestätigt.
+Separate Agentennachprüfung folgt auf exakter veröffentlichter SHA.
+Commit mit SkipCI; Betreiber startet anschließend ausschließlich off.
+
+**Grenzen:** Immutable Referenz löst nur veränderlichen Tag; keine Sicherheits-
+Signatur/Vulnerability-Abnahme behauptet. Startup-/Domain-/authentisierter
+Metadatenbeleg fehlen. CP5 weiter7/10; #6/#8/#10 offen. V1 unverändert62/71 historisch,
+M0–M7 0/8,P4 0/4,R0/18; alpha.2 zuletzt belegt, kein Livezugriff/Backup/Deploy/Merge/Kauf.
+
+
+## 2026-10-23, Europe/Berlin — Metadatenjob47 REFUSED; feste Diagnose statt Blindretry
+
+**Auftrag/Eingang:** BetreiberScreenshot image(20261023-062818).png zeigt
+Pipeline539, Offlinegrün/Approvalgrün/Metadatenjobrot, REFUSEDexit78.
+GitHub exactc952645000b2954c04f1c0446c333392048065e6 bestätigt offline45success,
+approvalsuccess und metadata47failure. Keine unmittelbare Ursache/Authentisierung
+oder fehlenderSiteeffekt aus generischerMeldung abgeleitet. Originalbild/Logs/
+Zugangsdaten nicht veröffentlicht, keinRerun/SSH/Contextzugriff ausgeführt.
+
+**Umsetzung:** RefusalJSON mit strikt allowlisted Stages/Reasons, niemals
+Exceptionmessages/argv/env/Rohoutput/Identifier/beliebigeReturncodes.
+Settingsfehler bekommen festeKlassen; Stage ist lokale Versuchsstufe, kein
+Loginbeweis. Transport255 bleibt generischerExit. VorhandeneRemoteprüfungen
+melden stattdessen festeExits81–90; nurbei leerenbeidenStreams auf
+REMOTE_REPORTED_Kategorien abgebildet, nicht als unabhängigeUrsachen gewertet.
+Keine Guards/Commands/Pin-/Deadline-/Output-/Cleanup-/Credentialgrenzen gelockert.
+Keine Pfadsuche oder /home/www/public als SSHnamespace bewiesen.
+Remotehash nun1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58.
+
+**Tests:**121/121 lokale synthetischeTestsPASS(4neueGruppen), shellsyntaxPASS.
+FiktiverPythonprozess stattSSH prüft Remotecodes/255/Unknown/Streamkontamination,
+falscheSettings stoppenvorRunner, Stage-/Secret-/Exceptioncodeleckabwehr.
+Alte Erfolgspfad/Hostpin/strictstderr/Bounds/Timeout/Askpass/NoPHP unverändert.
+SeparaterReviewer zur tatsächlichenDiffnachprüfung beauftragt; kein Approval
+vorweggenommen. Implementierung/Dokukandidat mit SkipCI auf PR32 publiziert,
+neueSHA muss eigensreviewt/Contextgepinnt werden. Keine automatischeProvider-CI.
+
+**Nächste:** nach akzeptiertemReview nur Contextrevision/ApprovedSHA/ScriptHash/
+echteReviewreferenz anpassen, Secrets/Root unverändert; dann EINENEUE metadata-
+Pipeline mit verpflichtender aktueller kontextfreier Offlineprüfung vorApproval.
+Kein alterJob47Retry, keine Sicherheitsregeln zumGrünmachen ändern.
+CP5 unverändert8/10, #8/#10offen; kein tatsächlichererfolgreicherMetadatenbeleg.
+V1 offen62/71historisch,M0–M7 0/8,P4 0/4,R0/18,PR32Draft,alpha.2zuletztbelegt;
+keineBackup/Deploy/Merge/Kauf/Dreamloud-Aktion.
+
+
+## 2026-10-23, Europe/Berlin — Job50 SSH-Abbruch; private Diagnostik verfeinert
+
+**Auftrag/Eingang:** PGP05 CP5 selbstständig weiterführen; Betreiberbild mit
+REFUSED/stage SSH/reason PROCESS_EXIT ausgewertet. W0/O01/O03, #27/Draft32.
+Unabhängiger GitHub-Status auf b31e6cc0684593cca63d493ba0f56dd562e11f53:
+Offline48 und Approval erfolgreich, Metadata50 failure
+https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/50 .
+Das neue Resultat lokalisiert den Abbruch im SSH-Prozess; Settings und der
+Hostschlüsselkandidat wurden akzeptiert. Authentisierung und Fehlerursache
+bleiben unbekannt. Weder falsches Passwort noch falscher Root bewiesen.
+
+**Änderung:** Nur bounded stderr -> feste SSH_REPORTED_* Diagnosekategorie:
+eng begrenzte vollständige kanonische Bytezeilen, bekannte Exitklassen,
+leeres stdout erforderlich; mehrdeutig/unbekannt bleibt PROCESS_EXIT.
+Keine Rohdiagnose, Matched-Werte oder beliebige Returncodes veröffentlicht.
+AUTH_REFUSED beschreibt eine Meldung, kein bewiesenes Passwortproblem.
+126/127 beweisen weder Login noch Remoteausführung. Erfolg verlangt weiter
+exaktes stdout/leeres stderr. Payload/Befehle/SSHargs/Hostpin/Limits/Einversuch
+unverändert; Remote-SHA256 weiter1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58.
+Keine automatische Wiederholung und keine Änderung an Zugang/Pfad/Rechten.
+
+**Validierung:** 125/125 lokale synthetische Tests PASS; vier zusätzliche Tests
+für feste Kategorien, Mehrdeutigkeit/falscheExitklasse/Übergröße, kanonische
+Zeilen und Geheimnisredaktion. Kein IONOS-Login. Separater beauftragter
+Prüfer prüft tatsächliche Quelldateien unabhängig; Freigabe und Providerlauf
+werden nicht vorweggenommen. Veröffentlichung mit SkipCI, danach Review der
+exakten publizierten SHA und Context-Neupin durch Betreiber erforderlich.
+
+**Status:** CP5 8/10, #8 Account/Namespace/Domainbindung und #10 akzeptierter
+realer Metadatenlauf offen. production_capture_allowed=false. V1 offen,
+62/71 historische Codingpakete, M0–M7 0/8, P4 0/4, R0/18; PR32 Draft,
+alpha.2 zuletzt belegt. Kein Backup/Deploy/Merge/Kauf/Dreamloud-Zugriff.
+
+
+## 2026-10-23, Europe/Berlin — Betreiber verlangt tatsächliche Dreamloud-Übernahme
+**Auftrag:** SSH-Zweck erklären, unnötigen Sonderweg beenden, funktionierende
+Dreamloud-Backupimplementierung für OrgaVela verwenden. W0/O01/O03,#27/Draft32.
+Bisherige reineArchitekturentscheidung vom22.10. nicht als vollständigePortierung
+ausgeben. Keine neuenprivatenWerte/Liveaktionen/Käufe autorisationsfrei erfinden.
+
+**Verifizierte Vorlage:** Dreamloud backup/production-circleci weiterhin exakt
+07d4ffbcc3c6d70f0716fda070050d6532a69df6. Issue434 aktuell8/8abgenommen,
+Tagescapture1139/writer1141/immutableRelease421379530 dort dokumentiert;
+kein neuerDownload/Restore/Dreamloud-Serverzugriff durch diesen Auftrag.
+Tatsächlich gelesen .circleci/config.yml, scripts/probe_circleci_password_source.py,
+scripts/capture_quiesced_circleci.py. Dreamloud nutzt bereits Passwort-Askpass,
+Hostpin, getrennteCapture-/Writercontexts, Verschlüsselung/Readback/Restore.
+SSH ist der dort verwendete Servertransport, kein zusätzlichesOrgaVelaProdukt.
+Der OrgaVela-Sonderwrapper/env+stdin ist keine allgemeineBackupvorbedingung.
+
+**Tatsächliche Änderung:** InitialeSSH-Metadatenübertragung folgt jetzt Dreamlouds
+festem direktemSSH-command statt extraabsolutemenv-/bin/sh-Wrapper+stdin.
+Nur validierte/gequoteteRoot/Userparameter vor unverändertem festemMetadataBody;
+kein beliebigerBefehl,keinePfadsuche/PHP/SQL/Writes. PrivateArgumente nichtloggen.
+ProviderverwaltetePOSIX-Shell und Umgebungsverhalten sind dabei ausdrücklich
+Teil desselbenInfrastrukturvertrauens; inkompatibleShell verweigert,keinFallback.
+Passwortisolation/Pin/Context-/Sourcebindung/Einversuch/Bounds/strikterErfolg
+bleiben. BodySHA1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58
+unverändert. KeineBehauptung,Wrapper sei bewieseneUrsache derJobs50/53.
+
+**Tests:**127/127lokaleSynthetikPASS. NeueTests führen den tatsächlichen
+konstruiertenBefehl mitfiktiverWPForm lokal aus; korrekterErfolg,Configmode,
+zusätzlichesMUfile/fehlendeDatei verweigert; Shellfragmentinjektion abgelehnt.
+SeparatesReview der realenImplementierung vorFreigabe; keinProviderlauf behauptet.
+
+**Grenze:** Dies portiert dasTransportmuster, nichtschon den gesamtenProducer.
+WeitereArbeit soll bestehendeDreamloud-Capture/Writer/Restorekomponenten mit
+eigenemOrgaVelaKey/Quellscope/Tabellenerwartung/Zielrepo adaptieren; keine
+Neuerfindung/WeitergabevonDreamloud-Zugängen. Ein spätererProduktionscollector
+mitWartung/DBsperren gehört nichtinaktuellenReadonly-Metadatenlauf.
+CP5weiter8/10,#8/#10offen,productioncapturefalse. V1offen62/71historisch,
+M0–M7 0/8,P4 0/4,R0/18,PR32Draft,alpha.2zuletztbelegt. KeinBackup/Deploy/Merge.

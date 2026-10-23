@@ -202,7 +202,33 @@
       "source_github_main_branch_protected": false,
       "source_github_main_branch_protection_probe": "GitHub GET /branches/main protected=false; GET /rulesets [] on 2026-10-13. /branches/main/protection requires inaccessible admin permission (403).",
       "source_github_branch_ruleset_count": 0,
-      "github_backup_secret_storage_authorized": false
+      "github_backup_secret_storage_authorized": false,
+      "pgp05_checkpoint5_latest_evidence": {
+        "date": "2026-10-22",
+        "issue": 27,
+        "draft_pr": 32,
+        "accepted_criteria": 7,
+        "total_criteria": 10,
+        "open_criteria": [
+          6,
+          8,
+          10
+        ],
+        "database_mapping_provenance": "owner-attested-private-ui-comparison",
+        "ssh_probe_candidate": "scripts/ci/orgavela_pgp05_circleci_ssh_probe.py",
+        "operator_guide": "docs/operations/PGP05_CIRCLECI_SSH_PROBE_OPERATOR_GUIDE_20261022.md",
+        "default_live_mode": "off",
+        "local_synthetic_tests_passed": 116,
+        "new_tests": 23,
+        "new_provider_ci_verified": false,
+        "live_hostkey_run": false,
+        "authenticated_metadata_run": false,
+        "independent_security_signoff": false,
+        "temporary_contexts_configured": false,
+        "production_capture_allowed": false,
+        "next": "Operator configures hostkey-only context with project and exact-revision restriction, without login credentials; review/provider validation before run",
+        "note": "Scoped latest PGP05 evidence; older baseline O03 fields are historical, not current PGP05 authorization. No global V1 acceptance change."
+      }
     },
     {
       "id": "O04",

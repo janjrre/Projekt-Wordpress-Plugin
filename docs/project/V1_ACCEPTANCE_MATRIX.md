@@ -158,3 +158,19 @@ Bewusst **nicht** B04/R03 als grün zählen. [Operatives O03-Runbook](../operati
 | IONOS-OrgaVela-Vertragsbackups und konkrete Restorepunkte im Hosting-Konto überprüft | **Offen**, allgemeine Anbieterangaben genügen nicht |
 
 Abnahme nur bei belegtem GH-01…GH-07 und tatsächlichem IONOS-Recoveryinventar. [Masterplan v2.11](../operations/V1_ACCEPTANCE_PLAN.md) · [Maschinenstatus v2.11](../operations/V1_PROGRESS.json); Release-Gates (darunter R03 und R15) bleiben ausdrücklich offen. Keine Datensicherungs- oder Löschaktivität in diesem Matrix-Nachtrag.
+
+
+## 22.10.2026 — O01/O03 / PGP05 Checkpoint5 SSH-Prüfkandidat, keine Gate-Abnahme
+
+| Nachweis | Tatsächlicher Stand |
+| --- | --- |
+| Neuer begrenzter SSH-Prüfer mit Default-off, getrennten Context-/Approval-Modi | Implementiert auf Draft PR32, nicht live freigegeben |
+| Synthetische lokale Regression und Subprozess-/Shell-Negativtests | 116/116 PASS, keine echten Zugangsdaten oder IONOS-Zugriffe |
+| YAML-/SSH-Options-/Remote-Shellsyntax | Lokal PASS; keine CircleCI-Providerkompilierung |
+| Serverseitige Projekt-/Revisions-Context-Restriction vor Secret-Injektion | Betreiber-Setup noch ausstehend |
+| Offizieller Hostkey gegen tatsächlich präsentierten Kandidaten | Live noch nicht ausgeführt |
+| Unabhängiges Review von Transport, Credential-Isolation und Server-Startup | OFFEN, Autorentests nicht als unabhängige Abnahme zählen |
+| Authentisierte Konto-/Root-/Domainbindung und akzeptierter Metadatenlauf | OFFEN, vHost bleibt im Receipt false |
+| Produktionsbackup/Real-Restore und formale V1-Releaseabnahme | Unverändert OFFEN |
+
+[Ausführungsschritte, Reviewgrenzen und Rollback](../operations/PGP05_CIRCLECI_SSH_PROBE_OPERATOR_GUIDE_20261022.md). Checkpoint5 unverändert **7/10**, #6/#8/#10 offen. Keine Änderung der V1-Abnahmezähler.
