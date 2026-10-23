@@ -190,7 +190,12 @@ class TransportTests(unittest.TestCase):
             with patch.object(m, 'probe', side_effect=AssertionError('must not run')), contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
                 self.assertEqual(m.main(args), 78)
             self.assertEqual(out.getvalue(), '')
-            self.assertEqual(err.getvalue(), 'PGP05_CIRCLECI_SSH_PROBE=REFUSED\n')
+            lines = err.getvalue().splitlines()
+            self.assertEqual(lines[0], 'PGP05_CIRCLECI_SSH_PROBE=REFUSED')
+            report = __import__('json').loads(lines[1])
+            self.assertEqual(report['stage'], 'CLI')
+            self.assertFalse(report['production_capture_allowed'])
+            self.assertNotIn('private-secret', err.getvalue())
 
     def test_cli_receipt_binds_revision_without_identifiers(self):
         out,err=io.StringIO(),io.StringIO()
@@ -199,6 +204,64 @@ class TransportTests(unittest.TestCase):
         self.assertIn(SHA,out.getvalue())
         self.assertNotIn(HOST,out.getvalue())
         self.assertEqual(err.getvalue(),'')
+
+
+class DiagnosticTests(unittest.TestCase):
+    def test_local_setting_reasons_stop_before_network(self):
+        cases = [('PGP05_APPROVED_SHA','bad','REVISION'),
+                 ('PGP05_ZERO_COST_CONFIRMED','no','COST'),
+                 ('PGP05_SSH_HOST','private.invalid','HOST'),
+                 ('PGP05_REMOTE_SHA256','0'*64,'REMOTE_SCRIPT_HASH'),
+                 ('PGP05_METADATA_REVIEW_REF','private-secret','REVIEW_REF'),
+                 ('PGP05_STARTUP_REVIEWED','no','STARTUP_SCOPE'),
+                 ('PGP05_WP_ROOT','/one','ROOT_FORMAT'),
+                 ('PGP05_SSH_USER','-private-secret','USER_FORMAT'),
+                 ('PGP05_SSH_PASSWORD','private\nsecret','PASSWORD_FORMAT')]
+        for key, value, reason in cases:
+            with self.subTest(key=key):
+                def runner(*args, **kw):
+                    self.fail('must not reach network runner')
+                with self.assertRaises(m.Refused) as caught:
+                    m.probe({**environment(True),key:value},'metadata',runner=runner)
+                self.assertEqual((caught.exception.stage,caught.exception.reason),('SETTINGS',reason))
+
+    def test_remote_reported_codes_require_exact_empty_streams(self):
+        # Python is a fictitious SSH process here; no network executable runs.
+        with patch.object(m,'SSH',sys.executable):
+            for code, expected in m.REMOTE_REFUSALS.items():
+                with self.subTest(code=code), self.assertRaises(m.Refused) as caught:
+                    m.bounded_run([sys.executable,'-c',f'raise SystemExit({code})'],env=m.clean_env('/tmp'),timeout=2)
+                self.assertEqual(caught.exception.reason,expected)
+            for source in ['raise SystemExit(255)', 'raise SystemExit(91)',
+                           'print("private-secret");raise SystemExit(82)',
+                           'import sys;sys.stderr.write("private-secret");raise SystemExit(82)']:
+                with self.assertRaises(m.Refused) as caught:
+                    m.bounded_run([sys.executable,'-c',source],env=m.clean_env('/tmp'),timeout=2)
+                self.assertEqual(caught.exception.reason,'PROCESS_EXIT')
+
+    def test_stage_labels_do_not_claim_authentication(self):
+        def runner(argv,**kw):
+            if argv[0]==m.KEYSCAN:return LINE,b''
+            raise m.Refused('private-secret',reason='PROCESS_EXIT')
+        with patch.object(m,'EXPECTED_FPR',FPR),patch.object(m,'trusted_binary'),self.assertRaises(m.Refused) as caught:
+            m.probe(environment(True),'metadata',runner=runner)
+        self.assertEqual((caught.exception.stage,caught.exception.reason),('SSH','PROCESS_EXIT'))
+
+    def test_public_diagnostics_never_echo_exception_or_hostile_code(self):
+        errors = [ValueError('private-secret'), m.Refused('private-secret'),
+                  m.Refused('private-secret',reason='private-secret',stage='private-secret')]
+        changed=m.Refused();changed.reason=['private-secret'];changed.stage={'private-secret':'value'};errors.append(changed)
+        for error in errors:
+            out,err=io.StringIO(),io.StringIO()
+            with patch.object(m,'probe',side_effect=error),contextlib.redirect_stdout(out),contextlib.redirect_stderr(err):
+                self.assertEqual(m.main(['--mode','metadata','--live-opt-in']),78)
+            self.assertEqual(out.getvalue(),'')
+            self.assertNotIn('private-secret',err.getvalue())
+            report=__import__('json').loads(err.getvalue().splitlines()[1])
+            self.assertEqual(set(report),{'schema','stage','reason','production_capture_allowed'})
+            self.assertIn(report['stage'],m.STAGES)
+            self.assertIn(report['reason'],m.REASONS)
+            self.assertFalse(report['production_capture_allowed'])
 
 
 class RemoteScriptTests(unittest.TestCase):
@@ -224,13 +287,13 @@ class RemoteScriptTests(unittest.TestCase):
     def test_remote_extra_mu_file_refused(self):
         for filename in ['extra.php', '.hidden.php']:
             result=self.run_fixture(lambda root:(root/'wp-content/mu-plugins'/filename).touch())
-            self.assertEqual(result.returncode,78)
+            self.assertEqual(result.returncode,90)
             self.assertEqual(result.stdout,b'')
 
     def test_remote_directory_symlink_refused(self):
         def change(root):
             (root/'wp-admin').rmdir();(root/'wp-admin').symlink_to(root/'wp-includes',target_is_directory=True)
-        self.assertEqual(self.run_fixture(change).returncode,78)
+        self.assertEqual(self.run_fixture(change).returncode,85)
 
     def test_php_files_never_executed(self):
         def change(root):
@@ -244,9 +307,9 @@ class RemoteScriptTests(unittest.TestCase):
             p=root/'wp-config.php';p.unlink();p.symlink_to(root/'index.php')
         def hardlink(root):
             os.link(root/'wp-config.php',root/'other')
-        for change in [symlink,hardlink,lambda r:(r/'wp-config.php').chmod(0o644),lambda r:(r/'index.php').unlink()]:
+        for change, code in [(symlink,86),(hardlink,87),(lambda r:(r/'wp-config.php').chmod(0o644),89),(lambda r:(r/'index.php').unlink(),86)]:
             result=self.run_fixture(change)
-            self.assertEqual(result.returncode,78)
+            self.assertEqual(result.returncode,code)
             self.assertEqual(result.stdout,b'')
 
 

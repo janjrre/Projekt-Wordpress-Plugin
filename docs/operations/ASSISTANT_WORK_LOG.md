@@ -1012,3 +1012,39 @@ Commit mit SkipCI; Betreiber startet anschließend ausschließlich off.
 Signatur/Vulnerability-Abnahme behauptet. Startup-/Domain-/authentisierter
 Metadatenbeleg fehlen. CP5 weiter7/10; #6/#8/#10 offen. V1 unverändert62/71 historisch,
 M0–M7 0/8,P4 0/4,R0/18; alpha.2 zuletzt belegt, kein Livezugriff/Backup/Deploy/Merge/Kauf.
+
+
+## 2026-10-23, Europe/Berlin — Metadatenjob47 REFUSED; feste Diagnose statt Blindretry
+
+**Auftrag/Eingang:** BetreiberScreenshot image(20261023-062818).png zeigt
+Pipeline539, Offlinegrün/Approvalgrün/Metadatenjobrot, REFUSEDexit78.
+GitHub exactc952645000b2954c04f1c0446c333392048065e6 bestätigt offline45success,
+approvalsuccess und metadata47failure. Keine unmittelbare Ursache/Authentisierung
+oder fehlenderSiteeffekt aus generischerMeldung abgeleitet. Originalbild/Logs/
+Zugangsdaten nicht veröffentlicht, keinRerun/SSH/Contextzugriff ausgeführt.
+
+**Umsetzung:** RefusalJSON mit strikt allowlisted Stages/Reasons, niemals
+Exceptionmessages/argv/env/Rohoutput/Identifier/beliebigeReturncodes.
+Settingsfehler bekommen festeKlassen; Stage ist lokale Versuchsstufe, kein
+Loginbeweis. Transport255 bleibt generischerExit. VorhandeneRemoteprüfungen
+melden stattdessen festeExits81–90; nurbei leerenbeidenStreams auf
+REMOTE_REPORTED_Kategorien abgebildet, nicht als unabhängigeUrsachen gewertet.
+Keine Guards/Commands/Pin-/Deadline-/Output-/Cleanup-/Credentialgrenzen gelockert.
+Keine Pfadsuche oder /home/www/public als SSHnamespace bewiesen.
+Remotehash nun1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58.
+
+**Tests:**121/121 lokale synthetischeTestsPASS(4neueGruppen), shellsyntaxPASS.
+FiktiverPythonprozess stattSSH prüft Remotecodes/255/Unknown/Streamkontamination,
+falscheSettings stoppenvorRunner, Stage-/Secret-/Exceptioncodeleckabwehr.
+Alte Erfolgspfad/Hostpin/strictstderr/Bounds/Timeout/Askpass/NoPHP unverändert.
+SeparaterReviewer zur tatsächlichenDiffnachprüfung beauftragt; kein Approval
+vorweggenommen. Implementierung/Dokukandidat mit SkipCI auf PR32 publiziert,
+neueSHA muss eigensreviewt/Contextgepinnt werden. Keine automatischeProvider-CI.
+
+**Nächste:** nach akzeptiertemReview nur Contextrevision/ApprovedSHA/ScriptHash/
+echteReviewreferenz anpassen, Secrets/Root unverändert; dann EINENEUE metadata-
+Pipeline mit verpflichtender aktueller kontextfreier Offlineprüfung vorApproval.
+Kein alterJob47Retry, keine Sicherheitsregeln zumGrünmachen ändern.
+CP5 unverändert8/10, #8/#10offen; kein tatsächlichererfolgreicherMetadatenbeleg.
+V1 offen62/71historisch,M0–M7 0/8,P4 0/4,R0/18,PR32Draft,alpha.2zuletztbelegt;
+keineBackup/Deploy/Merge/Kauf/Dreamloud-Aktion.
