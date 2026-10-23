@@ -1526,3 +1526,16 @@ Präzisierung im JSON: zuletzt einzeln gelesene Provider-Testzahl bleibt117
 121 sind Vorgänger-Lokal-/Reviewtests,125 aktuelle unabhängige Lokaltests.
 Keine neue Provider-CI behauptet. Nächste Benutzeraktion drei Contextstellen
 wie Operatorguide, CP5 unverändert8/10; alle übrigen V1-Zähler unverändert.
+
+
+## 2026-10-23, Europe/Berlin — Betreiber benötigt konkrete Context-Schritte
+**Auftrag:** genaue nächste Handlung erklären. Keine neue technische Ausführung.
+Aktueller Sourcekandidat f5e35ea36b192288920558b783fee2c46c854c18,
+125 lokale/unabhängige Tests, Review #27/6359237075, neue Providerprüfung offen.
+Anweisung präzisiert: vorhandenen MetadataContext öffnen, vollständige bisherige
+Expression durch gleich restriktive neue VollSHA-Expression ersetzen;
+PGP05_APPROVED_SHA und PGP05_METADATA_REVIEW_REF aktualisieren. Keine neuen
+Credentials, keine Remotehashänderung. Danach maskierte Übersicht/Expression
+zur Prüfung zeigen; noch kein vorgezogenes Approval. Keine Context-/Liveaktion
+durch Assistenten. CP5 unverändert8/10,#8/#10offen; V1 offen62/71historisch,
+M0–M7 0/8,P4 0/4,R0/18,PR32Draft,alpha.2zuletztbelegt. Kein Backup/Deploy/Merge/Kauf.
