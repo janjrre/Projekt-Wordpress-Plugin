@@ -1392,3 +1392,33 @@ V1 offen62/71historisch,M0–M7 0/8,P4 0/4,R0/18,PR32Draft,alpha.2zuletztbelegt;
 keineBackup/Deploy/Merge/Kauf/Dreamloud-Aktion.
 
 **Nachprüfung:** SeparaterPrüfer bestätigte lokalenDiff/121Tests, danach tatsächliche publizierteSHA b31e6cc... und identischeSource/Test/Configblobs; APPROVED im exaktgleichenScope. RealerReviewbeleg #27 issuecomment6358998616, keine menschlicheApprovalbehauptung. AlteContextpins nicht geändert, geplanter neuerVersuch benötigt Betreiberupdate+neueProviderOfflineprüfung. Kein Ereignis aus neuenDiagnosecodes rückwirkendJob47 zugeschrieben.
+
+
+## 2026-10-23, Europe/Berlin — Diagnosekandidat im Metadata-Context nachgepinnt
+
+**Eingang:** BetreiberScreenshot image(20261023-063748).png lokal gelesen,
+nicht verändert/öffentlich kopiert; ContextID/privateSuffixe nicht dokumentiert.
+W0/O01/O03,#27/Draft32. Richtiger separaterMetadataContext mit9Feldern,
+Projectrestriction unverändertnurProjekt-Wordpress-Plugin. Gespeicherte
+Expression bindet vollständige neueSHA b31e6cc0684593cca63d493ba0f56dd562e11f53,
+richtigenOwner/Repo/Featurebranch, notSSH und notapi-Konfig. Drei geänderte
+Variablen(APPROVED_SHA,REMOTE_SHA256,REVIEW_REF) haben passende sichtbare
+Konstantensuffixe und neue Änderungszeit; volle Werte bleiben maskiert.
+Keine unabhängige vollständigeWerte-/Mitglieder-/APIprüfung behauptet.
+
+**GitHub:** PRHEAD exaktb31e6cc..., Draft. NeueSHAStatuspending/0Statuses,
+also nochkeine ProviderCI oder neue Live-/Diagnoseausführung. DocsHEAD
+af72e7d8fe7db38a3be56dbd3f5cc5e82f34612b unverändert. AkzeptiertesReview
+#27/6358998616 und121lokaleTests weiter gültig.
+
+**Nächste tatsächliche Benutzeraktion:** eine NEUE Pipeline auf Featurebranch
+feat/pgp05-readonly-ssh-metadata-check-20261021, pgp05_ssh_probe=metadata.
+NeueSHA mussb31e6cc...sein. Auf aktuellen Offlineerfolg und wartendes
+approve-pgp05-metadata warten, Überblick/Link vorApproval zeigen.
+KeinRerun47/keinaltesSHA/nichtvorabapproven. Danach nurfesterDiagnosticScope
+gemäßReview; privateQuelle bleibtunverändert.
+
+**Stand:** Repin-UI-Unterbeleg erledigt, Code unverändert/keine neuenlokalenTests
+oder Provideraktionen durchAssistent. CP5weiter8/10,#8/#10offen.
+KeineSecrets gelesen, keinSSH/Backup/Deploy/Merge/Kauf; productioncapturefalse.
+V1offen62/71historisch,M0–M7 0/8,P4 0/4,R0/18,Livealpha.2zuletztbelegt.

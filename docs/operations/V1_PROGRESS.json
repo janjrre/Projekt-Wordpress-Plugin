@@ -225,7 +225,7 @@
         "independent_security_signoff": true,
         "temporary_contexts_configured": true,
         "production_capture_allowed": false,
-        "next": "Operator updates exact expressionSHA and APPROVED_SHA to reviewed b31e6cc, remotehash andreviewref only; keepprivateidentity unchanged. Newmetadata pipeline with actualnewSHAofflinepass beforemanualapproval; nooldjobrerun.",
+        "next": "Operator starts one NEW featurebranch metadata pipeline expected b31e6cc; wait for exactSHA offline pass and pending approve-pgp05-metadata, supply graph before approval; do not rerun old job47.",
         "note": "Job47genericrefusal doesn't establish authstage/cause. Newstatic diagnostics reviewed121localtests, no providerCI claimed for b31. Prior117provider platform/evidence retained separately. CP5 8/10,8and10open.",
         "provider_ci_url": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/44",
         "hostkey_candidate_matches_provider": true,
@@ -280,10 +280,13 @@
         "metadata_failure_reason": "generic REFUSEDexit78, stage unknown",
         "ssh_authentication_outcome": "unknown on refusedjob47",
         "successful_authenticated_metadata_run_verified": false,
-        "metadata_context_requires_repin": true,
+        "metadata_context_requires_repin": false,
         "metadata_context_required_script_sha256": "1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58",
         "metadata_context_required_review_ref": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6358998616",
-        "refusal_diagnostic_guide": "docs/operations/PGP05_METADATA_REFUSAL_DIAGNOSTICS_20261023.md"
+        "refusal_diagnostic_guide": "docs/operations/PGP05_METADATA_REFUSAL_DIAGNOSTICS_20261023.md",
+        "metadata_context_restrictions_revision": "b31e6cc0684593cca63d493ba0f56dd562e11f53",
+        "metadata_context_diagnostic_repin_screenshot_verified": true,
+        "metadata_context_diagnostic_repin_provenance": "operator screenshot full expected expression plus matching masked suffixes/update timestamps of APPROVED_SHA, REMOTE_SHA256 and REVIEW_REF; full private values not read back"
       }
     },
     {
