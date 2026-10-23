@@ -1565,3 +1565,27 @@ vor manualapprove-pgp05-metadata. KeinRerun50/keinVorabapproval.
 Source/Context/Website nicht durchAssistent verändert. CP5 unverändert8/10,
 #8/#10offen,productioncapturefalse. V1offen62/71historisch,M0–M7 0/8,P4 0/4,
 R0/18,PR32Draft,Livealpha.2zuletztbelegt. KeinBackup/Deploy/Merge/Kauf.
+
+
+## 2026-10-23, Europe/Berlin — Pipeline541/Offline51 PASS, Freigabe wartet
+**Auftrag/Eingang:** BetreiberScreenshot image(20261023-071616).png auswerten.
+Lokales Bild zeigt richtigePipeline541/f5e35ea,pgp05-metadata-one-shot,
+Offlinejobgrün26s,approve-pgp05-metadata wartet,SSHjobnachgelagert blockiert.
+UnabhängigerGitHub-Abgleich bestätigt exakte volleSourceSHA
+f5e35ea36b192288920558b783fee2c46c854c18,PR32Draft/HEADgleich,
+Offline51success https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/51
+und Approvalpending im Workflow19ed1187-0f2c-46cf-849e-a2782daa1716.
+EinzelneProviderTestzahl nichtausScreenshotnachgelesen;125lokale/unabhängige
+Tests bleiben separaterBeleg. NeuerSourceProviderOfflinegate jetztbestanden.
+
+**NächsteBenutzeraktion:** ausschließlichapprove-pgp05-metadata in dieser
+neuenPipeline541 freigeben; danach Ergebnisvonpgp05-reviewed-ssh-metadata
+zeigen. BeiREFUSED nurfeste stage/reason auswerten, keineRohlogs/Credentials.
+Ein begrenzter freigegebenerVersuch mit gleichemScriptHash/Contextscope;
+keinRerun50,keineZugang-/Root-/Rechteänderung. KeinLiveerfolgvorweggenommen.
+Assistent hat nichts gestarten/approvt,keineSecrets gelesen oderSitegeändert.
+
+**Dokumentation:** Log/JSON fortgeführt; Source unverändert. CP5weiter8/10,
+#8Account-/Namespace-/Domainbindung und#10 akzeptierterMetadatenlauf offen;
+productioncapturefalse. V1offen62/71historisch,M0–M7 0/8,P4 0/4,R0/18,
+PR32Draft,alpha.2zuletztbelegt. KeinBackup/Deploy/Merge/Kauf/Dreamloud.
