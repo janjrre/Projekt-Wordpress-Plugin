@@ -1964,3 +1964,20 @@ Status: Collectorport/ersterrealerOrgaVelaBackup-/Restorelaufweiteroffen,
 production_capture_allowed=false,PR32Draft/unmerged. KeineAusführungdieser
 späterenLive-/Capture-/Writer-/Restore-/ScheduleaktionenbeimPlanauftrag.
 V1offen62/71historisch,M0–M7 0/8,P4 0/4,R0/18,alpha.2zuletztbelegt.
+
+
+## 2026-10-23, Europe/Berlin — Auftrag: DreamloudCollector undBackupkette offlineübernehmen
+**Auftrag:** Betreiber"okay dann mache damit weiter" bestätigt Weiterarbeitsplan
+Schritte1/2: tatsächlichePortierungbestehenderDreamloud-Komponenten, synthetische
+IntegrationundseparatesSicherheitsreview,selbstständigbisBetreiberaktionnötig.
+Ausgang: CP510/10undPasswortcleanupbelegt,PR32Source8c4b445,Draft.
+NeueArbeitW0/O03/#27,keinCP5Wiederaufrollen. BasiskandidatOrgaPR31
+3ca6be16f4c9d8d17ebb8265bbc8e05bb3952c95enthältbereitsakzeptiertePGP04/05-
+Synthetik;metadatenspezifischerPR32bleibtunverändert. Plan: isolierten
+nachgelagertenDraftmitneuenportiertenKomponentenundaktuellerDokumentation.
+DreamloudQuellebackup/production-circleci07d4ffbcc3c6d70f0716fda070050d6532a69df6
+nurlesen,niealsTestumgebungverwenden. EigeneOrgaVelaQuell-/Empfänger-/Zielwerte;
+keineCredentialslesen/kopieren/setzen. KeineLive-/Backup-/Deploy-/Merge-/Schedule-
+oderKostenaktion. PrüfagentfürvombetreiberbestätigtesunabhängigesReview
+fortgesetztbeauftragt. Ergebnisse/FehlerwerdenvorEndecommittet,keineAbnahme
+vorweggenommen. V1-Zählerunverändert62/71historisch,M0–M7 0/8,P4 0/4,R0/18.
