@@ -1615,3 +1615,83 @@ CP5weiter8/10,#8authentisierteAccount/Namespace/Domainbindung,#10erfolgreicher
 akzeptierterMetadatenlauf offen;productioncapturefalse. V1offen62/71historisch,
 M0–M7 0/8,P4 0/4,R0/18,PR32Draft,alpha.2zuletztbelegt.
 KeinBackup/Deploy/Merge/Kauf/Dreamloudzugriff; keineCredentialsveröffentlicht.
+
+
+## 2026-10-23, Europe/Berlin — Betreiber verlangt tatsächliche Dreamloud-Übernahme
+**Auftrag:** SSH-Zweck erklären, unnötigen Sonderweg beenden, funktionierende
+Dreamloud-Backupimplementierung für OrgaVela verwenden. W0/O01/O03,#27/Draft32.
+Bisherige reineArchitekturentscheidung vom22.10. nicht als vollständigePortierung
+ausgeben. Keine neuenprivatenWerte/Liveaktionen/Käufe autorisationsfrei erfinden.
+
+**Verifizierte Vorlage:** Dreamloud backup/production-circleci weiterhin exakt
+07d4ffbcc3c6d70f0716fda070050d6532a69df6. Issue434 aktuell8/8abgenommen,
+Tagescapture1139/writer1141/immutableRelease421379530 dort dokumentiert;
+kein neuerDownload/Restore/Dreamloud-Serverzugriff durch diesen Auftrag.
+Tatsächlich gelesen .circleci/config.yml, scripts/probe_circleci_password_source.py,
+scripts/capture_quiesced_circleci.py. Dreamloud nutzt bereits Passwort-Askpass,
+Hostpin, getrennteCapture-/Writercontexts, Verschlüsselung/Readback/Restore.
+SSH ist der dort verwendete Servertransport, kein zusätzlichesOrgaVelaProdukt.
+Der OrgaVela-Sonderwrapper/env+stdin ist keine allgemeineBackupvorbedingung.
+
+**Tatsächliche Änderung:** InitialeSSH-Metadatenübertragung folgt jetzt Dreamlouds
+festem direktemSSH-command statt extraabsolutemenv-/bin/sh-Wrapper+stdin.
+Nur validierte/gequoteteRoot/Userparameter vor unverändertem festemMetadataBody;
+kein beliebigerBefehl,keinePfadsuche/PHP/SQL/Writes. PrivateArgumente nichtloggen.
+ProviderverwaltetePOSIX-Shell und Umgebungsverhalten sind dabei ausdrücklich
+Teil desselbenInfrastrukturvertrauens; inkompatibleShell verweigert,keinFallback.
+Passwortisolation/Pin/Context-/Sourcebindung/Einversuch/Bounds/strikterErfolg
+bleiben. BodySHA1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58
+unverändert. KeineBehauptung,Wrapper sei bewieseneUrsache derJobs50/53.
+
+**Tests:**127/127lokaleSynthetikPASS. NeueTests führen den tatsächlichen
+konstruiertenBefehl mitfiktiverWPForm lokal aus; korrekterErfolg,Configmode,
+zusätzlichesMUfile/fehlendeDatei verweigert; Shellfragmentinjektion abgelehnt.
+SeparatesReview der realenImplementierung vorFreigabe; keinProviderlauf behauptet.
+
+**Grenze:** Dies portiert dasTransportmuster, nichtschon den gesamtenProducer.
+WeitereArbeit soll bestehendeDreamloud-Capture/Writer/Restorekomponenten mit
+eigenemOrgaVelaKey/Quellscope/Tabellenerwartung/Zielrepo adaptieren; keine
+Neuerfindung/WeitergabevonDreamloud-Zugängen. Ein spätererProduktionscollector
+mitWartung/DBsperren gehört nichtinaktuellenReadonly-Metadatenlauf.
+CP5weiter8/10,#8/#10offen,productioncapturefalse. V1offen62/71historisch,
+M0–M7 0/8,P4 0/4,R0/18,PR32Draft,alpha.2zuletztbelegt. KeinBackup/Deploy/Merge.
+
+
+## 2026-10-23 — tatsächliche Dreamloud-Transportübernahme statt weiterer Sonderdiagnose
+Der Betreiber verlangt erneut die vorhandene funktionierendeDreamloud-Lösung.
+Die frühere reineÜbernahmeplanung wird nicht als fertigePortierung gewertet.
+AktuelleVorlage backup/production-circleci07d4ffbcc3c6d70f0716fda070050d6532a69df6;
+DreamloudIssue434 weist jetzt8/8Abnahme und Tagescapture1139/writer1141 aus.
+DortigerSSH-Transport wird benötigt, um QuellDateien/DB aufIONOSzu sichern.
+EigeneOrgaVelaStartup-/Wrapper-/Diagnosekonstruktion ist keineallgemeinePflicht.
+
+**Umgesetzt auf Source 8c4b445ea5dced969f63b0f30e0e371342f64680:** initiale festeMetadata-Anweisung direkt als
+SSH-command wieDreamloudsprobe_circleci_password_source.py; kein extraabsolutes
+env-/bin/sh-Wrapper, kein stdinInterpreter. Validierte/gequoteteParameter vor
+identischemMetadataBody. TatsächlicheSammlung/Guards/SSHoptionen unverändert.
+PrivateSSHargv/Root/User undRohoutput nichtloggen. ManagedPOSIX-Shell/Environment
+explizitvertrauenswürdigangenommen; inkompatibleShell verweigert ohneFallback.
+Dies ist keineBeobachtungallerStartuphooks und keinBeweis fürhistorischeFehlerursache.
+BodyHash1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58
+bleibt; gesamteBuilder/Transportidentität ist durch neueSourceSHA gebunden.
+
+**127/127lokaleTests PASS, separatwiederholt; exaktepublizierteBlobs geprüft,
+APPROVED.** [Review](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6359766814),
+[Implementierung/Abgrenzung](PGP05_DREAMLOUD_TRANSPORT_REUSE_20261023.md).
+NeueSourcehatnochkeineProviderCI und keinenLiveerfolg. Die historischgrüne
+Offline51prüfung gilt fürf5e35ea, nichtfürneueSHA. KeineautomatischePipeline.
+
+**WeitererÜbernahmepfad:** vorhandeneCapture/PublicKeyVerschlüsselung/separater
+CiphertextWriter/ImmutableReadbacks/isolierterWPMariaDBRestore ausDreamloud
+adaptieren; bestehendeOrgaVelaPGP04-Nachweise weiterverwenden. EigeneQuellidentität,
+Tabellenerwartungen,PGPonyEmpfänger und orgavela-backups bleiben getrennt.
+VollständigerProduktionscollector ist nochNICHTportiert/ausgeführt. PHP/DBlocks/
+Wartung erst in späterer getrenntgegateterCapturephase, nicht im aktuellen
+readonlyCheck. KeineneuenpauschalenStartup-Anforderungen/Blindrerruns.
+
+NächsterkonkreterTest benötigtContextrevision+PGP05_APPROVED_SHA auf neueSHA
+und PGP05_METADATA_REVIEW_REF aufobigesReview; RemoteBodyHash/privateWertegleich.
+Dann neueexakteFeaturebranch-MetadataPipeline, aktuelleOfflineprüfung vorApproval.
+CP5unverändert8/10,#8/#10offen,productioncapturefalse. V1offen62/71historisch,
+M0–M7 0/8,P4 0/4,R0/18;PR32Draft,alpha.2zuletztbelegt. KeineDreamloudÄnderung,
+keineSite-/Backup-/Deploy-/Merge-/Kostenaktion.

@@ -316,3 +316,30 @@ Bei erneutem Abbruch nur festes Schema/stage/reason senden; kein rohes SSH-Log.
 SSH_REPORTED_AUTH_REFUSED beweist kein falsches Passwort. Bei generischem
 oder widersprüchlichem Ergebnis stoppen statt Zugang/Pfad/Guards zu ändern.
 CP5weiter8/10,#8/#10offen; keineProduktivbackupfreigabe.
+
+
+## Aktuell: Dreamloud-Transportmuster übernommen (23.10.2026)
+Ersetzt frühereSource-/Reviewwerte fürden nächstenTest. Keinefingierte
+BehebungdesPROCESS_EXIT; tatsächlicherNeutest stehtaus. Drei Stellen im
+bestehendenContextorgavela-pgp05-reviewed-metadata ändern:
+- Expressionrevision und PGP05_APPROVED_SHA: `8c4b445ea5dced969f63b0f30e0e371342f64680`.
+- PGP05_METADATA_REVIEW_REF: `https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6359766814`.
+
+GesamteExpression:
+```text
+pipeline.git.repo_owner == "janjrre"
+and pipeline.git.repo_name == "Projekt-Wordpress-Plugin"
+and pipeline.git.branch == "feat/pgp05-readonly-ssh-metadata-check-20261021"
+and pipeline.git.revision == "8c4b445ea5dced969f63b0f30e0e371342f64680"
+and not job.ssh.enabled
+and not (pipeline.config_source starts-with "api")
+```
+RemoteBodyHashbleibt1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58.
+AlleprivatenWerteunverändert. Kein neuerContext/Passwortwechsel nötig.
+Erst neueexakteBranchpipeline mitpgp05_ssh_probe=metadata starten; neuer
+OfflinejobmussPASSsein und richtigeSHA/Workflowgraph vorApproval prüfen.
+NichtJobs50/53wiederholen. NurfesteReceipt/Diagnoseöffentlich, keineSSHargv/
+Rohlogs oderunmaskierteContextwerte. NoPHP/WP/SQL/Sitewrites/Backups unverändert.
+Die gesendeteAnweisung läuft direktinprovidermanagedPOSIXshell/environment;
+beiUnverträglichkeitstoppen,keinFallback. WeitereCapture-/Restoreübernahme
+bleibt getrennteArbeit; kein vollständigerBackupportbehauptet.
