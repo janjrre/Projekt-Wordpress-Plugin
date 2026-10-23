@@ -1320,3 +1320,37 @@ erfasst. Keine neuePipeline/Approval/Login/Backup/Deploy/Merge/Kauf durchAssiste
 CP5 unverändert8/10 (80%), #8 authentisierte Account/Namespace/Domainbindung und
 #10 tatsächlicher akzeptierterMetadatenlauf offen. V1 offen unverändert62/71
 historisch,M0–M7 0/8,P4 0/4,R0/18; alpha.2 zuletztbelegt, heute nicht neuabgefragt.
+
+
+## 2026-10-23, Europe/Berlin — Metadatenworkflow bereit; konkrete Approvalanweisung
+
+**Eingang:** Betreiber liefert CircleCI-Link zu Workflow
+fdf4dbd8-1501-40fa-94f7-41cdabfa0075 sowie Screenshot. Bild zeigt Dreamloud-
+GitHub-Rulesets, nicht OrgaVela-Pipeline. Keine Dreamloud-Aktion/Regeländerung
+daraus abgeleitet; Bild nicht veröffentlicht oder geändert.
+
+**Unabhängige Verifikation:** GitHub CombinedStatus für
+c952645000b2954c04f1c0446c333392048065e6 zeigt ci/circleci:pgp05-offline-security
+success→https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/45 und
+ci/circleci:pgp05-metadata-one-shot/approve-pgp05-metadata pending,
+targetWorkflowID exakt wie Betreiberlink. PR32HEAD weiterhin c952645...,Draft.
+Damit tatsächlicher neuer Offlineerfolg und wartender geeigneter Approval
+belegt; kein zusätzlicherScreenshot nötig. VollständigerJobGraph nicht über
+CircleCI-API gelesen, Abfolge aus exakt geprüftemConfigblob+GitHubStatuses.
+DocsHEAD77d4df9... unverändert.
+
+**Konkrete zulässige Benutzeraktion:** Nur wartendes approve-pgp05-metadata
+dieses Workflows über Approve job freigeben. Folgender
+pgp05-reviewed-ssh-metadata führt festes freigegebenes stdin-Skript/Hostpin/
+AccountRootMetadaten aus; keine angeforderten PHP/WP/SQL/Inhaltsreads/Writes/
+Backups/Deploys. Vorliegende ausdrückliche Readonly-Freigabe, neun privat
+hinterlegteFelder und Reviewrevision decken genau diesen Schritt.
+Assistent hat Approval nicht geklickt, keine Pipeline gestartet oder Secrets
+gelesen. Ergebnis aus folgendemMetadatenjob senden; beiREFUSED stoppen und
+keine Wiederholung/Scope-/Permissionänderung zum Grünmachen.
+
+**Status:** Noch kein erfolgreicher authentisierter Lauf/Receipt. CP5 bleibt8/10,
+#8 KontoNamespaceDomain und #10 tatsächlicher akzeptierterMetadatenlauf offen;
+productioncapture=false. V1 unverändert offen62/71 historisch,M0–M7 0/8,
+P4 0/4,R0/18,PR32Draft/ungemergt,Livealpha.2 zuletztbelegt. KeineKosten/
+Produktionsbackup-/Deploy-/Merge-/Dreamloud-Aktion durchAssistent.

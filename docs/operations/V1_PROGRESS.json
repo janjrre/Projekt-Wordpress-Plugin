@@ -225,7 +225,7 @@
         "independent_security_signoff": true,
         "temporary_contexts_configured": true,
         "production_capture_allowed": false,
-        "next": "Operator starts one exact-c952645 featurebranch pipeline with pgp05_ssh_probe=metadata; wait for offline success and approve-pgp05-metadata; inspect graph/SHA before approval, no rerun on refusal.",
+        "next": "Operator approves only approve-pgp05-metadata in verified workflow fdf4dbd8-1501-40fa-94f7-41cdabfa0075, then supplies sanitized result from pgp05-reviewed-ssh-metadata; stop on REFUSED, no rerun or secret disclosure.",
         "note": "Reviewer explicitly revised disproportionate mandatory provider-letter requirement. Criterion6 accepted boundedcommand under normal managed-provider trust; no hook inspection inferred. CP5 8/10 accepted; criteria8 and10 open; no login/capture yet.",
         "provider_ci_url": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/44",
         "hostkey_candidate_matches_provider": true,
@@ -269,7 +269,11 @@
         "metadata_context_restrictions_provenance": "operator supplied screenshot: empty variables, correct context name, project-only and full expected repo/branch/revision expression with SSH/API-config exclusions; no API/membership audit",
         "metadata_context_credentials_configuration_provenance": "owner confirmed all9 fields entered; screenshot verifies names/presence only, values masked and not fully read back",
         "metadata_context_expected_variable_names_present": 9,
-        "metadata_context_full_values_independently_verified": false
+        "metadata_context_full_values_independently_verified": false,
+        "metadata_workflow_url": "https://app.circleci.com/workflow/fdf4dbd8-1501-40fa-94f7-41cdabfa0075",
+        "metadata_offline_job_url": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/45",
+        "metadata_offline_job_verified": true,
+        "metadata_approval_status": "pending independently verified GitHub exactSHA status"
       }
     },
     {
