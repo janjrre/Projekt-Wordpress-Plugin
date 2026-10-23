@@ -224,8 +224,8 @@
         "independent_security_signoff": true,
         "temporary_contexts_configured": true,
         "production_capture_allowed": false,
-        "next": "Owner views current orgavela.com IONOS Verwendung/Ziel; follow linked target installation to its configured root if needed and compare privately with already successful pinned SSH root. One explicit provider relation chain completes criterion8; no furtherSSH/PHP needed. Then cleanup temporary metadata credential context and continue gated Dreamloud capture/writer/restore adaptation.",
-        "note": "CP5 9/10: actual reviewed metadata56 PASS, independently accepted criterion10. Only criterion8 domain-to-installation/root relation missing; its account/namespace portion passed. Probe's domain/startup/serverreadonly/database/capture/restore flags remainfalse.",
+        "next": "Owner opens IONOS Websites/WordPress > OrgaVela project details showing orgavela.com assigned to that specific project/installation. Correlate with existing same-project Explorer/root evidence; no repeated root probe if identity chain clear. No DNS/usage/settings change or new SSH run.",
+        "note": "CP5 9/10. Authenticated metadata56 accepted. Current domain->managedWordPress service now UI-verified, exact installation/root relation remains last missing subpart of criterion8. Separate reviewer inspected both images. Do not treat shared DNS as root proof.",
         "provider_ci_url": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/54",
         "hostkey_candidate_matches_provider": true,
         "hostkey_candidate_authenticated": true,
@@ -300,7 +300,9 @@
         "criterion8_account_namespace_passed": true,
         "criterion8_domain_binding_verified": false,
         "domain_vhost_binding_proven_by_probe": false,
-        "metadata_context_cleanup_verified": false
+        "metadata_context_cleanup_verified": false,
+        "criterion8_domain_managed_wordpress_service_verified": true,
+        "criterion8_domain_service_evidence_provenance": "operator screenshots20261023-074717 and074753: orgavela.com IONOSmanaged WordPress target plus @/www WordPressservice DNS. Specific installation/root not displayed; DNS is not root proof."
       }
     },
     {

@@ -42,3 +42,30 @@ DB-Dump,Restore,Deploy,Merge,ScheduleroderKauf. Dreamloudunverändert.
 V1offen62/71historisch,M0–M7 0/8,P4 0/4,R0/18,PR32Draft,
 alpha.2zuletztbelegt. NachCP5: tatsächlicheCapture-/Writer-/Restoreübernahme
 mitgetrenntenGatesweiterbearbeiten; keinProductionCollectorportvorgegeben.
+
+
+## 2026-10-23, Europe/Berlin — aktuelle Domain zeigt WordPress-Service, Installationskette offen
+**Auftrag/Eingang:** Betreiberbilderimage(20261023-074717).png und074753.png
+prüfen/fortsetzen. Beide lokal gelesen,unverändert/nichtöffentlichkopiert.
+ErstesBild zeigtorgavela.com,VerwendungsartIONOSverwaltet,ZielWordPress,
+passendenHostingprodukttyp. ZweitesBild zeigt@/wwwRecords demWordPressservice
+zugeordnet. KonkreteIP-/TXT-/Vertragskennungenöffentlichnichtnotiert.
+DasbelegtaktuelleDomain->WordPressserviceZuordnung,nichtausgewählteInstallation
+oderFilesystemroot. DNS kann fehlendePfadrelationnichtbeweisen.
+
+**Unabhängig:** beauftragterseparaterPrüferhatbeideOriginalbilder selbstgelesen
+undbestätigtdieseGrenze. BereitsvorhandeneprojektbezogeneExplorer-/Root- und
+SiteHealthbelegeweiterverwenden,nichtnochmalSSHoderRootprüfungfordern.
+NurfehlenderVerknüpfungspunkt: IONOSWebsites/WordPress/OrgaVelaProjektdetails,
+woorgavela.com diesemkonkretenProjekt/Installationzugewiesenist. Dieselbe
+ProjektidentitätmitvorhandenerExplorerRootEvidenzverbinden. KeinDNS-/Domain-
+oderWPsettingändern,keinProviderbrief/Supportcase/neuerSSHlaufnötig.
+
+**GitHub-Abgleich:** volleSource8c4b445ea5dced969f63b0f30e0e371342f64680
+unverändertmitOffline54/Approval/Metadata56alle success. KeineerneutenTests,
+Code/Context/Dreamloud/SiteänderungenoderPipelineaktionen.
+**CP5weiter9/10(90%),genau#8teilweiseoffen**; #10bleibtakzeptiert,
+productioncapturefalse. V1offen62/71historisch,M0–M7 0/8,P4 0/4,R0/18,
+PR32Draft,alpha.2zuletztbelegt. NächsteBetreiberaktionnurProjektzuordnungzeigen.
+KeinBackup/Deploy/Merge/Kauf; CleanupMetadataContextnachCheckpointabschluss
+weiteroffen,nichtfälschlichalsgeschehenausgegeben.
