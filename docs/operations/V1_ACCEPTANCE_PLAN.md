@@ -896,3 +896,39 @@ Gesamtissue27bleibtoffen,keinProduktivbackup/Restore/Deploy/Merge/Kauf.
 
 V1unverändertoffen:62/71historischeCodingpakete,M0–M7 0/8,P4 0/4,R0/18,
 alpha.2zuletztbelegt. CP5AbnahmeerhöhtkeinenanderenAbnahmezähler.
+
+
+## 2026-10-23 — Weiterarbeitsplan nach CP5-Abschluss (W0/O03, #27)
+Checkpoint5bleibterledigt10/10inklusiveMetadata-Passwortbereinigung. Jetzt
+bestehendeDreamloudBackupimplementierungübernehmen,keineerneuteIdentitätsrunde.
+1. Offlineportierung: vorhandenenkonsistentenDreamloudWordPress/MariaDBCollector,
+PublicKey-OpenPGPVerschlüsselung,getrenntenCiphertextWriter/Readback/Restore
+aufOrgaVelaadaptieren. EigenerRoot/Tabellenscope/PGPonyPublicRecipient/privatesZiel;
+keineDreamloudCredentialsübernehmen. BereitsakzeptiertePGP04Synthetikverwenden.
+Ergebnis: zusammenhängenderprüfbarerDraftmitklarerCapture-/Writergrenze.
+2. Lokale/synthetischeIntegrationundunabhängigesSicherheitsreview: Snapshotkohärenz,
+Fehlerabbruch/Bereinigung,keineKlartextlogs/-Artifacts,korrekterEmpfänger,
+Ciphertext-onlyÜbergabeundvollständigeDigest-/ByteReadbacksprüfen. Aktuelle
+SourceCIbelegen; ÄnderungenzuerstbündelnvorneuemContextsetup,keineScheinabnahme.
+3. EinmaligeBetriebseinrichtung/ersterrealerTest: konkretgeprüfteSource-/Writer-
+ContextsmitminimalenRechtenfürOrgaVela,WertevomBetreiberdirekteingeben;
+Capture/WartungsfensterundCiphertextveröffentlichungalsseparateFolgegates
+vorersterEchtverarbeitungfreigeben. KeinebestehendenDeployzugängeändern.
+4. TatsächlicheSicherungabnehmen: WordPressDateien+MariaDBkonsistentaufnehmen,
+OpenPGPverschlüsseln,imprivatenorgavela-backupsimmutableveröffentlichen,
+vollständigzurücklesen/hashprüfen. EigeneBackupdatenisoliertinWordPress+MariaDB
+wiederherstellen,Funktions-/DatenintegritätundPGPonyRecoverybelegen; niemals
+ProduktivseiteüberschreibenoderprivatenSchlüsselöffentlichteilen.
+5. ErstnachBackup-/RestoreabnahmeBetriebaktivieren: kostenloserZeitplan,
+Fehlermeldung/unabhängigerFreshnesscheck,RetentionundQuota/Kostenkontrolle,
+Recovery-/Widerrufdokumentation. KeineautomatischeLöschungohnepassendeRegel.
+
+**Aufgabenteilung:** Schritte1/2übernimmtAssistentautonommitGitHubDoku/Code/
+Tests; BetreibermussfürdirekteSecretablageundCircleCIUI-FreigabenbzwOffline-
+PGPonyRecoveryerstbeimkonkretenfertiggeprüftenPunktmitwirken. Aktuellkeine
+BenutzeraktionausdiesemPlanerforderlich. PlanbenenntbereitsbestehendePGP05-
+Folgearbeiten,keineneuenMeilensteineoderunbelegtenFortschrittsprozente.
+Status: Collectorport/ersterrealerOrgaVelaBackup-/Restorelaufweiteroffen,
+production_capture_allowed=false,PR32Draft/unmerged. KeineAusführungdieser
+späterenLive-/Capture-/Writer-/Restore-/ScheduleaktionenbeimPlanauftrag.
+V1offen62/71historisch,M0–M7 0/8,P4 0/4,R0/18,alpha.2zuletztbelegt.
