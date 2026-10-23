@@ -206,3 +206,37 @@ im präzisen obigen Scope ERFÜLLT. #8 tatsächliche authentisierte Account-/
 Namespace-/Domainbindung und #10 akzeptierter realer Metadatenlauf OFFEN.
 Reviewabschluss ist weder durchgeführter Login noch Produktionsbackupfreigabe.
 V1-Zähler unverändert62/71 historisch,M0–M7 0/8,P4 0/4,R0/18.
+
+
+## Independent exact-source review — 2026-10-23
+**APPROVED b31e6cc0684593cca63d493ba0f56dd562e11f53** for same bounded scope/
+normal managed IONOS trust. Separate reviewer fetched matching published blobs
+probe f0634f79aba1ddd8611e1feccfbdc0e9a68c3a86,
+tests d2046853f577f6a12b2a9ccac56bbafeedc265e0,
+unchanged config2085eb8e2296df0fa97908564de1faffe0931a1c and read guide.
+Independent **121/121 local tests PASS**. Remote script normalized old exits
+matches prior exact commands/checks/order; SSH args unchanged.
+Review reference:
+https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6358998616
+No provider test or authentication claim for new source.
+
+
+## 2026-10-23 — Metadatenjob47 verweigert; feste redigierte Diagnose freigegeben
+Job47 auf c952645... endet REFUSEDexit78; GitHub bestätigt failure, Offline45/
+Approvalsuccess. Ursache und erreichteAuthentisierungsstufe unbekannt.
+KeinBlindretry/Pfad-/Permissionwechsel. Code **b31e6cc0684593cca63d493ba0f56dd562e11f53**
+ergänzt nur feste lokaleStufen/Remote-reportedExitkategorien ohne Rohoutput.
+KeinGuard/Command/Pin/Timeout/Cleanup gelockert, keinPHP/WP/SQL/Writes/Discovery.
+**121/121 lokaleTests**, separate unabhängige Nachprüfung/exakteBlobprüfungPASS;
+neueSHAProviderprüfung nochOFFEN. ScriptHash
+1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58.
+[Diagnose-/Wiederanlaufplan](../operations/PGP05_METADATA_REFUSAL_DIAGNOSTICS_20261023.md).
+[Akzeptiertes unabhängiges Review](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6358998616).
+
+NächsterBetreiberpunkt: nur exakteContextrevision+PGP05_APPROVED_SHA auf neueSHA,
+PGP05_REMOTE_SHA256 auf neuenHash, PGP05_METADATA_REVIEW_REF auf neuesReview
+aktualisieren. Host/User/Passwort/Root unverändert. NeueMetadata-Pipeline, erst
+aktuellerOfflineerfolg und richtigeExpression/Graph vor erneutemApproval prüfen.
+KeinAssistenten-Livejob/Contextmutation/Backup/Deploy/Merge/Kauf.
+CP5 weiter8/10,#8/#10offen; productioncapturefalse. V1 unverändert62/71historisch,
+M0–M7 0/8,P4 0/4,R0/18; PR32Draft,alpha.2zuletztbelegt.

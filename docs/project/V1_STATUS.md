@@ -442,3 +442,24 @@ Reviewabschluss ist weder durchgeführter Login noch Produktionsbackupfreigabe.
 V1-Zähler unverändert62/71 historisch,M0–M7 0/8,P4 0/4,R0/18.
 
 [Dreamloud-Wiederverwendung und nächster Schritt](../operations/PGP05_DREAMLOUD_REUSE_AND_BOUNDED_METADATA_DECISION_20261022.md).
+
+
+## 2026-10-23 — Metadatenjob47 verweigert; feste redigierte Diagnose freigegeben
+Job47 auf c952645... endet REFUSEDexit78; GitHub bestätigt failure, Offline45/
+Approvalsuccess. Ursache und erreichteAuthentisierungsstufe unbekannt.
+KeinBlindretry/Pfad-/Permissionwechsel. Code **b31e6cc0684593cca63d493ba0f56dd562e11f53**
+ergänzt nur feste lokaleStufen/Remote-reportedExitkategorien ohne Rohoutput.
+KeinGuard/Command/Pin/Timeout/Cleanup gelockert, keinPHP/WP/SQL/Writes/Discovery.
+**121/121 lokaleTests**, separate unabhängige Nachprüfung/exakteBlobprüfungPASS;
+neueSHAProviderprüfung nochOFFEN. ScriptHash
+1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58.
+[Diagnose-/Wiederanlaufplan](../operations/PGP05_METADATA_REFUSAL_DIAGNOSTICS_20261023.md).
+[Akzeptiertes unabhängiges Review](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6358998616).
+
+NächsterBetreiberpunkt: nur exakteContextrevision+PGP05_APPROVED_SHA auf neueSHA,
+PGP05_REMOTE_SHA256 auf neuenHash, PGP05_METADATA_REVIEW_REF auf neuesReview
+aktualisieren. Host/User/Passwort/Root unverändert. NeueMetadata-Pipeline, erst
+aktuellerOfflineerfolg und richtigeExpression/Graph vor erneutemApproval prüfen.
+KeinAssistenten-Livejob/Contextmutation/Backup/Deploy/Merge/Kauf.
+CP5 weiter8/10,#8/#10offen; productioncapturefalse. V1 unverändert62/71historisch,
+M0–M7 0/8,P4 0/4,R0/18; PR32Draft,alpha.2zuletztbelegt.
