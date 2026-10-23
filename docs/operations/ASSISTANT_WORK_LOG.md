@@ -1422,3 +1422,27 @@ gemäßReview; privateQuelle bleibtunverändert.
 oder Provideraktionen durchAssistent. CP5weiter8/10,#8/#10offen.
 KeineSecrets gelesen, keinSSH/Backup/Deploy/Merge/Kauf; productioncapturefalse.
 V1offen62/71historisch,M0–M7 0/8,P4 0/4,R0/18,Livealpha.2zuletztbelegt.
+
+
+## 2026-10-23, Europe/Berlin — neue DiagnoseSHA: Offline48 PASS, Approval wartet
+
+**Eingang:** BetreiberScreenshot image(20261023-064222).png lokal visuell
+gelesen. Zeigt b31e6cc-Commit, richtigenMetadata-Workflow, Offlinejobgrün,
+Approvalwartend, Metadatenjobnochgesperrt. Detailkopf nochRunning (UI-Refresh-
+Zwischenstand); maßgeblicher unabhängigerGitHubStatus auf vollerSHA
+b31e6cc0684593cca63d493ba0f56dd562e11f53 bestätigt Offline48success und
+approve-pgp05-metadata pending→Workflowc2e5132f-384e-4afa-a17f-621eb3024890.
+PRHEADgleich/Draft. KeinEchtmetadatenerfolgbehauptet; neuerProviderOfflinejob
+belegt geändertenCandidate. Einzeltestzählung nicht ausScreenshotgelesen,
+121lokal/inunabhängigerReviewprüfung nachgewiesen.
+
+**Konkrete Benutzeraktion:** ausschließlich approve-pgp05-metadata im NEUEN
+Workflowfreigeben. Danach Ergebnis aus pgp05-reviewed-ssh-metadata senden;
+beiREFUSED nur feste Stage/Reason auswerten, keinRerun47/keinBlindRetry.
+Bisheriger Scope/approved script1906f7c.../genaueSHA/Contextbindings bestehen.
+Assistent hat nichts approvt/gestartet und keineCredentials gelesen.
+
+**Dokumentation/Status:** append-onlyLog/JSON auf separatemDocsbranch,
+Source unverändert. CP5weiter8/10,#8/#10offen,productioncapturefalse.
+V1offen62/71historisch,M0–M7 0/8,P4 0/4,R0/18,PR32Draft,Livealpha.2zuletztbelegt.
+KeinePHP/WP/SQL/Site-/Backup-/Deploy-/Merge-/Kosten-/Dreamloud-Aktion.
