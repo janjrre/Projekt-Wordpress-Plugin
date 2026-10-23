@@ -1539,3 +1539,29 @@ Credentials, keine Remotehashänderung. Danach maskierte Übersicht/Expression
 zur Prüfung zeigen; noch kein vorgezogenes Approval. Keine Context-/Liveaktion
 durch Assistenten. CP5 unverändert8/10,#8/#10offen; V1 offen62/71historisch,
 M0–M7 0/8,P4 0/4,R0/18,PR32Draft,alpha.2zuletztbelegt. Kein Backup/Deploy/Merge/Kauf.
+
+
+## 2026-10-23, Europe/Berlin — aktualisierter Metadata-Context screenshotgeprüft
+**Auftrag:** Betreiberbild image(20261023-070934).png prüfen und fortsetzen.
+W0/O01/O03,#27/Draft32. Lokales Bild gelesen, nicht verändert/publiziert.
+Richtiger Context,9maskierte Variablen vorhanden; APPROVED_SHA/REVIEW_REF
+sichtbare Suffixe und Änderungszeiten passen zum neuen freigegebenen Code
+f5e35ea36b192288920558b783fee2c46c854c18 und Review#27/6359237075.
+ScriptHash bleibt unverändert1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58.
+Vollständige gespeicherte Expression bindet richtigenOwner/Repo/Featurebranch/
+VollSHA mit notSSH/notapi-Konfig; Projectrestriction nur diesesRepository.
+Keine unabhängige Readbackprüfung vollständigermaskierterWerte/Mitglieder
+behauptet. KeineSecrets öffentlich protokolliert.
+
+**GitHub-Abgleich:** PR32HEAD exaktf5e35ea...,Draft; aktuelleSHApending/0Statuses.
+Also noch keineProviderprüfung/Metadatenausführung auf neuerSHA.125lokale und
+unabhängigeTests plus exakteSourcefreigabe bleiben separateNachweise.
+**Nächste echteBenutzeraktion:** NEUEPipeline auf
+feat/pgp05-readonly-ssh-metadata-check-20261021, pgp05_ssh_probe=metadata.
+Danach Workflowübersicht/Link zeigen; erstaktuellerOfflineerfolg/exakteSHA
+vor manualapprove-pgp05-metadata. KeinRerun50/keinVorabapproval.
+
+**Umsetzung:** append-onlyArbeitslog und JSON aufDokubranche aktualisiert;
+Source/Context/Website nicht durchAssistent verändert. CP5 unverändert8/10,
+#8/#10offen,productioncapturefalse. V1offen62/71historisch,M0–M7 0/8,P4 0/4,
+R0/18,PR32Draft,Livealpha.2zuletztbelegt. KeinBackup/Deploy/Merge/Kauf.
