@@ -1738,3 +1738,25 @@ undwartendesapprove-pgp05-metadata zeigen, nochkeineFreigabe. KeinRerun53.
 durchAssistent. CP5weiter8/10,#8/#10offen,productioncapturefalse. V1offen
 62/71historisch,M0–M7 0/8,P4 0/4,R0/18;PR32Draft,alpha.2zuletztbelegt.
 KeineSSH-/PHP-/SQL-/Backup-/Deploy-/Merge-/Kosten-/Dreamloudaktion.
+
+
+## 2026-10-23, Europe/Berlin — Dreamloud-Transport Pipeline542/Offline54 PASS
+**Auftrag/Eingang:** Screenshotimage(20261023-073732).png prüfen/fortsetzen.
+Zeigt neuePipeline542,Source8c4b445,richtigenmetadata-one-shotWorkflow,
+Offlinejobgrün4s,approve-pgp05-metadata wartet,SSHjobnachgelagert gesperrt.
+GitHub unabhängig: PR32Draft/volleHEAD8c4b445ea5dced969f63b0f30e0e371342f64680;
+Offline54success https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/54 ;
+Approvalpending Workflowb97d93e3-802e-466d-9124-89a73a553314.
+AktuelleSourceProviderOfflinegatebestanden; EinzeltestzahlnichtimBildgelesen,
+127lokale/separatwiederholteTests bleiben gesonderterBeleg. KeineLivebehauptung.
+
+**Nächste tatsächlicheBenutzeraktion:** ausschließlichapprove-pgp05-metadata
+in dieserneuenPipeline542 freigeben; danachResultatvonpgp05-reviewed-ssh-metadata
+zeigen. BeiREFUSEDnur festeStage/Reason,nichtRohlogs/Credentials. Einbestehender
+begrenztfreigegebenerVersuch,keinalterJob53rerun/keinZugang-/Root-/Rechtewechsel.
+AssistenthatkeinenWorkflowgestartet/approvt undkeineSecretsgelesen.
+
+**Dokumentation/Stand:** append-onlyLog/JSON,Sourcegleich. CP5weiter8/10,
+#8authentisierteAccount/Namespace/Domainbindung/#10akzeptierterMetadatenlauf
+offen,productioncapturefalse. V1offen62/71historisch,M0–M7 0/8,P4 0/4,R0/18,
+PR32Draft,Livealpha.2zuletztbelegt. KeinBackup/Deploy/Merge/Kauf/Dreamloudaktion.
