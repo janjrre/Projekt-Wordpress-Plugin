@@ -49,3 +49,28 @@ Gesamtissue27bleibtoffen,keinProduktivbackup/Restore/Deploy/Merge/Kauf.
 
 V1unverändertoffen:62/71historischeCodingpakete,M0–M7 0/8,P4 0/4,R0/18,
 alpha.2zuletztbelegt. CP5AbnahmeerhöhtkeinenanderenAbnahmezähler.
+
+
+## 2026-10-23, Europe/Berlin — temporäres Metadata-Passwort entfernt, CP5 fertig
+**Auftrag/Eingang:** Screenshotimage(20261023-081238).png alsBereinigungsnachweis
+prüfen. Bildlokalgelesen,nichtverändert/öffentlichkopiert. RichtigerContext
+orgavela-pgp05-reviewed-metadata enthältjetzt8maskierteVariablen;
+PGP05_SSH_PASSWORDfehltundIONOSunabhängigeCircleCI-UIMeldungbestätigt
+explizit"PGP05_SSH_PASSWORD was removed". Projekt-/exakteSourceExpression
+weiter8c4b445ea5dced969f63b0f30e0e371342f64680+SSHrerrun/APIconfigausschluss.
+DasbelegtUIBereinigungdiesesFeldes,nichtAPIprüfung/Accountrotationoder
+andereContexts. KeinePasswortwertegelesen/gespeichert/veröffentlicht.
+OhnePflichtfeldverweigertaktuellgeprüfterCodevorNetzwerk; keinNegativ-Livejob
+zumNachtesten gestartet. KeineweitereMetadataPipeline erforderlich.
+
+**Umsetzung:** append-onlyLog/Completionbericht/JSON aktualisiert; PR32
+Bereinigungsstatusvermerkt,Sourcegleich/Draft. KeineCodeänderung/neuenTests,
+127vorherlokal/separatPASS+ProviderOffline54/realMetadata56bleibenBelege.
+**Checkpoint5weiter10/10(100%),keinoffenesKriteriumundBereinigungsnachlauf
+jetzterledigt.** GesamtPGP05/O03nichtvollständigabgenommen; nochkeinrealer
+BackupCollector/Writer/RestorefürOrgaVelaausgeführt. NächstesPaket: vorhandene
+DreamloudCapture/Verschlüsselung/separaterWriter/Readback/Restore offline
+aufOrgaVelaadaptieren,danachseparateFolgegatesvordererstenRealdatensicherung.
+V1offenunverändert62/71historisch,M0–M7 0/8,P4 0/4,R0/18,PR32Draft,
+alpha.2zuletztbelegt,productioncapturefalse. KeineSite-/Dreamloud-/SSH-/PHP-/
+SQL-/Backup-/Deploy-/Merge-/Scheduler-/KostenaktiondurchAssistent.

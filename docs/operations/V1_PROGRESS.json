@@ -222,8 +222,8 @@
         "independent_security_signoff": true,
         "temporary_contexts_configured": true,
         "production_capture_allowed": false,
-        "next": "Operational cleanup: operator removes only temporary PGP05_SSH_PASSWORD from orgavela-pgp05-reviewed-metadata, leaves account/other contexts unchanged; no metadata rerun. Continue adapting Dreamloud capture/encryption/separate writer/fullreadback/isolated restore offline under subsequent PGP05 gates.",
-        "note": "CP5 COMPLETE10/10, no open criteria. Criterion8 accepted by combined provider/project/domain/priorroot/authSSH evidence; criterion10 actualmetadata56 accepted. Receipt domain/startup/serverreadonly/database/capture/restore flags stayfalse. No realbackup or fullproducerport claimed.",
+        "next": "Checkpoint5complete including temporary password cleanup. Next package: offline adaptation of existing Dreamloud coherent production capture/encryption/separate immutable writer/fullreadback/isolated restore for OrgaVela's own configuration under later PGP05 gates; no live metadata rerun or production capture yet.",
+        "note": "CP5COMPLETE10/10; operational temporary metadata-password removal screenshot-verified. Current code fails settings before network without requiredpassword. No IONOS password reset, other-context mutation or realbackup.",
         "provider_ci_url": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/54",
         "hostkey_candidate_matches_provider": true,
         "hostkey_candidate_authenticated": true,
@@ -298,7 +298,7 @@
         "criterion8_account_namespace_passed": true,
         "criterion8_domain_binding_verified": true,
         "domain_vhost_binding_proven_by_probe": false,
-        "metadata_context_cleanup_verified": false,
+        "metadata_context_cleanup_verified": true,
         "criterion8_domain_managed_wordpress_service_verified": true,
         "criterion8_domain_service_evidence_provenance": "operator screenshots20261023-074717 and074753: orgavela.com IONOSmanaged WordPress target plus @/www WordPressservice DNS. Specific installation/root not displayed; DNS is not root proof.",
         "checkpoint_completed": true,
@@ -310,7 +310,8 @@
         "metadata_context_cleanup_required_fields": [
           "PGP05_SSH_PASSWORD"
         ],
-        "metadata_context_cleanup_pending": true
+        "metadata_context_cleanup_pending": false,
+        "metadata_context_cleanup_provenance": "operator screenshot20261023-081238 shows8remaining masked variables, PGP05_SSH_PASSWORD absent and provider toast explicitly confirms removal. Project/exact-source expression restrictions retained. UI observation, not API audit, password rotation or other-context cleanup."
       }
     },
     {
