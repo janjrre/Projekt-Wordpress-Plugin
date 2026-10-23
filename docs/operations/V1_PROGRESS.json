@@ -207,11 +207,9 @@
         "date": "2026-10-23",
         "issue": 27,
         "draft_pr": 32,
-        "accepted_criteria": 9,
+        "accepted_criteria": 10,
         "total_criteria": 10,
-        "open_criteria": [
-          8
-        ],
+        "open_criteria": [],
         "database_mapping_provenance": "owner-attested-private-ui-comparison",
         "ssh_probe_candidate": "scripts/ci/orgavela_pgp05_circleci_ssh_probe.py",
         "operator_guide": "docs/operations/PGP05_CIRCLECI_SSH_PROBE_OPERATOR_GUIDE_20261022.md",
@@ -224,8 +222,8 @@
         "independent_security_signoff": true,
         "temporary_contexts_configured": true,
         "production_capture_allowed": false,
-        "next": "Owner opens IONOS Websites/WordPress > OrgaVela project details showing orgavela.com assigned to that specific project/installation. Correlate with existing same-project Explorer/root evidence; no repeated root probe if identity chain clear. No DNS/usage/settings change or new SSH run.",
-        "note": "CP5 9/10. Authenticated metadata56 accepted. Current domain->managedWordPress service now UI-verified, exact installation/root relation remains last missing subpart of criterion8. Separate reviewer inspected both images. Do not treat shared DNS as root proof.",
+        "next": "Operational cleanup: operator removes only temporary PGP05_SSH_PASSWORD from orgavela-pgp05-reviewed-metadata, leaves account/other contexts unchanged; no metadata rerun. Continue adapting Dreamloud capture/encryption/separate writer/fullreadback/isolated restore offline under subsequent PGP05 gates.",
+        "note": "CP5 COMPLETE10/10, no open criteria. Criterion8 accepted by combined provider/project/domain/priorroot/authSSH evidence; criterion10 actualmetadata56 accepted. Receipt domain/startup/serverreadonly/database/capture/restore flags stayfalse. No realbackup or fullproducerport claimed.",
         "provider_ci_url": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/54",
         "hostkey_candidate_matches_provider": true,
         "hostkey_candidate_authenticated": true,
@@ -298,11 +296,21 @@
         "actual_metadata_result_signoff": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6360036292",
         "accepted_criterion10": true,
         "criterion8_account_namespace_passed": true,
-        "criterion8_domain_binding_verified": false,
+        "criterion8_domain_binding_verified": true,
         "domain_vhost_binding_proven_by_probe": false,
         "metadata_context_cleanup_verified": false,
         "criterion8_domain_managed_wordpress_service_verified": true,
-        "criterion8_domain_service_evidence_provenance": "operator screenshots20261023-074717 and074753: orgavela.com IONOSmanaged WordPress target plus @/www WordPressservice DNS. Specific installation/root not displayed; DNS is not root proof."
+        "criterion8_domain_service_evidence_provenance": "operator screenshots20261023-074717 and074753: orgavela.com IONOSmanaged WordPress target plus @/www WordPressservice DNS. Specific installation/root not displayed; DNS is not root proof.",
+        "checkpoint_completed": true,
+        "checkpoint_completed_date": "2026-10-23",
+        "checkpoint_closure_ref": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6360194115",
+        "criterion8_domain_binding_provenance": "separate-agent accepted combined chain: current operator075106 IONOS OrgaVela project explicitly assignedorgavela.com and same privately compared contract as074717; prior same-project Explorer/SiteHealth root; authenticated metadata56. Screenshot itself does not show root; no provider API/vhost inspection.",
+        "criterion8_domain_project_installation_link_verified": true,
+        "criterion8_independent_result_review_kind": "separate-agent-not-external-human-audit",
+        "metadata_context_cleanup_required_fields": [
+          "PGP05_SSH_PASSWORD"
+        ],
+        "metadata_context_cleanup_pending": true
       }
     },
     {
