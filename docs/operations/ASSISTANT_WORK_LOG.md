@@ -1281,3 +1281,42 @@ oder Approval starten. Assistent trägt keinerlei Credentialwerte ein.
 **Stand:** Konfiguration vorbereitender Unterbeleg akzeptiert; CP5 unverändert8/10,
 #8/#10offen. Keine SSHsitzung/Metadata/WordPress/PHP/SQL/Backup/Deploy/Merge/Kauf.
 V1 offen62/71 historisch,M0–M7 0/8,P4 0/4,R0/18,Livealpha.2 zuletztbelegt.
+
+
+## 2026-10-23, Europe/Berlin — neun Metadaten-Contextfelder hinterlegt; Pipelinevorbereitung
+
+**Auftrag/Eingang:** Betreiber »sind alle hinterlegt« plus Screenshot
+image(20261023-062158).png. Lokal visuell gelesen, nicht geändert/öffentlich
+kopiert, kein Libraryzugriff. ContextID/private Wertteile nicht übernommen.
+W0/O01/O03,#27/Draft32; bisherige read-only Freigabe und Reviewrevision
+PGP05-SSH-20261022.2 gelten unverändert.
+
+**UI-Nachweis:** Richtiger Metadata-Context zeigt genau9 erwartete Variablennamen
+(SHA, Reviewref, ScriptHash, Host, Passwort, User, StartupReview, Root, Kostenflag).
+Werte maskiert, sichtbare Konstantensuffixe passend, keine vollständige
+unabhängige Werteverifikation. Betreiber bestätigt Hinterlegung. Projekt-/
+Expression-Restrictions weiterhin sichtbar/konsistent mit vorherigem Vollbeleg.
+Group Allmembers unverändert, keine API-/Mitgliederprüfung behauptet.
+
+**GitHub/Config:** PR32 Draft und HEAD exakt
+c952645000b2954c04f1c0446c333392048065e6. ExaktSHAStatus offline-securitysuccess
+CircleCI44. Configblob2085eb8e2296df0fa97908564de1faffe0931a1c erneut gelesen:
+metadata→offline→approve-pgp05-metadata→pgp05-reviewed-ssh-metadata,
+ausschließlich eigenerMetadataContext und festerFeaturebranch. Kein Codepin/
+Kontext geändert oder Wiederholungstest ohne Anlass.
+
+**Nächste Betreiberaktion:** EINE neue Pipeline im bestehenden OrgaVela-Projekt,
+Config/CheckoutFeaturebranch feat/pgp05-readonly-ssh-metadata-check-20261021,
+Parameter pgp05_ssh_probe=metadata. Commit c952645 muss erscheinen.
+Zuerst Offlinejob, danach wartendes approve-pgp05-metadata zeigen; noch keine
+Freigabe und kein neuerRerun/Contextwechsel. Erst bei gezeigter korrekter
+Pipeline/SHA/Graph folgt explizite Approvalanweisung. TatsächlicherMetadatenjob
+führt ausschließlich festes überprüftes Script unter dokumentiertemProvidertrust
+aus; kein PHP/WP/SQL/Inhaltslesen/Schreiben/Backup/Deployment. Bei REFUSED stoppen,
+keine unreviewte Berechtigungs-/Pfadänderung. Maskierte Passwörter nicht zeigen.
+
+**Status:** Credentials lautBetreiber konfiguriert, keine Werte vomAssistent
+erfasst. Keine neuePipeline/Approval/Login/Backup/Deploy/Merge/Kauf durchAssistent.
+CP5 unverändert8/10 (80%), #8 authentisierte Account/Namespace/Domainbindung und
+#10 tatsächlicher akzeptierterMetadatenlauf offen. V1 offen unverändert62/71
+historisch,M0–M7 0/8,P4 0/4,R0/18; alpha.2 zuletztbelegt, heute nicht neuabgefragt.
