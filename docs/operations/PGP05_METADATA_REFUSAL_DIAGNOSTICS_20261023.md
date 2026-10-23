@@ -76,3 +76,66 @@ matches prior exact commands/checks/order; SSH args unchanged.
 Review reference:
 https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6358998616
 No provider test or authentication claim for new source.
+
+
+## Follow-up: Job50 and narrower SSH-reported diagnostics — 2026-10-23
+Job50 on b31e6cc0684593cca63d493ba0f56dd562e11f53 failed with fixed
+stage SSH / reason PROCESS_EXIT. GitHub confirms offline48 and approval
+success, metadata50 failure. Settings and keyscan/pin passed, but SSH
+failure does not establish authentication, remote execution or its cause.
+No account/password/root/permissions changed and no blind retry requested.
+
+New parser recognizes bounded complete canonical stderr lines for known
+exit classes and emits only static SSH_REPORTED_* labels (authentication
+refusal, hostkey, DNS, connect, askpass, command unavailable). Empty stdout
+required; conflicting/unknown signatures stay PROCESS_EXIT. AUTH_REFUSED
+is not proof of a wrong password; exec-like messages are not login proof.
+Raw output, matched strings and arbitrary return codes stay private.
+Remote script/hash/SSHargs/config/guards remain unchanged. The script hash
+above remains1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58.
+125/125 local tests PASS, independently repeated by separate reviewer.
+Actual final published-SHA confirmation and new provider offline test are
+separate next gates. Previous reviewref/CI do not approve this new source.
+
+Updated operator sequence supersedes prior repin steps for this refinement:
+change only exact context expression revision, PGP05_APPROVED_SHA and
+PGP05_METADATA_REVIEW_REF to the newly published/reviewed source/reference.
+PGP05_REMOTE_SHA256 and private settings stay unchanged. Then one new exact
+branch metadata workflow; require current contextless offline success before
+manual approval. Do not rerun old50 or infer success from predecessor CI.
+CP5 remains8/10, #8 and #10 open; production_capture_allowed=false.
+
+
+## 2026-10-23 — Job50 eingegrenzt; SSH-Diagnostik unabhängig freigegeben
+Job50 auf b31e6cc0684593cca63d493ba0f56dd562e11f53 meldet
+SSH / PROCESS_EXIT; Offline48 und Approval unabhängig als success bestätigt.
+Settings und Hostkeypin passiert, aber Authentisierung/Ursache unbekannt.
+Kein Passwort-/Pfad-/Rechtewechsel auf Verdacht, kein alter Job-Rerun.
+
+Neuer exakter Code **f5e35ea36b192288920558b783fee2c46c854c18**:
+125/125 lokale synthetische Tests PASS, separat unabhängig wiederholt;
+Prüfer hat publizierte Probe3fd7610d53978f722485f27c2a337beb88deac7d,
+Testsbf4064608f5613d372d41b5dd1e2e1320f0ed8e8 und unveränderte
+Config2085eb8e2296df0fa97908564de1faffe0931a1c nachgeprüft. **APPROVED**
+im unveränderten PGP05-SSH-20261022.2 Scope, keine externe menschliche
+Auditbehauptung. [Exakter Reviewbeleg](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6359237075).
+Nur vollständige kanonische bounded stderr-Zeilen werden festen
+SSH_REPORTED_* Kategorien zugeordnet; leeres stdout/zulässige Exitklasse
+nötig, mehrdeutig/unbekannt generic. Keine Rohtexte/Identifiers/Returncodes.
+Die Kategorie beschreibt gemeldeten Text, keinen bewiesenen Fehlergrund.
+Remote-Skript/SSHargs/Config/Guards unverändert, ScriptSHA256 weiter
+1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58.
+NeueSHA hat noch keine Provider-CI; VorgängerOffline48 ist kein solcher Beleg.
+
+Nächste tatsächliche Betreiberaktion: im vorhandenen MetadataContext nur
+Expressionrevision und PGP05_APPROVED_SHA auf f5e35ea36b192288920558b783fee2c46c854c18,
+PGP05_METADATA_REVIEW_REF auf https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6359237075 setzen.
+ScriptHash und private Settings bleiben unverändert. Dann eine NEUE Pipeline
+auf exakt dem Featurebranch mit pgp05_ssh_probe=metadata; aktueller
+kontextfreier Offlinejob muss vor manueller Approval erfolgreich sein.
+Keine Contextmutation/Liveausführung durch Assistent; keine Secrets gelesen.
+
+**CP5 unverändert8/10 (80%)**, #8 authentisierte Account-/Namespace-/Domainbindung
+und #10 akzeptierter echter Metadatenlauf offen. production_capture_allowed=false.
+V1 offen:62/71 historische Codingpakete, M0–M7 0/8,P4 0/4,R0/18;
+PR32 Draft/unmerged, alpha.2 zuletzt belegt. Kein Backup/Deploy/Merge/Kauf.

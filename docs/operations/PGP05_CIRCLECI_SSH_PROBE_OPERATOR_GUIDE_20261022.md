@@ -282,3 +282,37 @@ branch job after the security prerequisites are met.
 SSH/namespace/domain binding and #10 actual accepted metadata run remain open.
 The hostkey-only setup is the next concrete operator action, with no SSH
 password needed. V1 counts remain 62/71 historical, M0–M7 0/8, P4 0/4, R 0/18.
+
+
+## Aktueller Wiederanlauf nach Job50 — 2026-10-23
+Diese Anweisung ersetzt frühere neue-SHA-/Reviewref-Werte; historische Einträge
+bleiben als Verlauf bestehen. Unabhängig freigegebener Code:
+`f5e35ea36b192288920558b783fee2c46c854c18`.
+Review: https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6359237075
+
+Im Context orgavela-pgp05-reviewed-metadata genau drei Stellen ändern:
+1. Vollständige Expressionrevision wie unten.
+2. PGP05_APPROVED_SHA = `f5e35ea36b192288920558b783fee2c46c854c18`.
+3. PGP05_METADATA_REVIEW_REF = `https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6359237075`.
+
+```text
+pipeline.git.repo_owner == "janjrre"
+and pipeline.git.repo_name == "Projekt-Wordpress-Plugin"
+and pipeline.git.branch == "feat/pgp05-readonly-ssh-metadata-check-20261021"
+and pipeline.git.revision == "f5e35ea36b192288920558b783fee2c46c854c18"
+and not job.ssh.enabled
+and not (pipeline.config_source starts-with "api")
+```
+
+PGP05_REMOTE_SHA256 bleibt
+`1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58`.
+Host/User/Passwort/Root und übrige Restrictions unverändert. Keine privaten
+Werte öffentlich zeigen; maskierte Variablennamen/Expression reichen für UI-Abgleich.
+Danach NEUE Pipeline auf feat/pgp05-readonly-ssh-metadata-check-20261021
+mit pgp05_ssh_probe=metadata. Richtige VollSHA und aktuellen erfolgreichen
+kontextfreien Offlinejob prüfen, erst dann approve-pgp05-metadata freigeben.
+Kein alter Job50-Rerun. Noch kein Providerbeleg auf neuerSHA.
+Bei erneutem Abbruch nur festes Schema/stage/reason senden; kein rohes SSH-Log.
+SSH_REPORTED_AUTH_REFUSED beweist kein falsches Passwort. Bei generischem
+oder widersprüchlichem Ergebnis stoppen statt Zugang/Pfad/Guards zu ändern.
+CP5weiter8/10,#8/#10offen; keineProduktivbackupfreigabe.
