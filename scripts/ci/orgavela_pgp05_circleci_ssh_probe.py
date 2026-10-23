@@ -29,7 +29,8 @@ LIMIT = 16384
 KEYSCAN = '/usr/bin/ssh-keyscan'
 SSH = '/usr/bin/ssh'
 REMOTE_OK = b'PGP05_REMOTE_METADATA=PASS\n'
-# Passed on stdin to sh; never uploaded or installed on the server.
+# Fixed metadata body, sent as the SSH command as in Dreamloud's source probe.
+# Never uploaded or installed on the server; no caller-selected command.
 # Server startup precedes this script. Accepted scope trusts normal managed
 # IONOS infrastructure; its internal hooks are not observed by this probe.
 REMOTE_SCRIPT = b'''set -eu
@@ -253,6 +254,19 @@ def candidate_line(data, host):
     raise Refused('missing key')
 
 
+def remote_command(root, user):
+    """Dreamloud-style fixed command; provider-managed POSIX shell is trusted.
+
+    No absolute remote env/sh wrapper or stdin interpreter is required. The
+    private root/user occur in SSH argv but never in public output. Validation
+    is repeated here so this builder cannot accept shell fragments directly.
+    """
+    require(isinstance(root, str) and re.fullmatch(r'/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+', root)
+            and all(part not in ('.', '..') for part in root.split('/')), 'ROOT_FORMAT')
+    require(isinstance(user, str) and re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}', user), 'USER_FORMAT')
+    return 'set -- ' + shlex.quote(root) + ' ' + shlex.quote(user) + '\n' + REMOTE_SCRIPT.decode('ascii')
+
+
 def ssh_arguments(host, user, pinfile, root):
     opts = ['-F', '/dev/null', '-T', '-p', '22', '-l', user]
     for option in (
@@ -269,8 +283,7 @@ def ssh_arguments(host, user, pinfile, root):
         'HostbasedAuthentication=no', 'BatchMode=no', 'EscapeChar=none',
     ):
         opts += ['-o', option]
-    command = 'exec /usr/bin/env -i PATH=/usr/bin:/bin LC_ALL=C /bin/sh -s -- ' + shlex.quote(root) + ' ' + shlex.quote(user)
-    return [SSH] + opts + [host, command]
+    return [SSH] + opts + ['--', host, remote_command(root, user)]
 
 
 def probe(env, mode, *, runner=bounded_run):
@@ -299,7 +312,7 @@ def probe(env, mode, *, runner=bounded_run):
         child_env.update({'SSH_ASKPASS': str(helper), 'SSH_ASKPASS_REQUIRE': 'force',
                           'DISPLAY': 'pgp05:0', 'PGP05_SSH_PASSWORD': env['PGP05_SSH_PASSWORD']})
         data, errors = at_stage('SSH', runner, ssh_arguments(host, env['PGP05_SSH_USER'], pinfile, env['PGP05_WP_ROOT']),
-                         env=child_env, timeout=30, input_bytes=REMOTE_SCRIPT)
+                         env=child_env, timeout=30)
         # With strict preloaded host pinning and LogLevel=ERROR, no stderr is
         # expected. Never accept or publish startup warnings or diagnostics.
         if data != REMOTE_OK or errors != b'':

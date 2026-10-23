@@ -1082,3 +1082,43 @@ exakten publizierten SHA und Context-Neupin durch Betreiber erforderlich.
 realer Metadatenlauf offen. production_capture_allowed=false. V1 offen,
 62/71 historische Codingpakete, M0–M7 0/8, P4 0/4, R0/18; PR32 Draft,
 alpha.2 zuletzt belegt. Kein Backup/Deploy/Merge/Kauf/Dreamloud-Zugriff.
+
+
+## 2026-10-23, Europe/Berlin — Betreiber verlangt tatsächliche Dreamloud-Übernahme
+**Auftrag:** SSH-Zweck erklären, unnötigen Sonderweg beenden, funktionierende
+Dreamloud-Backupimplementierung für OrgaVela verwenden. W0/O01/O03,#27/Draft32.
+Bisherige reineArchitekturentscheidung vom22.10. nicht als vollständigePortierung
+ausgeben. Keine neuenprivatenWerte/Liveaktionen/Käufe autorisationsfrei erfinden.
+
+**Verifizierte Vorlage:** Dreamloud backup/production-circleci weiterhin exakt
+07d4ffbcc3c6d70f0716fda070050d6532a69df6. Issue434 aktuell8/8abgenommen,
+Tagescapture1139/writer1141/immutableRelease421379530 dort dokumentiert;
+kein neuerDownload/Restore/Dreamloud-Serverzugriff durch diesen Auftrag.
+Tatsächlich gelesen .circleci/config.yml, scripts/probe_circleci_password_source.py,
+scripts/capture_quiesced_circleci.py. Dreamloud nutzt bereits Passwort-Askpass,
+Hostpin, getrennteCapture-/Writercontexts, Verschlüsselung/Readback/Restore.
+SSH ist der dort verwendete Servertransport, kein zusätzlichesOrgaVelaProdukt.
+Der OrgaVela-Sonderwrapper/env+stdin ist keine allgemeineBackupvorbedingung.
+
+**Tatsächliche Änderung:** InitialeSSH-Metadatenübertragung folgt jetzt Dreamlouds
+festem direktemSSH-command statt extraabsolutemenv-/bin/sh-Wrapper+stdin.
+Nur validierte/gequoteteRoot/Userparameter vor unverändertem festemMetadataBody;
+kein beliebigerBefehl,keinePfadsuche/PHP/SQL/Writes. PrivateArgumente nichtloggen.
+ProviderverwaltetePOSIX-Shell und Umgebungsverhalten sind dabei ausdrücklich
+Teil desselbenInfrastrukturvertrauens; inkompatibleShell verweigert,keinFallback.
+Passwortisolation/Pin/Context-/Sourcebindung/Einversuch/Bounds/strikterErfolg
+bleiben. BodySHA1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58
+unverändert. KeineBehauptung,Wrapper sei bewieseneUrsache derJobs50/53.
+
+**Tests:**127/127lokaleSynthetikPASS. NeueTests führen den tatsächlichen
+konstruiertenBefehl mitfiktiverWPForm lokal aus; korrekterErfolg,Configmode,
+zusätzlichesMUfile/fehlendeDatei verweigert; Shellfragmentinjektion abgelehnt.
+SeparatesReview der realenImplementierung vorFreigabe; keinProviderlauf behauptet.
+
+**Grenze:** Dies portiert dasTransportmuster, nichtschon den gesamtenProducer.
+WeitereArbeit soll bestehendeDreamloud-Capture/Writer/Restorekomponenten mit
+eigenemOrgaVelaKey/Quellscope/Tabellenerwartung/Zielrepo adaptieren; keine
+Neuerfindung/WeitergabevonDreamloud-Zugängen. Ein spätererProduktionscollector
+mitWartung/DBsperren gehört nichtinaktuellenReadonly-Metadatenlauf.
+CP5weiter8/10,#8/#10offen,productioncapturefalse. V1offen62/71historisch,
+M0–M7 0/8,P4 0/4,R0/18,PR32Draft,alpha.2zuletztbelegt. KeinBackup/Deploy/Merge.

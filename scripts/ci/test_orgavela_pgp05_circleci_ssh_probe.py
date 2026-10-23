@@ -106,7 +106,9 @@ class TransportTests(unittest.TestCase):
             self.assertIn('NumberOfPasswordPrompts=1', options)
             self.assertIn('PubkeyAuthentication=no', options)
             self.assertIn('ClearAllForwardings=yes', options)
-            self.assertEqual(kw['input_bytes'], m.REMOTE_SCRIPT)
+            self.assertNotIn('input_bytes', kw)
+            self.assertEqual(argv[-1], m.remote_command(environment(True)['PGP05_WP_ROOT'],environment(True)['PGP05_SSH_USER']))
+            self.assertEqual(argv[-3:-1], ['--', HOST])
             self.assertNotIn(environment(True)['PGP05_SSH_PASSWORD'], ' '.join(argv))
             home = Path(kw['env']['HOME'])
             self.assertEqual((home/'known_hosts').read_bytes(), LINE)
@@ -310,7 +312,7 @@ class DiagnosticTests(unittest.TestCase):
 
 
 class RemoteScriptTests(unittest.TestCase):
-    def run_fixture(self, change=None):
+    def run_fixture(self, change=None, direct=False):
         # Only a private synthetic root and files are created, never a real site.
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)/'fixture'
@@ -322,8 +324,28 @@ class RemoteScriptTests(unittest.TestCase):
             if change:
                 change(root)
             user=subprocess.check_output(['id','-un'], text=True).strip()
-            return subprocess.run(['/bin/sh','-s','--',str(root),user], input=m.REMOTE_SCRIPT,
+            argv = ['/bin/sh','-c',m.remote_command(str(root),user)] if direct else ['/bin/sh','-s','--',str(root),user]
+            return subprocess.run(argv, input=b'' if direct else m.REMOTE_SCRIPT,
                                   capture_output=True, timeout=3, env=m.clean_env(tmp))
+
+    def test_dreamloud_direct_command_preserves_guards_without_stdin(self):
+        cases = [(None,0),(lambda r:(r/'wp-config.php').chmod(0o644),89),
+                 (lambda r:(r/'wp-content/mu-plugins/extra.php').touch(),90),
+                 (lambda r:(r/'index.php').unlink(),86)]
+        for change,code in cases:
+            result=self.run_fixture(change,direct=True)
+            self.assertEqual(result.returncode,code)
+            self.assertEqual(result.stdout,m.REMOTE_OK if code==0 else b'')
+            self.assertEqual(result.stderr,b'')
+
+    def test_direct_command_rejects_shell_fragments_before_construction(self):
+        for root,user in [('/a/b;id','user'),('/a/../b','user'),('/a/b','user;id'),
+                          ('/a/b\n','user'),('/a/b','-user')]:
+            with self.assertRaises(m.Refused): m.remote_command(root,user)
+        command=m.remote_command('/synthetic/root','fixture_user')
+        self.assertEqual(command,'set -- /synthetic/root fixture_user\n'+m.REMOTE_SCRIPT.decode('ascii'))
+        self.assertNotIn('/usr/bin/env',command)
+        self.assertNotIn('/bin/sh',command)
 
     def test_remote_valid_shape_without_php_content_access(self):
         result=self.run_fixture()
