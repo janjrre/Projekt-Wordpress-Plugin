@@ -1981,3 +1981,55 @@ keineCredentialslesen/kopieren/setzen. KeineLive-/Backup-/Deploy-/Merge-/Schedul
 oderKostenaktion. PrüfagentfürvombetreiberbestätigtesunabhängigesReview
 fortgesetztbeauftragt. Ergebnisse/FehlerwerdenvorEndecommittet,keineAbnahme
 vorweggenommen. V1-Zählerunverändert62/71historisch,M0–M7 0/8,P4 0/4,R0/18.
+
+
+## 2026-10-23, Europe/Berlin — Weiterarbeit und Chatfortsetzung: Offline-Collector-Draft geprüft
+**Auftrag:** Die bestätigte Dreamloud-Übernahme Schritte 1/2 fortsetzen; neueste
+Nachricht "Continue this chat" als Fortsetzung desselben Auftrags behandelt.
+AGENTS, kanonische Planung/JSON/Status/Matrix/Journal und Issue27 erneut gelesen.
+Ausgang Doku792986ee72b14a6f3737078ea8d7cbbe2a0b1aaf; PR31 weiterhin3ca6be16,
+PR32 weiterhin8c4b445/Draft. Keine abgeschlossenen CP5-Gates wiedereröffnet.
+**Umsetzung:** Neues Paket scripts/ci/production_backup/, contextloser opt-in
+CircleCI-Test und Portierungsbericht. Dreamloud-Referenz07d4ffb ausschließlich
+read-only; eigene OrgaVela-Bindungen/Public-Empfänger/Ziel, keine Credentials.
+Produktive CLIs/PHP/Tokenloader hartdeaktiviert; voller SSH-Snapshottransport
+noch nicht aktiviert/komplettiert. Keine Liveaktion oder vertraulichen Rohdaten.
+**Prüfung:** 16/16 Python, vier PHP-Lints, PHP-Hilfstest, GPG-Public-Integration
+und temporäre In-Memory-Testschlüssel-Decrypt/3-Komponenten-Bytehashprüfung PASS;
+unabhängig separat wiederholt. Assembled PHP exit78/leeresstdout/exaktDisabled.
+YAML lokal geparst; neuer Providerjob noch nicht gestartet/abgenommen.
+**Fehler/Entscheidungen:** apt-setuid/setgroups scheiterte; lokales extrahiertes
+PHP verwendet. GPG-Agent-Socket hier verboten, keine Umgehung: Public-only
+recipient-file/show-keys ohne Agent. PHP anfangs ohne Tokenizer gescheitert,
+explizites Laden korrigierte Laufzeit. Review fand drei P2-Defekte (API-Pfadausbruch,
+DB-/Passwort-Credentialgrenze, uploads-Typ/Ancestor-/Memberlimit), alle behoben
+und regressionsgetestet; separates Agentenurteil APPROVED für Offline-Draft.
+Kein externes Human-Audit/Produktivsignoff. Bericht enthält weitere Beweisgrenzen.
+**Nächster Schritt:** neue exakte Branchrevision einmal in CircleCI ohne
+Context/Secrets mit run_collector_port_tests=true prüfen; nur kostenlose Quote.
+Noch offene Folgegates: vollständiger boundedSSHTransport, Runtimepins, getrennte
+Source-/Writer-Einrichtung und konkrete Erst-Capture/Publish-Freigaben, echte
+Sicherung+immutableReadbacks+isolierterWordPress/MariaDB-Restore, erst dann Betrieb.
+CP5 unverändert10/10, kein fehlendes Kriterium. V1 offen62/71historisch,M0–M7 0/8,
+P4 0/4,R0/18; PR32Draft/unmerged,alpha.2zuletztbelegt. Kein Backup/Deploy/Merge/
+Schedule/Kauf. Veröffentlichungssource/PR/Reviewbelege im nachfolgenden Logeintrag.
+
+
+## 2026-10-23 — veröffentlichter Stand und exakter Reviewnachweis
+Draft [PR #33](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/33), HEAD
+`0d419c991d75999dd264aba2a912fedf663a1cf0`, Base PR31 /3ca6be16. Separater Reviewer
+hat alle 17 Kandidat-/CI-Dateien über GitHub-Git-Tree gegen eigene lokale Git-Blob-
+Hashes abgeglichen: null Abweichungen, Tree vollständig. Urteil APPROVED nur
+Offline-Draft und contextloser synthetischer Providertest; keine Livefreigabe.
+[Ergebnis-/Reviewbeleg](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6364395389).
+Providerstatus am exakten HEAD: 0 Statusmeldungen, noch kein neuer CI-PASS.
+Main0adacb42 ist aktuell protected=true; keine vollständige Admin-/Mitgliedschafts-
+oder Rulesetprüfung behauptet. PR32 unverändert8c4b445/Draft. CP510/10 unverändert.
+Nächste Betreiberaktion: Branch feat/pgp05-dreamloud-collector-port-20261023 in
+CircleCI wählen, Boolean run_collector_port_tests=true, keine Contexts/Secrets.
+
+Dokumentationsabschluss dieses Arbeitsabschnitts: öffentlich ausschließlich bereinigte
+Quell-/Prüf-/Statusinformationen. Lokale Referenzen, PHP-Runtime, Testabhängigkeiten
+und Cachedateien nicht committed. Keine Pipeline durch Assistent gestartet;
+Commit mit skip-ci, opt-in-Parameter standardmäßig false. Betreiber braucht für
+Provider-CI die bestehende CircleCI-Oberfläche; keine neue Secretablage erforderlich.

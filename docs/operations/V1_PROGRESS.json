@@ -1,8 +1,8 @@
 {
   "schema": "uop-v1-progress-v1",
   "project": "UOP Core / OrgaVela",
-  "snapshot_date": "2026-10-12",
-  "snapshot_basis": "2026-10-13 explicit operator backup strategy switch: no Google Drive, only existing IONOS contract backup plus separate private GitHub repository GitHub Releases ciphertext. Google-Drive workflow removed; existing secure private Google Drive folder unused, not deleted. Desired janjrre/orgavela-backups repository not yet confirmed/created; connection cannot create repositories or secrets. No real backup or isolated restore.",
+  "snapshot_date": "2026-10-23",
+  "snapshot_basis": "CP5 accepted 10/10; independently approved offline Dreamloud collector/encryption/writer candidate, local synthetic tests passed; new provider CI pending. No production capture or restoration.",
   "plan_path": "docs/operations/V1_ACCEPTANCE_PLAN.md",
   "source_refs": [
     "docs/specification/phase-3-specification-freeze.md",
@@ -199,8 +199,13 @@
       "circleci_context_project_restriction": "Screenshot-verified: Projekt-Wordpress-Plugin only (2026-10-13)",
       "circleci_context_expression_restriction": "Operator reports saved: pipeline.git.branch == \"main\" and not job.ssh.enabled and not (pipeline.config_source starts-with \"api\"); not independently verified",
       "circleci_context_expression_verified": false,
-      "source_github_main_branch_protected": false,
-      "source_github_main_branch_protection_probe": "GitHub GET /branches/main protected=false; GET /rulesets [] on 2026-10-13. /branches/main/protection requires inaccessible admin permission (403).",
+      "source_github_main_branch_protected": true,
+      "source_github_main_branch_protection_probe": {
+        "date": "2026-10-23",
+        "head": "0adacb427bd95dd87594e358ec9c6f2f5b38aae8",
+        "protected": true,
+        "scope": "public branch API protected flag; not a full ruleset/admin audit"
+      },
       "source_github_branch_ruleset_count": 0,
       "github_backup_secret_storage_authorized": false,
       "pgp05_checkpoint5_latest_evidence": {
@@ -222,7 +227,7 @@
         "independent_security_signoff": true,
         "temporary_contexts_configured": true,
         "production_capture_allowed": false,
-        "next": "Offline adaptation of existing Dreamloud collector/encryption/separate ciphertext writer/readback/isolated restore for OrgaVela, then synthetic integration and independent security review before consolidated operator secret/CI setup and separate real capture/writer gates. Actual backup+restore acceptance precedes scheduling.",
+        "next": "CP5 COMPLETE 10/10. Verify the new contextless offline collector-port pipeline on exact published SHA, then complete bounded snapshot transport and separate protected source/writer activation gates; real backup/isolated restore precede scheduling.",
         "note": "CP5COMPLETE10/10; operational temporary metadata-password removal screenshot-verified. Current code fails settings before network without requiredpassword. No IONOS password reset, other-context mutation or realbackup.",
         "provider_ci_url": "https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/54",
         "hostkey_candidate_matches_provider": true,
@@ -312,6 +317,33 @@
         ],
         "metadata_context_cleanup_pending": false,
         "metadata_context_cleanup_provenance": "operator screenshot20261023-081238 shows8remaining masked variables, PGP05_SSH_PASSWORD absent and provider toast explicitly confirms removal. Project/exact-source expression restrictions retained. UI observation, not API audit, password rotation or other-context cleanup."
+      },
+      "pgp05_collector_port_offline_candidate": {
+        "date": "2026-10-23",
+        "issue": 27,
+        "branch": "feat/pgp05-dreamloud-collector-port-20261023",
+        "base_pr": 31,
+        "base_sha": "3ca6be16f4c9d8d17ebb8265bbc8e05bb3952c95",
+        "reference_sha": "07d4ffbcc3c6d70f0716fda070050d6532a69df6",
+        "local_python_tests_passed": 16,
+        "php_helper_tests_passed": true,
+        "php_lint_files": 4,
+        "synthetic_public_recipient_integration": true,
+        "synthetic_temporary_key_roundtrip": true,
+        "component_hashes_verified": 3,
+        "independent_review": "approved-limited-offline-draft-separate-agent",
+        "provider_ci_verified": false,
+        "live_entrypoints_enabled": false,
+        "production_capture_allowed": false,
+        "full_bounded_ssh_snapshot_transport_completed": false,
+        "actual_site_restore_tested": false,
+        "report": "docs/operations/PGP05_COLLECTOR_PORT_OFFLINE_20261023.md",
+        "draft_pr": 33,
+        "source_sha": "0d419c991d75999dd264aba2a912fedf663a1cf0",
+        "independent_published_blob_matches": 17,
+        "independent_published_blob_mismatches": 0,
+        "independent_review_ref": "https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6364395389",
+        "provider_commit_status_count": 0
       }
     },
     {
@@ -697,12 +729,9 @@
     "https_static_assets_verified": true
   },
   "immediate_next": [
-    "SECURITY BLOCKER: operator must protect `main` of PUBLIC `janjrre/Projekt-Wordpress-Plugin` using GitHub Settings > Branches > classic protection (require PR, no admin bypass, force pushes and deletion disallowed); GitHub API currently reports protected=false and zero rulesets",
-    "Reverify public source repo main branch protected=true, verify who can push/merge and PR/fork CircleCI context-exposure risk; operator-reported expression restriction is not independent CircleCI UI/API proof",
-    "Confirm CircleCI Free usage and effective Context project/expression restrictions; no tokens/secrets until these are verified",
-    "Operator creates securely retained offline private age decryption key, two independent secure recovery copies, and supplies ONLY public age recipient",
-    "Then restrict expiring fine-grained PAT to private janjrre/orgavela-backups Contents read/write, store only in properly protected CircleCI Context, test encrypted synthetic release with full redownload/hash/local decryption",
-    "Only after synthetic success create real consistent encrypted OrgaVela WP file+MariaDB backup, verify full redownload and isolated no-egress restore, then schedule backups and consider O03/B04 gates"
+    "Run one contextless/secret-free CircleCI collector-port pipeline on feat/pgp05-dreamloud-collector-port-20261023 with run_collector_port_tests=true using existing free quota; verify exact published source revision.",
+    "Complete independently reviewed bounded SSH snapshot transport, immutable sensitive runtime pins and own minimal source/writer credential setup; no repeat of completed CP5 identity checks.",
+    "Obtain concrete first real capture and separate ciphertext publication decisions; verify actual consistent encrypted OrgaVela backup, immutable full readbacks and isolated WordPress/MariaDB restore before scheduling."
   ],
   "update_policy": "Before each UOP response, review plan, GitHub changes, statuses and evidence; append worklog, change plan/progress if facts changed; always link entire plan and show concise cockpit. No automatic background updates without an active task.",
   "tracker_issue": 15,

@@ -631,3 +631,35 @@ Gesamtissue27bleibtoffen,keinProduktivbackup/Restore/Deploy/Merge/Kauf.
 
 V1unverändertoffen:62/71historischeCodingpakete,M0–M7 0/8,P4 0/4,R0/18,
 alpha.2zuletztbelegt. CP5AbnahmeerhöhtkeinenanderenAbnahmezähler.
+
+
+## 2026-10-23 — Dreamloud-Collector als geprüfter Offline-Kandidat (W0/O03, #27)
+Checkpoint 5 bleibt abgeschlossen 10/10 (100%); kein Kriterium offen. Der nächste
+Collector-/Verschlüsselungs-/Writer-Baustein liegt auf `feat/pgp05-dreamloud-collector-port-20261023`
+als gestapelter Draft auf PR31, mit hart deaktivierten produktiven Entry Points.
+16/16 lokale Python-Tests, PHP-Hilfstests, vier PHP-Lints und öffentliche
+Verschlüsselungsintegration PASS. Temporärer künstlicher Testschlüssel: Decrypt
+und Byte-/Hashvergleich aller drei Komponenten PASS. Separates Agentenreview
+nach drei behobenen Befunden APPROVED ausschließlich für Offline-Draft; kein
+externes menschliches Audit. Provider-CI des neuen Kandidaten noch offen.
+Bericht: [Portierung und Prüfgrenzen](../operations/PGP05_COLLECTOR_PORT_OFFLINE_20261023.md).
+Nächster Schritt: genau eine context-/secretfreie CircleCI-Pipeline auf diesem
+Branch mit `run_collector_port_tests=true`; danach tatsächlichen begrenzten
+Transport/Runtimepins und konkrete getrennte Source-/Writer-Gates fertigstellen.
+Kein echtes Backup/Restore/Livezugriff/Deploy/Merge/Schedule. Vollständige produktive
+Collectorportierung bleibt offen; production_capture_allowed=false. V1-Zähler
+unverändert 62/71, M0–M7 0/8, P4 0/4, R0/18; alpha.2 zuletzt belegt.
+
+
+## 2026-10-23 — veröffentlichter Stand und exakter Reviewnachweis
+Draft [PR #33](https://github.com/janjrre/Projekt-Wordpress-Plugin/pull/33), HEAD
+`0d419c991d75999dd264aba2a912fedf663a1cf0`, Base PR31 /3ca6be16. Separater Reviewer
+hat alle 17 Kandidat-/CI-Dateien über GitHub-Git-Tree gegen eigene lokale Git-Blob-
+Hashes abgeglichen: null Abweichungen, Tree vollständig. Urteil APPROVED nur
+Offline-Draft und contextloser synthetischer Providertest; keine Livefreigabe.
+[Ergebnis-/Reviewbeleg](https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6364395389).
+Providerstatus am exakten HEAD: 0 Statusmeldungen, noch kein neuer CI-PASS.
+Main0adacb42 ist aktuell protected=true; keine vollständige Admin-/Mitgliedschafts-
+oder Rulesetprüfung behauptet. PR32 unverändert8c4b445/Draft. CP510/10 unverändert.
+Nächste Betreiberaktion: Branch feat/pgp05-dreamloud-collector-port-20261023 in
+CircleCI wählen, Boolean run_collector_port_tests=true, keine Contexts/Secrets.
