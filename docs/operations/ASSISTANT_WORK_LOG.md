@@ -1695,3 +1695,23 @@ Dann neueexakteFeaturebranch-MetadataPipeline, aktuelleOfflineprüfung vorApprov
 CP5unverändert8/10,#8/#10offen,productioncapturefalse. V1offen62/71historisch,
 M0–M7 0/8,P4 0/4,R0/18;PR32Draft,alpha.2zuletztbelegt. KeineDreamloudÄnderung,
 keineSite-/Backup-/Deploy-/Merge-/Kostenaktion.
+
+
+## 2026-10-23, Europe/Berlin — Fortsetzung mit übernommenem Dreamloud-Transport
+**Auftrag:** weiterarbeiten. GitHub bestätigt PR32Draft/HEAD
+8c4b445ea5dced969f63b0f30e0e371342f64680; tatsächliches akzeptiertesReview
+#27/6359766814 vorhanden. AktuelleSHAhat0Providerstatuses/pending, keinLivebeleg.
+KeineSourceänderung/neuenTests nötig;127lokale/unabhängigeTests sind dokumentiert.
+
+**Tatsächlich nötige Benutzeraktion:** bestehenderMetadataContext benötigt
+neueVollSHA inExpression und PGP05_APPROVED_SHA sowieReviewRef6359766814.
+GleicherRemoteBodyHash/privateCredentials,keinneuerContext/Passwortwechsel.
+KopierfertigeExpression/Variablenwerte erläutert; danach gespeicherteExpression
+und maskierteÜbersicht zeigen, nochkeinePipeline/manuelleApproval. DieseBindung
+ist fürdenneuenCode nötig; alteJobsnichtwiederholen. KeineerneuteAllgemeinfreigabe
+gefordert. AssistentkannContext nichtüberGitHubändern,keinCloudbrowser genutzt.
+
+**Stand:** CP5weiter8/10,#8/#10offen,productioncapturefalse. V1offen62/71historisch,
+M0–M7 0/8,P4 0/4,R0/18; PR32Draft,alpha.2zuletztbelegt. NächsterSchritt:
+Contextabgleich,dannneuekontextfreieProviderprüfungvorGatefreigabe.
+KeinBackup/Deploy/Merge/Kauf/Dreamloudzugriff.
