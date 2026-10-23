@@ -254,7 +254,7 @@
         "executor_provider_pinned_start_verified": true,
         "executor_provider_start_provenance": "operator-provided Build44 log: exact pinned manifest started from cache, not fresh registry pull",
         "executor_runtime_security_subblock_resolved": true,
-        "provider_synthetic_tests_passed": 121,
+        "provider_synthetic_tests_passed": 117,
         "provider_runtime_openssh": "8.9p1 Ubuntu-3ubuntu0.17",
         "provider_runtime_system_helper_python": "3.10.12",
         "startup_provider_evidence_verified": false,
@@ -287,7 +287,7 @@
         "metadata_context_restrictions_revision": "b31e6cc0684593cca63d493ba0f56dd562e11f53",
         "metadata_context_diagnostic_repin_screenshot_verified": false,
         "metadata_context_diagnostic_repin_provenance": "previous b31 repin screenshot retained historically; no new-source repin verified",
-        "provider_synthetic_tests_count_provenance": "121 local and independently reviewed; provider job48 success, individual provider count not re-read",
+        "provider_synthetic_tests_count_provenance": "Last individually read provider count: Build44=117. Job48 success independently verified on b31; individual job48 count not re-read (121 local/review tests, not asserted as provider count).",
         "current_code_security_diagnostic_change": "bounded canonical stderr -> static SSH_REPORTED labels; no stdout/unknown or conflicting signatures generic; no raw text/rc exposed"
       }
     },
