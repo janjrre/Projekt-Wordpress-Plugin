@@ -207,6 +207,51 @@ class TransportTests(unittest.TestCase):
 
 
 class DiagnosticTests(unittest.TestCase):
+    def test_ssh_text_classifies_only_fixed_reported_categories(self):
+        cases = [
+            (255,b'private-user@private-host: Permission denied (publickey,password).\n','SSH_REPORTED_AUTH_REFUSED'),
+            (255,b'Host key verification failed.\n','SSH_REPORTED_HOSTKEY'),
+            (255,b'ssh: Could not resolve hostname private-host: private-detail\n','SSH_REPORTED_DNS'),
+            (255,b'ssh: connect to host private-host port 22: Connection refused\n','SSH_REPORTED_CONNECT_REFUSED'),
+            (255,b'ssh: connect to host private-host port 22: Connection timed out\n','SSH_REPORTED_CONNECT_TIMEOUT'),
+            (255,b'ssh_askpass: exec(private-path): private-detail\n','SSH_REPORTED_ASKPASS'),
+            (127,b'/usr/bin/env: private-path: No such file or directory\n','SSH_REPORTED_COMMAND_UNAVAILABLE'),
+            (126,b'/bin/sh: private-path: not found\n','SSH_REPORTED_COMMAND_UNAVAILABLE'),
+        ]
+        for rc, data, reason in cases:
+            with self.subTest(reason=reason):
+                self.assertEqual(m.ssh_exit_reason(rc,b'',data),reason)
+                self.assertEqual(m.ssh_exit_reason(rc,b'private-stdout',data),'PROCESS_EXIT')
+                self.assertEqual(m.ssh_exit_reason(82,b'',data),'PROCESS_EXIT')
+
+    def test_ssh_text_ambiguity_unknown_and_oversize_stay_generic(self):
+        for rc,data in [(255,b'unknown private-secret'),(255,b''),(99,b'Permission denied (password).'),
+                        (255,b'user@host: Permission denied (password).\nssh: connect to host private-host port 22: Connection refused\n'),
+                        (255,b'Permission denied (password).'+b'x'*m.LIMIT),
+                        (127,b'No such file or directory'),(255,b'/bin/sh: not found')]:
+            with self.subTest(rc=rc):
+                self.assertEqual(m.ssh_exit_reason(rc,b'',data),'PROCESS_EXIT')
+
+    def test_ssh_signatures_require_complete_canonical_lines(self):
+        for data in [b'quoted Host key verification failed. text',
+                     b'Connection refused',b'Permission denied (password).',
+                     b'prefix ssh: connect to host host port 22: Connection refused',
+                     b'Host key verification failed. suffix']:
+            self.assertEqual(m.ssh_exit_reason(255,b'',data),'PROCESS_EXIT')
+
+    def test_ssh_reported_category_never_echoes_private_text_in_cli(self):
+        source='import sys;sys.stderr.write("private-secret@private-host: Permission denied (password).\\n");raise SystemExit(255)'
+        with patch.object(m,'SSH',sys.executable), self.assertRaises(m.Refused) as caught:
+            m.bounded_run([sys.executable,'-c',source],env=m.clean_env('/tmp'),timeout=2)
+        error=m.Refused(str(caught.exception),reason=caught.exception.reason,stage='SSH')
+        out,err=io.StringIO(),io.StringIO()
+        with patch.object(m,'probe',side_effect=error),contextlib.redirect_stdout(out),contextlib.redirect_stderr(err):
+            self.assertEqual(m.main(['--mode','metadata','--live-opt-in']),78)
+        self.assertIn('SSH_REPORTED_AUTH_REFUSED',err.getvalue())
+        self.assertNotIn('private-secret',err.getvalue())
+        self.assertNotIn('private-host',err.getvalue())
+        self.assertEqual(out.getvalue(),'')
+
     def test_local_setting_reasons_stop_before_network(self):
         cases = [('PGP05_APPROVED_SHA','bad','REVISION'),
                  ('PGP05_ZERO_COST_CONFIRMED','no','COST'),

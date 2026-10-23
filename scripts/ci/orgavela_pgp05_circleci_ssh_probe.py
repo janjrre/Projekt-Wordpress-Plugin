@@ -84,13 +84,26 @@ REMOTE_REFUSALS = dict(zip(range(81, 91), (
     'REMOTE_REPORTED_HARDLINK', 'REMOTE_REPORTED_FILE_OWNER',
     'REMOTE_REPORTED_CONFIG_MODE', 'REMOTE_REPORTED_MU_INVENTORY',
 )))
+# Diagnostic labels reflect recognized client text, never verified root causes.
+# Only known client/shell exit classes and nonconflicting signatures qualify.
+SSH_TEXT_SIGNATURES = (
+    ('SSH_REPORTED_AUTH_REFUSED', (255,), rb'^[^\r\n]{1,512}: Permission denied \([-a-zA-Z0-9, ]{1,128}\)\.\r?$'),
+    ('SSH_REPORTED_HOSTKEY', (255,), rb'^Host key verification failed\.\r?$'),
+    ('SSH_REPORTED_DNS', (255,), rb'^ssh: Could not resolve hostname [^\r\n]{1,512}: [^\r\n]{1,512}\r?$'),
+    ('SSH_REPORTED_CONNECT_REFUSED', (255,), rb'^ssh: connect to host [^\r\n]{1,512} port [0-9]{1,5}: Connection refused\r?$'),
+    ('SSH_REPORTED_CONNECT_TIMEOUT', (255,), rb'^ssh: connect to host [^\r\n]{1,512} port [0-9]{1,5}: Connection timed out\r?$'),
+    ('SSH_REPORTED_ASKPASS', (255,), rb'^ssh_askpass: [^\r\n]{1,1024}\r?$'),
+    ('SSH_REPORTED_COMMAND_UNAVAILABLE', (126, 127), rb'^/usr/bin/env: [^\r\n]{1,1024}: No such file or directory\r?$'),
+    ('SSH_REPORTED_COMMAND_UNAVAILABLE', (126, 127), rb'^/usr/bin/env: [^\r\n]{1,1024}: not found\r?$'),
+    ('SSH_REPORTED_COMMAND_UNAVAILABLE', (126, 127), rb'^/bin/sh: [^\r\n]{1,1024}: not found\r?$'),
+)
 STAGES = frozenset(('INTERNAL', 'CLI', 'SETTINGS', 'RUNTIME', 'KEYSCAN',
                     'HOSTKEY_PIN', 'SSH', 'RECEIPT'))
 REASONS = frozenset(('GUARD', 'UNEXPECTED', 'PROJECT', 'BRANCH', 'REVISION',
     'COST', 'FOREIGN_CREDENTIALS', 'HOST', 'STARTUP_SCOPE', 'REMOTE_SCRIPT_HASH',
     'REVIEW_REF', 'USER_FORMAT', 'ROOT_FORMAT', 'PASSWORD_FORMAT', 'BINARY',
     'TIMEOUT', 'OUTPUT_LIMIT', 'PROCESS_EXIT', 'UNEXPECTED_OUTPUT',
-    'HOSTKEY', *REMOTE_REFUSALS.values()))
+    'HOSTKEY', *REMOTE_REFUSALS.values(), *(x[0] for x in SSH_TEXT_SIGNATURES)))
 
 
 def safe_code(value, permitted, fallback):
@@ -122,6 +135,19 @@ class PrivateParser(argparse.ArgumentParser):
 def require(ok, reason='GUARD'):
     if not ok:
         raise Refused(reason=reason)
+
+
+def ssh_exit_reason(rc, output, errors):
+    """Private bounded bytes -> one fixed remote/client-reported label only."""
+    if not isinstance(output, bytes) or not isinstance(errors, bytes):
+        return 'PROCESS_EXIT'
+    if output or len(errors) > LIMIT:
+        return 'PROCESS_EXIT'
+    if not errors:
+        return REMOTE_REFUSALS.get(rc, 'PROCESS_EXIT')
+    labels = {label for label, codes, pattern in SSH_TEXT_SIGNATURES
+              if rc in codes and re.search(pattern, errors, flags=re.MULTILINE)}
+    return labels.pop() if len(labels) == 1 else 'PROCESS_EXIT'
 
 
 def trusted_binary(path):
@@ -163,9 +189,9 @@ def bounded_run(argv, *, env, timeout, input_bytes=b''):
             except subprocess.TimeoutExpired:
                 raise Refused(reason='TIMEOUT') from None
             if rc != 0:
-                # These codes are remote-reported hints, never authentication
-                # evidence. Any accompanying output prevents interpretation.
-                reason = REMOTE_REFUSALS.get(rc, 'PROCESS_EXIT') if argv[0] == SSH and not output and not errors else 'PROCESS_EXIT'
+                # Remote guard codes require empty streams; recognized client
+                # stderr is classified separately. Neither proves authentication.
+                reason = ssh_exit_reason(rc, bytes(output), bytes(errors)) if argv[0] == SSH else 'PROCESS_EXIT'
                 raise Refused(reason=reason)
             return bytes(output), bytes(errors)
         finally:

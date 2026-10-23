@@ -1048,3 +1048,37 @@ Kein alterJob47Retry, keine Sicherheitsregeln zumGrünmachen ändern.
 CP5 unverändert8/10, #8/#10offen; kein tatsächlichererfolgreicherMetadatenbeleg.
 V1 offen62/71historisch,M0–M7 0/8,P4 0/4,R0/18,PR32Draft,alpha.2zuletztbelegt;
 keineBackup/Deploy/Merge/Kauf/Dreamloud-Aktion.
+
+
+## 2026-10-23, Europe/Berlin — Job50 SSH-Abbruch; private Diagnostik verfeinert
+
+**Auftrag/Eingang:** PGP05 CP5 selbstständig weiterführen; Betreiberbild mit
+REFUSED/stage SSH/reason PROCESS_EXIT ausgewertet. W0/O01/O03, #27/Draft32.
+Unabhängiger GitHub-Status auf b31e6cc0684593cca63d493ba0f56dd562e11f53:
+Offline48 und Approval erfolgreich, Metadata50 failure
+https://circleci.com/gh/janjrre/Projekt-Wordpress-Plugin/50 .
+Das neue Resultat lokalisiert den Abbruch im SSH-Prozess; Settings und der
+Hostschlüsselkandidat wurden akzeptiert. Authentisierung und Fehlerursache
+bleiben unbekannt. Weder falsches Passwort noch falscher Root bewiesen.
+
+**Änderung:** Nur bounded stderr -> feste SSH_REPORTED_* Diagnosekategorie:
+eng begrenzte vollständige kanonische Bytezeilen, bekannte Exitklassen,
+leeres stdout erforderlich; mehrdeutig/unbekannt bleibt PROCESS_EXIT.
+Keine Rohdiagnose, Matched-Werte oder beliebige Returncodes veröffentlicht.
+AUTH_REFUSED beschreibt eine Meldung, kein bewiesenes Passwortproblem.
+126/127 beweisen weder Login noch Remoteausführung. Erfolg verlangt weiter
+exaktes stdout/leeres stderr. Payload/Befehle/SSHargs/Hostpin/Limits/Einversuch
+unverändert; Remote-SHA256 weiter1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58.
+Keine automatische Wiederholung und keine Änderung an Zugang/Pfad/Rechten.
+
+**Validierung:** 125/125 lokale synthetische Tests PASS; vier zusätzliche Tests
+für feste Kategorien, Mehrdeutigkeit/falscheExitklasse/Übergröße, kanonische
+Zeilen und Geheimnisredaktion. Kein IONOS-Login. Separater beauftragter
+Prüfer prüft tatsächliche Quelldateien unabhängig; Freigabe und Providerlauf
+werden nicht vorweggenommen. Veröffentlichung mit SkipCI, danach Review der
+exakten publizierten SHA und Context-Neupin durch Betreiber erforderlich.
+
+**Status:** CP5 8/10, #8 Account/Namespace/Domainbindung und #10 akzeptierter
+realer Metadatenlauf offen. production_capture_allowed=false. V1 offen,
+62/71 historische Codingpakete, M0–M7 0/8, P4 0/4, R0/18; PR32 Draft,
+alpha.2 zuletzt belegt. Kein Backup/Deploy/Merge/Kauf/Dreamloud-Zugriff.

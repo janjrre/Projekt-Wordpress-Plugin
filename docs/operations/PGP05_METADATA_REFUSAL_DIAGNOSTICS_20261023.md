@@ -64,3 +64,43 @@ Normal managed IONOS trust model PGP05-SSH-20261022.2 remains; hookobservation,
 server-enforcedreadonly, vhostproof and productioncapture remainfalse.
 CP5 count remains8/10 for prior approved scope; revised candidate must receive
 its own independent review before further use. #8/#10 still open.
+
+## Independent exact-source review — 2026-10-23
+**APPROVED b31e6cc0684593cca63d493ba0f56dd562e11f53** for same bounded scope/
+normal managed IONOS trust. Separate reviewer fetched matching published blobs
+probe f0634f79aba1ddd8611e1feccfbdc0e9a68c3a86,
+tests d2046853f577f6a12b2a9ccac56bbafeedc265e0,
+unchanged config2085eb8e2296df0fa97908564de1faffe0931a1c and read guide.
+Independent **121/121 local tests PASS**. Remote script normalized old exits
+matches prior exact commands/checks/order; SSH args unchanged.
+Review reference:
+https://github.com/janjrre/Projekt-Wordpress-Plugin/issues/27#issuecomment-6358998616
+No provider test or authentication claim for new source.
+
+
+## Follow-up: Job50 and narrower SSH-reported diagnostics — 2026-10-23
+Job50 on b31e6cc0684593cca63d493ba0f56dd562e11f53 failed with fixed
+stage SSH / reason PROCESS_EXIT. GitHub confirms offline48 and approval
+success, metadata50 failure. Settings and keyscan/pin passed, but SSH
+failure does not establish authentication, remote execution or its cause.
+No account/password/root/permissions changed and no blind retry requested.
+
+New parser recognizes bounded complete canonical stderr lines for known
+exit classes and emits only static SSH_REPORTED_* labels (authentication
+refusal, hostkey, DNS, connect, askpass, command unavailable). Empty stdout
+required; conflicting/unknown signatures stay PROCESS_EXIT. AUTH_REFUSED
+is not proof of a wrong password; exec-like messages are not login proof.
+Raw output, matched strings and arbitrary return codes stay private.
+Remote script/hash/SSHargs/config/guards remain unchanged. The script hash
+above remains1906f7c716d32983f2f0e412449c929f4d92ccedd27cb8716c485e5483d12c58.
+125/125 local tests PASS, independently repeated by separate reviewer.
+Actual final published-SHA confirmation and new provider offline test are
+separate next gates. Previous reviewref/CI do not approve this new source.
+
+Updated operator sequence supersedes prior repin steps for this refinement:
+change only exact context expression revision, PGP05_APPROVED_SHA and
+PGP05_METADATA_REVIEW_REF to the newly published/reviewed source/reference.
+PGP05_REMOTE_SHA256 and private settings stay unchanged. Then one new exact
+branch metadata workflow; require current contextless offline success before
+manual approval. Do not rerun old50 or infer success from predecessor CI.
+CP5 remains8/10, #8 and #10 open; production_capture_allowed=false.
